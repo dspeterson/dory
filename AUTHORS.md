@@ -1,8 +1,8 @@
-Bruce's core implementation was written by
-[Dave Peterson](https://github.com/dspeterson).  Bruce also contains code
-written by former Tagged/if(we) employees who worked on the
-[Stig Database Project](http://www.stigdb.org/).  These contributors include
-[Jason Lucas](https://github.com/jasonl9000),
+Dory is a fork of [Bruce](https://github.com/ifwe/bruce), and is maintained by
+Dave Peterson, who wrote Bruce's core implementation while employed at if(we).
+Dory also contains code written by former Tagged/if(we) employees who worked on
+the [Stig Database Project](http://www.stigdb.org/).  These contributors
+include [Jason Lucas](https://github.com/jasonl9000),
 [Joris Van Remoortere](https://github.com/jmlvanre),
 [Cody Maloney](https://github.com/cmaloney),
 [Michael Park](https://github.com/mpark),

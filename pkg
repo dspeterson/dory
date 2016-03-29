@@ -30,13 +30,12 @@ make_tar() {
     dbg=$1
 
     # The contents of the tarball are exactly the same regardless of whether we
-    # call it 'bruce' or 'bruce_debug'.  The only reason for the name
-    # difference is to make building the 'bruce_debug' RPM package a bit
-    # easier.
+    # call it 'dory' or 'dory_debug'.  The only reason for the name difference
+    # is to make building the 'dory_debug' RPM package a bit easier.
     if [ $dbg -eq 0 ]; then
-        pkg_base_name=bruce
+        pkg_base_name=dory
     else
-        pkg_base_name=bruce_debug
+        pkg_base_name=dory_debug
     fi
 
     pkg_name=${pkg_base_name}-${version}
@@ -48,7 +47,7 @@ make_tar() {
     done
 
     cp .gitignore out/pkg/tar/${pkg_name}
-    src/bruce/scripts/gen_version -q > out/pkg/tar/${pkg_name}/version.txt
+    src/dory/scripts/gen_version -q > out/pkg/tar/${pkg_name}/version.txt
 
     if [ "$?" -ne 0 ]; then
         echo Failed to generate version.txt 1>&2
@@ -74,18 +73,18 @@ make_rpm() {
 
     if [ $dbg -eq 0 ]; then
         pkg_subdir=release
-        pkg_name=bruce
+        pkg_name=dory
     else
         pkg_subdir=debug
-        pkg_name=bruce_debug
+        pkg_name=dory_debug
     fi
 
     if [ "$target" == "rpm_noconfig" ]; then
         rpm_dir=out/pkg/${pkg_subdir}/rpm_noconfig
-        spec_in=rpm_specs/bruce_noconfig.spec.in
+        spec_in=rpm_specs/dory_noconfig.spec.in
     else
         rpm_dir=out/pkg/${pkg_subdir}/rpm
-        spec_in=rpm_specs/bruce.spec.in
+        spec_in=rpm_specs/dory.spec.in
     fi
 
     rm -fr $rpm_dir
@@ -98,20 +97,20 @@ make_rpm() {
     mkdir -p $base/SRPMS
 
     if [ $dbg -eq 0 ]; then
-        sed "s/BRUCE_VERSION/${version}/" < $spec_in | \
+        sed "s/DORY_VERSION/${version}/" < $spec_in | \
                 sed 's/BUILD_TYPE/release/' | \
-                sed 's/BRUCE_PKG_NAME/bruce/' | \
-                sed 's/SANITIZE_ADDRESS/no/' > $base/SPECS/bruce.spec
+                sed 's/DORY_PKG_NAME/dory/' | \
+                sed 's/SANITIZE_ADDRESS/no/' > $base/SPECS/dory.spec
     else
-        sed "s/BRUCE_VERSION/${version}/" < $spec_in | \
+        sed "s/DORY_VERSION/${version}/" < $spec_in | \
                 sed 's/BUILD_TYPE/debug/' | \
-                sed 's/BRUCE_PKG_NAME/bruce_debug/' | \
-                sed "s/SANITIZE_ADDRESS/${asan}/" > $base/SPECS/bruce.spec
+                sed 's/DORY_PKG_NAME/dory_debug/' | \
+                sed "s/SANITIZE_ADDRESS/${asan}/" > $base/SPECS/dory.spec
     fi
 
     cp out/pkg/tar/${pkg_name}-${version}.tar.gz $base/SOURCES
     cd $base
-    rpmbuild --define "_topdir `pwd`" -ba SPECS/bruce.spec
+    rpmbuild --define "_topdir `pwd`" -ba SPECS/dory.spec
 
     if [ "$?" -ne 0 ]; then
         echo RPM build failed 1>&2
@@ -185,7 +184,7 @@ if [ ! -f "SConstruct" ] || [ ! -d "src" ]; then
     exit 1
 fi
 
-version=`src/bruce/scripts/gen_version -q`
+version=`src/dory/scripts/gen_version -q`
 echo Software version is $version
 echo
 

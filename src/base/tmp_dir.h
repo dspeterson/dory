@@ -32,7 +32,7 @@ namespace Base {
     NO_COPY_SEMANTICS(TTmpDir);
 
     public:
-    TTmpDir(const char *name_template = "/tmp/bruce_tmp.XXXXXX",
+    TTmpDir(const char *name_template = "/tmp/dory_tmp.XXXXXX",
             bool delete_on_destroy = false);
 
     ~TTmpDir();

@@ -34,7 +34,7 @@ namespace Base {
     DEFINE_ERROR(TCannotCreateName, std::runtime_error,
                  "Cannot create temporary filename");
 
-    TTmpFileName(const char *name_template = "/tmp/bruce_tmp.XXXXXX");
+    TTmpFileName(const char *name_template = "/tmp/dory_tmp.XXXXXX");
 
     operator const char *() const {
       return &Name[0];

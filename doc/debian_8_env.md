@@ -27,7 +27,7 @@ packages, which are found on the [DVD images for installing Debian]
   `pool/main/b/boost1.55/libboost1.55-dev_1.55.0+dfsg-3_amd64.deb`
 
 Now proceed to
-[build, install, and configure Bruce](../README.md#building-and-installing-bruce).
+[build, install, and configure Dory](../README.md#building-and-installing-dory).
 
 -----
 

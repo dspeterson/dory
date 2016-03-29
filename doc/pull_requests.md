@@ -5,8 +5,8 @@ To contribute code, create a pull request as described
 and pull" model for making contributions.  A quick summary of the process is as
 follows:
 
-1. Fork Bruce's GitHub repository.  To fork the repo, click the
-[fork button](http://github.com/ifwe/bruce/fork) on the
+1. Fork Dory's GitHub repository.  To fork the repo, click the
+[fork button](http://github.com/dspeterson/dory/fork) on the
 [GitHub](http://github.com) web interface.
 
 2. Clone the forked repository to your local machine.
@@ -22,7 +22,7 @@ are functioning in your locally cloned repo, it's time to
 your forked repo on GitHub.
 
 5. [Create a pull request](https://help.github.com/articles/using-pull-requests)
-to the master branch of the bruce repository.
+to the master branch of the dory repository.
 
 -----
 

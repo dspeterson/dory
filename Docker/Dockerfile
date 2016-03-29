@@ -24,12 +24,12 @@ RUN wget http://googletest.googlecode.com/files/gtest-1.7.0.zip && \
           cp -a include/gtest /usr/include
 
 RUN cd /root && \
-    git clone https://github.com/ifwe/bruce.git && \
-    cd bruce && \
-    cd src/bruce && \
-    scons -Q --up --release bruce && \
-    mkdir -p /opt/bruce/bin/ && \
-    cp /root/bruce/out/release/bruce/bruce /opt/bruce/bin/
+    git clone https://github.com/dspeterson/dory.git && \
+    cd dory && \
+    cd src/dory && \
+    scons -Q --up --release dory && \
+    mkdir -p /opt/dory/bin/ && \
+    cp /root/dory/out/release/dory/dory /opt/dory/bin/
 
 
 RUN wget http://peak.telecommunity.com/dist/ez_setup.py
@@ -38,10 +38,10 @@ RUN easy_install pip
 ADD datadogsync.py /root/
 RUN pip install datadog
 
-RUN mkdir -p /etc/bruce
-ADD bruce_conf.xml /etc/bruce/
-ADD start.sh /etc/bruce/
+RUN mkdir -p /etc/dory
+ADD dory_conf.xml /etc/dory/
+ADD start.sh /etc/dory/
 
 EXPOSE 9090
 
-CMD sh /etc/bruce/start.sh
+CMD sh /etc/dory/start.sh

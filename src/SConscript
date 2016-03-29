@@ -191,7 +191,7 @@ def specify_generated_file(in_node, out_node, header_node, script_node,
             script_abs_path + " -g < $SOURCE > $TARGET")
 
     # Specify that header depends on file generated during the build.  For
-    # instance, 'bruce/build_id.h' depends on 'bruce/build_id.c'.  This
+    # instance, 'dory/build_id.h' depends on 'dory/build_id.c'.  This
     # information is taken into account when dependencies are computed.
     env['GENERATED_SOURCE_MAP'][header_node.get_path()] = out_node
 
@@ -234,17 +234,17 @@ def make_unique(a):
     return result
 
 
-specify_generated_file(Dir('bruce').File('build_id.c.in'),
-        Dir('bruce').File('build_id.c'), Dir('bruce').File('build_id.h'),
-        Dir('bruce').Dir('scripts').File('gen_version'),
-        src.Dir('bruce').Dir('scripts').File('gen_version'))
-specify_generated_file(Dir('bruce').Dir('client').File('build_id.c.in'),
-        Dir('bruce').Dir('client').File('build_id.c'),
-        Dir('bruce').Dir('client').File('build_id.h'),
-        Dir('bruce').Dir('scripts').File('gen_version'),
-        src.Dir('bruce').Dir('scripts').File('gen_version'))
-specify_lib_headers(Dir('bruce').Dir('client').File('libbruce_client.a'),
-    [Dir('bruce').Dir('client').File('bruce_client.h')])
+specify_generated_file(Dir('dory').File('build_id.c.in'),
+        Dir('dory').File('build_id.c'), Dir('dory').File('build_id.h'),
+        Dir('dory').Dir('scripts').File('gen_version'),
+        src.Dir('dory').Dir('scripts').File('gen_version'))
+specify_generated_file(Dir('dory').Dir('client').File('build_id.c.in'),
+        Dir('dory').Dir('client').File('build_id.c'),
+        Dir('dory').Dir('client').File('build_id.h'),
+        Dir('dory').Dir('scripts').File('gen_version'),
+        src.Dir('dory').Dir('scripts').File('gen_version'))
+specify_lib_headers(Dir('dory').Dir('client').File('libdory_client.a'),
+    [Dir('dory').Dir('client').File('dory_client.h')])
 googletest_lib_1 = third_party_out_dir('googletest').File('libgtest.a')
 googletest_lib_2 = third_party_out_dir('googletest').File('libgtest_main.a')
 env.Command(googletest_lib_1, "", make_third_party_build_cmd('googletest'))

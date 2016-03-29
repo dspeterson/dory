@@ -1,9 +1,9 @@
 ## Setting Up a CentOS 6.5 Build Environment
 
-Bruce is implemented in C++, and makes extensive use of C++11 features.
+Dory is implemented in C++, and makes extensive use of C++11 features.
 Therefore, it must be built using a more recent version of gcc than what CentOS
 6.5 provides.  Likewise, a newer version of Python is required to support
-Bruce's SCons-based Python build scripts.  Some RPM packages are also needed,
+Dory's SCons-based Python build scripts.  Some RPM packages are also needed,
 which may be installed as follows:
 
 ```
@@ -59,8 +59,8 @@ following:
    rpm -Uvh libmpc-devel-0.8-3.el6.x86_64.rpm
    yum install rpm-build
    mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}  # or use a directory of your choice
-   git clone https://github.com/ifwe/bruce.git
-   cp bruce/centos6/gcc482.spec ~/rpmbuild/SPECS
+   git clone https://github.com/dspeterson/dory.git
+   cp dory/centos6/gcc482.spec ~/rpmbuild/SPECS
    wget http://mirrors.kernel.org/gnu/gcc/gcc-4.8.2/gcc-4.8.2.tar.bz2
    cp gcc-4.8.2.tar.bz2 ~/rpmbuild/SOURCES
    cd ~/rpmbuild
@@ -104,27 +104,27 @@ easy_install-2.7 argparse
 
 ### Using Python 2.7 inside a virtualenv Environment
 
-For building Bruce, you need to create a Python 2.7 virtualenv environment,
+For building Dory, you need to create a Python 2.7 virtualenv environment,
 which may be done as follows:
 
 ```
-virtualenv-2.7 --distribute ~/bruce_env  # or use a directory of your choice
+virtualenv-2.7 --distribute ~/dory_env  # or use a directory of your choice
 ```
 
 Now activate the virtualenv environment as follows:
 
 ```
-$ source ~/bruce_env/bin/activate
+$ source ~/dory_env/bin/activate
 $ python --version
 Python 2.7.3
 $
 ```
 As shown above, when executing commands in the shell where you activated the
 virtualenv environment, Python 2.7.3 will be used by default.  Before building
-Bruce, you must perform this step in the shell where you are doing the build.
+Dory, you must perform this step in the shell where you are doing the build.
 
 Now proceed to
-[build, install, and configure Bruce](../README.md#building-and-installing-bruce).
+[build, install, and configure Dory](../README.md#building-and-installing-dory).
 
 -----
 

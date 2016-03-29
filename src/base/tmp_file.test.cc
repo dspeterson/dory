@@ -21,7 +21,10 @@
   
   
 #include <base/tmp_file.h>
-  
+ 
+#include <cstddef>
+#include <cstring>
+ 
 #include <gtest/gtest.h>
   
 using namespace Base;
@@ -45,13 +48,15 @@ namespace {
   };  // TTmpFileTest
 
   TEST_F(TTmpFileTest, Test1) {
-    std::string tmpl("/tmp/bruce_tmp.XXXXXX");
+    std::string tmpl("/tmp/dory_tmp.XXXXXX");
     TTmpFile tmp_file(tmpl.c_str(), true);
     std::string name(tmp_file.GetName());
     ASSERT_EQ(tmpl.size(), name.size());
     ASSERT_NE(tmpl, name);
-    ASSERT_EQ(name.substr(0, 15), std::string("/tmp/bruce_tmp."));
-    ASSERT_NE(name.substr(15, 6), std::string("XXXXXX"));
+    const char tmpl_prefix[] = "/tmp/dory_tmp.";
+    size_t tmpl_prefix_len = std::strlen(tmpl_prefix);
+    ASSERT_EQ(name.substr(0, tmpl_prefix_len), std::string(tmpl_prefix));
+    ASSERT_NE(name.substr(tmpl_prefix_len, 6), std::string("XXXXXX"));
   }
   
   TEST_F(TTmpFileTest, Test2) {

@@ -1,6 +1,6 @@
 ## Coding Conventions
 
-In general, the coding convention for Bruce follows the
+In general, the coding convention for Dory follows the
 [Google C++ Style Guide](http://google-styleguide.googlecode.com/svn/trunk/cppguide.xml)
 
 ### Indentation

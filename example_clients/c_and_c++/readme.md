@@ -1,8 +1,8 @@
 ## Support for C and C++ Clients
 
-Bruce comes with a library that C and C++ clients may use for sending messages,
+Dory comes with a library that C and C++ clients may use for sending messages,
 as described
-[here](../../doc/build_install.md#building-bruces-client-library).
+[here](../../doc/build_install.md#building-dorys-client-library).
 
 -----
 

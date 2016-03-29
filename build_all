@@ -194,13 +194,13 @@ if 'run_tests' in target_set and 'tests' in target_set:
     # 'tests' is redundant when specified with 'run_tests', so remove it.
     target_set.remove('tests')
 
-all_apps = ['bruce/bruce',
-            'bruce/kafka_proto/v0/mdrequest',
-            'bruce/mock_kafka_server/mock_kafka_server',
-            'bruce/mock_kafka_server/inject_error/inject_error',
-            'bruce/client/to_bruce']
-client_libs = ['bruce/client/libbruce_client.a',
-               'bruce/client/libbruce_client.so']
+all_apps = ['dory/dory',
+            'dory/kafka_proto/v0/mdrequest',
+            'dory/mock_kafka_server/mock_kafka_server',
+            'dory/mock_kafka_server/inject_error/inject_error',
+            'dory/client/to_dory']
+client_libs = ['dory/client/libdory_client.a',
+               'dory/client/libdory_client.so']
 root = os.getcwd()
 
 for target in target_set:

@@ -2,42 +2,42 @@
 
 ### Using the Command Line Client
 
-The quickest way to get started sending messages to Bruce is by using the
-command line client.  This client is included in Bruce's RPM package, and can
+The quickest way to get started sending messages to Dory is by using the
+command line client.  This client is included in Dory's RPM package, and can
 be built separately as described
-[here](build_install.md#building-bruces-client-library).  Sending a message to
-Bruce can then be done as follows:
+[here](build_install.md#building-dorys-client-library).  Sending a message to
+Dory can then be done as follows:
 
 ```
-to_bruce --socket_path /var/run/bruce/bruce.socket --topic test_topic \
+to_dory --socket_path /var/run/dory/dory.socket --topic test_topic \
         --value "hello world"
 ```
 
 or alternatively:
 
 ```
-echo -n "hello world" | to_bruce --socket_path /var/run/bruce/bruce.socket \
+echo -n "hello world" | to_dory --socket_path /var/run/dory/dory.socket \
         --topic test_topic --stdin
 ```
 
 A full listing of the client's command line options may be obtained by typing
-`to_bruce --help`.
+`to_dory --help`.
 
 ### Other Clients
 
-Example client code for sending messages to Bruce in various programming
+Example client code for sending messages to Dory in various programming
 languages may be found in the [example_clients](../example_clients) directory
-of Bruce's Git repository.  Community contributions for additional programming
+of Dory's Git repository.  Community contributions for additional programming
 languages are much appreciated.
 
 ### Message Types
 
-Bruce supports two input message types: *AnyPartition* messages
+Dory supports two input message types: *AnyPartition* messages
 and *PartitionKey* messages.  They differ in how a partition is chosen for
 topics with multiple partitions.
 
-If you wish to give Bruce full control over partition selection, then send an
-AnyPartition message.  Bruce will distrubute AnyPartition messages across the
+If you wish to give Dory full control over partition selection, then send an
+AnyPartition message.  Dory will distrubute AnyPartition messages across the
 partitions for a topic using essentially a round-robin distribution scheme to
 balance the load.
 
@@ -49,17 +49,17 @@ defined by the
 [Kafka protocol](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol)
 and further described in
 [this proposal](https://cwiki.apache.org/confluence/display/KAFKA/Keyed+Messages+Proposal).
-The partition keys we describe here are known to Bruce, but not to the Kafka
-brokers.  Bruce chooses a partition by applying a mod function to the partition
+The partition keys we describe here are known to Dory, but not to the Kafka
+brokers.  Dory chooses a partition by applying a mod function to the partition
 key and using it as an index into an array of partitions.  For instance,
-suppose that topic T has partitions 0, 1, and 2.  Then Bruce's partition array
+suppose that topic T has partitions 0, 1, and 2.  Then Dory's partition array
 for T will look like this:
 
 ```
 [0, 1, 2]
 ```
 
-For key K, Bruce then chooses (K % 3) as the array index of the partition to
+For key K, Dory then chooses (K % 3) as the array index of the partition to
 use.  For instance, if K is 6, then array index 0 will be chosen.  Since
 partition ID 0 is at position 0, a message with key K will be sent to partition
 0.  In practice, this might be useful in a scenario where messages are
@@ -70,17 +70,17 @@ guaranteed to be sorted in ascending order.  Therefore, a sender with full
 knowledge of the partition layout for a given topic can use the partition key
 mechanism to directly choose a partition.  Now suppose that partition 0 becomes
 temporarily unavailable.  In the case where a message with key K maps to
-partition 0, Bruce will realize that partition 0 is unavailable and choose the
+partition 0, Dory will realize that partition 0 is unavailable and choose the
 next available partition.  For instance, if partition 1 is available, then
 messages that would normally be sent to partition 0 will temporarily be sent to
-partition 1.  Once partition 0 becomes available again, Bruce will resume
+partition 1.  Once partition 0 becomes available again, Dory will resume
 sending these messages to partition 0.
 
 ### Message Formats
 
-Here, low-level details are presented for the message formats that Bruce
-expects to receive from its UNIX domain datagram socket.  The same notation
-described [here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol)
+Here, low-level details are presented for the message formats that Dory expects
+to receive from its UNIX domain datagram socket.  The same notation described
+[here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol)
 is used below.
 
 #### Generic Message Format
@@ -181,7 +181,7 @@ described
 Notice that the PartitionKey format is identical to the AnyPartition format
 except for the presence of the `PartitionKey` field.
 
-Once you are able to send messages to Bruce, you will probably be interested
+Once you are able to send messages to Dory, you will probably be interested
 in learning about its
 [status monitoring interface](../README.md#status-monitoring).
 

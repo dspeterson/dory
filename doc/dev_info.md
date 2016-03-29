@@ -1,14 +1,14 @@
-## Modifying Bruce's Implementation
+## Modifying Dory's Implementation
 
-Before making code changes, it is helpful to become familiar with Bruce's build
+Before making code changes, it is helpful to become familiar with Dory's build
 system, which is based on [SCons](http://www.scons.org/).
 
 ### Build System
 
 Files [SConstruct](../SConstruct) and [src/SConscript](../src/SConscript)
 contain the build configuration.  As shown
-[here](build_install.md#building-bruce-directly), to build something, first
-source the file [bash_defs](../bash_defs) in the root of Bruce's Git
+[here](build_install.md#building-dory-directly), to build something, first
+source the file [bash_defs](../bash_defs) in the root of Dory's Git
 repository.  Then `cd` into the `src` directory or any directory beneath `src`
 and use the `build` command to build a particular target.  In general, to build
 an executable you simply specify its name when invoking the `build` command.
@@ -16,25 +16,25 @@ For instance:
 
 ```
 source bash_defs
-cd src/bruce
-build bruce  # builds bruce executable
-build client/to_bruce  # builds command line client
+cd src/dory
+build dory  # builds dory executable
+build client/to_dory  # builds command line client
 build msg.o  # compile source file msg.cc
 build conf/conf.o  # compile source file conf/conf.cc
 ```
 
 All build results are in the `out` directory (relative to the root of the Git
-repository).  For instance, the built `bruce` executable will be
-`out/debug/bruce/bruce`.  To build a release version of a target, use the
+repository).  For instance, the built `dory` executable will be
+`out/debug/dory/dory`.  To build a release version of a target, use the
 `--release` option with the `build` command.  For instance,
-`build --release bruce` will build a release version of `bruce`, which will be
-`out/release/bruce/bruce`.
+`build --release dory` will build a release version of `dory`, which will be
+`out/release/dory/dory`.
 
 Source files ending in `.test.cc` are unit tests, which can be executed as
 standalone executables.  For instance, in the above example if we typed
-`build unix_dg_input_agent.test`, this would build the unit test for Bruce's
+`build unix_dg_input_agent.test`, this would build the unit test for Dory's
 UNIX datagram input agent, which would then appear as executable file
-`out/debug/bruce/unix_dg_input_agent.test`.  If you type
+`out/debug/dory/unix_dg_input_agent.test`.  If you type
 `build --test unix_dg_input_agent.test`, that will build the unit test and then
 immediately execute it.
 
@@ -105,26 +105,26 @@ Likewise, if you do not specify `--mode=release` when running the `build_all`
 script, debug versions of binaries will be built by default.  As documented
 [here](build_install.md#building-an-rpm-package), the `pkg` command may be used
 for building an RPM package.  By default, `pkg` builds a release version of
-Bruce.  To build a debug version, specify `--debug`.
+Dory.  To build a debug version, specify `--debug`.
 
 In GCC 4.8, support was added for [AddressSanitizer]
 (http://code.google.com/p/address-sanitizer/), a useful debugging tool.  This
-is enabled by default in debug builds.  When running Bruce with the address
+is enabled by default in debug builds.  When running Dory with the address
 sanitizer, you may notice that it uses a large amount of virtual memory (often
-multiple terabytes).  This is expected behavior.  After running Bruce for a
+multiple terabytes).  This is expected behavior.  After running Dory for a
 while with the address sanitizer, it may exit with the following error message:
 
 ```
 ERROR: Failed to mmap
 ```
 
-If this causes problems, you can build Bruce with the address sanitizer
-disabled.  When building Bruce directly, as described [here]
-(build_install.md#building-bruce-directly), you can disable the address
+If this causes problems, you can build Dory with the address sanitizer
+disabled.  When building Dory directly, as described [here]
+(build_install.md#building-dory-directly), you can disable the address
 sanitizer as follows:
 
 ```
-build --asan=no bruce
+build --asan=no dory
 ```
 
 Likewise, you can invoke `build_all` as follows:
@@ -154,14 +154,14 @@ cause out of memory conditions to result in segmentation faults due to null
 pointer dereferences.  See [this issue]
 (https://github.com/google/sanitizers/issues/295) for details.
 
-Regardless of how you build bruce (via the `build` command, the `build_all`
+Regardless of how you build dory (via the `build` command, the `build_all`
 script, or the `pkg` script), the address sanitizer is *always* disabled in
 release builds, regardless of any command line options that disable or enable
 the address sanitizer.
 
 The GNU C++ library provides a [debug mode]
 (https://gcc.gnu.org/onlinedocs/libstdc++/manual/debug_mode.html) which
-implements various assertion checks for STL containers.  Bruce makes use of
+implements various assertion checks for STL containers.  Dory makes use of
 this in its debug build. A word of caution is therefore necessary. Suppose you
 have the following piece of code:
 
@@ -198,13 +198,13 @@ void foo(std::vector<int> &v) {
 Although this is a bit less elegant than the previous implementation, the
 benefits of tools such as debug mode can be great when tracking down problems.
 Therefore please avoid code such as the first version of `foo()` when making
-changes to Bruce.
+changes to Dory.
 
 ### Contributing Code
 
-Information on contributing to Bruce is provided [here](../CONTRIBUTING.md).
+Information on contributing to Dory is provided [here](../CONTRIBUTING.md).
 
-Information on getting help with Bruce is provided
+Information on getting help with Dory is provided
 [here](../README.md#getting-help).
 
 -----

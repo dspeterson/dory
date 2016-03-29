@@ -111,11 +111,11 @@ if not BUILD_TARGETS:
     sys.exit(0)
 
 
-# Look for Bruce's generated version file.  If the file exists and its version
+# Look for Dory's generated version file.  If the file exists and its version
 # string is incorrect, delete it.  Deleting the file will cause the build to
 # regenerate it with the correct version string.
 def check_version_file(ver_file):
-    check_ver = src.Dir('bruce').Dir('scripts').File('gen_version') \
+    check_ver = src.Dir('dory').Dir('scripts').File('gen_version') \
             .get_abspath()
 
     try:
@@ -127,8 +127,8 @@ def check_version_file(ver_file):
         sys.exit(1)
 
 
-check_version_file(out.Dir('bruce').File('build_id.c').get_abspath())
-check_version_file(out.Dir('bruce').Dir('client').File('build_id.c').
+check_version_file(out.Dir('dory').File('build_id.c').get_abspath())
+check_version_file(out.Dir('dory').Dir('client').File('build_id.c').
         get_abspath())
 
 # Environment.

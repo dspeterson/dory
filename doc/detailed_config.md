@@ -1,22 +1,22 @@
 ## Detailed Configuration
 
-Before reading the full details of Bruce's configuration options, you will
-probably want an overview of Bruce's design, which is avaliable
+Before reading the full details of Dory's configuration options, you will
+probably want an overview of Dory's design, which is avaliable
 [here](design.md).
 
 ### Config File
 
-Bruce's config file is an XML document that specifies settings for batching,
+Dory's config file is an XML document that specifies settings for batching,
 compression, and per-topic message rate limiting.  It also specifies a list of
-initial brokers to try contacting for metadata when Bruce is starting.  Below
+initial brokers to try contacting for metadata when Dory is starting.  Below
 is an example config file.  It is well commented, and should be self-
 explanatory once the reader is familiar with the information provided in the
 above-mentioned design section.
 
 ```XML
 <?xml version="1.0" encoding="US-ASCII"?>
-<!-- example Bruce configuration -->
-<bruceConfig>
+<!-- example Dory configuration -->
+<doryConfig>
     <batching>
         <namedConfigs>
             <config name="low_latency">
@@ -29,7 +29,7 @@ above-mentioned design section.
                 <!-- Set 500 milliseconds max batching delay.  Here, you must
                      specify integer values directly rather than using syntax
                      such as "10k".  Specifying "disable" for this setting is
-                     not recommended, since it can cause Bruce to batch a
+                     not recommended, since it can cause Dory to batch a
                      message indefinitely if not enough other messages arrive
                      to exceed one of the other two batching thresholds below.
                   -->
@@ -71,8 +71,8 @@ above-mentioned design section.
 
         <!-- This value should be exactly the same as the message.max.bytes
              value in the Kafka broker configuration.  A larger value will
-             cause Kafka to send MessageSizeTooLarge error ACKs to Bruce for
-             large compressed message sets, which will cause Bruce to discard
+             cause Kafka to send MessageSizeTooLarge error ACKs to Dory for
+             large compressed message sets, which will cause Dory to discard
              them.  A smaller value will not cause data loss, but will
              unnecessarily restrict the size of a compressed message set.  As
              above, you can supply a value such as "1024k".  Specifying
@@ -146,7 +146,7 @@ above-mentioned design section.
 
         <!-- This must be an integer value at least 0 and at most 100.  If the
              compressed size of a message set is greater than this percentage
-             of the uncompressed size, then Bruce sends the data uncompressed,
+             of the uncompressed size, then Dory sends the data uncompressed,
              so the Kafka brokers don't waste CPU cycles dealing with the
              compression.  The value below is somewhat arbitrary, and not based
              on experimental data. -->
@@ -206,11 +206,11 @@ above-mentioned design section.
     </topicRateLimiting>
 
     <initialBrokers>
-        <!-- When Bruce starts, it chooses a broker in this list to contact for
-             metadata.  If Bruce cannot get metadata from the host it chooses,
-             it tries other hosts until it succeeds.  Once Bruce successfully
+        <!-- When Dory starts, it chooses a broker in this list to contact for
+             metadata.  If Dory cannot get metadata from the host it chooses,
+             it tries other hosts until it succeeds.  Once Dory successfully
              gets metadata, the broker list in the metadata determines which
-             brokers Bruce will connect to for message transmission and future
+             brokers Dory will connect to for message transmission and future
              metadata requests.  Specifying a single host is ok, but multiple
              hosts are recommended to guard against the case where a single
              specified host is down.
@@ -218,25 +218,25 @@ above-mentioned design section.
         <broker host="broker_host_1" port="9092" />
         <broker host="broker_host_2" port="9092" />
     </initialBrokers>
-</bruceConfig>
+</doryConfig>
 ```
 
 ### Command Line Arguments
 
-Bruce's required command line arguments are summarized below:
+Dory's required command line arguments are summarized below:
 
 * `--config_path PATH`: This specifies the location of the config file.
 * `--msg_buffer_max MAX_KB`: This specifies the amount of memory in kbytes
-Bruce reserves for message data.  If this buffer space is exhausted, Bruce
+Dory reserves for message data.  If this buffer space is exhausted, Dory
 starts discarding messages.
-* `--receive_socket_name PATH`: This specifies the pathname of Bruce's UNIX
+* `--receive_socket_name PATH`: This specifies the pathname of Dory's UNIX
 domain datagram socket that clients write messages to.
 
-Bruce's optional command line arguments are summarized below:
+Dory's optional command line arguments are summarized below:
 
 * `-h --help`: Display help message.
 * `--version`: Display version information and exit.
-* `--receive_socket_mode MODE`: This specifies the file permissions for Bruce's
+* `--receive_socket_mode MODE`: This specifies the file permissions for Dory's
 UNIX domain datagram socket.  Octal values are prefixed with 0.  For instance,
 `--receive_socket_mode 0777` specifies unrestricted access.
 * `--log_level LEVEL`: This specifies the maximum enabled log level for syslog
@@ -249,10 +249,10 @@ communicating with Kafka, as specified
 Currently 0 is the only allowed value.  Note: There should actually be two
 separate options: a metadata protocol version and a producer protocol version,
 since Kafka versions these parts of the protocol separately.  Some minor
-refactoring needs to be done to make Bruce behave in this manner.
-* `--status_loopback_only`: This specifies that Bruce's web interface should
+refactoring needs to be done to make Dory behave in this manner.
+* `--status_loopback_only`: This specifies that Dory's web interface should
 only be available on the loopback interface.
-* `--status_port PORT`: This specifies the port Bruce uses for its web
+* `--status_port PORT`: This specifies the port Dory uses for its web
 interface.  The default value is 9090.
 * `--max_input_msg_size N`: This specifies the maximum input message size in
 bytes expected from clients.  Messages larger than this value will be
@@ -262,13 +262,13 @@ value is 65536.
 max_input_msg_size that a client sending a UNIX domain datagram of the maximum
 allowed size will need to increase its SO_SNDBUF socket option above the
 default value.
-* `--max_failed_delivery_attempts N`: Each time Bruce receives an error ACK
+* `--max_failed_delivery_attempts N`: Each time Dory receives an error ACK
 causing it to initiate a "pause without discard" or "resend" action as
-documented [here](design.md#dispatcher), Bruce increments the failed delivery
+documented [here](design.md#dispatcher), Dory increments the failed delivery
 attempt account for each message in the message set that the ACK applies to.
 Once a message's failed delivery attempt count exceeds this value, the message
 is discarded.  The default vaule is 5.
-* `--daemon`: Causes Bruce to run as a daemon.
+* `--daemon`: Causes Dory to run as a daemon.
 * `--client_id ID`: This specifies the client ID string to send in produce
 requests, as documented
 [here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol).
@@ -282,11 +282,11 @@ wait for successful replication to occur, as described
 [here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-ProduceRequest),
 before returning an error.  The default value is 10000.
 * `--shutdown_max_delay N`: This specifies the maximum time in milliseconds
-Bruce will spend trying to send queued messages and receive ACKs before
+Dory will spend trying to send queued messages and receive ACKs before
 shutting down once it receives a shutdown signal.  If the time limit expires
-and Bruce still has queued messages, they will be discarded.  The recommended
-way to shut down Bruce is to stop all clients and let Bruce empty its queues
-*before* sending Bruce a shutdown signal.  The default value is 30000.
+and Dory still has queued messages, they will be discarded.  The recommended
+way to shut down Dory is to stop all clients and let Dory empty its queues
+*before* sending Dory a shutdown signal.  The default value is 30000.
 * `--dispatcher_restart_max_delay N`: This specifies the maximum allowed delay
 in milliseconds for dispatcher shutdown during a pause or metadata update
 event.  During this time period, each dispatcher thread will attempt to finish
@@ -297,22 +297,22 @@ thread's queue after it shuts down will be sent after the dispatcher is
 restarted with new metadata.  The messages contained in any remaining sent
 produce requests in a dispatcher thread's "ACK waiting" queue on dispatcher
 shutdown will be resent after the dispatcher is restarted with new metadata.
-These messages will be reported as possible duplicates in Bruce's discard
+These messages will be reported as possible duplicates in Dory's discard
 reporting interface.  The default value is 5000.
-* `--metadata_refresh_interval N`: This specifies Bruce's metadata refresh
+* `--metadata_refresh_interval N`: This specifies Dory's metadata refresh
 interval in minutes.  The actual interval will vary somewhat due to added
-randomness.  This will spread out the metadata requests of multiple Bruce
+randomness.  This will spread out the metadata requests of multiple Dory
 instances to prevent them from all requesting metadata at the same time.  The
 default value is 15.
 * `--kafka_socket_timeout N`: This specifies the socket timeout in seconds that
-Bruce uses when communicating with the Kafka brokers.  The default value is 60.
+Dory uses when communicating with the Kafka brokers.  The default value is 60.
 * `--min_pause_delay N`: This specifies a lower bound on the initial time
-period in milliseconds Bruce will wait before sending a metadata request in
+period in milliseconds Dory will wait before sending a metadata request in
 response to a pause event or retrying a failed metadata request.  The default
 value is 5000.  See also --pause_rate_limit_initial and
 --pause_rate_limit_max_double below.
 * `--pause_rate_limit_initial N`: This specifies an initial delay in
-milliseconds that Bruce will wait before sending a metadata request in response
+milliseconds that Dory will wait before sending a metadata request in response
 to a pause event or retrying a failed metadata request.  The --min_pause_delay
 option described above places a lower bound on the actual value, which has a
 bit of randomness added to it.  The default value is 5000.
@@ -323,8 +323,8 @@ number of times specified here.  The actual delay has some randomness added to
 it.  The default value is 4.
 * `--discard_report_interval N`: This specifies the discard report interval in
 seconds.  The default value is 600.
-* `--no_log_discard`: This prevents Bruce from writing syslog messages when
-discards occur.  Discards will still be reported through Bruce's web interface.
+* `--no_log_discard`: This prevents Dory from writing syslog messages when
+discards occur.  Discards will still be reported through Dory's web interface.
 * `--debug_dir DIR`: This specifies a directory for debug instrumentation
 files, as described
 [here](troubleshooting.md).  If unspecified, the debug instrumentation file
@@ -357,7 +357,7 @@ exceeds discard_log_max_archive_size (specified in Kb), then old logfiles are
 deleted, starting with the oldest, until their combined size no longer exceeds
 the maximum.  The default value is 8192.
 * `--discard_report_bad_msg_prefix_size N`: Maximum bad message prefix size in
-bytes to write to discard report available from Bruce's web interface.  The
+bytes to write to discard report available from Dory's web interface.  The
 default value is 256.
 * `--topic_autocreate`: Enable automatic topic creation.  For this to work, the
 brokers must be configured with `auto.create.topics.enable=true`.
@@ -370,7 +370,7 @@ if(we).
 removed.  Its purpose is to provide compatibility with legacy infrastructure at
 if(we).
 
-Now that you are familiar with all of Bruce's configuration options, you may
+Now that you are familiar with all of Dory's configuration options, you may
 find information on [troubleshooting](../README.md#troubleshooting) helpful.
 
 -----

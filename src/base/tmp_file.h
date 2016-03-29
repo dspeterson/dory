@@ -22,6 +22,7 @@
 #pragma once
 
 #include <cassert>
+#include <vector>
 
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
@@ -32,7 +33,7 @@ namespace Base {
     NO_COPY_SEMANTICS(TTmpFile);
 
     public:
-    TTmpFile(const char *name_template = "/tmp/bruce_tmp.XXXXXX",
+    TTmpFile(const char *name_template = "/tmp/dory_tmp.XXXXXX",
              bool delete_on_destroy = false);
 
     ~TTmpFile();

@@ -1,0 +1,112 @@
+%define _bindir /usr/bin
+
+# Trying to build the debuginfo package on CentOS 6 causes problems.
+%if 0%{?rhel} == 6
+%define debug_package %{nil}
+%endif
+
+# The right hand sides of these definitions get replaced during preprocessing
+# by the 'pkg' script.
+#
+# When building a debug version, 'BUILD_TYPE' gets replaced with 'debug' and
+# 'DORY_PKG_NAME' gets replaced with 'dory_debug'.  When building a release
+# version, 'BUILD_TYPE' gets replaced with 'release' and 'DORY_PKG_NAME' gets
+# replaced with 'dory'.
+%define build_type BUILD_TYPE
+%define dory_pkg_name DORY_PKG_NAME
+%define asan SANITIZE_ADDRESS
+
+Name:		%{dory_pkg_name}
+Version:	DORY_VERSION
+Release:	1%{?dist}
+Summary:	producer daemon for Apache Kafka
+
+Group:		System Environment/Daemons
+License:	ASL 2.0
+#URL:		
+Source0:	%{name}-%{version}.tar.gz
+
+#BuildRequires:	
+Requires:	snappy
+
+%description
+Dory is a producer daemon for Apache Kafka.
+
+
+%prep
+%setup -q
+
+
+%build
+%if 0%{?rhel} == 6
+    # For CentOS 6, we must build using gcc 4.8.2 and Python 2.7.
+    IMPORT_PATH=--import_path
+    mkdir out
+    virtualenv-2.7 --distribute out/python_2_7_env
+    source out/python_2_7_env/bin/activate
+    export PATH=/opt/gcc/bin:$PATH
+    export LD_LIBRARY_PATH=/opt/gcc/lib64
+%else
+    IMPORT_PATH=
+%endif
+
+./build_all -m %{build_type} --asan %{asan} -f dory/dory $IMPORT_PATH apps
+./build_all -m %{build_type} --asan %{asan} -f dory/client/to_dory $IMPORT_PATH apps
+./build_all -m %{build_type} --asan %{asan} -f dory/client/libdory_client.a $IMPORT_PATH client_libs
+./build_all -m %{build_type} --asan %{asan} -f dory/client/libdory_client.so $IMPORT_PATH client_libs
+
+
+%install
+mkdir -p %{buildroot}/%{_bindir}
+cp out/%{build_type}/dory/dory %{buildroot}/%{_bindir}
+cp out/%{build_type}/dory/client/to_dory %{buildroot}/%{_bindir}
+mkdir -p %{buildroot}/%{_libdir}
+cp out/%{build_type}/dory/client/libdory_client.a %{buildroot}/%{_libdir}
+cp out/%{build_type}/dory/client/libdory_client.so %{buildroot}/%{_libdir}/libdory_client.so.0
+mkdir -p %{buildroot}/%{_includedir}/dory/client
+cp src/dory/client/dory_client.h %{buildroot}/%{_includedir}/dory/client
+cp src/dory/client/dory_client_socket.h %{buildroot}/%{_includedir}/dory/client
+cp src/dory/client/status_codes.h %{buildroot}/%{_includedir}/dory/client
+cp status_monitoring/check_dory_counters.py %{buildroot}/%{_bindir}
+cp status_monitoring/check_dory_discards.py %{buildroot}/%{_bindir}
+mkdir -p %{buildroot}/%{_sysconfdir}/sysconfig
+cp config/dory.sysconfig %{buildroot}/%{_sysconfdir}/sysconfig/dory
+mkdir -p %{buildroot}/%{_sysconfdir}/dory
+cp config/dory_conf.xml %{buildroot}/%{_sysconfdir}/dory
+mkdir -p %{buildroot}/%{_sysconfdir}/init.d
+cp config/dory.init %{buildroot}/%{_sysconfdir}/init.d/dory
+
+
+%post
+/sbin/ldconfig
+
+
+%postun
+/sbin/ldconfig
+
+if [ "$1" -eq 0 ]; then
+    # Stuff in here executes when package is being removed, not upgraded.
+    rmdir %{_includedir}/dory/client
+    rmdir %{_includedir}/dory
+    rmdir %{_sysconfdir}/dory
+fi
+
+
+%files
+%defattr(-,root,root)
+%{_bindir}/dory
+%{_bindir}/to_dory
+%{_libdir}/libdory_client.a
+%{_libdir}/libdory_client.so.0
+%{_includedir}/dory/client/dory_client.h
+%{_includedir}/dory/client/dory_client_socket.h
+%{_includedir}/dory/client/status_codes.h
+%{_bindir}/check_dory_counters.py
+%{_bindir}/check_dory_discards.py
+%{_sysconfdir}/sysconfig/dory
+%{_sysconfdir}/dory/dory_conf.xml
+%{_sysconfdir}/init.d/dory
+
+
+%changelog
+

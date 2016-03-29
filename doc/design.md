@@ -1,11 +1,11 @@
 ## Design Overview
 
-Bruce's core implementation consists of an input thread, a router thread, and a
+Dory's core implementation consists of an input thread, a router thread, and a
 message dispatcher that assigns a thread to each Kafka broker.  There is also a
 main thread that starts the input and router threads, and then waits for a
-shutdown signal.  A third party HTTP server library used for Bruce's status
+shutdown signal.  A third party HTTP server library used for Dory's status
 monitoring interface creates additional threads.  The input thread creates
-Bruce's input socket, monitors it for messages from clients, and passes the
+Dory's input socket, monitors it for messages from clients, and passes the
 messages to the router thread.  The router thread starts and manages the
 dispatcher threads, receives messages from the input thread, and routes them to
 dispatcher threads for delivery to the Kafka brokers.
@@ -16,24 +16,24 @@ The input thread's behavior is designed to be as simple as possible so it can
 respond immediately to messages on its input socket.  This is important to
 prevent messages from queueing up to the point where clients get blocked trying
 to write.  More complex and possibly time-consuming behaviors are delegated to
-the router thread and dispatcher threads.  When Bruce starts up, it
-preallocates a fixed but configurable amount of memory for storing message
-content.  When a message arrives on its input socket, the input thread attempts
-to allocate memory from this pool to store the message contents.  If the pool
-does not contain enough free memory, Bruce will discard the message.  All
-messages discarded for any reason are tracked and reported through Bruce's web
-interface, as described [here](status_monitoring.md#discard-reporting).  On
-successful message creation, the input thread queues the message for processing
-by the router thread and continues monitoring its input socket.
+the router thread and dispatcher threads.  When Dory starts up, it preallocates
+a fixed but configurable amount of memory for storing message content.  When a
+message arrives on its input socket, the input thread attempts to allocate
+memory from this pool to store the message contents.  If the pool does not
+contain enough free memory, Dory will discard the message.  All messages
+discarded for any reason are tracked and reported through Dory's web interface,
+as described [here](status_monitoring.md#discard-reporting).  On successful
+message creation, the input thread queues the message for processing by the
+router thread and continues monitoring its input socket.
 
-Communication between Bruce and its clients is purely one-way in nature.
-Clients write messages as individual datagrams to Bruce's input socket and the
+Communication between Dory and its clients is purely one-way in nature.
+Clients write messages as individual datagrams to Dory's input socket and the
 input thread reads the messages.  There is no need for clients to wait for an
 ACK, since the operating system provides the same reliability guarantee for
 UNIX domain sockets as for other local IPC mechanisms such as pipes.  Note that
 this differs from UDP datagrams, which do not provide a reliable delivery
 guarantee.  Like their network-oriented counterparts, UNIX domain sockets exist
-in both datagram and stream variants.  The datagram option was chosen for Bruce
+in both datagram and stream variants.  The datagram option was chosen for Dory
 because of the greater simplicity of the programming model on both client and
 server ends.  However, a limitation of this approach is the maximum size of a
 single datagram, which has been found to be 212959 bytes on a CentOS 7 x86_64
@@ -49,16 +49,16 @@ brokers based on metadata obtained from Kafka.  The metadata provides
 information such as the set of brokers in the cluster, a list of known topics,
 a list of partitions for each topic along with the locations of the replicas
 for each partition, and status information for the brokers, topics, and
-partitions.  Bruce uses this information to choose a destination broker and
-partition for each message.  If Bruce receives a message for an unknown topic,
+partitions.  Dory uses this information to choose a destination broker and
+partition for each message.  If Dory receives a message for an unknown topic,
 it will discard the message unless automatic topic creation is enabled.  In the
-case where automatic topic creation is enabled, Bruce first sends a single
+case where automatic topic creation is enabled, Dory first sends a single
 topic metadata request to one of the brokers, which is the mechanism for
 requesting creation of a new topic.  Assuming that a response indicating
-success is received, Bruce then does a complete refresh of its metadata, so
+success is received, Dory then does a complete refresh of its metadata, so
 that the metadata shows information about the new topic, and then handles the
 message as usual.  As documented [here](sending_messages.md#message-types),
-Bruce provides two different message types, *AnyPartition* messages and
+Dory provides two different message types, *AnyPartition* messages and
 *PartitionKey* messages, which implement different types of routing behavior.
 The Router thread shares responsibility for message batching with the
 dispatcher threads, as detailed below.
@@ -105,43 +105,43 @@ dispatcher thread that got the ACK to respond in one of four ways:
 
 The Kafka error ACK values are documented
 [here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-ErrorCodes).
-The following table summarizes which response Bruce implements for each type of
+The following table summarizes which response Dory implements for each type of
 error ACK:
 
-| Error                            | Code | Response from Bruce |
-|:---------------------------------|-----:|:--------------------|
-| Unknown                          |   -1 | Discard             |
-| OffsetOutOfRange                 |    1 | Discard             |
-| InvalidMessage                   |    2 | Resend              |
-| UnknownTopicOrPartition          |    3 | Pause               |
-| InvalidMessageSize               |    4 | Discard             |
-| LeaderNotAvailable               |    5 | Pause               |
-| NotLeaderForPartition            |    6 | Pause               |
-| RequestTimedOut                  |    7 | Pause               |
-| BrokerNotAvailable               |    8 | Discard             |
-| ReplicaNotAvailable              |    9 | Discard             |
-| MessageSizeTooLarge              |   10 | Discard             |
-| StaleControllerEpochCode         |   11 | Discard             |
-| OffsetMetadataTooLargeCode       |   12 | Discard             |
-| GroupLoadInProgressCode          |   14 | Discard             |
-| GroupCoordinatorNotAvailableCode |   15 | Discard             |
-| NotCoordinatorForGroupCode       |   16 | Discard             |
-| InvalidTopicCode                 |   17 | Discard             |
-| RecordListTooLargeCode           |   18 | Discard             |
-| NotEnoughReplicasCode            |   19 | Discard             |
-| NotEnoughReplicasAfterAppendCode |   20 | Discard             |
-| InvalidRequiredAcksCode          |   21 | Discard             |
-| IllegalGenerationCode            |   22 | Discard             |
-| InconsistentGroupProtocolCode    |   23 | Discard             |
-| InvalidGroupIdCode               |   24 | Discard             |
-| UnknownMemberIdCode              |   25 | Discard             |
-| InvalidSessionTimeoutCode        |   26 | Discard             |
-| RebalanceInProgressCode          |   27 | Discard             |
-| InvalidCommitOffsetSizeCode      |   28 | Discard             |
-| TopicAuthorizationFailedCode     |   29 | Discard             |
-| GroupAuthorizationFailedCode     |   30 | Discard             |
-| ClusterAuthorizationFailedCode   |   31 | Discard             |
-| (all other values)               |    ? | Discard             |
+| Error                            | Code | Response from Dory |
+|:---------------------------------|-----:|:-------------------|
+| Unknown                          |   -1 | Discard            |
+| OffsetOutOfRange                 |    1 | Discard            |
+| InvalidMessage                   |    2 | Resend             |
+| UnknownTopicOrPartition          |    3 | Pause              |
+| InvalidMessageSize               |    4 | Discard            |
+| LeaderNotAvailable               |    5 | Pause              |
+| NotLeaderForPartition            |    6 | Pause              |
+| RequestTimedOut                  |    7 | Pause              |
+| BrokerNotAvailable               |    8 | Discard            |
+| ReplicaNotAvailable              |    9 | Discard            |
+| MessageSizeTooLarge              |   10 | Discard            |
+| StaleControllerEpochCode         |   11 | Discard            |
+| OffsetMetadataTooLargeCode       |   12 | Discard            |
+| GroupLoadInProgressCode          |   14 | Discard            |
+| GroupCoordinatorNotAvailableCode |   15 | Discard            |
+| NotCoordinatorForGroupCode       |   16 | Discard            |
+| InvalidTopicCode                 |   17 | Discard            |
+| RecordListTooLargeCode           |   18 | Discard            |
+| NotEnoughReplicasCode            |   19 | Discard            |
+| NotEnoughReplicasAfterAppendCode |   20 | Discard            |
+| InvalidRequiredAcksCode          |   21 | Discard            |
+| IllegalGenerationCode            |   22 | Discard            |
+| InconsistentGroupProtocolCode    |   23 | Discard            |
+| InvalidGroupIdCode               |   24 | Discard            |
+| UnknownMemberIdCode              |   25 | Discard            |
+| InvalidSessionTimeoutCode        |   26 | Discard            |
+| RebalanceInProgressCode          |   27 | Discard            |
+| InvalidCommitOffsetSizeCode      |   28 | Discard            |
+| TopicAuthorizationFailedCode     |   29 | Discard            |
+| GroupAuthorizationFailedCode     |   30 | Discard            |
+| ClusterAuthorizationFailedCode   |   31 | Discard            |
+| (all other values)               |    ? | Discard            |
 
 In the case of *UnknownTopicOrPartition*, the router thread will discard the
 message set during rerouting if the topic no longer exists.  Feedback from the
@@ -188,8 +188,8 @@ produce request, up to a configurable data size limit.
 #### Batching of AnyPartition Messages
 
 For AnyPartition messages, per-topic batching is done by the router thread.
-When a batch for a topic is complete, Bruce chooses a destination broker as
-follows.  For each topic, Bruce maintains an array of available partitions.  An
+When a batch for a topic is complete, Dory chooses a destination broker as
+follows.  For each topic, Dory maintains an array of available partitions.  An
 index in this array is chosen in a round-robin manner, and the broker that
 hosts the lead replica for that partition is chosen as the destination.
 However, at this point only the destination broker is determined, and the batch
@@ -265,32 +265,32 @@ grouped into additional message sets.
 ### Message Compression
 
 Kafka supports compression of individual message sets.  To send a compressed
-message set, a producer such as Bruce is expected to encapsulate the compressed
+message set, a producer such as Dory is expected to encapsulate the compressed
 data inside a single message with a header field set to indicate the type of
-compression.  Bruce allows compression to be configured on a per-topic basis.
-Although Bruce was designed to support multiple compression types, only Snappy
+compression.  Dory allows compression to be configured on a per-topic basis.
+Although Dory was designed to support multiple compression types, only Snappy
 compression is currently implemented.  Support for new compression types can
-easily be added with minimal changes to Bruce's core implementation.
+easily be added with minimal changes to Dory's core implementation.
 
-Bruce may be configured to skip compression of message sets whose uncompressed
+Dory may be configured to skip compression of message sets whose uncompressed
 sizes are below a certain limit, since compression of small amounts of data may
-not be worthwhile.  Bruce may also be configured to compute the ratio of
+not be worthwhile.  Dory may also be configured to compute the ratio of
 compressed to uncompressed message set size, and send an individual message set
 uncompressed if this ratio is above a certain limit.  This prevents the brokers
 from wasting CPU cycles dealing with message sets that compress poorly.  The
 intended use case for this behavior is situations where most messages compress
 well enough for compression to be worthwhile, but there are occasional message
 sets that compress poorly.  It is best to disable compression for topics that
-consistently compress poorly, so Bruce avoids wasting CPU cycles on useless
+consistently compress poorly, so Dory avoids wasting CPU cycles on useless
 compression attempts.  Future work is to add compression statistics reporting
-to Bruce's web interface, so topics that compress poorly can easily be
-identified.  An additional possibility is to make Bruce smart enough to learn
+to Dory's web interface, so topics that compress poorly can easily be
+identified.  An additional possibility is to make Dory smart enough to learn
 through experience which topics compress well, although this may be more effort
 than it is worth.
 
 Kafka places an upper bound on the size of a single message.  To prevent this
 limit from being exceeded by a message that encapsulates a large compressed
-message set, Bruce limits the size of a produce request so that the
+message set, Dory limits the size of a produce request so that the
 uncompressed size of each individual message set it contains does not exceed
 the limit.  Although it's possible that the compressed size of a message set is
 within the limit while the uncompressed size exceeds it, basing enforcement of
@@ -299,24 +299,24 @@ message sets that are found to still exceed the limit after compression.
 
 ### Message Rate Limiting
 
-Bruce provides optional message rate limiting on a per-topic basis.  The
+Dory provides optional message rate limiting on a per-topic basis.  The
 motivation is to deal with situations in which buggy client code sends an
 unreasonably large volume of messages for some topic T. Without rate limiting,
 this might stress the Kafka cluster to the point where it can no longer keep up
 with the message volume. The result is likely to be slowness in message
-processing that affects many topics, causing Bruce to discard messages across
+processing that affects many topics, causing Dory to discard messages across
 many topics.  The goal of rate limiting is to contain the damage by discarding
 excess messages for topic T, preventing the Kafka cluster from becoming
-overwhelmed and forcing Bruce to discard messages for other topics.  To specify
+overwhelmed and forcing Dory to discard messages for other topics.  To specify
 a rate limiting configuration, you provide an interval length in milliseconds
 and a maximum number of messages for a given topic that should be allowed
-within an interval of that length.  Bruce implements rate limiting by assigning
+within an interval of that length.  Dory implements rate limiting by assigning
 its own internal timestamps to messages as they are created using a clock that
 increases monotonically, and is guaranteed to be unaffected by changes made to
 the system wall clock.  Therefore there is no danger of messages being
 erroneously discarded by the rate limiting mechanism if the system clock is set
 back.  As with all other types of discards, messages discarded by the rate
-limiting mechanism will be included in Bruce's discard reports.
+limiting mechanism will be included in Dory's discard reports.
 
 Next: [detailed configuration](../README.md#detailed-configuration).
 

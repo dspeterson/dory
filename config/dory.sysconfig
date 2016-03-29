@@ -1,0 +1,15 @@
+# This is the Kafka protocol version that Dory uses.  Currently only 0 is
+# supported.
+PROTOCOL_VERSION=0
+
+# This is the amount of memory that dory will reserve for storing messages
+# from clients.  The value is specified in kbytes.
+MSG_BUFFER_MAX=65536
+
+# This is the UNIX domain datagram socket that dory monitors for messages from
+# web clients.
+INPUT_SOCKET_NAME=/var/run/dory/dory.socket
+
+# This is dory's config file.  It mostly contains settings related to batching
+# and compression.
+CONFIG_FILE=/etc/dory/dory_conf.xml

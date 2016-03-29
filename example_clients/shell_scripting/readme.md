@@ -1,6 +1,6 @@
 ## Client Support for Shell Scripts
 
-Shell scripts (bash, zsh, etc.) can send messages to Bruce by invoking the
+Shell scripts (bash, zsh, etc.) can send messages to Dory by invoking the
 [command line client](../../doc/sending_messages.md#using-the-command-line-client).
 The message body may be supplied either as a command line argument or via
 standard input.
