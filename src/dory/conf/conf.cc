@@ -136,15 +136,20 @@ TConf TConf::TBuilder::Build(const char *config_filename) {
     throw TXmlDocumentError("XML document missing root element");
   }
 
-  if (std::strcmp(node.name(), "doryConfig")) {
+  /* For backward compatibility with Bruce, allow root node to be named either
+     "doryConfig" or "bruceConfig". */
+  if (std::strcmp(node.name(), "doryConfig") &&
+      std::strcmp(node.name(), "bruceConfig")) {
     throw TXmlDocumentError(
         std::string("Unknown XML document root element [") + node.name() +
-        "]: [doryConfig] expected");
+        "]: [doryConfig] or [bruceConfig] expected");
   }
 
   if (node.next_sibling()) {
-    throw TXmlDocumentError(
-        "Unexpected XML content after root element [doryConfig]");
+    std::string msg("Unexpected XML content after root element [");
+    msg += node.name();
+    msg += "]";
+    throw TXmlDocumentError(msg.c_str());
   }
 
   ProcessRootElem(node);
