@@ -52,10 +52,10 @@ been tested on CentOS versions 7 and 6.5, and Ubuntu versions 15.04 LTS,
 14.04.1 LTS, and 13.10.
 
 Dory is a fork of [Bruce](https://github.com/ifwe/bruce), and is maintained by
-Dave Peterson, who wrote Bruce's core implementation while employed at if(we).
-Code contributions from the community are welcomed and much appreciated.
-Information for developers interested in contributing is provided
-[here](doc/dev_info.md) and [here](CONTRIBUTING.md).
+Dave Peterson, who created Bruce while employed at if(we).  Code contributions
+from the community are welcomed and much appreciated.  Information for
+developers interested in contributing is provided [here](doc/dev_info.md) and
+[here](CONTRIBUTING.md).
 
 ## Setting Up a Build Environment
 
