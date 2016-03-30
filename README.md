@@ -44,9 +44,16 @@ currently available:
 Code contributions for clients in other programming languages are much
 appreciated.  Technical details on how to send messages to Dory are provided
 [here](doc/sending_messages.md).  Support for [running Dory inside a Docker
-container](Docker) is also available.  Dory runs on Linux, and has been tested
-on CentOS versions 7 and 6.5, and Ubuntu versions 15.04 LTS, 14.04.1 LTS, and
-13.10.  Dory requires at least version 0.8 of Kafka.
+container](Docker) is also available.  Dory requires at least version 0.8 of
+Kafka, and has been tested on versions 0.8 and 0.9.  It runs on Linux, and has
+been tested on CentOS versions 7 and 6.5, and Ubuntu versions 15.04 LTS,
+14.04.1 LTS, and 13.10.
+
+Dory is a fork of [Bruce](https://github.com/ifwe/bruce), and is maintained by
+Dave Peterson, who wrote Bruce's core implementation while employed at if(we).
+Code contributions from the community are welcomed and much appreciated.
+Information for developers interested in contributing is provided
+[here](doc/dev_info.md) and [here](CONTRIBUTING.md).
 
 ## Setting Up a Build Environment
 
@@ -90,11 +97,6 @@ Full details of Dory's configuration options are provided
 
 Information that may help with troubleshooting is provided
 [here](doc/troubleshooting.md).
-
-## Modifying Dory's Implementation
-
-Information for developers interested in making custom modifications or
-contributing code to Dory is provided [here](doc/dev_info.md).
 
 ## Getting Help
 
