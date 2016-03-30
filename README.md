@@ -1,5 +1,7 @@
 # Dory
 
+![Dory](doc/dory.jpg?raw=true)
+
 Dory is a producer daemon for [Apache Kafka](http://kafka.apache.org).  Dory
 simplifies clients that send messages to Kafka, freeing them from the
 complexity of direct interaction with the Kafka cluster.  Specifically, it
