@@ -62,7 +62,7 @@ void TFdManagedThread::Start() {
   Thread = std::thread(std::bind(&TFdManagedThread::RunAndTerminate, this));
 }
 
-bool TFdManagedThread::IsStarted() const {
+bool TFdManagedThread::IsStarted() const noexcept {
   assert(this);
   return Thread.joinable();
 }

@@ -82,7 +82,7 @@ namespace Thread {
 
     /* Return true iff. Start() has been called and Join() has not yet been
        called. */
-    bool IsStarted() const;
+    bool IsStarted() const noexcept;
 
     /* Notify the thread to shut itself down.
 
