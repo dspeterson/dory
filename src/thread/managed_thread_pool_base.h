@@ -461,7 +461,7 @@ namespace Thread {
        becomes readable. */
     const Base::TFd &GetShutdownRequestFd() const noexcept {
       assert(this);
-      return Manager.GetShutdownReqFd();
+      return Manager.GetShutdownRequestFd();
     }
 
     /* Return a file descriptor that becomes readable when WaitForShutdown()
@@ -722,13 +722,10 @@ namespace Thread {
 
       virtual ~TManager() noexcept;
 
-      /* Long-running worker threads are expected to monitor this, and stop
-         working when it becomes readable (indicating that the pool is shutting
-         down). */
-      const Base::TFd &GetShutdownReqFd() const noexcept {
-        assert(this);
-        return GetShutdownRequestFd();
-      }
+      /* Long-running worker threads are expected to monitor the file
+         descriptor returned by this method, and stop working when it becomes
+         readable (indicating that the pool is shutting down). */
+      using TFdManagedThread::GetShutdownRequestFd;
 
       protected:
       /* Main loop for manager thread. */

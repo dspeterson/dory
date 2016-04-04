@@ -136,7 +136,7 @@ namespace Thread {
     /* This returns a file descriptor that the thread must monitor to detect a
        shutdown request, which is indicated when the descriptor becomes
        readable. */
-    const Base::TFd &GetShutdownRequestFd() const {
+    const Base::TFd &GetShutdownRequestFd() const noexcept {
       assert(this);
       return ShutdownRequestedSem.GetFd();
     }
