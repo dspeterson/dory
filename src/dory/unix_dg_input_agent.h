@@ -45,7 +45,6 @@
 
 #pragma once
 
-#include <atomic>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -73,8 +72,7 @@ namespace Dory {
     public:
     TUnixDgInputAgent(const TConfig &config, Capped::TPool &pool,
         TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
-        Thread::TGatePutApi<TMsg::TPtr> &output_queue,
-        std::atomic<size_t> *msg_received_count = nullptr);
+        Thread::TGatePutApi<TMsg::TPtr> &output_queue);
 
     virtual ~TUnixDgInputAgent() noexcept;
 
@@ -91,9 +89,6 @@ namespace Dory {
     TMsg::TPtr ReadOneMsg();
 
     void ForwardMessages();
-
-    /* Used for testing. */
-    std::atomic<size_t> * const MsgReceivedCount;
 
     const TConfig &Config;
 

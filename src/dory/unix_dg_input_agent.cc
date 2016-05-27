@@ -51,10 +51,8 @@ SERVER_COUNTER(UnixDgInputAgentForwardMsg);
 
 TUnixDgInputAgent::TUnixDgInputAgent(const TConfig &config, TPool &pool,
     TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
-    TGatePutApi<TMsg::TPtr> &output_queue,
-    std::atomic<size_t> *msg_received_count)
-    : MsgReceivedCount(msg_received_count),
-      Config(config),
+    TGatePutApi<TMsg::TPtr> &output_queue)
+    : Config(config),
       Destroying(false),
       Pool(pool),
       MsgStateTracker(msg_state_tracker),
@@ -199,10 +197,6 @@ void TUnixDgInputAgent::ForwardMessages() {
     assert(input_socket_event.revents);
     assert(!msg);
     msg = ReadOneMsg();
-
-    if (MsgReceivedCount) {
-      ++*MsgReceivedCount;  // for testing
-    }
 
     if (msg) {
       /* Forward message to router thread. */

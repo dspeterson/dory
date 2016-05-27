@@ -35,12 +35,8 @@
 #include <utility>
 #include <vector>
 
-#include <arpa/inet.h>
 #include <boost/lexical_cast.hpp>
 #include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
 
 #include <base/basename.h>
 #include <base/error_utils.h>
@@ -54,7 +50,11 @@
 #include <dory/build_id.h>
 #include <dory/client/dory_client.h>
 #include <dory/client/dory_client_socket.h>
+#include <dory/client/path_too_long.h>
 #include <dory/client/status_codes.h>
+#include <dory/client/tcp_sender.h>
+#include <dory/client/unix_dg_sender.h>
+#include <dory/client/unix_stream_sender.h>
 #include <dory/input_dg/old_v0_input_dg_writer.h>
 #include <dory/util/arg_parse_error.h>
 #include <tclap/CmdLine.h>
@@ -220,213 +220,6 @@ TConfig::TConfig(int argc, char *argv[])
       Bad(false),
       Print(0) {
   ParseArgs(argc, argv, *this);
-}
-
-class TPathTooLong : public std::runtime_error {
-  public:
-  explicit TPathTooLong(const char *path)
-      : std::runtime_error(MakeWhatArg(path)) {
-  }
-
-  explicit TPathTooLong(const std::string &path)
-      : TPathTooLong(path.c_str()) {
-  }
-
-  private:
-  static std::string MakeWhatArg(const char *path);
-};  // TPathTooLong
-
-std::string TPathTooLong::MakeWhatArg(const char *path) {
-  std::string result("Path too long: [");
-  result += path;
-  result += "]";
-  return std::move(result);
-}
-
-class TClientSenderBase {
-  NO_COPY_SEMANTICS(TClientSenderBase);
-
-  public:
-  virtual ~TClientSenderBase() noexcept {
-  }
-
-  void PrepareToSend() {
-    assert(this);
-    DoPrepareToSend();
-  }
-
-  void Send(const void *msg, size_t msg_size) {
-    assert(this);
-    DoSend(reinterpret_cast<const uint8_t *>(msg), msg_size);
-  }
-
-  void Reset() {
-    assert(this);
-    DoReset();
-  }
-
-  protected:
-  TClientSenderBase() = default;
-
-  virtual void DoPrepareToSend() = 0;
-
-  virtual void DoSend(const uint8_t *msg, size_t msg_size) = 0;
-
-  virtual void DoReset() = 0;
-};  // TClientSenderBase
-
-class TUnixDgSender final : public TClientSenderBase {
-  NO_COPY_SEMANTICS(TUnixDgSender);
-
-  public:
-  explicit TUnixDgSender(const char *path)
-      : Path(path) {
-  }
-
-  virtual ~TUnixDgSender() noexcept {
-  }
-
-  virtual void DoPrepareToSend();
-
-  virtual void DoSend(const uint8_t *msg, size_t msg_size);
-
-  virtual void DoReset();
-
-  private:
-  std::string Path;
-
-  TDoryClientSocket Sock;
-};  // TUnixDgSender
-
-void TUnixDgSender::DoPrepareToSend() {
-  assert(this);
-
-  switch (Sock.Bind(Path.c_str())) {
-    case DORY_OK: {
-      break;
-    }
-    case DORY_CLIENT_SOCK_IS_OPENED: {
-      throw std::logic_error("UNIX domain datagram socket is already opened");
-    }
-    case DORY_SERVER_SOCK_PATH_TOO_LONG: {
-      throw TPathTooLong(Path);
-    }
-    default: {
-      throw std::logic_error(
-          "Unexpected return value from UNIX domain datagram socket bind() "
-          "operation");
-    }
-  }
-}
-
-void TUnixDgSender::DoSend(const uint8_t *msg, size_t msg_size) {
-  assert(this);
-  int ret = Sock.Send(msg, msg_size);
-
-  if (ret != DORY_OK) {
-    assert(ret > 0);
-    ThrowSystemError(ret);
-  }
-}
-
-void TUnixDgSender::DoReset() {
-  assert(this);
-  Sock.Close();
-}
-
-class TUnixStreamSender final : public TClientSenderBase {
-  NO_COPY_SEMANTICS(TUnixStreamSender);
-
-  public:
-  explicit TUnixStreamSender(const char *path)
-      : Path(path) {
-  }
-
-  virtual ~TUnixStreamSender() noexcept {
-  }
-
-  virtual void DoPrepareToSend();
-
-  virtual void DoSend(const uint8_t *msg, size_t msg_size);
-
-  virtual void DoReset();
-
-  private:
-  std::string Path;
-
-  TFd Sock;
-};  // TUnixStreamSender
-
-void TUnixStreamSender::DoPrepareToSend() {
-  assert(this);
-  Sock = IfLt0(socket(AF_LOCAL, SOCK_STREAM, 0));
-  struct sockaddr_un servaddr;
-  std::memset(&servaddr, 0, sizeof(servaddr));
-  servaddr.sun_family = AF_LOCAL;
-  std::strncpy(servaddr.sun_path, Path.c_str(), Path.size());
-  servaddr.sun_path[sizeof(servaddr.sun_path) - 1] = '\0';
-
-  if (std::strcmp(Path.c_str(), servaddr.sun_path)) {
-    throw TPathTooLong(Path);
-  }
-
-  IfLt0(connect(Sock, reinterpret_cast<const struct sockaddr *>(&servaddr),
-      sizeof(servaddr)));
-}
-
-void TUnixStreamSender::DoSend(const uint8_t *msg, size_t msg_size) {
-  assert(this);
-  IfLt0(send(Sock, msg, msg_size, MSG_NOSIGNAL));
-}
-
-void TUnixStreamSender::DoReset() {
-  assert(this);
-  Sock.Reset();
-}
-
-class TTcpSender final : public TClientSenderBase {
-  NO_COPY_SEMANTICS(TTcpSender);
-
-  public:
-  explicit TTcpSender(in_port_t port)
-      : Port(port) {
-  }
-
-  virtual ~TTcpSender() noexcept {
-  }
-
-  virtual void DoPrepareToSend();
-
-  virtual void DoSend(const uint8_t *msg, size_t msg_size);
-
-  virtual void DoReset();
-
-  private:
-  in_port_t Port;
-
-  TFd Sock;
-};  // TTcpSender
-
-void TTcpSender::DoPrepareToSend() {
-  assert(this);
-  Sock = IfLt0(socket(AF_INET, SOCK_STREAM, 0));
-  struct sockaddr_in servaddr;
-  std::memset(&servaddr, 0, sizeof(servaddr));
-  servaddr.sin_family = AF_INET;
-  servaddr.sin_port = htons(Port);
-  inet_pton(AF_INET, "127.0.0.1", &servaddr.sin_addr);
-  IfLt0(connect(Sock, reinterpret_cast<const struct sockaddr *>(&servaddr),
-      sizeof(servaddr)));
-}
-
-void TTcpSender::DoSend(const uint8_t *msg, size_t msg_size) {
-  assert(this);
-  IfLt0(send(Sock, msg, msg_size, MSG_NOSIGNAL));
-}
-
-void TTcpSender::DoReset() {
-  assert(this);
-  Sock.Reset();
 }
 
 std::string GetValueFromStdin() {

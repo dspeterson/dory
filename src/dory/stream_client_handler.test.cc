@@ -1,7 +1,7 @@
-/* <dory/unix_dg_input_agent.test.cc>
+/* <dory/stream_client_handler.test.cc>
 
    ----------------------------------------------------------------------------
-   Copyright 2013-2014 if(we)
+   Copyright 2016 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,14 +16,16 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Unit test for <dory/unix_dg_input_agent.h>
+   Unit test for <dory/stream_client_handler.h>.
  */
 
-#include <dory/unix_dg_input_agent.h>
+#include <dory/stream_client_handler.h>
 
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <exception>
+#include <iostream>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -39,8 +41,7 @@
 #include <capped/reader.h>
 #include <dory/anomaly_tracker.h>
 #include <dory/client/dory_client.h>
-#include <dory/client/dory_client_socket.h>
-#include <dory/client/status_codes.h>
+#include <dory/client/unix_stream_sender.h>
 #include <dory/config.h>
 #include <dory/debug/debug_setup.h>
 #include <dory/discard_file_logger.h>
@@ -48,7 +49,9 @@
 #include <dory/kafka_proto/wire_protocol.h>
 #include <dory/metadata_timestamp.h>
 #include <dory/msg_state_tracker.h>
+#include <dory/stream_client_handler.h>
 #include <dory/test_util/misc_util.h>
+#include <server/unix_stream_server.h>
 #include <thread/gate.h>
 
 #include <gtest/gtest.h>
@@ -60,6 +63,7 @@ using namespace Dory::Client;
 using namespace Dory::Debug;
 using namespace Dory::KafkaProto;
 using namespace Dory::TestUtil;
+using namespace Server;
 using namespace Thread;
 
 namespace {
@@ -70,7 +74,9 @@ namespace {
 
     public:
     DEFINE_ERROR(TStartFailure, std::runtime_error,
-        "Failed to start UNIX datagram input agent");
+        "Failed to start UNIX stream input agent");
+
+    using TWorkerPool = TStreamClientHandler::TWorkerPool;
 
     TTmpFileName UnixSocketName;
 
@@ -94,7 +100,9 @@ namespace {
 
     std::unique_ptr<TGate<TMsg::TPtr>> OutputQueue;
 
-    std::unique_ptr<TUnixDgInputAgent> UnixDgInputAgent;
+    std::unique_ptr<TWorkerPool> StreamClientWorkerPool;
+
+    std::unique_ptr<TUnixStreamServer> UnixStreamServer;
 
     explicit TDoryConfig(size_t pool_block_size);
 
@@ -102,9 +110,17 @@ namespace {
       StopDory();
     }
 
+    TStreamClientHandler *CreateStreamClientHandler() {
+      assert(this);
+      return new TStreamClientHandler(false, *Cfg, Pool, MsgStateTracker,
+          AnomalyTracker, *OutputQueue, *StreamClientWorkerPool);
+    }
+
     void StartDory() {
       if (!DoryStarted) {
-        if (!UnixDgInputAgent->SyncStart()) {
+        StreamClientWorkerPool->Start();
+
+        if (!UnixStreamServer->SyncStart()) {
           THROW_ERROR(TStartFailure);
         }
 
@@ -114,9 +130,11 @@ namespace {
 
     void StopDory() {
       if (DoryStarted) {
-        TUnixDgInputAgent &unix_dg_input_agent = *UnixDgInputAgent;
-        unix_dg_input_agent.RequestShutdown();
-        unix_dg_input_agent.Join();
+        TUnixStreamServer &unix_stream_server = *UnixStreamServer;
+        unix_stream_server.RequestShutdown();
+        unix_stream_server.Join();
+        StreamClientWorkerPool->RequestShutdown();
+        StreamClientWorkerPool->WaitForShutdown();
         DoryStarted = false;
       }
     }
@@ -140,15 +158,26 @@ namespace {
     Args.push_back("/nonexistent/path");
     Args.push_back("--msg_buffer_max");
     Args.push_back("1");  /* this is 1 * 1024 bytes, not 1 byte */
-    Args.push_back("--receive_socket_name");
+    Args.push_back("--receive_stream_socket_name");
     Args.push_back(UnixSocketName);
     Args.push_back(nullptr);
     Cfg.reset(new TConfig(Args.size() - 1, const_cast<char **>(&Args[0])));
     Protocol.reset(ChooseProto(Cfg->ProtocolVersion, Cfg->RequiredAcks,
                    static_cast<int32_t>(Cfg->ReplicationTimeout)));
     OutputQueue.reset(new TGate<TMsg::TPtr>);
-    UnixDgInputAgent.reset(new TUnixDgInputAgent(*Cfg, Pool, MsgStateTracker,
-        AnomalyTracker, *OutputQueue));
+    StreamClientWorkerPool.reset(new TWorkerPool(
+        [](const char *msg) {
+          std::cerr << "Stream client worker pool fatal error: " << msg
+              << std::endl;
+          ASSERT_TRUE(false);
+        }));
+    UnixStreamServer.reset(new TUnixStreamServer(16,
+        Cfg->ReceiveStreamSocketName, CreateStreamClientHandler(),
+        [](const char *msg) {
+          std::cerr << "UNIX stream server fatal error: " << msg
+              << std::endl;
+          ASSERT_TRUE(false);
+        }));
   }
 
   static void MakeDg(std::vector<uint8_t> &dg, const std::string &topic,
@@ -163,13 +192,13 @@ namespace {
     ASSERT_EQ(ret, DORY_OK);
   }
 
-  /* The fixture for testing class TUnixDgInputAgent. */
-  class TUnixDgInputAgentTest : public ::testing::Test {
+  /* The fixture for testing class TStreamClientHandler. */
+  class TStreamClientHandlerTest : public ::testing::Test {
     protected:
-    TUnixDgInputAgentTest() {
+    TStreamClientHandlerTest() {
     }
 
-    virtual ~TUnixDgInputAgentTest() {
+    virtual ~TStreamClientHandlerTest() {
     }
 
     virtual void SetUp() {
@@ -177,9 +206,9 @@ namespace {
 
     virtual void TearDown() {
     }
-  };  // TUnixDgInputAgentTest
+  };  // TStreamClientHandlerTest
 
-  TEST_F(TUnixDgInputAgentTest, SuccessfulForwarding) {
+  TEST_F(TStreamClientHandlerTest, SuccessfulForwarding) {
     /* If this value is set too large, message(s) will be discarded and the
        test will fail. */
     const size_t pool_block_size = 256;
@@ -193,9 +222,16 @@ namespace {
       ASSERT_TRUE(false);
     }
 
-    TDoryClientSocket sock;
-    int ret = sock.Bind(conf.UnixSocketName);
-    ASSERT_EQ(ret, DORY_OK);
+    TUnixStreamSender sender(conf.UnixSocketName);
+
+    try {
+      sender.PrepareToSend();
+    } catch (const std::exception &x) {
+      std::cerr << "Failed to connect to Dory for sending: " << x.what()
+          << std::endl;
+      ASSERT_TRUE(false);
+    }
+
     std::vector<std::string> topics;
     std::vector<std::string> bodies;
     topics.push_back("topic1");
@@ -210,8 +246,14 @@ namespace {
 
     for (size_t i = 0; i < topics.size(); ++i) {
       MakeDg(dg_buf, topics[i], bodies[i]);
-      ret = sock.Send(&dg_buf[0], dg_buf.size());
-      ASSERT_EQ(ret, DORY_OK);
+
+      try {
+        sender.Send(&dg_buf[0], dg_buf.size());
+      } catch (const std::exception &x) {
+        std::cerr << "Failed to send message to Dory: " << x.what()
+            << std::endl;
+        ASSERT_TRUE(false);
+      }
     }
 
     std::list<TMsg::TPtr> msg_list;
@@ -252,7 +294,7 @@ namespace {
     msg_list.clear();
   }
 
-  TEST_F(TUnixDgInputAgentTest, NoBufferSpaceDiscard) {
+  TEST_F(TStreamClientHandlerTest, NoBufferSpaceDiscard) {
     /* This setting must be chosen properly, since it determines how many
        messages will be discarded. */
     const size_t pool_block_size = 256;
@@ -266,9 +308,16 @@ namespace {
       ASSERT_TRUE(false);
     }
 
-    TDoryClientSocket sock;
-    int ret = sock.Bind(conf.UnixSocketName);
-    ASSERT_EQ(ret, DORY_OK);
+    TUnixStreamSender sender(conf.UnixSocketName);
+
+    try {
+      sender.PrepareToSend();
+    } catch (const std::exception &x) {
+      std::cerr << "Failed to connect to Dory for sending: " << x.what()
+          << std::endl;
+      ASSERT_TRUE(false);
+    }
+
     std::vector<std::string> topics;
     std::vector<std::string> bodies;
     topics.push_back("topic1");
@@ -288,8 +337,14 @@ namespace {
 
     for (size_t i = 0; i < topics.size(); ++i) {
       MakeDg(dg_buf, topics[i], bodies[i]);
-      ret = sock.Send(&dg_buf[0], dg_buf.size());
-      ASSERT_EQ(ret, DORY_OK);
+
+      try {
+        sender.Send(&dg_buf[0], dg_buf.size());
+      } catch (const std::exception &x) {
+        std::cerr << "Failed to send message to Dory: " << x.what()
+            << std::endl;
+        ASSERT_TRUE(false);
+      }
     }
 
     std::list<TMsg::TPtr> msg_list;
@@ -344,7 +399,7 @@ namespace {
     msg_list.clear();
   }
 
-  TEST_F(TUnixDgInputAgentTest, MalformedMessageDiscards) {
+  TEST_F(TStreamClientHandlerTest, MalformedMessageDiscards) {
     /* If this value is set too large, message(s) will be discarded and the
        test will fail. */
     const size_t pool_block_size = 256;
@@ -361,9 +416,17 @@ namespace {
     /* This message will get discarded because it's malformed. */
     std::string topic("scooby_doo");
     std::string msg_body("I like scooby snacks");
-    TDoryClientSocket sock;
-    int ret = sock.Bind(conf.UnixSocketName);
-    ASSERT_EQ(ret, DORY_OK);
+
+    TUnixStreamSender sender(conf.UnixSocketName);
+
+    try {
+      sender.PrepareToSend();
+    } catch (const std::exception &x) {
+      std::cerr << "Failed to connect to Dory for sending: " << x.what()
+          << std::endl;
+      ASSERT_TRUE(false);
+    }
+
     std::vector<uint8_t> dg_buf;
     MakeDg(dg_buf, topic, msg_body);
 
@@ -371,8 +434,12 @@ namespace {
     ASSERT_GE(dg_buf.size(), sizeof(int32_t));
     WriteInt32ToHeader(&dg_buf[0], dg_buf.size() - 1);
 
-    ret = sock.Send(&dg_buf[0], dg_buf.size());
-    ASSERT_EQ(ret, DORY_OK);
+    try {
+      sender.Send(&dg_buf[0], dg_buf.size());
+    } catch (const std::exception &x) {
+      std::cerr << "Failed to send message to Dory: " << x.what() << std::endl;
+      ASSERT_TRUE(false);
+    }
 
     for (size_t i = 0; i < 3000; ++i) {
       TAnomalyTracker::TInfo bad_stuff;
@@ -398,8 +465,3 @@ namespace {
   }
 
 }  // namespace
-
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
