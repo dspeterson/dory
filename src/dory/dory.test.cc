@@ -81,7 +81,7 @@ using namespace Thread;
 
 namespace {
 
-  class TDoryTestServer final : public TFdManagedThread {
+  class TDoryTestServer final : private TFdManagedThread {
     NO_COPY_SEMANTICS(TDoryTestServer);
 
     public:
@@ -108,7 +108,7 @@ namespace {
       return UnixSocketName;
     }
 
-    /* Call this method rather than Start() to start the server. */
+    /* Call this method to start the server. */
     bool SyncStart();
 
     /* This must not be called until SyncStart() has been called.  Returns
@@ -120,6 +120,8 @@ namespace {
     }
 
     virtual void RequestShutdown() override;
+
+    using TFdManagedThread::Join;
 
     int GetDoryReturnValue() const {
       assert(this);
@@ -384,12 +386,6 @@ namespace {
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
-    ASSERT_TRUE(dory != nullptr);
-
-    if (dory == nullptr) {
-      return;
-    }
-
     TDoryClientSocket sock;
     int ret = sock.Bind(server.GetUnixSocketName());
     ASSERT_EQ(ret, DORY_OK);
@@ -490,12 +486,6 @@ namespace {
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
-    ASSERT_TRUE(dory != nullptr);
-
-    if (dory == nullptr) {
-      return;
-    }
-
     TDoryClientSocket sock;
     int ret = sock.Bind(server.GetUnixSocketName());
     ASSERT_EQ(ret, DORY_OK);
@@ -584,12 +574,6 @@ namespace {
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
-    ASSERT_TRUE(dory != nullptr);
-
-    if (dory == nullptr) {
-      return;
-    }
-
     std::string msg_body("rejected on 1st attempt");
 
     /* Error code 6 is "not leader for partition", which causes the ProdMngr to
@@ -756,12 +740,6 @@ namespace {
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
-    ASSERT_TRUE(dory != nullptr);
-
-    if (dory == nullptr) {
-      return;
-    }
-
     std::string msg_body("rejected on 1st attempt");
 
     /* Make the mock Kafka server close the TCP connection rather than send an
@@ -888,11 +866,6 @@ namespace {
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
-    ASSERT_TRUE(dory != nullptr);
-
-    if (dory == nullptr) {
-      return;
-    }
 
     /* This message will get discarded because it's malformed. */
     std::string msg_body("I like scooby snacks");
@@ -956,11 +929,6 @@ namespace {
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
-    ASSERT_TRUE(dory != nullptr);
-
-    if (dory == nullptr) {
-      return;
-    }
 
     /* This message will get discarded because it's malformed. */
     std::string msg_body("I like scooby snacks");
@@ -1067,12 +1035,6 @@ namespace {
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
-    ASSERT_TRUE(dory != nullptr);
-
-    if (dory == nullptr) {
-      return;
-    }
-
     TDoryClientSocket sock;
     int ret = sock.Bind(server.GetUnixSocketName());
     ASSERT_EQ(ret, DORY_OK);
