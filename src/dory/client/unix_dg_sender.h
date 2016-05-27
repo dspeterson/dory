@@ -41,6 +41,10 @@ namespace Dory {
           : Path(path) {
       }
 
+      explicit TUnixDgSender(const std::string &path)
+          : TUnixDgSender(path.c_str()) {
+      }
+
       virtual ~TUnixDgSender() noexcept {
       }
 

@@ -41,6 +41,10 @@ namespace Dory {
           : Path(path) {
       }
 
+      explicit TUnixStreamSender(const std::string &path)
+          : TUnixStreamSender(path.c_str()) {
+      }
+
       virtual ~TUnixStreamSender() noexcept {
       }
 
