@@ -90,8 +90,7 @@ namespace {
         : BrokerPort(broker_port),
           MsgBufferMaxKb(msg_buffer_max_kb),
           DoryConf(dory_conf),
-          DoryReturnValue(EXIT_FAILURE),
-          DoNotInit(false) {
+          DoryReturnValue(EXIT_FAILURE) {
     }
 
     TDoryTestServer(in_port_t broker_port, size_t msg_buffer_max_kb,
@@ -99,8 +98,7 @@ namespace {
         : BrokerPort(broker_port),
           MsgBufferMaxKb(msg_buffer_max_kb),
           DoryConf(std::move(dory_conf)),
-          DoryReturnValue(EXIT_FAILURE),
-          DoNotInit(false) {
+          DoryReturnValue(EXIT_FAILURE) {
     }
 
     virtual ~TDoryTestServer() noexcept;
@@ -110,10 +108,16 @@ namespace {
       return UnixSocketName;
     }
 
-    /* This must not be called until Start() method of TFdManagedThread base
-       class has been called.  Returns pointer to dory server object, or
-       nullptr on dory server initialization failure. */
-    TDoryServer *GetDory();
+    /* Call this method rather than Start() to start the server. */
+    bool SyncStart();
+
+    /* This must not be called until SyncStart() has been called.  Returns
+       pointer to dory server object, or nullptr on dory server initialization
+       failure. */
+    TDoryServer *GetDory() {
+      assert(this);
+      return Dory.get();
+    }
 
     virtual void RequestShutdown() override;
 
@@ -136,12 +140,6 @@ namespace {
 
     int DoryReturnValue;
 
-    TEventSemaphore InitSem;
-
-    std::mutex InitMutex;
-
-    bool DoNotInit;
-
     std::unique_ptr<TDoryServer> Dory;
   };  // TDoryTestServer
 
@@ -150,62 +148,8 @@ namespace {
     ShutdownOnDestroy();
   }
 
-  TDoryServer *TDoryTestServer::GetDory() {
+  bool TDoryTestServer::SyncStart() {
     assert(this);
-
-    if (!InitSem.GetFd().IsReadable(30000)) {
-      std::cerr << "Dory server failed to start after 30 seconds."
-          << std::endl;
-      return nullptr;
-    }
-
-    if (!Dory) {
-      return nullptr;
-    }
-
-    if (!Dory->GetInitWaitFd().IsReadable(30000)) {
-      std::cerr << "Dory server failed to initialize after 30 seconds."
-          << std::endl;
-      return nullptr;
-    }
-
-    return Dory.get();
-  }
-
-  void TDoryTestServer::RequestShutdown() {
-    assert(this);
-
-    {
-      std::lock_guard<std::mutex> lock(InitMutex);
-
-      if (!Dory) {
-        /* If we get here, either the server thread has not yet tried to create
-           the TDoryServer object, or it has tried and failed.  In the former
-           case, setting this flag will cause it to terminate immediately
-           rather than creating the server.  In the latter case, setting this
-           flag has no effect but we have nothing to do since the server thread
-           is already terminating or has terminated. */
-        DoNotInit = true;
-        return;
-      }
-    }
-
-    /* If we get this far, then the server thread has created the server, so we
-       must take action. */
-
-    /* We must do this because the server thread isn't paying attention to the
-       FD returned by TFdManagedThread::GetShutdownRequestFd(). */
-    Dory->RequestShutdown();
-
-    /* In this case, we don't really need to call this method, but calling it
-       does no harm, and it follows the usual pattern for dealing with
-       TFdManagedThread objects. */
-    TFdManagedThread::RequestShutdown();
-  }
-
-  void TDoryTestServer::Run() {
-    assert(this);
-    DoryReturnValue = EXIT_FAILURE;
     TTmpFile tmp_file;
     tmp_file.SetDeleteOnDestroy(true);
     std::ofstream ofs(tmp_file.GetName());
@@ -238,30 +182,50 @@ namespace {
           large_sendbuf_required));
       const Dory::TConfig &config = dory_config->GetCmdLineConfig();
       InitSyslog(args[0], config.LogLevel, config.LogEcho);
-
-      {
-        std::lock_guard<std::mutex> lock(InitMutex);
-
-        if (DoNotInit) {
-          /* We have already received a shutdown request.  Quietly terminate.
-           */
-          DoryReturnValue = EXIT_SUCCESS;
-          return;
-        }
-
-        Dory.reset(new TDoryServer(std::move(*dory_config)));
-      }
-
+      Dory.reset(new TDoryServer(std::move(*dory_config)));
       dory_config.Reset();
+      Start();
+    } catch (const std::exception &x) {
+      std::cerr << "Server error: " << x.what() << std::endl;
+      return false;
+    } catch (...) {
+      std::cerr << "Unknown server error" << std::endl;
+      return false;
+    }
+
+    if (!Dory->GetInitWaitFd().IsReadable(30000)) {
+      std::cerr << "Dory server failed to initialize after 30 seconds."
+          << std::endl;
+      return false;
+    }
+
+    return true;
+  }
+
+  void TDoryTestServer::RequestShutdown() {
+    assert(this);
+
+    /* We must do this because the server thread isn't paying attention to the
+       FD returned by TFdManagedThread::GetShutdownRequestFd(). */
+    Dory->RequestShutdown();
+
+    /* In this case, we don't really need to call this method, but calling it
+       does no harm, and it follows the usual pattern for dealing with
+       TFdManagedThread objects. */
+    TFdManagedThread::RequestShutdown();
+  }
+
+  void TDoryTestServer::Run() {
+    assert(this);
+    DoryReturnValue = EXIT_FAILURE;
+
+    try {
       Dory->BindStatusSocket(true);
-      InitSem.Push();
       DoryReturnValue = Dory->Run();
     } catch (const std::exception &x) {
       std::cerr << "Server error: " << x.what() << std::endl;
-      InitSem.Push();
     } catch (...) {
       std::cerr << "Unknown server error" << std::endl;
-      InitSem.Push();
     }
   }
 
@@ -417,7 +381,8 @@ namespace {
 
     assert(port);
     TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
-    server.Start();
+    bool started = server.SyncStart();
+    ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
     ASSERT_TRUE(dory != nullptr);
 
@@ -522,7 +487,8 @@ namespace {
 
     assert(port);
     TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
-    server.Start();
+    bool started = server.SyncStart();
+    ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
     ASSERT_TRUE(dory != nullptr);
 
@@ -615,7 +581,8 @@ namespace {
 
     assert(port);
     TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
-    server.Start();
+    bool started = server.SyncStart();
+    ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
     ASSERT_TRUE(dory != nullptr);
 
@@ -786,7 +753,8 @@ namespace {
 
     assert(port);
     TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
-    server.Start();
+    bool started = server.SyncStart();
+    ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
     ASSERT_TRUE(dory != nullptr);
 
@@ -917,7 +885,8 @@ namespace {
 
     assert(port);
     TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
-    server.Start();
+    bool started = server.SyncStart();
+    ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
     ASSERT_TRUE(dory != nullptr);
 
@@ -984,7 +953,8 @@ namespace {
 
     assert(port);
     TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
-    server.Start();
+    bool started = server.SyncStart();
+    ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
     ASSERT_TRUE(dory != nullptr);
 
@@ -1094,7 +1064,8 @@ namespace {
     size_t data_size = msg_body_1.size() + proto.GetSingleMsgOverhead();
     TDoryTestServer server(port, 1024,
         CreateCompressionTestConf(port, 1 + (10 * data_size)));
-    server.Start();
+    bool started = server.SyncStart();
+    ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
     ASSERT_TRUE(dory != nullptr);
 
