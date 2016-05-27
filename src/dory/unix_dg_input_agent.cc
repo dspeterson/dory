@@ -48,14 +48,14 @@ using namespace Socket;
 using namespace Thread;
 
 SERVER_COUNTER(UnixDgInputAgentForwardMsg);
-SERVER_COUNTER(UnixDgInputAgentGotOkMsg);
 
 TUnixDgInputAgent::TUnixDgInputAgent(const TConfig &config, TPool &pool,
     TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
-    TGatePutApi<TMsg::TPtr> &output_queue)
-    : Config(config),
+    TGatePutApi<TMsg::TPtr> &output_queue,
+    std::atomic<size_t> *msg_received_count)
+    : MsgReceivedCount(msg_received_count),
+      Config(config),
       Destroying(false),
-      OkShutdown(true),
       Pool(pool),
       MsgStateTracker(msg_state_tracker),
       AnomalyTracker(anomaly_tracker),
@@ -67,7 +67,8 @@ TUnixDgInputAgent::TUnixDgInputAgent(const TConfig &config, TPool &pool,
       InputBuf(config.MaxInputMsgSize + 1),
 
       OutputQueue(output_queue),
-      MsgReceivedCount(0) {
+      SyncStartSuccess(false),
+      SyncStartNotify(nullptr) {
 }
 
 TUnixDgInputAgent::~TUnixDgInputAgent() noexcept {
@@ -78,43 +79,58 @@ TUnixDgInputAgent::~TUnixDgInputAgent() noexcept {
   ShutdownOnDestroy();
 }
 
+bool TUnixDgInputAgent::SyncStart() {
+  assert(this);
+
+  if (IsStarted()) {
+    throw std::logic_error("Cannot call SyncStart() when UNIX datagram input "
+        "agent is already started");
+  }
+
+  SyncStartSuccess = false;
+  TEventSemaphore started;
+  SyncStartNotify = &started;
+  Start();
+  started.Pop();
+  SyncStartNotify = nullptr;
+  return SyncStartSuccess;
+}
+
 void TUnixDgInputAgent::Run() {
   assert(this);
   int tid = static_cast<int>(Gettid());
-  syslog(LOG_NOTICE, "Input thread %d started", tid);
+  syslog(LOG_NOTICE, "UNIX datagram input thread %d started", tid);
 
   try {
-    DoRun();
-  } catch (const std::exception &x) {
-    syslog(LOG_ERR, "Fatal error in input thread %d: %s", tid, x.what());
-    _exit(EXIT_FAILURE);
+    OpenUnixSocket();
   } catch (...) {
-    syslog(LOG_ERR, "Fatal unknown error in input thread %d", tid);
-    _exit(EXIT_FAILURE);
+    if (SyncStartNotify) {
+      try {
+        SyncStartNotify->Push();
+      } catch (...) {
+        syslog(LOG_ERR,
+            "Failed to notify on error starting UNIX datagram input agent");
+        _exit(EXIT_FAILURE);
+      }
+    }
+
+    throw;
   }
 
-  syslog(LOG_NOTICE, "Input thread %d finished %s", tid,
-      OkShutdown ? "normally" : "on error");
-}
+  if (SyncStartNotify) {
+    SyncStartSuccess = true;
+    SyncStartNotify->Push();
+  }
 
-void TUnixDgInputAgent::DoRun() {
-  assert(this);
-  OkShutdown = false;
-  syslog(LOG_NOTICE, "Input thread opening UNIX domain datagram socket");
-  OpenUnixSocket();
-
-  /* Let the thread that started us know that we finished our initialization
-     successfully. */
-  InitFinishedSem.Push();
-
-  syslog(LOG_NOTICE,
-         "Input thread finished initialization, forwarding messages");
+  syslog(LOG_NOTICE, "UNIX datagram input thread finished initialization, "
+      "forwarding messages");
   ForwardMessages();
-  OkShutdown = true;
+  syslog(LOG_NOTICE, "UNIX datagram input thread finishing normally");
 }
 
 void TUnixDgInputAgent::OpenUnixSocket() {
   assert(this);
+  syslog(LOG_NOTICE, "UNIX datagram input thread opening socket");
   TAddress input_socket_address;
   input_socket_address.SetFamily(AF_LOCAL);
   input_socket_address.SetPath(Config.ReceiveSocketName.c_str());
@@ -145,14 +161,8 @@ TMsg::TPtr TUnixDgInputAgent::ReadOneMsg() {
   assert(this);
   char * const msg_begin = reinterpret_cast<char *>(&InputBuf[0]);
   ssize_t result = IfLt0(recv(InputSocket, msg_begin, InputBuf.size(), 0));
-  TMsg::TPtr msg = InputDg::BuildMsgFromDg(msg_begin, result, Config, Pool,
+  return InputDg::BuildMsgFromDg(msg_begin, result, Config, Pool,
       AnomalyTracker, MsgStateTracker);
-
-  if (msg) {
-    UnixDgInputAgentGotOkMsg.Increment();
-  }
-
-  return std::move(msg);
 }
 
 void TUnixDgInputAgent::ForwardMessages() {
@@ -176,8 +186,8 @@ void TUnixDgInputAgent::ForwardMessages() {
 
     if (shutdown_request_event.revents) {
       if (!Destroying) {
-        syslog(LOG_NOTICE, "Input thread got shutdown request, closing UNIX "
-               "domain socket");
+        syslog(LOG_NOTICE, "UNIX datagram input thread got shutdown request, "
+            "closing socket");
         /* We received a shutdown request from the thread that created us.
            Close the input socket and terminate. */
         InputSocket.Reset();
@@ -189,7 +199,10 @@ void TUnixDgInputAgent::ForwardMessages() {
     assert(input_socket_event.revents);
     assert(!msg);
     msg = ReadOneMsg();
-    ++MsgReceivedCount;  // for testing
+
+    if (MsgReceivedCount) {
+      ++*MsgReceivedCount;  // for testing
+    }
 
     if (msg) {
       /* Forward message to router thread. */

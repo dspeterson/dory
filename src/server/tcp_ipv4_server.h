@@ -41,7 +41,12 @@ namespace Server {
        htonl(INADDR_ANY).  To bind to an ephemeral port, pass a value of 0 for
        'port'. */
     TTcpIpv4Server(int backlog, in_addr_t bind_addr, in_port_t port,
-        TConnectionHandlerApi *connection_handler);
+        TConnectionHandlerApi *connection_handler,
+        const TFatalErrorHandler &fatal_error_handler);
+
+    TTcpIpv4Server(int backlog, in_addr_t bind_addr, in_port_t port,
+        TConnectionHandlerApi *connection_handler,
+        TFatalErrorHandler &&fatal_error_handler);
 
     virtual ~TTcpIpv4Server() noexcept {
     }

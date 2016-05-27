@@ -31,13 +31,36 @@ using namespace Base;
 using namespace Server;
 
 TUnixStreamServer::TUnixStreamServer(int backlog, const char *path,
-    TConnectionHandlerApi *connection_handler)
+    TConnectionHandlerApi *connection_handler,
+    const TFatalErrorHandler &fatal_error_handler)
     : TStreamServerBase(backlog,
           reinterpret_cast<struct sockaddr *>(&ClientAddr), sizeof(ClientAddr),
-          connection_handler),
+          connection_handler, fatal_error_handler),
       Path(path) {
   if (std::strlen(path) >= sizeof(ClientAddr.sun_path)) {
     ThrowSystemError(ENAMETOOLONG);
+  }
+}
+
+TUnixStreamServer::TUnixStreamServer(int backlog, const char *path,
+    TConnectionHandlerApi *connection_handler,
+    TFatalErrorHandler &&fatal_error_handler)
+    : TStreamServerBase(backlog,
+          reinterpret_cast<struct sockaddr *>(&ClientAddr), sizeof(ClientAddr),
+          connection_handler, std::move(fatal_error_handler)),
+      Path(path) {
+  if (std::strlen(path) >= sizeof(ClientAddr.sun_path)) {
+    ThrowSystemError(ENAMETOOLONG);
+  }
+}
+
+void TUnixStreamServer::SetMode(mode_t mode) {
+  assert(this);
+
+  if (Mode.IsKnown()) {
+    *Mode = mode;
+  } else {
+    Mode.MakeKnown(mode);
   }
 }
 
@@ -56,6 +79,12 @@ void TUnixStreamServer::InitListeningSocket(TFd &sock) {
   IfLt0(bind(sock_fd, reinterpret_cast<const struct sockaddr *>(&serv_addr),
       sizeof(serv_addr)));
   sock = std::move(sock_fd);
+
+  /* Set the permission bits on the socket file if they have been specified.
+     If unspecified, the umask determines the permission bits. */
+  if (Mode.IsKnown()) {
+    IfLt0(chmod(Path.c_str(), *Mode));
+  }
 }
 
 void TUnixStreamServer::CloseListeningSocket(TFd &sock) {

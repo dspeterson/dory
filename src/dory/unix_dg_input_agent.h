@@ -45,6 +45,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -72,51 +73,31 @@ namespace Dory {
     public:
     TUnixDgInputAgent(const TConfig &config, Capped::TPool &pool,
         TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
-        Thread::TGatePutApi<TMsg::TPtr> &output_queue);
+        Thread::TGatePutApi<TMsg::TPtr> &output_queue,
+        std::atomic<size_t> *msg_received_count = nullptr);
 
     virtual ~TUnixDgInputAgent() noexcept;
 
-    /* Return a file descriptor that becomes readable when the input thread has
-       finished its initialization and is open for business. */
-    const Base::TFd &GetInitWaitFd() const {
-      assert(this);
-      return InitFinishedSem.GetFd();
-    }
-
-    bool ShutdownWasOk() const {
-      assert(this);
-      return OkShutdown;
-    }
-
-    /* Used for testing. */
-    size_t GetMsgReceivedCount() const {
-      assert(this);
-      return MsgReceivedCount;
-    }
+    /* Start agent and wait for it to open input socket.  Return true on
+       success or false on failure. */
+    bool SyncStart();
 
     protected:
     virtual void Run() override;
 
     private:
-    void DoRun();
-
     void OpenUnixSocket();
 
     TMsg::TPtr ReadOneMsg();
 
     void ForwardMessages();
 
+    /* Used for testing. */
+    std::atomic<size_t> * const MsgReceivedCount;
+
     const TConfig &Config;
 
     bool Destroying;
-
-    /* This becomes readable when the input thread has finished its
-       initialization and is open for business. */
-    Base::TEventSemaphore InitFinishedSem;
-
-    /* After the input thread terminates, this indicates whether it terminated
-       normally or with an error. */
-    bool OkShutdown;
 
     /* Blocks for TBlob objects containing message data get allocated from
        here. */
@@ -136,8 +117,9 @@ namespace Dory {
     /* Messages are queued here for the router thread. */
     Thread::TGatePutApi<TMsg::TPtr> &OutputQueue;
 
-    /* Used for testing. */
-    std::atomic<size_t> MsgReceivedCount;
+    bool SyncStartSuccess;
+
+    Base::TEventSemaphore *SyncStartNotify;
   };  // TUnixDgInputAgent
 
 }  // Dory

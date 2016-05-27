@@ -214,14 +214,18 @@ namespace {
   TEST_F(TStreamServerTest, TcpIpv4Test) {
     std::list<TConnectionWorker> workers;
     TTcpIpv4Server server(16, htonl(INADDR_LOOPBACK), 0,
-        new TTestServerConnectionHandler(workers));
+        new TTestServerConnectionHandler(workers),
+        [](const char *) noexcept {
+          ASSERT_TRUE(false);
+        });
     ASSERT_FALSE(server.IsBound());
     server.Bind();
     ASSERT_TRUE(server.IsBound());
     ASSERT_EQ(server.GetPort(), 0U);
     in_port_t port = server.GetBindPort();
     ASSERT_FALSE(server.IsStarted());
-    server.SyncStart();
+    bool ok = server.SyncStart();
+    ASSERT_TRUE(ok);
     ASSERT_TRUE(server.IsStarted());
 
     {
@@ -267,14 +271,18 @@ namespace {
   TEST_F(TStreamServerTest, TcpIpv6Test) {
     std::list<TConnectionWorker> workers;
     TTcpIpv6Server server(16, in6addr_loopback, 0,
-        new TTestServerConnectionHandler(workers));
+        new TTestServerConnectionHandler(workers),
+        [](const char *) noexcept {
+          ASSERT_TRUE(false);
+        });
     ASSERT_FALSE(server.IsBound());
     server.Bind();
     ASSERT_TRUE(server.IsBound());
     ASSERT_EQ(server.GetPort(), 0U);
     in_port_t port = server.GetBindPort();
     ASSERT_FALSE(server.IsStarted());
-    server.SyncStart();
+    bool ok = server.SyncStart();
+    ASSERT_TRUE(ok);
     ASSERT_TRUE(server.IsStarted());
 
     {
@@ -322,13 +330,17 @@ namespace {
     TTmpFile tmp_file;
     tmp_file.SetDeleteOnDestroy(true);
     TUnixStreamServer server(16, tmp_file.GetName(),
-        new TTestServerConnectionHandler(workers));
+        new TTestServerConnectionHandler(workers),
+        [](const char *) noexcept {
+          ASSERT_TRUE(false);
+        });
     ASSERT_FALSE(server.IsBound());
     server.Bind();
     ASSERT_TRUE(server.IsBound());
     ASSERT_EQ(server.GetPath(), tmp_file.GetName());
     ASSERT_FALSE(server.IsStarted());
-    server.SyncStart();
+    bool ok = server.SyncStart();
+    ASSERT_TRUE(ok);
     ASSERT_TRUE(server.IsStarted());
 
     {
@@ -369,6 +381,34 @@ namespace {
     for (auto &w : workers) {
       w.Join();
     }
+  }
+
+  TEST_F(TStreamServerTest, UnixStreamFailureTest) {
+    std::list<TConnectionWorker> workers;
+    char bad_path[] = "/nonexistent/path";
+    TUnixStreamServer server(16, bad_path,
+        new TTestServerConnectionHandler(workers),
+        [](const char *) noexcept {
+          ASSERT_TRUE(false);
+        });
+    ASSERT_FALSE(server.IsBound());
+    ASSERT_EQ(server.GetPath(), bad_path);
+    ASSERT_FALSE(server.IsStarted());
+    bool ok = server.SyncStart();
+    ASSERT_FALSE(ok);
+
+    /* Even though the server failed during initialization, it is still
+       considered "started" until its Join() method is called. */
+    ASSERT_TRUE(server.IsStarted());
+    bool threw = false;
+
+    try {
+      server.Join();
+    } catch (const TFdManagedThread::TThreadThrewStdException &) {
+      threw = true;
+    }
+
+    ASSERT_TRUE(threw);
   }
 
 }  // namespace

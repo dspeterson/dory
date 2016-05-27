@@ -72,7 +72,7 @@ void TStreamServerBase::Bind() {
   }
 }
 
-void TStreamServerBase::SyncStart() {
+bool TStreamServerBase::SyncStart() {
   assert(this);
 
   if (IsStarted()) {
@@ -80,11 +80,13 @@ void TStreamServerBase::SyncStart() {
         "Cannot call SyncStart() when server is already started");
   }
 
+  SyncStartSuccess = false;
   TEventSemaphore started;
   SyncStartNotify = &started;
   Start();
   started.Pop();
   SyncStartNotify = nullptr;
+  return SyncStartSuccess;
 }
 
 void TStreamServerBase::Reset() {
@@ -99,10 +101,29 @@ void TStreamServerBase::Reset() {
 }
 
 TStreamServerBase::TStreamServerBase(int backlog, struct sockaddr *addr,
-    socklen_t addr_space, TConnectionHandlerApi *connection_handler)
-    : Backlog(backlog),
+    socklen_t addr_space, TConnectionHandlerApi *connection_handler,
+    const TFatalErrorHandler &fatal_error_handler)
+    : FatalErrorHandler(fatal_error_handler),
+      Backlog(backlog),
       Addr(addr),
       AddrSpace(addr_space),
+      SyncStartSuccess(false),
+      SyncStartNotify(nullptr),
+      ConnectionHandler(connection_handler) {
+  assert(ConnectionHandler);
+
+  /* not strictly necessary */
+  std::memset(Addr, 0, AddrSpace);
+}
+
+TStreamServerBase::TStreamServerBase(int backlog, struct sockaddr *addr,
+    socklen_t addr_space, TConnectionHandlerApi *connection_handler,
+    TFatalErrorHandler &&fatal_error_handler)
+    : FatalErrorHandler(std::move(fatal_error_handler)),
+      Backlog(backlog),
+      Addr(addr),
+      AddrSpace(addr_space),
+      SyncStartSuccess(false),
       SyncStartNotify(nullptr),
       ConnectionHandler(connection_handler) {
   assert(ConnectionHandler);
@@ -129,6 +150,7 @@ void TStreamServerBase::Run() {
       try {
         Server.CloseListeningSocket(Server.ListeningSocket);
       } catch (...) {
+        Server.FatalErrorHandler("Failed to close listening socket");
       }
     }
 
@@ -147,6 +169,7 @@ void TStreamServerBase::Run() {
       try {
         SyncStartNotify->Push();
       } catch (...) {
+        FatalErrorHandler("Failed to notify on error starting stream server");
       }
     }
 
@@ -154,6 +177,7 @@ void TStreamServerBase::Run() {
   }
 
   if (SyncStartNotify) {
+    SyncStartSuccess = true;
     SyncStartNotify->Push();
   }
 

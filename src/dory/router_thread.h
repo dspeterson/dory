@@ -111,6 +111,12 @@ namespace Dory {
       return MetadataTimestamp;
     }
 
+    /* Used by main thread during shutdown. */
+    std::list<TMsg::TPtr> GetRemainingMsgs() {
+      assert(this);
+      return MsgChannel.NonblockingGet();
+    }
+
     protected:
     virtual void Run() override;
 

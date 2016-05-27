@@ -23,6 +23,7 @@
 
 #include <cstring>
 #include <stdexcept>
+#include <utility>
 
 #include <arpa/inet.h>
 
@@ -33,10 +34,21 @@ using namespace Base;
 using namespace Server;
 
 TTcpIpv4Server::TTcpIpv4Server(int backlog, in_addr_t bind_addr,
-    in_port_t port, TConnectionHandlerApi *connection_handler)
+    in_port_t port, TConnectionHandlerApi *connection_handler,
+    const TFatalErrorHandler &fatal_error_handler)
     : TStreamServerBase(backlog,
           reinterpret_cast<struct sockaddr *>(&ClientAddr), sizeof(ClientAddr),
-          connection_handler),
+          connection_handler, fatal_error_handler),
+      BindAddr(bind_addr),
+      Port(port) {
+}
+
+TTcpIpv4Server::TTcpIpv4Server(int backlog, in_addr_t bind_addr,
+    in_port_t port, TConnectionHandlerApi *connection_handler,
+    TFatalErrorHandler &&fatal_error_handler)
+    : TStreamServerBase(backlog,
+          reinterpret_cast<struct sockaddr *>(&ClientAddr), sizeof(ClientAddr),
+          connection_handler, std::move(fatal_error_handler)),
       BindAddr(bind_addr),
       Port(port) {
 }

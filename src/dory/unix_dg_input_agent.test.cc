@@ -21,14 +21,17 @@
 
 #include <dory/unix_dg_input_agent.h>
 
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 #include <base/field_access.h>
+#include <base/thrower.h>
 #include <base/time_util.h>
 #include <base/tmp_file_name.h>
 #include <capped/blob.h>
@@ -66,6 +69,9 @@ namespace {
     bool DoryStarted;
 
     public:
+    DEFINE_ERROR(TStartFailure, std::runtime_error,
+        "Failed to start UNIX datagram input agent");
+
     TTmpFileName UnixSocketName;
 
     std::vector<const char *> Args;
@@ -88,6 +94,8 @@ namespace {
 
     std::unique_ptr<TGate<TMsg::TPtr>> OutputQueue;
 
+    std::atomic<size_t> MsgReceivedCount;
+
     std::unique_ptr<TUnixDgInputAgent> UnixDgInputAgent;
 
     explicit TDoryConfig(size_t pool_block_size);
@@ -98,9 +106,10 @@ namespace {
 
     void StartDory() {
       if (!DoryStarted) {
-        TUnixDgInputAgent &unix_dg_input_agent = *UnixDgInputAgent;
-        unix_dg_input_agent.Start();
-        unix_dg_input_agent.GetInitWaitFd().IsReadable(-1);
+        if (!UnixDgInputAgent->SyncStart()) {
+          THROW_ERROR(TStartFailure);
+        }
+
         DoryStarted = true;
       }
     }
@@ -113,7 +122,7 @@ namespace {
         DoryStarted = false;
       }
     }
-  };
+  };  // TDoryConfig
 
   static inline size_t
   ComputeBlockCount(size_t max_buffer_kb, size_t block_size) {
@@ -127,7 +136,8 @@ namespace {
         AnomalyTracker(DiscardFileLogger, 0,
                        std::numeric_limits<size_t>::max()),
         DebugSetup("/unused/path", TDebugSetup::MAX_LIMIT,
-                   TDebugSetup::MAX_LIMIT) {
+                   TDebugSetup::MAX_LIMIT),
+        MsgReceivedCount(0) {
     Args.push_back("dory");
     Args.push_back("--config_path");
     Args.push_back("/nonexistent/path");
@@ -141,7 +151,7 @@ namespace {
                    static_cast<int32_t>(Cfg->ReplicationTimeout)));
     OutputQueue.reset(new TGate<TMsg::TPtr>);
     UnixDgInputAgent.reset(new TUnixDgInputAgent(*Cfg, Pool, MsgStateTracker,
-        AnomalyTracker, *OutputQueue));
+        AnomalyTracker, *OutputQueue, &MsgReceivedCount));
   }
 
   static void MakeDg(std::vector<uint8_t> &dg, const std::string &topic,
@@ -179,7 +189,13 @@ namespace {
 
     TDoryConfig conf(pool_block_size);
     TGate<TMsg::TPtr> &output_queue = *conf.OutputQueue;
-    conf.StartDory();
+
+    try {
+      conf.StartDory();
+    } catch (const TDoryConfig::TStartFailure &) {
+      ASSERT_TRUE(false);
+    }
+
     TDoryClientSocket sock;
     int ret = sock.Bind(conf.UnixSocketName);
     ASSERT_EQ(ret, DORY_OK);
@@ -245,9 +261,14 @@ namespace {
     const size_t pool_block_size = 256;
 
     TDoryConfig conf(pool_block_size);
-    TUnixDgInputAgent &unix_dg_input_agent = *conf.UnixDgInputAgent;
     TGate<TMsg::TPtr> &output_queue = *conf.OutputQueue;
-    conf.StartDory();
+
+    try {
+      conf.StartDory();
+    } catch (const TDoryConfig::TStartFailure &) {
+      ASSERT_TRUE(false);
+    }
+
     TDoryClientSocket sock;
     int ret = sock.Bind(conf.UnixSocketName);
     ASSERT_EQ(ret, DORY_OK);
@@ -286,13 +307,11 @@ namespace {
       msg_list.splice(msg_list.end(), output_queue.Get());
     }
 
-    for (size_t i = 0;
-         (unix_dg_input_agent.GetMsgReceivedCount() < 5) && (i < 3000);
-         ++i) {
+    for (size_t i = 0; (conf.MsgReceivedCount < 5) && (i < 3000); ++i) {
       SleepMilliseconds(10);
     }
 
-    ASSERT_EQ(unix_dg_input_agent.GetMsgReceivedCount(), 5U);
+    ASSERT_EQ(conf.MsgReceivedCount, 5U);
     ASSERT_EQ(msg_list.size(), 4U);
     size_t i = 0;
 
@@ -328,9 +347,13 @@ namespace {
     const size_t pool_block_size = 256;
 
     TDoryConfig conf(pool_block_size);
-    TUnixDgInputAgent &unix_dg_input_agent = *conf.UnixDgInputAgent;
     TGate<TMsg::TPtr> &output_queue = *conf.OutputQueue;
-    conf.StartDory();
+
+    try {
+      conf.StartDory();
+    } catch (const TDoryConfig::TStartFailure &) {
+      ASSERT_TRUE(false);
+    }
 
     /* This message will get discarded because it's malformed. */
     std::string topic("scooby_doo");
@@ -348,13 +371,11 @@ namespace {
     ret = sock.Send(&dg_buf[0], dg_buf.size());
     ASSERT_EQ(ret, DORY_OK);
 
-    for (size_t i = 0;
-         (unix_dg_input_agent.GetMsgReceivedCount() < 1) && (i < 3000);
-         ++i) {
+    for (size_t i = 0; (conf.MsgReceivedCount < 1) && (i < 3000); ++i) {
       SleepMilliseconds(10);
     }
 
-    ASSERT_EQ(unix_dg_input_agent.GetMsgReceivedCount(), 1U);
+    ASSERT_EQ(conf.MsgReceivedCount, 1U);
     std::list<TMsg::TPtr> msg_list(output_queue.NonblockingGet());
     ASSERT_TRUE(msg_list.empty());
     TAnomalyTracker::TInfo bad_stuff;

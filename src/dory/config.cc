@@ -25,6 +25,8 @@
 #include <cstdlib>
 #include <cstring>
 #include <stdexcept>
+#include <type_traits>
+#include <utility>
 #include <vector>
 
 #include <boost/algorithm/string.hpp>
@@ -87,12 +89,38 @@ static inline int StringToLogLevel(const std::string &level_string) {
   return StringToLogLevel(level_string.c_str());
 }
 
+static void ProcessModeArg(const std::string &mode_string,
+    const char *opt_name, TOpt<mode_t> &result) {
+  if (!mode_string.empty()) {
+    std::string s(mode_string);
+    boost::algorithm::trim(s);
+
+    if (s.empty()) {
+      std::string blurb("Invalid value for --");
+      blurb += opt_name;
+      throw TArgParseError(std::move(blurb));
+    }
+
+    char *pos = nullptr;
+    long n = std::strtol(s.c_str(), &pos, 0);
+    mode_t mode = static_cast<mode_t>(n);
+
+    if ((*pos != '\0') || (n < 0) || (n == LONG_MAX) ||
+        (static_cast<long>(mode) != n)) {
+      std::string blurb("Invalid value for --");
+      blurb += opt_name;
+      throw TArgParseError(std::move(blurb));
+    }
+
+    result.MakeKnown(mode);
+  }
+}
+
 static void ParseArgs(int argc, char *argv[], TConfig &config) {
   using namespace TCLAP;
   const std::string prog_name = Basename(argv[0]);
   std::vector<const char *> arg_vec(&argv[0], &argv[0] + argc);
   arg_vec[0] = prog_name.c_str();
-  std::string receive_socket_mode;
 
   try {
     CmdLine cmd("Producer daemon for Apache Kafka", ' ', dory_build_id);
@@ -108,17 +136,34 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
     SwitchArg arg_log_echo("", "log_echo", "Echo syslog messages to standard "
         "error.", cmd, config.LogEcho);
     ValueArg<decltype(config.ReceiveSocketName)> arg_receive_socket_name("",
-        "receive_socket_name", "Pathname of UNIX domain socket for receiving "
-        "messages from web clients", true, config.ReceiveSocketName, "PATH");
+        "receive_socket_name", "Pathname of UNIX domain datagram socket for "
+        "receiving messages from clients", false, config.ReceiveSocketName,
+        "PATH");
     cmd.add(arg_receive_socket_name);
-    ValueArg<decltype(receive_socket_mode)> arg_receive_socket_mode("",
-        "receive_socket_mode", "File permission bits for UNIX domain socket "
-        "for receiving messages from web clients.  If unspecified, the umask "
-        "determines the permission bits.  To specify an octal value, you must "
-        "use a 0 prefix.  For instance, specify 0777 rather than 777 for "
-        "unrestricted access.", false,
-        receive_socket_mode, "MODE");
+    ValueArg<decltype(config.ReceiveStreamSocketName)>
+        arg_receive_stream_socket_name("", "receive_stream_socket_name",
+        "Pathname of UNIX domain stream socket for receiving messages from "
+        "clients", false, config.ReceiveStreamSocketName, "PATH");
+    cmd.add(arg_receive_stream_socket_name);
+    ValueArg<std::remove_reference<decltype(*config.InputPort)>::type>
+        arg_input_port("", "input_port", "Port for receiving TCP connections "
+            "from local clients that wish to send messages.", false, 0,
+            "PORT");
+    cmd.add(arg_input_port);
+    ValueArg<std::string> arg_receive_socket_mode("", "receive_socket_mode",
+        "File permission bits for UNIX domain datagram socket for receiving "
+        "messages from clients.  If unspecified, the umask determines the "
+        "permission bits.  To specify an octal value, you must use a 0 "
+        "prefix.  For instance, specify 0777 rather than 777 for unrestricted "
+        "access.", false, "", "MODE");
     cmd.add(arg_receive_socket_mode);
+    ValueArg<std::string> arg_receive_stream_socket_mode("",
+        "receive_stream_socket_mode", "File permission bits for UNIX domain "
+        "stream socket for receiving messages from clients.  If unspecified, "
+        "the umask determines the permission bits.  To specify an octal "
+        "value, you must use a 0 prefix.  For instance, specify 0777 rather "
+        "than 777 for unrestricted access.", false, "", "MODE");
+    cmd.add(arg_receive_stream_socket_mode);
     ValueArg<decltype(config.ProtocolVersion)> arg_protocol_version("",
         "protocol_version", "Version of Kafka protocol to use.", false,
         config.ProtocolVersion, "VERSION");
@@ -135,10 +180,25 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
     cmd.add(arg_msg_buffer_max);
     ValueArg<decltype(config.MaxInputMsgSize)> arg_max_input_msg_size("",
         "max_input_msg_size", "Maximum input message size in bytes expected "
-        "from clients.  Messages larger than this value will be discarded.  "
-        "Here, \"size\" means total combined size of topic, key, and value.",
-        false, config.MaxInputMsgSize, "MAX_BYTES");
+        "from clients sending UNIX domain datagrams.  This limit does NOT "
+        "apply to messages sent by UNIX domain stream socket or local TCP "
+        "(see max_stream_input_msg_size).  Input datagrams larger than this "
+        "value will be discarded.", false, config.MaxInputMsgSize,
+        "MAX_BYTES");
     cmd.add(arg_max_input_msg_size);
+    ValueArg<decltype(config.MaxStreamInputMsgSize)>
+        arg_max_stream_input_msg_size("", "max_stream_input_msg_size",
+        "Maximum input message size in bytes expected from clients using UNIX "
+        "domain stream sockets or local TCP.  Input messages larger than this "
+        "value will cause Dory to immediately log an error and disconnect, "
+        "forcing the client to reconnect if it wishes to continue sending "
+        "messages.  The purpose of this is to guard against ridiculously "
+        "large messages.  Even if a message doesn't exceed this limit, it may "
+        "still be discarded if it is too large to send in a single produce "
+        "request.  However, in this case Dory will still leave the connection "
+        "open and continue reading messages.", false,
+        config.MaxStreamInputMsgSize, "MAX_BYTES");
+    cmd.add(arg_max_stream_input_msg_size);
     SwitchArg arg_allow_large_unix_datagrams("", "allow_large_unix_datagrams",
         "Allow large enough values for max_input_msg_size that a client "
         "sending a UNIX domain datagram of the maximum allowed size will need "
@@ -290,32 +350,30 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
     config.LogLevel = StringToLogLevel(arg_log_level.getValue());
     config.LogEcho = arg_log_echo.getValue();
     config.ReceiveSocketName = arg_receive_socket_name.getValue();
-    receive_socket_mode = arg_receive_socket_mode.getValue();
+    config.ReceiveStreamSocketName = arg_receive_stream_socket_name.getValue();
 
-    if (!receive_socket_mode.empty()) {
-      boost::algorithm::trim(receive_socket_mode);
+    if (arg_input_port.isSet()) {
+      in_port_t port = arg_input_port.getValue();
 
-      if (receive_socket_mode.empty()) {
-        throw TArgParseError("Invalid value for --receive_socket_mode");
+      if (port < 1) {
+        /* A value of 0 is not allowed as a command line arg, but test code can
+           specify 0 directly to request an ephemeral port. */
+        throw TArgParseError("Invalid input port");
       }
 
-      char *pos = nullptr;
-      long n = std::strtol(receive_socket_mode.c_str(), &pos, 0);
-      mode_t mode = static_cast<mode_t>(n);
-
-      if ((*pos != '\0') || (n < 0) || (n == LONG_MAX) ||
-          (static_cast<long>(mode) != n)) {
-        throw TArgParseError("Invalid value for --receive_socket_mode");
-      }
-
-      config.ReceiveSocketMode.MakeKnown(mode);
+      config.InputPort.MakeKnown(port);
     }
 
+    ProcessModeArg(arg_receive_socket_mode.getValue(), "receive_socket_mode",
+        config.ReceiveSocketMode);
+    ProcessModeArg(arg_receive_stream_socket_mode.getValue(),
+        "receive_stream_socket_mode", config.ReceiveStreamSocketMode);
     config.ProtocolVersion = arg_protocol_version.getValue();
     config.StatusPort = arg_status_port.getValue();
     config.StatusLoopbackOnly = arg_status_loopback_only.getValue();
     config.MsgBufferMax = arg_msg_buffer_max.getValue();
     config.MaxInputMsgSize = arg_max_input_msg_size.getValue();
+    config.MaxStreamInputMsgSize = arg_max_stream_input_msg_size.getValue();
     config.AllowLargeUnixDatagrams = arg_allow_large_unix_datagrams.getValue();
     config.MaxFailedDeliveryAttempts =
         arg_max_failed_delivery_attempts.getValue();
@@ -359,8 +417,37 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
     config.TopicAutocreate = arg_topic_autocreate.getValue();
     config.UseOldInputFormat = arg_use_old_input_format.getValue();
     config.UseOldOutputFormat = arg_use_old_output_format.getValue();
+
+    if (!arg_receive_socket_name.isSet() &&
+        !arg_receive_stream_socket_name.isSet() && !arg_input_port.isSet()) {
+      throw TArgParseError("At least one of (--receive_socket_name, "
+          "--receive_stream_socket_name, --input_port) options must be "
+          "specified.");
+    }
+
+    if (!arg_receive_socket_name.isSet()) {
+      if (arg_receive_socket_mode.isSet()) {
+        throw TArgParseError("Option --receive_socket_mode is only allowed "
+            "when --receive_socket_name is specified.");
+      }
+
+      if (arg_allow_large_unix_datagrams.isSet()) {
+        throw TArgParseError("Option --allow_large_unix_datagrams is only "
+            "allowed when --receive_socket_name is specified.");
+      }
+    }
+
+    if (!arg_receive_stream_socket_name.isSet() &&
+        arg_receive_stream_socket_mode.isSet()) {
+      throw TArgParseError("Option --receive_stream_socket_mode is only "
+          "allowed when --receive_stream_socket_name is specified.");
+    }
   } catch (const ArgException &x) {
     throw TArgParseError(x.error(), x.argId());
+  }
+
+  if (config.StatusPort < 1) {
+    throw TArgParseError("Invalid value specified for option --status_port.");
   }
 }
 
@@ -372,6 +459,7 @@ TConfig::TConfig(int argc, char *argv[])
       StatusLoopbackOnly(false),
       MsgBufferMax(256 * 1024),
       MaxInputMsgSize(64 * 1024),
+      MaxStreamInputMsgSize(2 * 1024 * 1024),
       AllowLargeUnixDatagrams(false),
       MaxFailedDeliveryAttempts(5),
       Daemon(false),
@@ -402,6 +490,19 @@ TConfig::TConfig(int argc, char *argv[])
   ParseArgs(argc, argv, *this);
 }
 
+static std::string BuildModeString(const TOpt<mode_t> &opt_mode) {
+  char socket_mode[32];
+
+  if (opt_mode.IsKnown()) {
+    std::snprintf(socket_mode, sizeof(socket_mode), "0%o", *opt_mode);
+  } else {
+    strncpy(socket_mode, "<unspecified>", sizeof(socket_mode));
+  }
+
+  socket_mode[sizeof(socket_mode) - 1] = '\0';
+  return socket_mode;
+}
+
 void Dory::LogConfig(const TConfig &config) {
   if (config.ClientIdWasEmpty) {
     syslog(LOG_WARNING, "Using \"dory\" for client ID since none was "
@@ -413,19 +514,38 @@ void Dory::LogConfig(const TConfig &config) {
 
   syslog(LOG_NOTICE, "Version: [%s]", dory_build_id);
   syslog(LOG_NOTICE, "Config file: [%s]", config.ConfigPath.c_str());
-  syslog(LOG_NOTICE, "UNIX domain datagram input socket [%s]",
-         config.ReceiveSocketName.c_str());
-  char socket_mode[32];
 
-  if (config.ReceiveSocketMode.IsKnown()) {
-    std::snprintf(socket_mode, sizeof(socket_mode), "0%o",
-        *config.ReceiveSocketMode);
+  if (config.ReceiveSocketName.empty()) {
+    syslog(LOG_NOTICE, "UNIX domain datagram input socket disabled");
   } else {
-    strncpy(socket_mode, "<unspecified>", sizeof(socket_mode));
+    syslog(LOG_NOTICE, "UNIX domain datagram input socket [%s]",
+        config.ReceiveSocketName.c_str());
   }
 
-  socket_mode[sizeof(socket_mode) - 1] = '\0';
-  syslog(LOG_NOTICE, "UNIX domain datagram input socket mode %s", socket_mode);
+  if (config.ReceiveStreamSocketName.empty()) {
+    syslog(LOG_NOTICE, "UNIX domain stream input socket disabled");
+  } else {
+    syslog(LOG_NOTICE, "UNIX domain stream input socket [%s]",
+        config.ReceiveStreamSocketName.c_str());
+  }
+
+  if (config.InputPort.IsKnown()) {
+    syslog(LOG_NOTICE, "Listening on input port %u",
+        static_cast<unsigned>(*config.InputPort));
+  } else {
+    syslog(LOG_NOTICE, "Input port disabled");
+  }
+
+  if (!config.ReceiveSocketName.empty()) {
+    syslog(LOG_NOTICE, "UNIX domain datagram input socket mode %s",
+        BuildModeString(config.ReceiveSocketMode).c_str());
+  }
+
+  if (!config.ReceiveStreamSocketName.empty()) {
+    syslog(LOG_NOTICE, "UNIX domain stream input socket mode %s",
+        BuildModeString(config.ReceiveStreamSocketMode).c_str());
+  }
+
   syslog(LOG_NOTICE, "Using Kafka protocol version [%lu]",
          static_cast<unsigned long>(config.ProtocolVersion));
   syslog(LOG_NOTICE, "Listening on status port %u",
@@ -434,10 +554,16 @@ void Dory::LogConfig(const TConfig &config) {
          config.StatusLoopbackOnly ? "true" : "false");
   syslog(LOG_NOTICE, "Buffered message limit %lu kbytes",
          static_cast<unsigned long>(config.MsgBufferMax));
-  syslog(LOG_NOTICE, "Max input message size %lu bytes",
+  syslog(LOG_NOTICE, "Max datagram input message size %lu bytes",
          static_cast<unsigned long>(config.MaxInputMsgSize));
-  syslog(LOG_NOTICE, "Allow large UNIX datagrams: %s",
-         config.AllowLargeUnixDatagrams ? "true" : "false");
+  syslog(LOG_NOTICE, "Max stream input message size %lu bytes",
+         static_cast<unsigned long>(config.MaxStreamInputMsgSize));
+
+  if (!config.ReceiveSocketName.empty()) {
+    syslog(LOG_NOTICE, "Allow large UNIX datagrams: %s",
+           config.AllowLargeUnixDatagrams ? "true" : "false");
+  }
+
   syslog(LOG_NOTICE, "Max failed delivery attempts %lu",
          static_cast<unsigned long>(config.MaxFailedDeliveryAttempts));
   syslog(LOG_NOTICE, config.Daemon ?

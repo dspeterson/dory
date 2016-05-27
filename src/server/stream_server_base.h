@@ -23,6 +23,7 @@
 #pragma once
 
 #include <cassert>
+#include <functional>
 #include <memory>
 
 #include <sys/socket.h>
@@ -45,6 +46,10 @@ namespace Server {
     NO_COPY_SEMANTICS(TStreamServerBase);
 
     public:
+    /* Fatal error handler.  Function should report error and terminate
+       program immediately. */
+    using TFatalErrorHandler = std::function<void(const char *) noexcept>;
+
     /* Defines API of caller-supplied class for handling new client
        connections. */
     class TConnectionHandlerApi {
@@ -93,12 +98,13 @@ namespace Server {
 
     /* To start the server, you can call the Start() method of our base class,
        or you can call this method.  The difference is that this method doesn't
-       return until the acceptor thread has either successfully called accept()
-       or encountered a failure preventing a successful call to accept().
+       return until the acceptor thread has either successfully called listen()
+       or encountered a failure preventing a successful call to listen().
        Therefore, on return it is guaranteed that you can connect to the server
        without getting "connection refused", provided that the server started
-       successfully. */
-    void SyncStart();
+       successfully.  This method returns true if the server initialized
+       successfully or false otherwise. */
+    bool SyncStart();
 
     void Reset();
 
@@ -125,9 +131,16 @@ namespace Server {
            connection_handler: Pointer to an object whose purpose is to handle
                new client connections.  The TStreamServerBase takes ownership
                of 'connection_handler', and is responsible for its destruction.
+           fatal_error_handler: Fatal error hander, which should report error
+               message and terminate program immediately.
      */
     TStreamServerBase(int backlog, struct sockaddr *addr,
-        socklen_t addr_space, TConnectionHandlerApi *connection_handler);
+        socklen_t addr_space, TConnectionHandlerApi *connection_handler,
+        const TFatalErrorHandler &fatal_error_handler);
+
+    TStreamServerBase(int backlog, struct sockaddr *addr,
+        socklen_t addr_space, TConnectionHandlerApi *connection_handler,
+        TFatalErrorHandler &&fatal_error_handler);
 
     /* On entry, 'sock' is empty.  Derived class calles socket() and bind() in
        here.  Must throw if operation fails. */
@@ -148,11 +161,17 @@ namespace Server {
     private:
     void AcceptClients();
 
+    /* Client-supplied fatal error handler.  This should report error and
+       immediately terminate program. */
+    const TFatalErrorHandler FatalErrorHandler;
+
     const int Backlog;
 
     struct sockaddr * const Addr;
 
     const socklen_t AddrSpace;
+
+    bool SyncStartSuccess;
 
     Base::TEventSemaphore *SyncStartNotify;
 

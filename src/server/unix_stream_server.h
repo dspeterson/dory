@@ -24,12 +24,15 @@
 
 #include <cassert>
 #include <string>
+#include <utility>
 
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/un.h>
 
 #include <base/no_copy_semantics.h>
+#include <base/opt.h>
 #include <server/stream_server_base.h>
 
 namespace Server {
@@ -40,11 +43,25 @@ namespace Server {
 
     public:
     TUnixStreamServer(int backlog, const char *path,
-        TConnectionHandlerApi *connection_handler);
+        TConnectionHandlerApi *connection_handler,
+        const TFatalErrorHandler &fatal_error_handler);
 
     TUnixStreamServer(int backlog, const std::string &path,
-        TConnectionHandlerApi *connection_handler)
-        : TUnixStreamServer(backlog, path.c_str(), connection_handler) {
+        TConnectionHandlerApi *connection_handler,
+        const TFatalErrorHandler &fatal_error_handler)
+        : TUnixStreamServer(backlog, path.c_str(), connection_handler,
+              fatal_error_handler) {
+    }
+
+    TUnixStreamServer(int backlog, const char *path,
+        TConnectionHandlerApi *connection_handler,
+        TFatalErrorHandler &&fatal_error_handler);
+
+    TUnixStreamServer(int backlog, const std::string &path,
+        TConnectionHandlerApi *connection_handler,
+        TFatalErrorHandler &&fatal_error_handler)
+        : TUnixStreamServer(backlog, path.c_str(), connection_handler,
+              std::move(fatal_error_handler)) {
     }
 
     virtual ~TUnixStreamServer() noexcept {
@@ -60,6 +77,18 @@ namespace Server {
       return ClientAddr;
     }
 
+    /* Specify a value to chmod() the socket file to the next time it is
+       created.  If unspecified, the umask determines the permission bits. */
+    void SetMode(mode_t mode);
+
+    /* Specify that the next time the socket file is created, its mode will be
+       determined by the umask.  This is the default behavior if SetMode() has
+       not been called. */
+    void ClearMode() {
+      assert(this);
+      Mode.Reset();
+    }
+
     protected:
     virtual void InitListeningSocket(Base::TFd &sock) override;
 
@@ -69,6 +98,8 @@ namespace Server {
     void UnlinkPath();
 
     const std::string Path;
+
+    Base::TOpt<mode_t> Mode;
 
     struct sockaddr_un ClientAddr;
   };  // TUnixStreamServer

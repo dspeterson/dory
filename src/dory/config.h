@@ -44,7 +44,16 @@ namespace Dory {
 
     std::string ReceiveSocketName;
 
+    std::string ReceiveStreamSocketName;
+
+    /* Unknown means "TCP input is disabled".  Known and nonzero means "Use
+       this TCP input port".  Known but 0 means "bind() to ephemeral port for
+       TCP input".  The last option is used by test code. */
+    Base::TOpt<in_port_t> InputPort;
+
     Base::TOpt<mode_t> ReceiveSocketMode;
+
+    Base::TOpt<mode_t> ReceiveStreamSocketMode;
 
     size_t ProtocolVersion;
 
@@ -55,6 +64,8 @@ namespace Dory {
     size_t MsgBufferMax;
 
     size_t MaxInputMsgSize;
+
+    size_t MaxStreamInputMsgSize;
 
     bool AllowLargeUnixDatagrams;
 

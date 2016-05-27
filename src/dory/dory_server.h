@@ -33,6 +33,7 @@
 #include <base/event_semaphore.h>
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
+#include <base/opt.h>
 #include <base/timer_fd.h>
 #include <base/thrower.h>
 #include <capped/pool.h>
@@ -48,7 +49,12 @@
 #include <dory/msg_dispatch/kafka_dispatcher.h>
 #include <dory/msg_state_tracker.h>
 #include <dory/router_thread.h>
+#include <dory/stream_client_handler.h>
+#include <dory/stream_client_work_fn.h>
+#include <server/tcp_ipv4_server.h>
+#include <server/unix_stream_server.h>
 #include <signal/set.h>
+#include <thread/managed_thread_pool.h>
 
 namespace Dory {
 
@@ -182,20 +188,33 @@ namespace Dory {
     void RequestShutdown();
 
     private:
-    bool GotFatalError() const {
-      assert(this);
-      return UnixDgInputAgentFatalError || RouterThreadFatalError;
-    }
+    /* Thread pool type for handling local TCP and UNIX domain stream client
+       connections. */
+    using TWorkerPool = TStreamClientHandler::TWorkerPool;
+
+    static void WorkerPoolFatalErrorHandler(const char *msg) noexcept;
+
+    static void UnixStreamServerFatalErrorHandler(const char *msg) noexcept;
+
+    static void TcpServerFatalErrorHandler(const char *msg) noexcept;
 
     void BlockAllSignals();
 
-    void StartMsgHandlingThreads();
+    TStreamClientHandler *CreateStreamClientHandler(bool is_tcp);
 
-    bool MsgHandlingInitWait();
+    /* Return true on success or false on error starting one of the input
+       agents. */
+    bool StartMsgHandlingThreads();
 
     void HandleEvents();
 
-    void Shutdown();
+    void DiscardFinalMsgs(std::list<TMsg::TPtr> &msg_list);
+
+    bool Shutdown();
+
+    /* For listen() system call for UNIX domain stream and local TCP sockets.
+       TODO: consider providing command line option(s) for setting backlog. */
+    static const int STREAM_BACKLOG;
 
     /* Protects 'ServerList' below. */
     static std::mutex ServerListMutex;
@@ -246,15 +265,28 @@ namespace Dory {
 
     Debug::TDebugSetup DebugSetup;
 
-    bool UnixDgInputAgentFatalError;
-
-    bool RouterThreadFatalError;
-
     MsgDispatch::TKafkaDispatcher Dispatcher;
 
     TRouterThread RouterThread;
 
-    TUnixDgInputAgent UnixDgInputAgent;
+    /* Thread pool for handling local TCP and UNIX domain stream client
+       connections. */
+    Base::TOpt<TWorkerPool> StreamClientWorkerPool;
+
+    /* Server for handling UNIX domain datagram client messages.  This is the
+       preferred way for clients to send messages to dory. */
+    Base::TOpt<TUnixDgInputAgent> UnixDgInputAgent;
+
+    /* Server for handling UNIX domain stream client connections.  This may be
+       useful for clients who want to send messages too large for UNIX domain
+       datagrams, or who can deal with UNIX domain stream, but not datagram,
+       sockets. */
+    Base::TOpt<Server::TUnixStreamServer> UnixStreamInputAgent;
+
+    /* Server for handling local TCP client connections.  This should only be
+       used by clients who are not easily able to use UNIX domain datagram or
+       stream sockets. */
+    Base::TOpt<Server::TTcpIpv4Server> TcpInputAgent;
 
     const TMetadataTimestamp &MetadataTimestamp;
 
