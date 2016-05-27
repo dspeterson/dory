@@ -145,6 +145,7 @@ static int init_client_addr(struct sockaddr_un *client_addr) {
   int status = DORY_OK;
   client_addr->sun_family = AF_LOCAL;
   strncpy(client_addr->sun_path, client_path, sizeof(client_addr->sun_path));
+  client_addr->sun_path[sizeof(client_addr->sun_path) - 1] = '\0';
 
   if ((unlink(client_path) < 0) && (errno != ENOENT)) {
     status = errno;
@@ -193,6 +194,8 @@ int EXPORT_SYM dory_client_socket_bind(dory_client_socket_t *client_socket,
   client_socket->server_addr.sun_family = AF_LOCAL;
   strncpy(client_socket->server_addr.sun_path, server_path,
           sizeof(client_socket->server_addr.sun_path));
+  client_socket->server_addr.sun_path[
+      sizeof(client_socket->server_addr.sun_path) - 1] = '\0';
 
   if (strcmp(server_path, client_socket->server_addr.sun_path)) {
     status = DORY_SERVER_SOCK_PATH_TOO_LONG;

@@ -42,7 +42,7 @@ namespace Dory {
       public:
       /* Create a new Dory socket object.  You must call Bind() to prepare the
          object for sending messages to Dory. */
-      TDoryClientSocket() {
+      TDoryClientSocket() noexcept {
         dory_client_socket_init(&Sock);
       }
 
@@ -53,14 +53,14 @@ namespace Dory {
       /* Move constructor.  Transplant state from 'that' to object being
          constructed, leaving 'that' in an empty (i.e. newly constructed)
          state. */
-      TDoryClientSocket(TDoryClientSocket &&that) {
+      TDoryClientSocket(TDoryClientSocket &&that) noexcept {
         MoveState(that);
       }
 
       /* Move assignment operator.  On assignment to self, this is a no-op.
          Otherwise, close socket and transplant state from 'that', leaving
          'that' in an empty (i.e. newly constructed) state. */
-      TDoryClientSocket &operator=(TDoryClientSocket &&that) {
+      TDoryClientSocket &operator=(TDoryClientSocket &&that) noexcept {
         if (this != &that) {
           Close();
           MoveState(that);
@@ -70,7 +70,7 @@ namespace Dory {
       }
 
       /* Swap our internal state with internal state of 'that'. */
-      void Swap(TDoryClientSocket &that) {
+      void Swap(TDoryClientSocket &that) noexcept {
         struct sockaddr_un tmp;
         std::memcpy(&tmp, &that.Sock.server_addr, sizeof(tmp));
         std::memcpy(&that.Sock.server_addr, &Sock.server_addr, sizeof(tmp));
@@ -80,20 +80,20 @@ namespace Dory {
 
       /* After calling this method and getting a return value of DORY_OK, you
          are ready to call Send(). */
-      int Bind(const char *server_path) {
+      int Bind(const char *server_path) noexcept {
         return dory_client_socket_bind(&Sock, server_path);
       }
 
       /* A true return value indicates that the socket is bound and ready for
          sending messages to Dory via Send() method below.  Otherwise, you
          must call Bind() before sending. */
-      bool IsBound() const {
+      bool IsBound() const noexcept {
         return (Sock.sock_fd >= 0);
       }
 
       /* Send a message to Dory.  You must call Bind() above with a successful
          return value before calling this method. */
-      int Send(const void *msg, size_t msg_size) const {
+      int Send(const void *msg, size_t msg_size) const noexcept {
         return dory_client_socket_send(&Sock, msg, msg_size);
       }
 
@@ -101,13 +101,13 @@ namespace Dory {
          harmless to call Close() on an already closed object.  After calling
          Close(), you can call Bind() again if you wish to resume communication
          with Dory. */
-      void Close() {
+      void Close() noexcept {
         dory_client_socket_close(&Sock);
       }
 
       private:
       /* Helper method for move construction and assignment. */
-      void MoveState(TDoryClientSocket &that) {
+      void MoveState(TDoryClientSocket &that) noexcept {
         std::memcpy(&Sock.server_addr, &that.Sock.server_addr,
             sizeof(Sock.server_addr));
         Sock.sock_fd = that.Sock.sock_fd;

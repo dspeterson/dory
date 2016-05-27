@@ -94,6 +94,8 @@
 
 #include <dory/client/status_codes.h>
 
+/* A thin wrapper around a UNIX domain datagram socket for sending messages to
+   Dory. */
 typedef struct dory_client_socket {
   /* Client socket file descriptor.  Negative when not opened. */
   int sock_fd;
@@ -163,7 +165,9 @@ int dory_write_partition_key_msg(void *out_buf, size_t out_buf_size,
 
 /* Initialize a dory_client_socket_t structure.  This must be called before
    its first use, but should not be called again on the object after that.  It
-   serves the same purpose as a constructor in C++. */
+   serves the same purpose as a constructor in C++.  On return, 'client_socket'
+   is initialized to an empty state.  In other words, it does not yet contain a
+   valid file descriptor. */
 void dory_client_socket_init(dory_client_socket_t *client_socket);
 
 /* Prepare 'client_socket' to send messages to Dory.  This amounts to doing a
