@@ -70,6 +70,19 @@ namespace Dory {
         return Items;
       }
 
+      void ClearRevents() {
+        assert(this);
+
+        for (size_t i = 0; i < SIZE; ++i) {
+          DoClearRevents(i);
+        }
+      }
+
+      void ClearRevents(TEnum index) {
+        assert(this);
+        DoClearRevents(static_cast<size_t>(index));
+      }
+
       void Clear() {
         assert(this);
 
@@ -84,6 +97,12 @@ namespace Dory {
       }
 
       private:
+      void DoClearRevents(size_t index) {
+        assert(this);
+        assert(index < SIZE);
+        Items[index].revents = 0;
+      }
+
       void DoClear(size_t index) {
         assert(this);
         assert(index < SIZE);
