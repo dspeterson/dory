@@ -784,7 +784,7 @@ namespace Thread {
        pushes 'AllWorkersFinished' to notify manager. */
     size_t LiveWorkerCount;
 
-    /* The manager clears when it gets a shutdown request.  If
+    /* The manager clears this when it gets a shutdown request.  If
        'LiveWorkerCount' is nonzero when the manager clears this, then the
        manager waits for 'AllWorkersFinished'.  Volatile because workers test
        this in a loop. */

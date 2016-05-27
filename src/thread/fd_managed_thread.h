@@ -50,6 +50,10 @@ namespace Thread {
     NO_COPY_SEMANTICS(TFdManagedThread);
 
     public:
+    /* TODO: Eliminate TThreadThrewUnknownException and
+       TThreadThrewStdException.  There is a more standard way of doing this.
+     */
+
     DEFINE_ERROR(TThreadThrewUnknownException, std::runtime_error,
         "Worker thread threw unknown exception");
 
@@ -86,7 +90,7 @@ namespace Thread {
 
     /* Notify the thread to shut itself down.
 
-       TODO: Make this nonvirtual.  Curently unit test code overrides it. */
+       TODO: Make this nonvirtual.  Currently unit test code overrides it. */
     virtual void RequestShutdown();
 
     /* Return a file descriptor that becomes readable once the thread is about
@@ -128,9 +132,10 @@ namespace Thread {
        do is simply return, once it has finished whatever it needs to do in
        preparation for terminating.  The implementation then handles the
        details of making the file descriptor returned by GetShutdownWaitFd()
-       readable and terminating the thread.  This method should not let any
-       exceptions escape from it.  However, if any exceptions do escape, a
-       corresponding exception will be thrown by Join(). */
+       readable and terminating the thread.  If this method lets any exceptions
+       escape from it, a corresponding exception (one of
+       { TThreadThrewStdException, TThreadThrewUnknownException }) will be
+       thrown by Join(). */
     virtual void Run() = 0;
 
     /* This returns a file descriptor that the thread must monitor to detect a
