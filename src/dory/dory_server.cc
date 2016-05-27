@@ -73,9 +73,10 @@ SERVER_COUNTER(StreamClientWorkerUnknownException);
 
 TDoryServer::TServerConfig
 TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
-    size_t pool_block_size) {
+    bool allow_input_bind_ephemeral, size_t pool_block_size) {
   large_sendbuf_required = false;
-  std::unique_ptr<TConfig> cfg(new TConfig(argc, argv));
+  std::unique_ptr<TConfig> cfg(
+      new TConfig(argc, argv, allow_input_bind_ephemeral));
 
   switch (TestUnixDgSize(cfg->MaxInputMsgSize)) {
     case TUnixDgSizeTestResult::Pass:

@@ -116,7 +116,8 @@ static void ProcessModeArg(const std::string &mode_string,
   }
 }
 
-static void ParseArgs(int argc, char *argv[], TConfig &config) {
+static void ParseArgs(int argc, char *argv[], TConfig &config,
+    bool allow_input_bind_ephemeral) {
   using namespace TCLAP;
   const std::string prog_name = Basename(argv[0]);
   std::vector<const char *> arg_vec(&argv[0], &argv[0] + argc);
@@ -355,9 +356,9 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
     if (arg_input_port.isSet()) {
       in_port_t port = arg_input_port.getValue();
 
-      if (port < 1) {
-        /* A value of 0 is not allowed as a command line arg, but test code can
-           specify 0 directly to request an ephemeral port. */
+      if ((port < 1) && !allow_input_bind_ephemeral) {
+        /* A value of 0 requests an ephemeral port, which is only allowed for
+           test code. */
         throw TArgParseError("Invalid input port");
       }
 
@@ -451,7 +452,7 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
   }
 }
 
-TConfig::TConfig(int argc, char *argv[])
+TConfig::TConfig(int argc, char *argv[], bool allow_input_bind_ephemeral)
     : LogLevel(LOG_NOTICE),
       LogEcho(false),
       ProtocolVersion(0),
@@ -487,7 +488,7 @@ TConfig::TConfig(int argc, char *argv[])
       TopicAutocreate(false),
       UseOldInputFormat(false),
       UseOldOutputFormat(false) {
-  ParseArgs(argc, argv, *this);
+  ParseArgs(argc, argv, *this, allow_input_bind_ephemeral);
 }
 
 static std::string BuildModeString(const TOpt<mode_t> &opt_mode) {

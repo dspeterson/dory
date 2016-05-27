@@ -143,7 +143,8 @@ namespace {
     Args.push_back("--receive_socket_name");
     Args.push_back(UnixSocketName);
     Args.push_back(nullptr);
-    Cfg.reset(new TConfig(Args.size() - 1, const_cast<char **>(&Args[0])));
+    Cfg.reset(
+        new TConfig(Args.size() - 1, const_cast<char **>(&Args[0]), true));
     Protocol.reset(ChooseProto(Cfg->ProtocolVersion, Cfg->RequiredAcks,
                    static_cast<int32_t>(Cfg->ReplicationTimeout)));
     OutputQueue.reset(new TGate<TMsg::TPtr>);

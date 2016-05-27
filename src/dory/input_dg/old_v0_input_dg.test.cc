@@ -75,8 +75,8 @@ namespace {
     Args.push_back("--receive_socket_name");
     Args.push_back("dummy_value");
     Args.push_back(nullptr);
-    Cfg.reset(new Dory::TConfig(Args.size() - 1,
-                                 const_cast<char **>(&Args[0])));
+    Cfg.reset(new Dory::TConfig(Args.size() - 1, const_cast<char **>(&Args[0]),
+        true));
   }
 
   /* The fixture for testing reading/writing of old format input datagrams. */

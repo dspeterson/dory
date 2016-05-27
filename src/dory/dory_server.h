@@ -135,7 +135,8 @@ namespace Dory {
     };  // TServerConfig
 
     static TServerConfig CreateConfig(int argc, char **argv,
-        bool &large_sendbuf_required, size_t pool_block_size = 128);
+        bool &large_sendbuf_required, bool allow_input_bind_ephemeral,
+        size_t pool_block_size = 128);
 
     static void HandleShutdownSignal(int signum);
 
@@ -166,6 +167,14 @@ namespace Dory {
     in_port_t GetStatusPort() const {
       assert(this);
       return StatusPort;
+    }
+
+    /* Return the port used by the TCP input agent, or 0 if agent is inactive.
+       Do not call until server has been started.  This is intended for test
+       code to use for finding the ephemeral port chosen by the kernel. */
+    in_port_t GetInputPort() const {
+      assert(this);
+      return TcpInputAgent.IsKnown() ? TcpInputAgent->GetBindPort() : 0;
     }
 
     /* Return a file descriptor that becomes readable when the server has

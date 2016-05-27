@@ -30,6 +30,7 @@
 #include <mutex>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <boost/lexical_cast.hpp>
@@ -48,12 +49,16 @@
 #include <base/tmp_file_name.h>
 #include <capped/pool.h>
 #include <dory/anomaly_tracker.h>
-#include <dory/dory_server.h>
+#include <dory/client/client_sender_base.h>
 #include <dory/client/dory_client.h>
 #include <dory/client/dory_client_socket.h>
 #include <dory/client/status_codes.h>
+#include <dory/client/tcp_sender.h>
+#include <dory/client/unix_dg_sender.h>
+#include <dory/client/unix_stream_sender.h>
 #include <dory/config.h>
 #include <dory/debug/debug_setup.h>
+#include <dory/dory_server.h>
 #include <dory/kafka_proto/choose_proto.h>
 #include <dory/kafka_proto/v0/wire_proto.h>
 #include <dory/metadata_timestamp.h>
@@ -87,7 +92,8 @@ namespace {
     public:
     TDoryTestServer(in_port_t broker_port, size_t msg_buffer_max_kb,
         const std::string &dory_conf)
-        : BrokerPort(broker_port),
+        : TcpInputActive(false),
+          BrokerPort(broker_port),
           MsgBufferMaxKb(msg_buffer_max_kb),
           DoryConf(dory_conf),
           DoryReturnValue(EXIT_FAILURE) {
@@ -95,7 +101,8 @@ namespace {
 
     TDoryTestServer(in_port_t broker_port, size_t msg_buffer_max_kb,
         std::string &&dory_conf)
-        : BrokerPort(broker_port),
+        : TcpInputActive(false),
+          BrokerPort(broker_port),
           MsgBufferMaxKb(msg_buffer_max_kb),
           DoryConf(std::move(dory_conf)),
           DoryReturnValue(EXIT_FAILURE) {
@@ -103,9 +110,64 @@ namespace {
 
     virtual ~TDoryTestServer() noexcept;
 
-    const char *GetUnixSocketName() const {
+    void UseUnixDgSocket() {
       assert(this);
-      return UnixSocketName;
+      assert(!IsStarted());
+      UnixDgSocketName.MakeKnown();
+    }
+
+    void UseUnixStreamSocket() {
+      assert(this);
+      assert(!IsStarted());
+      UnixStreamSocketName.MakeKnown();
+    }
+
+    void UseTcpInputSocket() {
+      assert(this);
+      TcpInputActive = true;
+    }
+
+    const char *GetUnixDgSocketName() const {
+      assert(this);
+
+      /* Warning: Don't try to shorten the code below to this:
+
+             return UnixDgSocketName.IsKnown() ?
+                 *UnixDgSocketName : nullptr;
+
+         It has been observed to cause creation and destruction of a temporary
+         TTmpFileName object, returning a pointer to the filename inside the
+         destroyed object. */
+
+      if (UnixDgSocketName.IsUnknown()) {
+        return nullptr;
+      }
+
+      return *UnixDgSocketName;
+    }
+
+    const char *GetUnixStreamSocketName() const {
+      assert(this);
+
+      /* Warning: Don't try to shorten the code below to this:
+
+             return UnixStreamSocketName.IsKnown() ?
+                 *UnixStreamSocketName : nullptr;
+
+         It has been observed to cause creation and destruction of a temporary
+         TTmpFileName object, returning a pointer to the filename inside the
+         destroyed object. */
+
+      if (UnixStreamSocketName.IsUnknown()) {
+        return nullptr;
+      }
+
+      return *UnixStreamSocketName;
+    }
+
+    in_port_t GetInputPort() const {
+      assert(this);
+      return Dory->GetInputPort();
     }
 
     /* Call this method to start the server. */
@@ -132,7 +194,11 @@ namespace {
     virtual void Run() override;
 
     private:
-    TTmpFileName UnixSocketName;
+    TOpt<TTmpFileName> UnixDgSocketName;
+
+    TOpt<TTmpFileName> UnixStreamSocketName;
+
+    bool TcpInputActive;
 
     in_port_t BrokerPort;
 
@@ -165,8 +231,22 @@ namespace {
     args.push_back(tmp_file.GetName());
     args.push_back("--msg_buffer_max");
     args.push_back(msg_buffer_max_str.c_str());
-    args.push_back("--receive_socket_name");
-    args.push_back(UnixSocketName);
+
+    if (UnixDgSocketName.IsKnown()) {
+      args.push_back("--receive_socket_name");
+      args.push_back(*UnixDgSocketName);
+    }
+
+    if (UnixStreamSocketName.IsKnown()) {
+      args.push_back("--receive_stream_socket_name");
+      args.push_back(*UnixStreamSocketName);
+    }
+
+    if (TcpInputActive) {
+      args.push_back("--input_port");
+      args.push_back("0");  // 0 means "request ephemeral port"
+    }
+
     args.push_back("--client_id");
     args.push_back("dory");
     args.push_back("--status_loopback_only");
@@ -181,7 +261,7 @@ namespace {
       bool large_sendbuf_required = false;
       dory_config.MakeKnown(TDoryServer::CreateConfig(
           args.size() - 1, const_cast<char **>(&args[0]),
-          large_sendbuf_required));
+          large_sendbuf_required, true));
       const Dory::TConfig &config = dory_config->GetCmdLineConfig();
       InitSyslog(args[0], config.LogLevel, config.LogEcho);
       Dory.reset(new TDoryServer(std::move(*dory_config)));
@@ -257,25 +337,46 @@ namespace {
     return os.str();
   }
 
-  void CreateKafkaConfig(const char *topic, std::vector<std::string> &result) {
+  void CreateKafkaConfig(size_t num_brokers,
+      const std::vector<std::string> &topic_vec, size_t partitions_per_topic,
+      std::vector<std::string> &result) {
     result.clear();
 
-    /* Add contents to a setup file for the mock Kafka server.
-       This line tells the server to simulate 2 brokers on consecutive ports
+    /* Add contents to a setup file for the mock Kafka server.  This line tells
+       the server to simulate the given number of brokers on consecutive ports
        starting at 10000.  During the test, dory will connect to these ports
        and forward messages it gets from the UNIX domain socket. */
-    result.push_back("ports 10000 2");
-
-    /* This line tells the mock Kafka server to create a single topic with the
-       given name, containing 2 partitions.  The 0 at the end specifies that
-       the first partition should be on the broker whose port is at offset 0
-       from the starting port (10000 above).  The remaining partitions are
-       distributed among the brokers in round-robin fashion on consecutive
-       ports. */
-    std::string line("topic ");
-    line += topic;
-    line += " 2 0";
+    std::string line("ports 10000 ");
+    line += boost::lexical_cast<std::string>(num_brokers);
     result.push_back(line);
+    std::string num_partitions_str =
+        boost::lexical_cast<std::string>(partitions_per_topic);
+    size_t i = 0;
+
+    for (const auto &topic : topic_vec) {
+      /* This line tells the mock Kafka server to create a topic with the given
+         name, containing the given number of partitions.  The value following
+         the partition count specifies that the first partition should be on
+         the broker whose port is at the given offset from the starting port
+         (10000 above).  The remaining partitions are distributed among the
+         brokers in round-robin fashion on consecutive ports. */
+      line = "topic ";
+      line += topic;
+      line += " ";
+      line += num_partitions_str;
+      size_t offset = i % num_brokers;
+      ++i;
+      line += " ";
+      line += boost::lexical_cast<std::string>(offset);
+      result.push_back(line);
+    }
+  }
+
+  void CreateKafkaConfig(size_t num_brokers, const std::string &topic,
+      size_t num_partitions, std::vector<std::string> &result) {
+    std::vector<std::string> topic_vec;
+    topic_vec.push_back(topic);
+    CreateKafkaConfig(num_brokers, topic_vec, num_partitions, result);
   }
 
   void MakeDg(std::vector<uint8_t> &dg, const std::string &topic,
@@ -371,7 +472,7 @@ namespace {
   TEST_F(TDoryTest, SuccessfulDeliveryTest) {
     std::string topic("scooby_doo");
     std::vector<std::string> kafka_config;
-    CreateKafkaConfig(topic.c_str(), kafka_config);
+    CreateKafkaConfig(2, topic.c_str(), 2, kafka_config);
     TMockKafkaConfig kafka(kafka_config);
     kafka.StartKafka();
     Dory::MockKafkaServer::TMainThread &mock_kafka = *kafka.MainThread;
@@ -383,11 +484,12 @@ namespace {
 
     assert(port);
     TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
+    server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
     TDoryClientSocket sock;
-    int ret = sock.Bind(server.GetUnixSocketName());
+    int ret = sock.Bind(server.GetUnixDgSocketName());
     ASSERT_EQ(ret, DORY_OK);
     std::vector<std::string> topics;
     std::vector<std::string> bodies;
@@ -471,7 +573,7 @@ namespace {
   TEST_F(TDoryTest, KeyValueTest) {
     std::string topic("scooby_doo");
     std::vector<std::string> kafka_config;
-    CreateKafkaConfig(topic.c_str(), kafka_config);
+    CreateKafkaConfig(2, topic.c_str(), 2, kafka_config);
     TMockKafkaConfig kafka(kafka_config);
     kafka.StartKafka();
     Dory::MockKafkaServer::TMainThread &mock_kafka = *kafka.MainThread;
@@ -483,11 +585,12 @@ namespace {
 
     assert(port);
     TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
+    server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
     TDoryClientSocket sock;
-    int ret = sock.Bind(server.GetUnixSocketName());
+    int ret = sock.Bind(server.GetUnixDgSocketName());
     ASSERT_EQ(ret, DORY_OK);
     std::string key, value;
     std::vector<uint8_t> dg_buf;
@@ -559,7 +662,7 @@ namespace {
   TEST_F(TDoryTest, AckErrorTest) {
     std::string topic("scooby_doo");
     std::vector<std::string> kafka_config;
-    CreateKafkaConfig(topic.c_str(), kafka_config);
+    CreateKafkaConfig(2, topic.c_str(), 2, kafka_config);
     TMockKafkaConfig kafka(kafka_config);
     kafka.StartKafka();
     Dory::MockKafkaServer::TMainThread &mock_kafka = *kafka.MainThread;
@@ -571,6 +674,7 @@ namespace {
 
     assert(port);
     TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
+    server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
@@ -598,7 +702,7 @@ namespace {
     ASSERT_TRUE(success);
 
     TDoryClientSocket sock;
-    int ret = sock.Bind(server.GetUnixSocketName());
+    int ret = sock.Bind(server.GetUnixDgSocketName());
     ASSERT_EQ(ret, DORY_OK);
     std::vector<uint8_t> dg_buf;
     MakeDg(dg_buf, topic, msg_body);
@@ -725,7 +829,7 @@ namespace {
   TEST_F(TDoryTest, DisconnectTest) {
     std::string topic("scooby_doo");
     std::vector<std::string> kafka_config;
-    CreateKafkaConfig(topic.c_str(), kafka_config);
+    CreateKafkaConfig(2, topic.c_str(), 2, kafka_config);
     TMockKafkaConfig kafka(kafka_config);
     kafka.StartKafka();
     Dory::MockKafkaServer::TMainThread &mock_kafka = *kafka.MainThread;
@@ -737,6 +841,7 @@ namespace {
 
     assert(port);
     TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
+    server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
@@ -749,7 +854,7 @@ namespace {
     ASSERT_TRUE(success);
 
     TDoryClientSocket sock;
-    int ret = sock.Bind(server.GetUnixSocketName());
+    int ret = sock.Bind(server.GetUnixDgSocketName());
     ASSERT_EQ(ret, DORY_OK);
     std::vector<uint8_t> dg_buf;
     MakeDg(dg_buf, topic, msg_body);
@@ -851,7 +956,7 @@ namespace {
   TEST_F(TDoryTest, MalformedMsgTest) {
     std::string topic("scooby_doo");
     std::vector<std::string> kafka_config;
-    CreateKafkaConfig(topic.c_str(), kafka_config);
+    CreateKafkaConfig(2, topic.c_str(), 2, kafka_config);
     TMockKafkaConfig kafka(kafka_config);
     kafka.StartKafka();
     Dory::MockKafkaServer::TMainThread &mock_kafka = *kafka.MainThread;
@@ -863,6 +968,7 @@ namespace {
 
     assert(port);
     TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
+    server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
@@ -870,7 +976,7 @@ namespace {
     /* This message will get discarded because it's malformed. */
     std::string msg_body("I like scooby snacks");
     TDoryClientSocket sock;
-    int ret = sock.Bind(server.GetUnixSocketName());
+    int ret = sock.Bind(server.GetUnixDgSocketName());
     ASSERT_EQ(ret, DORY_OK);
     std::vector<uint8_t> dg_buf;
     MakeDg(dg_buf, topic, msg_body);
@@ -914,7 +1020,7 @@ namespace {
   TEST_F(TDoryTest, UnsupportedVersionMsgTest) {
     std::string topic("scooby_doo");
     std::vector<std::string> kafka_config;
-    CreateKafkaConfig(topic.c_str(), kafka_config);
+    CreateKafkaConfig(2, topic.c_str(), 2, kafka_config);
     TMockKafkaConfig kafka(kafka_config);
     kafka.StartKafka();
     Dory::MockKafkaServer::TMainThread &mock_kafka = *kafka.MainThread;
@@ -926,6 +1032,7 @@ namespace {
 
     assert(port);
     TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
+    server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
@@ -933,7 +1040,7 @@ namespace {
     /* This message will get discarded because it's malformed. */
     std::string msg_body("I like scooby snacks");
     TDoryClientSocket sock;
-    int ret = sock.Bind(server.GetUnixSocketName());
+    int ret = sock.Bind(server.GetUnixDgSocketName());
     ASSERT_EQ(ret, DORY_OK);
     std::vector<uint8_t> dg_buf;
     MakeDg(dg_buf, topic, msg_body);
@@ -1017,7 +1124,7 @@ namespace {
     TWireProto proto(0, 0);
     std::string topic("scooby_doo");
     std::vector<std::string> kafka_config;
-    CreateKafkaConfig(topic.c_str(), kafka_config);
+    CreateKafkaConfig(2, topic.c_str(), 2, kafka_config);
     TMockKafkaConfig kafka(kafka_config);
     kafka.StartKafka();
     Dory::MockKafkaServer::TMainThread &mock_kafka = *kafka.MainThread;
@@ -1032,11 +1139,12 @@ namespace {
     size_t data_size = msg_body_1.size() + proto.GetSingleMsgOverhead();
     TDoryTestServer server(port, 1024,
         CreateCompressionTestConf(port, 1 + (10 * data_size)));
+    server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
     TDoryServer *dory = server.GetDory();
     TDoryClientSocket sock;
-    int ret = sock.Bind(server.GetUnixSocketName());
+    int ret = sock.Bind(server.GetUnixDgSocketName());
     ASSERT_EQ(ret, DORY_OK);
     std::vector<std::string> topics;
     std::vector<std::string> bodies;
@@ -1070,6 +1178,228 @@ namespace {
 
     GetKeyAndValue(*dory, mock_kafka, topic, "", msg_body_1, 1, 10,
                    TCompressionType::Snappy);
+
+    TAnomalyTracker::TInfo bad_stuff;
+    dory->GetAnomalyTracker().GetInfo(bad_stuff);
+    ASSERT_EQ(bad_stuff.DiscardTopicMap.size(), 0U);
+    ASSERT_EQ(bad_stuff.DuplicateTopicMap.size(), 0U);
+    ASSERT_EQ(bad_stuff.BadTopics.size(), 0U);
+    ASSERT_EQ(bad_stuff.MalformedMsgCount, 0U);
+    ASSERT_EQ(bad_stuff.UnsupportedVersionMsgCount, 0U);
+
+    server.RequestShutdown();
+    server.Join();
+    ASSERT_EQ(server.GetDoryReturnValue(), EXIT_SUCCESS);
+  }
+
+  std::string CreateStressTestMsgBody(const std::string &msg_body_base,
+      size_t seq, size_t pad) {
+    std::string result;
+    std::string seq_str = boost::lexical_cast<std::string>(seq);
+
+    if (seq_str.size() < pad) {
+      result.assign(pad - seq_str.size(), '0');
+    }
+
+    result += seq_str;
+    result.push_back(' ');
+    result += msg_body_base;
+    return std::move(result);
+  }
+
+  std::vector<std::string> CreateStressTestMsgBodyVec(
+      const std::string &msg_body_base, size_t msg_count, size_t pad) {
+    std::vector<std::string> result;
+
+    for (size_t i = 0; i < msg_count; ++i) {
+      result.push_back(CreateStressTestMsgBody(msg_body_base, i, pad));
+    }
+
+    return std::move(result);
+  }
+
+  class TMsgBlaster : public TFdManagedThread {
+    NO_COPY_SEMANTICS(TMsgBlaster);
+
+    public:
+    TMsgBlaster(TClientSenderBase *sender, const std::string &topic,
+        const std::vector<std::string> &msg_vec)
+        : Sender(sender),
+          Topic(topic),
+          MsgVec(msg_vec) {
+    }
+
+    virtual ~TMsgBlaster() noexcept {
+    }
+
+    virtual void Run() override;
+
+    private:
+    std::unique_ptr<TClientSenderBase> Sender;
+
+    const std::string &Topic;
+
+    const std::vector<std::string> &MsgVec;
+  };  // TMsgBlaster
+
+  void TMsgBlaster::Run() {
+    assert(this);
+    std::vector<uint8_t> msg_buf;
+
+    for (const std::string &msg : MsgVec) {
+      MakeDg(msg_buf, Topic, msg);
+      Sender->Send(&msg_buf[0], msg_buf.size());
+    }
+  }
+
+  TEST_F(TDoryTest, SimpleStressTest) {
+    std::cout << "This test is expected to take a while ..." << std::endl;
+    std::vector<std::string> topic_vec;
+    topic_vec.push_back("scooby_doo");
+    topic_vec.push_back("shaggy");
+    std::vector<std::string> kafka_config;
+    CreateKafkaConfig(2, topic_vec, 1, kafka_config);
+    TMockKafkaConfig kafka(kafka_config);
+    kafka.StartKafka();
+    Dory::MockKafkaServer::TMainThread &mock_kafka = *kafka.MainThread;
+
+    /* Translate virtual port from the mock Kafka server setup file into a
+       physical port.  See big comment in <dory/mock_kafka_server/port_map.h>
+       for an explanation of what is going on here. */
+    in_port_t port = mock_kafka.VirtualPortToPhys(10000);
+
+    assert(port);
+    TDoryTestServer server(port, 100 * 1024, CreateSimpleDoryConf(port));
+    server.UseUnixDgSocket();
+    server.UseUnixStreamSocket();
+    server.UseTcpInputSocket();
+    bool started = server.SyncStart();
+    ASSERT_TRUE(started);
+    TDoryServer *dory = server.GetDory();
+
+    std::string msg_base_0("UNIX datagram message for Scooby");
+    std::string msg_base_1("UNIX datagram message for Shaggy");
+    std::string msg_base_2("UNIX stream message for Scooby");
+    std::string msg_base_3("UNIX stream message for Shaggy");
+    std::string msg_base_4("TCP message for Scooby");
+    std::string msg_base_5("TCP message for Shaggy");
+    std::vector<std::string> unix_dg_msg_bodies_0 =
+        CreateStressTestMsgBodyVec(msg_base_0, 50000, 5);
+    std::vector<std::string> unix_dg_msg_bodies_1 =
+        CreateStressTestMsgBodyVec(msg_base_1, 50000, 5);
+    std::vector<std::string> unix_stream_msg_bodies_0 =
+        CreateStressTestMsgBodyVec(msg_base_2, 50000, 5);
+    std::vector<std::string> unix_stream_msg_bodies_1 =
+        CreateStressTestMsgBodyVec(msg_base_3, 50000, 5);
+    std::vector<std::string> tcp_msg_bodies_0 =
+        CreateStressTestMsgBodyVec(msg_base_4, 50000, 5);
+    std::vector<std::string> tcp_msg_bodies_1 =
+        CreateStressTestMsgBodyVec(msg_base_5, 50000, 5);
+
+    std::unique_ptr<TClientSenderBase> sender(
+        new TUnixDgSender(server.GetUnixDgSocketName()));
+    sender->PrepareToSend();
+    TMsgBlaster b0(sender.release(), topic_vec[0], unix_dg_msg_bodies_0);
+    sender.reset(new TUnixDgSender(server.GetUnixDgSocketName()));
+    sender->PrepareToSend();
+    TMsgBlaster b1(sender.release(), topic_vec[1], unix_dg_msg_bodies_1);
+    sender.reset(new TUnixStreamSender(server.GetUnixStreamSocketName()));
+    sender->PrepareToSend();
+    TMsgBlaster b2(sender.release(), topic_vec[0], unix_stream_msg_bodies_0);
+    sender.reset(new TUnixStreamSender(server.GetUnixStreamSocketName()));
+    sender->PrepareToSend();
+    TMsgBlaster b3(sender.release(), topic_vec[1], unix_stream_msg_bodies_1);
+    sender.reset(new TTcpSender(server.GetInputPort()));
+    sender->PrepareToSend();
+    TMsgBlaster b4(sender.release(), topic_vec[0], tcp_msg_bodies_0);
+    sender.reset(new TTcpSender(server.GetInputPort()));
+    sender->PrepareToSend();
+    TMsgBlaster b5(sender.release(), topic_vec[1], tcp_msg_bodies_1);
+
+    b0.Start();
+    b1.Start();
+    b2.Start();
+    b3.Start();
+    b4.Start();
+    b5.Start();
+
+    for (size_t i = 0; (dory->GetAckCount() < 300000) && (i < 30000); ++i) {
+      SleepMilliseconds(10);
+    }
+
+    ASSERT_EQ(dory->GetAckCount(), 300000U);
+    b0.Join();
+    b1.Join();
+    b2.Join();
+    b3.Join();
+    b4.Join();
+    b5.Join();
+
+    using TTracker = TReceivedRequestTracker;
+    std::list<TTracker::TRequestInfo> received;
+    std::vector<std::pair<std::string, std::string>> received_msgs;
+
+    for (size_t i = 0; i < 30000; ++i) {
+      mock_kafka.NonblockingGetHandledRequests(received);
+
+      for (auto &item : received) {
+        if (item.MetadataRequestInfo.IsKnown()) {
+          ASSERT_EQ(item.MetadataRequestInfo->ReturnedErrorCode, 0);
+        } else if (item.ProduceRequestInfo.IsKnown()) {
+          const TTracker::TProduceRequestInfo &info = *item.ProduceRequestInfo;
+          ASSERT_EQ(info.ReturnedErrorCode, 0);
+          received_msgs.push_back(
+              std::make_pair(info.Topic, info.FirstMsgValue));
+        } else {
+          ASSERT_TRUE(false);
+        }
+      }
+
+      received.clear();
+
+      if (received_msgs.size() == 300000) {
+        break;
+      }
+
+      SleepMilliseconds(10);
+    }
+
+    ASSERT_EQ(received_msgs.size(), 300000U);
+    std::vector<std::string> v0, v1, v2, v3, v4, v5;
+
+    for (const auto &topic_and_body : received_msgs) {
+      const std::string &topic = topic_and_body.first;
+      const std::string &body = topic_and_body.second;
+
+      if (body.find(msg_base_0) != std::string::npos) {
+        EXPECT_EQ(topic, topic_vec[0]);
+        v0.push_back(body);
+      } else if (body.find(msg_base_1) != std::string::npos) {
+        EXPECT_EQ(topic, topic_vec[1]);
+        v1.push_back(body);
+      } else if (body.find(msg_base_2) != std::string::npos) {
+        EXPECT_EQ(topic, topic_vec[0]);
+        v2.push_back(body);
+      } else if (body.find(msg_base_3) != std::string::npos) {
+        EXPECT_EQ(topic, topic_vec[1]);
+        v3.push_back(body);
+      } else if (body.find(msg_base_4) != std::string::npos) {
+        EXPECT_EQ(topic, topic_vec[0]);
+        v4.push_back(body);
+      } else if (body.find(msg_base_5) != std::string::npos) {
+        EXPECT_EQ(topic, topic_vec[1]);
+        v5.push_back(body);
+      } else {
+        ASSERT_TRUE(false);
+      }
+    }
+
+    ASSERT_EQ(unix_dg_msg_bodies_0, v0);
+    ASSERT_EQ(unix_dg_msg_bodies_1, v1);
+    ASSERT_EQ(unix_stream_msg_bodies_0, v2);
+    ASSERT_EQ(unix_stream_msg_bodies_1, v3);
+    ASSERT_EQ(tcp_msg_bodies_0, v4);
+    ASSERT_EQ(tcp_msg_bodies_1, v5);
 
     TAnomalyTracker::TInfo bad_stuff;
     dory->GetAnomalyTracker().GetInfo(bad_stuff);

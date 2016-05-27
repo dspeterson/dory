@@ -34,7 +34,7 @@ namespace Dory {
 
   struct TConfig {
     /* Throws TArgParseError on error parsing args. */
-    TConfig(int argc, char *argv[]);
+    TConfig(int argc, char *argv[], bool allow_input_bind_ephemeral);
 
     std::string ConfigPath;
 

@@ -48,7 +48,7 @@ static int DoryMain(int argc, char *argv[]) {
 
   try {
     dory_config.MakeKnown(TDoryServer::CreateConfig(argc, argv,
-        large_sendbuf_required));
+        large_sendbuf_required, false));
     const TConfig &config = dory_config->GetCmdLineConfig();
 
     if (config.Daemon) {
