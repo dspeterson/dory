@@ -37,6 +37,12 @@
 
 "use strict";
 
+/* Uncomment this and the code at the bottom of the file if you want to send
+   messages to Dory by UNIX domain _stream_ socket. */
+// var net = require('net');
+
+/* This is necessary only if you want to send messages to Dory by UNIX domain
+   _datagram_ socket. */
 var unix = require('unix-dgram');
 
 function GetEpochMilliseconds() {
@@ -114,10 +120,14 @@ DoryMsgCreator.getMaxTopicSize = function () {
 
 DoryMsgCreator.getMaxMsgSize = function () {
     /* This is an extremely loose upper bound, based on the maximum value that
-       can be stored in a 32-bit signed integer field.  The actual maximum is a
-       much smaller value: the maximum UNIX domain datagram size supported by
+       can be stored in a 32-bit signed integer field.  The actual maximum is
+       much smaller.  If we are sending to Dory by UNIX domain datagram socket,
+       we are limited by the maximum UNIX domain datagram size supported by
        the operating system, which has been observed to be 212959 bytes on a
-       CentOS 7 x86_64 system. */
+       CentOS 7 x86_64 system.  If we are sending to Dory by UNIX domain stream
+       socket or local TCP, there is a configurable maximum imposed by the
+       Kafka brokers.  See the message.max.bytes setting in the Kafka broker
+       configuration. */
     return 0x7fffffff;
 }
 
@@ -207,7 +217,7 @@ DoryMsgCreator.prototype = {
 };
 
 var Dory = new DoryMsgCreator();
-var dory_path = '/path/to/dory/socket';
+var dory_dgram_path = '/path/to/dory/datagram_socket';
 var topic = 'some topic';
 var msg_key = '';
 var msg_value = 'hello world';
@@ -225,9 +235,8 @@ var error = null;
 var client = unix.createSocket('unix_dgram');
 
 client.on('error', function (err) {
-    console.error('error while connecting to dory socket, closing connection',
-            err);
-    process.exit(0);
+    console.error('error while connecting to dory datagram socket', err);
+    process.exit(1);
 });
 
 client.on('connect', function () {
@@ -236,4 +245,22 @@ client.on('connect', function () {
     client.close();
 });
 
-client.connect(dory_path);
+client.connect(dory_dgram_path);
+
+/* Uncomment the code below and the "var net = require('net');" line near the
+   top of the file to send messages to Dory by UNIX domain _stream_ socket. */
+
+/*
+var client2 = net.createConnection('/path/to/dory/stream_socket');
+
+client2.on('error', function (err) {
+    console.error('error while connecting to dory stream socket', err);
+    process.exit(1);
+});
+
+client2.on('connect', function () {
+    client2.write(anyPartitionMessage);
+    client2.write(partitionKeyMessage);
+    client2.destroy();
+});
+ */
