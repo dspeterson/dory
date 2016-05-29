@@ -71,7 +71,13 @@ public class DoryExampleClient
            Alternatively, you can write your own JNI code that uses Dory's
            client C library. */
         try {
-            // create socket for sending to Dory
+            /* Create socket for sending to Dory.
+             *
+             * Note: If sending messages to Dory's UNIX domain stream socket,
+             * change the second constructor parameter below to the following:
+             *
+             *     JUDS.SOCK_STREAM
+             */
             unixSocket = new UnixDomainSocketClient(doryPath,
                     JUDS.SOCK_DGRAM);
 

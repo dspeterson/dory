@@ -95,10 +95,14 @@ public class DatagramCreator {
     }
 
     /* This is an extremely loose upper bound, based on the maximum value that
-       can be stored in a 32-bit signed integer field.  The actual maximum is a
-       much smaller value: the maximum UNIX domain datagram size supported by
+       can be stored in a 32-bit signed integer field.  The actual maximum is
+       much smaller.  If we are sending to Dory by UNIX domain datagram socket,
+       we are limited by the maximum UNIX domain datagram size supported by
        the operating system, which has been observed to be 212959 bytes on a
-       CentOS 7 x86_64 system. */
+       CentOS 7 x86_64 system.  If we are sending to Dory by UNIX domain stream
+       socket or local TCP, there is a configurable maximum imposed by the
+       Kafka brokers.  See the message.max.bytes setting in the Kafka broker
+       configuration. */
     private static int maxMsgSize() {
         return Integer.MAX_VALUE;
     }
