@@ -123,7 +123,6 @@ void TUnixDgInputAgent::Run() {
   syslog(LOG_NOTICE, "UNIX datagram input thread finished initialization, "
       "forwarding messages");
   ForwardMessages();
-  syslog(LOG_NOTICE, "UNIX datagram input thread finishing normally");
 }
 
 void TUnixDgInputAgent::OpenUnixSocket() {

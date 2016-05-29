@@ -547,7 +547,7 @@ void Dory::LogConfig(const TConfig &config) {
         BuildModeString(config.ReceiveStreamSocketMode).c_str());
   }
 
-  syslog(LOG_NOTICE, "Using Kafka protocol version [%lu]",
+  syslog(LOG_NOTICE, "Using Kafka protocol version %lu",
          static_cast<unsigned long>(config.ProtocolVersion));
   syslog(LOG_NOTICE, "Listening on status port %u",
          static_cast<unsigned>(config.StatusPort));

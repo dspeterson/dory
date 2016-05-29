@@ -676,6 +676,8 @@ bool TDoryServer::Shutdown() {
   assert(!router_thread_started || msg_list.empty());
   DiscardFinalMsgs(msg_list);
 
+  syslog(LOG_NOTICE, "Dory shutdown finished");
+
   /* Let the DiscardFileLogger destructor disable discard file logging.  Then
      we know it gets disabled only after everything that may generate discards
      has been destroyed. */
