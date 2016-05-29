@@ -64,10 +64,13 @@ package DoryMsgCreator {
   }
 
   # This is an extremely loose upper bound, based on the maximum value that can
-  # be stored in a 32-bit signed integer field.  The actual maximum is a much
-  # smaller value: the maximum UNIX domain datagram size supported by the
-  # operating system, which has been observed to be 212959 bytes on a CentOS 7
-  # x86_64 system.
+  # be stored in a 32-bit signed integer field.  The actual maximum is much
+  # smaller.  If we are sending to Dory by UNIX domain datagram socket, we are
+  # limited by the maximum UNIX domain datagram size supported by the operating
+  # system, which has been observed to be 212959 bytes on a CentOS 7 x86_64
+  # system.  If we are sending to Dory by UNIX domain stream socket or local
+  # TCP, there is a configurable maximum imposed by the Kafka brokers.  See the
+  # message.max.bytes setting in the Kafka broker configuration.
   sub getMaxMsgSize {
     return (2 ** 31) - 1;
   }
@@ -182,7 +185,7 @@ sub getEpochMilliseconds {
   return ($hi, $lo);
 }
 
-my $dory_path = "/path/to/dory/socket";
+my $dory_dgram_path = "/path/to/dory/datagram_socket";
 my $topic = "some topic";
 my $msg_key = "";
 my $msg_value = "hello world";
@@ -226,19 +229,28 @@ if (!defined($sock)) {
   die "Failed to create socket: $!";
 }
 
-my $peer = sockaddr_un($dory_path);
+my $peer = sockaddr_un($dory_dgram_path);
 my $ret = send($sock, $any_partition_msg, 0, $peer);
 
 if (!defined($ret)) {
   unlink $dory_sock_path;
-  die "Failed to send: $!";
+  die "Failed to send UNIX datagram: $!";
 }
 
 my $ret = send($sock, $partition_key_msg, 0, $peer);
 
 if (!defined($ret)) {
   unlink $dory_sock_path;
-  die "Failed to send: $!";
+  die "Failed to send UNIX datagram: $!";
 }
 
 unlink $dory_sock_path;
+
+# Uncomment the code below to send messages to Dory by UNIX domain _stream_
+# socket.
+
+# my $sock_addr = sockaddr_un("/path/to/dory/stream_socket");
+# socket(my $server, PF_UNIX, SOCK_STREAM, 0) || die "socket() failed: $!";
+# connect($server, $sock_addr) || die "connect() failed: $!";
+# print $server $any_partition_msg;
+# print $server $partition_key_msg;
