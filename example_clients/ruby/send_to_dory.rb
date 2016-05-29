@@ -66,10 +66,13 @@ class DoryMsgCreator
   MAX_TOPIC_SIZE = (2 ** 15) - 1
 
   # This is an extremely loose upper bound, based on the maximum value that can
-  # be stored in a 32-bit signed integer field.  The actual maximum is a much
-  # smaller value: the maximum UNIX domain datagram size supported by the
-  # operating system, which has been observed to be 212959 bytes on a CentOS 7
-  # x86_64 system.
+  # be stored in a 32-bit signed integer field.  The actual maximum is much
+  # smaller.  If we are sending to Dory by UNIX domain datagram socket, we are
+  # limited by the maximum UNIX domain datagram size supported by the operating
+  # system, which has been observed to be 212959 bytes on a CentOS 7 x86_64
+  # system.  If we are sending to Dory by UNIX domain stream socket or local
+  # TCP, there is a configurable maximum imposed by the Kafka brokers.  See the
+  # message.max.bytes setting in the Kafka broker configuration.
   MAX_MSG_SIZE = (2 ** 31) - 1
 
   def create_any_partition_msg(topic, timestamp, key, value)
@@ -156,7 +159,7 @@ def delete_file_if_exists(path)
   end
 end
 
-dory_path = '/path/to/dory/socket'
+dory_dgram_path = '/path/to/dory/datagram_socket'
 topic = 'some topic'  # Kafka topic
 msg_key = ''
 msg_value = 'hello world'
@@ -184,7 +187,7 @@ begin
   dory_sock = Socket.new(Socket::AF_UNIX, Socket::SOCK_DGRAM, 0)
   dory_sock_path = tmp_filename('dory_client')
   dory_sock.bind(Socket.pack_sockaddr_un(dory_sock_path))
-  dory_sock.connect(Socket.pack_sockaddr_un(dory_path))
+  dory_sock.connect(Socket.pack_sockaddr_un(dory_dgram_path))
 
   # Send AnyPartition message to Dory.
   dory_sock.send(any_partition_msg, 0)
@@ -192,9 +195,32 @@ begin
   # Send PartitionKey message to Dory.
   dory_sock.send(partition_key_msg, 0)
 rescue SystemCallError => x
-  STDERR.puts x
+  STDERR.puts "Error sending to Dory by UNIX domain datagram socket: #{x}"
   exit 1
 ensure
   dory_sock.close
   delete_file_if_exists(dory_sock_path)
 end
+
+# Uncomment the code below to send messages to Dory by UNIX domain _stream_
+# socket.
+
+=begin
+
+begin
+  dory_sock_2 = Socket.new(Socket::AF_UNIX, Socket::SOCK_STREAM, 0)
+  dory_sock_2.connect(Socket.pack_sockaddr_un('/path/to/dory/stream_socket'))
+
+  # Send AnyPartition message to Dory.
+  dory_sock_2.send(any_partition_msg, 0)
+
+  # Send PartitionKey message to Dory.
+  dory_sock_2.send(partition_key_msg, 0)
+rescue SystemCallError => x
+  STDERR.puts "Error sending to Dory by UNIX domain stream socket: #{x}"
+  exit 1
+ensure
+  dory_sock_2.close
+end
+
+=end
