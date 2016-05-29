@@ -115,10 +115,14 @@ class DoryMsgCreator {
     }
 
     /* This is an extremely loose upper bound, based on the maximum value that
-       can be stored in a 32-bit signed integer field.  The actual maximum is a
-       much smaller value: the maximum UNIX domain datagram size supported by
+       can be stored in a 32-bit signed integer field.  The actual maximum is
+       much smaller.  If we are sending to Dory by UNIX domain datagram socket,
+       we are limited by the maximum UNIX domain datagram size supported by
        the operating system, which has been observed to be 212959 bytes on a
-       CentOS 7 x86_64 system. */
+       CentOS 7 x86_64 system.  If we are sending to Dory by UNIX domain stream
+       socket or local TCP, there is a configurable maximum imposed by the
+       Kafka brokers.  See the message.max.bytes setting in the Kafka broker
+       configuration. */
     private static function maxMsgSize() {
         $n = pow(2, 30);
         return $n + ($n - 1);
@@ -196,7 +200,7 @@ class DoryMsgCreator {
 // initialize DoryMsgCreator class
 DoryMsgCreator::init();
 
-$doryPath = "/path/to/dory/socket";
+$doryDgramPath = "/path/to/dory/datagram_socket";
 $topic = "some topic";  // Kafka topic
 $msgKey = "";
 $msgValue = "hello world";
@@ -241,16 +245,16 @@ if (socket_bind($sock, $tmp_filename) === false) {
 }
 
 // send AnyPartition message to Dory
-if (socket_sendto($sock, $msg1, strlen($msg1), 0, $doryPath) === false) {
-    print "Failed to send to Dory\n";
+if (socket_sendto($sock, $msg1, strlen($msg1), 0, $doryDgramPath) === false) {
+    print "Failed to send UNIX datagram to Dory\n";
     socket_close($sock);
     unlink($tmp_filename);
     exit(1);
 }
 
 // send PartitionKey message to Dory
-if (socket_sendto($sock, $msg2, strlen($msg2), 0, $doryPath) === false) {
-    print "Failed to send to Dory\n";
+if (socket_sendto($sock, $msg2, strlen($msg2), 0, $doryDgramPath) === false) {
+    print "Failed to send UNIX datagram to Dory\n";
     socket_close($sock);
     unlink($tmp_filename);
     exit(1);
@@ -259,5 +263,22 @@ if (socket_sendto($sock, $msg2, strlen($msg2), 0, $doryPath) === false) {
 // clean up
 socket_close($sock);
 unlink($tmp_filename);
+
+/* Uncomment the code below to send messages to Dory by UNIX domain _stream_
+   socket. */
+
+/*
+$doryStreamPath = "/path/to/dory/stream_socket";
+$fp = stream_socket_client("unix://" . $doryStreamPath, $errno, $errstr);
+
+if (!$fp) {
+    print "Failed to send to Dory UNIX stream socket: $errstr ($errno)\n";
+    exit(1);
+}
+
+fwrite($fp, $msg1);
+fwrite($fp, $msg2);
+fclose($fp);
+ */
 
 ?>
