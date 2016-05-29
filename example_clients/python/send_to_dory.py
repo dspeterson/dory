@@ -70,10 +70,14 @@ class DoryMsgCreator(object):
         return (2 ** 15) - 1
 
     # This is an extremely loose upper bound, based on the maximum value that
-    # can be stored in a 32-bit signed integer field.  The actual maximum is a
-    # much smaller value: the maximum UNIX domain datagram size supported by
-    # the operating system, which has been observed to be 212959 bytes on a
-    # CentOS 7 x86_64 system.
+    # can be stored in a 32-bit signed integer field.  The actual maximum is
+    # much smaller.  If we are sending to Dory by UNIX domain datagram socket,
+    # we are limited by the maximum UNIX domain datagram size supported by the
+    # operating system, which has been observed to be 212959 bytes on a CentOS
+    # 7 x86_64 system.  If we are sending to Dory by UNIX domain stream socket
+    # or local TCP, there is a configurable maximum imposed by the Kafka
+    # brokers.  See the message.max.bytes setting in the Kafka broker
+    # configuration.
     @staticmethod
     def getMaxMsgSize():
         return (2 ** 31) - 1
@@ -142,7 +146,7 @@ def GetEpochMilliseconds():
     return int(time.time() * 1000)
 
 
-dory_path = '/path/to/dory/socket'
+dory_dgram_path = '/path/to/dory/datagram_socket'
 topic = 'some topic'  # Kafka topic
 msg_key = ''
 msg_value = 'hello world'
@@ -170,12 +174,34 @@ dory_sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
 
 try:
     # Send AnyPartition message to Dory.
-    dory_sock.sendto(any_partition_msg, dory_path)
+    dory_sock.sendto(any_partition_msg, dory_dgram_path)
 
     # Send PartitionKey message to Dory.
-    dory_sock.sendto(partition_key_msg, dory_path)
+    dory_sock.sendto(partition_key_msg, dory_dgram_path)
 except socket.error as x:
-    sys.stderr.write('Error sending to Dory: ' + x.strerror + '\n')
+    sys.stderr.write('Error sending UNIX datagram to Dory: ' + x.strerror + \
+            '\n')
     sys.exit(1)
 finally:
     dory_sock.close()
+
+# Uncomment the code below to send messages to Dory by UNIX domain _stream_
+# socket.
+
+# dory_sock_2 = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+#
+# try:
+#     dory_sock_2.connect('/path/to/dory/stream_socket')
+# except socket.error as x:
+#     sys.stderr.write('Error connecting to Dory: ' + x.strerror + '\n')
+#     sys.exit(1)
+#
+# try:
+#     dory_sock_2.sendall(any_partition_msg)
+#     dory_sock_2.sendall(partition_key_msg)
+# except socket.error as x:
+#     sys.stderr.write('Error sending to Dory UNIX stream socket: ' + \
+#             x.strerror + '\n')
+#     sys.exit(1)
+# finally:
+#     dory_sock_2.close()
