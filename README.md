@@ -7,11 +7,11 @@ simplifies clients that send messages to Kafka, freeing them from the
 complexity of direct interaction with the Kafka cluster.  Specifically, it
 handles the details of:
 
-* Routing messages to the proper brokers, and spreading the load evenly across
-  multiple partitions for a given topic.  Clients may optionally exercise
-  control over partition assignment, such as ensuring that a group of related
-  messages are all routed to the same partition, or even directly choosing a
-  partition if the client knows the cluster topology.
+* Routing messages to the proper Kafka brokers, and spreading the load evenly
+  across multiple partitions for a given topic.  Clients may optionally
+  exercise control over partition assignment, such as ensuring that a group of
+  related messages are all routed to the same partition, or even directly
+  choosing a partition if the client knows the cluster topology.
 * Waiting for acknowledgements, and resending messages as necessary due to
   communication failures or Kafka-reported errors
 * Buffering messages to handle transient load spikes and Kafka-related problems
@@ -22,15 +22,59 @@ handles the details of:
 * Optional rate limiting of messages on a per-topic basis.  This guards against
   buggy client code overwhelming the Kafka cluster with too many messages.
 
-Dory runs on each individual host that communicates with Kafka, receiving
-messages from local clients over a UNIX domain datagram socket.  Clients write
-messages to Dory's socket in a simple binary format.  Once a client has
-written a message, no further interaction with Dory is required.  From that
-point onward, Dory takes full responsibility for reliable message delivery.
-Dory serves as a single intake point for a Kafka cluster, receiving messages
-from diverse clients regardless of what programming language a client is
-written in.  The following client support for sending messages to Dory is
-currently available:
+Dory runs on each individual host that sends messages to Kafka, receiving
+messages from clients through local interprocess communication and forwarding
+them to the Kafka cluster.  Once a client has written a message, no further
+interaction with Dory is required.  From that point onward, Dory takes full
+responsibility for reliable message delivery.  The preferred method for sending
+messages to Dory is by UNIX domain datagram socket.  However, Dory can also
+receive messages by UNIX domain stream socket or local TCP.  The option of
+using stream sockets allows sending messages too large to fit in a single
+datagram.  Local TCP facilitates sending messages from clients written in
+programming languages that do not provide easy access to UNIX domain sockets.
+Dory serves as a single intake point, receiving messages from diverse clients
+written in a variety of programming languages.  Here are some reasons to
+consider using Dory:
+
+* Dory decouples message sources from the Kafka cluster.  A client is not
+  forced to wait for an ACK after sending a message, since Dory handles the
+  details of waiting for ACKs from Kafka and resending messages when necessary.
+  Likewise, a client is not burdened with holding onto messages until it has a
+  reasonable-sized batch to send to Kafka.  If a client crashes immediately
+  after sending a message to Dory, the message is safe with Dory.  However, if
+  the client assumes responsibility for interacting with Kafka, a crash will
+  cause the loss of all batched messages, and possibly sent messages for which
+  an ACK is pending.
+
+* Dory provides uniformity of mechanism for status monitoring and data quality
+  reporting through its web interface.  Likewise, it provides a single point of
+  configuration for settings related to batching, compression, and other
+  aspects of interaction with Kafka.  This simplifies system administration, as
+  compared to a multitude of producer mechanisms for various programming
+  languages and applications, each with its own status monitoring, data quality
+  reporting, and configuration mechanisms (or lack thereof).
+
+* Dory may enable more efficient interaction with the Kafka cluster.  Dory's
+  C++ implementation is likely to be less resource-intensive than producers
+  written in interpreted scripting languages.  Since Dory is capable of serving
+  as a single access point for all clients that send messages to Kafka, it
+  permits more efficient batching by combining messages from multiple client
+  programs into a single batch.  Batching behavior is coordinated across all
+  message senders, rather than having each client act independently without
+  awareness of messages from other clients.  If Dory assumes responsibility for
+  all message transmission from a client host to a Kafka cluster with N
+  brokers, only a single TCP connection to each broker is required, rather than
+  having each client program maintain its own set of N connections.  Scenarios
+  are avoided in which short-lived clients frequently open and close
+  connections to the brokers.
+
+* Dory simplifies adding producer support for new programming languages and
+  runtime environments.  Sending a message to Kafka becomes as simple as
+  writing a message in a simple binary format to a UNIX domain or local TCP
+  socket.
+
+The following client support for sending messages to Dory is currently
+available:
 
 * [C and C++](example_clients/c_and_c%2B%2B)
 * [Java](example_clients/java/dory-client)
@@ -47,14 +91,15 @@ Code contributions for clients in other programming languages are much
 appreciated.  Technical details on how to send messages to Dory are provided
 [here](doc/sending_messages.md).  Support for [running Dory inside a Docker
 container](Docker) is also available.  Dory requires at least version 0.8 of
-Kafka, and has been tested on versions 0.8 and 0.9.  It runs on Linux, and has
-been tested on CentOS versions 7 and 6.5, and Ubuntu versions 15.04 LTS,
-14.04.1 LTS, and 13.10.
+Kafka, and has been tested on versions 0.8, 0.9, and 0.10.  It runs on Linux,
+and has been tested on CentOS versions 7 and 6.5, and Ubuntu versions 15.04
+LTS, 14.04.1 LTS, and 13.10.
 
-Dory is a fork of [Bruce](https://github.com/ifwe/bruce), and is maintained by
-Dave Peterson, who created Bruce while employed at if(we).  Code contributions
-from the community are welcomed and much appreciated.  Information for
-developers interested in contributing is provided [here](doc/dev_info.md) and
+Dory is the successor to [Bruce](https://github.com/ifwe/bruce), and is
+maintained by [Dave Peterson](https://github.com/dspeterson), who created Bruce
+while employed at [if(we)](http://www.ifwe.co/).  Code contributions from the
+community are welcomed and much appreciated.  Information for developers
+interested in contributing is provided [here](doc/dev_info.md) and
 [here](CONTRIBUTING.md).
 
 ## Setting Up a Build Environment

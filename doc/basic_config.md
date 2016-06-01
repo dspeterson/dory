@@ -32,8 +32,14 @@ The above command line arguments have the following effects:
 * `--msg_buffer_max 65536` tells Dory to reserve 65536 kbytes (or 64 * 1024 *
 1024 bytes) of memory for buffering message data to be sent to Kafka.
 * `--receive_socket_name /var/run/dory/dory.socket` specifies the location of
-the UNIX domain datagram socket Dory creates for receiving messages from
-clients.
+a UNIX domain datagram socket to create for receiving messages from clients.
+at least one of (`--receive_socket_name PATH`,
+`--receive_stream_socket_name PATH`, `--input_port PORT`) must be specified
+(see below).  UNIX domain datagrams are the preferred method of sending
+messages to Dory.  However, stream sockets allow sending messages too large to
+fit in a single datagram, and local TCP makes Dory available to clients written
+in programming languages that do not provide easy access to UNIX domain
+sockets.
 * `--config_path /etc/dory/dory_conf.xml` specifies the location of Dory's
 config file.
 
@@ -51,9 +57,21 @@ If unspecified, a default value of -1 is used.
 wait for successful replication to occur, as described
 [here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-ProduceRequest),
 before returning an error.  If unspecified, a default value of 10000 is used.
+* `--receive_stream_socket_name PATH` specifies the pathname of a UNIX domain
+stream socket to create for receiving messages from clients.  This allows
+clients to send messages that are too large to fit in a single datagram.
+* `--input_port PORT` specifies a TCP port to monitor for connections from
+clients that wish to send messages over a TCP connection.  This makes Dory
+available to clients written in programming languages that do not provide easy
+access to UNIX domain sockets.  It also allows clients to send messages that
+are too large to fit in a single datagram.  Dory binds to the loopback
+interface, so only local clients may connect.
 * `--receive_socket_mode MODE` Specifies the file permissions for Dory's UNIX
 domain datagram socket.  Octal values are prefixed with 0.  For instance,
 `--receive_socket_mode 0777` specifies unrestricted access.
+* `--receive_stream_socket_mode MODE` Specifies the file permissions for Dory's
+UNIX domain stream socket.  Octal values are prefixed with 0.  For instance,
+`--receive_stream_socket_mode 0777` specifies unrestricted access.
 * `--log_level LOG_ERR|LOG_WARNING|LOG_NOTICE|LOG_INFO|LOG_DEBUG` Specifies log
 level for syslog messages.
 * `--log_echo` Causes syslog messages to be echoed to standard error.

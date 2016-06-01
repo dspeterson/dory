@@ -229,8 +229,15 @@ Dory's required command line arguments are summarized below:
 * `--msg_buffer_max MAX_KB`: This specifies the amount of memory in kbytes
 Dory reserves for message data.  If this buffer space is exhausted, Dory
 starts discarding messages.
+
+Additionally, Dory requires at least one of the following:
+
 * `--receive_socket_name PATH`: This specifies the pathname of Dory's UNIX
 domain datagram socket that clients write messages to.
+* `--receive_stream_socket_name PATH`: This specifies the pathname of Dory's
+UNIX domain stream socket that clients write messages to.
+* `--input_port PORT`: This specifies the port that local clients should
+connect to when sending messages to Dory over a TCP connection.
 
 Dory's optional command line arguments are summarized below:
 
@@ -239,6 +246,9 @@ Dory's optional command line arguments are summarized below:
 * `--receive_socket_mode MODE`: This specifies the file permissions for Dory's
 UNIX domain datagram socket.  Octal values are prefixed with 0.  For instance,
 `--receive_socket_mode 0777` specifies unrestricted access.
+* `--receive_stream_socket_mode MODE`: This specifies the file permissions for
+Dory's UNIX domain stream socket.  Octal values are prefixed with 0.  For
+instance, `--receive_stream_socket_mode 0777` specifies unrestricted access.
 * `--log_level LEVEL`: This specifies the maximum enabled log level for syslog
 messages.  Allowed values are { LOG_ERR, LOG_WARNING, LOG_NOTICE, LOG_INFO,
 LOG_DEBUG }.  The default value is LOG_NOTICE.
@@ -255,9 +265,19 @@ only be available on the loopback interface.
 * `--status_port PORT`: This specifies the port Dory uses for its web
 interface.  The default value is 9090.
 * `--max_input_msg_size N`: This specifies the maximum input message size in
-bytes expected from clients.  Messages larger than this value will be
-discarded.  Here, "size" means the size of the entire datagram.  The default
-value is 65536.
+bytes expected from clients sending UNIX domain datagrams.  This limit does NOT
+apply to messages sent by UNIX domain stream socket or local TCP (see
+max_stream_input_msg_size).  Input datagrams larger than this value will be
+discarded.  The default value is 65536.
+* `--max_stream_input_msg_size N`: This specifies the maximum input message
+size in bytes expected from clients using UNIX domain stream sockets or local
+TCP.  Input messages larger than this value will cause Dory to immediately log
+an error and disconnect, forcing the client to reconnect if it wishes to
+continue sending messages.  The purpose of this is to guard against
+ridiculously large messages.  Even if a message doesn't exceed this limit, it
+may still be discarded if it is too large to send in a single produce request.
+However, in this case Dory will still leave the connection open and continue
+reading messages.  The default value is (2 * 1024 * 1024).
 * `--allow_large_unix_datagrams`: Allow large enough values for
 max_input_msg_size that a client sending a UNIX domain datagram of the maximum
 allowed size will need to increase its SO_SNDBUF socket option above the

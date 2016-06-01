@@ -1,46 +1,119 @@
 ## Design Overview
 
-Dory's core implementation consists of an input thread, a router thread, and a
-message dispatcher that assigns a thread to each Kafka broker.  There is also a
-main thread that starts the input and router threads, and then waits for a
-shutdown signal.  A third party HTTP server library used for Dory's status
-monitoring interface creates additional threads.  The input thread creates
-Dory's input socket, monitors it for messages from clients, and passes the
-messages to the router thread.  The router thread starts and manages the
-dispatcher threads, receives messages from the input thread, and routes them to
-dispatcher threads for delivery to the Kafka brokers.
+Dory's core implementation consists of three input agents for receiving
+messages from clients by different interprocess communication mechanisms, a
+router thread, and a message dispatcher that assigns a thread to each Kafka
+broker.  There is also a main thread that starts the input agents and router
+thread, and then waits for a shutdown signal.  The router thread starts and
+manages the dispatcher, receives messages from the input agents, and routes
+them to dispatcher threads for delivery to the Kafka brokers.  A third party
+HTTP server library used for Dory's status monitoring interface creates
+additional threads.
 
-### Input Thread
+### Input Agents
 
-The input thread's behavior is designed to be as simple as possible so it can
-respond immediately to messages on its input socket.  This is important to
-prevent messages from queueing up to the point where clients get blocked trying
-to write.  More complex and possibly time-consuming behaviors are delegated to
-the router thread and dispatcher threads.  When Dory starts up, it preallocates
-a fixed but configurable amount of memory for storing message content.  When a
-message arrives on its input socket, the input thread attempts to allocate
-memory from this pool to store the message contents.  If the pool does not
-contain enough free memory, Dory will discard the message.  All messages
-discarded for any reason are tracked and reported through Dory's web interface,
-as described [here](status_monitoring.md#discard-reporting).  On successful
-message creation, the input thread queues the message for processing by the
-router thread and continues monitoring its input socket.
+There are three input agents: the UNIX datagram input agent, the UNIX stream
+input agent, and the TCP input agent.  These receive messages from clients by
+UNIX domain datagram socket, UNIX domain stream socket, and local TCP socket,
+respectively.  For each option, the operating system provides the same reliable
+delivery guarantee as for other local interprocess communication mechanisms
+such as traditional UNIX pipes.  In particular, UNIX domain datagrams differ
+from UDP datagrams, which do not guarantee reliable delivery.  Command line
+options documented [here](detailed_config.md#command-line-arguments) determine
+which of the above-mentioned communication mechanisms are available to clients.
+If a given input option is not specified on the command line, the corresponding
+input agent is not started.
 
-Communication between Dory and its clients is purely one-way in nature.
-Clients write messages as individual datagrams to Dory's input socket and the
-input thread reads the messages.  There is no need for clients to wait for an
-ACK, since the operating system provides the same reliability guarantee for
-UNIX domain sockets as for other local IPC mechanisms such as pipes.  Note that
-this differs from UDP datagrams, which do not provide a reliable delivery
-guarantee.  Like their network-oriented counterparts, UNIX domain sockets exist
-in both datagram and stream variants.  The datagram option was chosen for Dory
-because of the greater simplicity of the programming model on both client and
-server ends.  However, a limitation of this approach is the maximum size of a
-single datagram, which has been found to be 212959 bytes on a CentOS 7 x86_64
-system.  This limit increases to 425951 bytes if clients are willing to
-increase SO_SNDBUF above the default value, although this may be inconvenient
-for many.  Hopefully the lower limit will be adequate for most users.  If not,
-optional support for stream sockets can be implemented as a future extension.
+#### Overview of Input Agent Behavior
+
+The UNIX datagram input agent consists of a single thread that creates Dory's
+UNIX datagram input socket, monitors it for messages from clients, and passes
+the messages to the router thread.  The UNIX stream and TCP input agents are
+nearly identical to each other in design, and share much common code.  Each of
+these agents has a single thread that creates a listening socket and accepts
+incoming connections.  On receipt of a connection, a worker thread is allocated
+from a thread pool shared by the UNIX stream and TCP input agents, and assigned
+to handle the connection.  Thus, there is one active worker thread for each
+connection.  A future version of Dory may replace this implementation with one
+that is more economical in its use of threads.  The thread pool places no upper
+bound on the number of connections, and is intended purely to reduce the
+overhead associated with creating and destroying threads.  Its size adjusts
+dynamically based on demand, and decays gradually over time when a period of
+high demand for workers is followed by reduced demand.  The pool has a manager
+thread, which wakes up periodically to prune workers that have been idle for a
+long time.  If Dory's command line options activate neither of the stream-based
+input agents, the thread pool is not activated.
+
+The input agents are designed to respond immediately to messages from clients,
+and in the case of the stream input agents, accept incoming connections without
+delay.  This is important to prevent clients from blocking when attempting to
+write a message or open a connection to Dory.  Message handling behavior is
+kept as simple as possible, with more complex and possibly time-consuming
+behaviors delegated to the router thread and dispatcher threads.  When Dory
+starts up, it preallocates a fixed but configurable amount of memory for
+storing message content.  On receipt of a message, Dory allocates memory from
+this pool to store the message contents.  If the pool does not contain enough
+free memory, Dory will discard the message.  All messages discarded for any
+reason are tracked and reported through Dory's web interface, as described
+[here](status_monitoring.md#discard-reporting).  On successful message
+creation, the receiving input agent queues the message for processing by the
+router thread.  Once it has queued or discarded a message, the input agent
+waits for the next incoming message.
+
+#### Options for Clients
+
+UNIX domain datagram sockets are the preferred option for most purposes due to
+simplicity and low overhead.  However, the operating system imposes a limit on
+datagram size.  This limit is platform-dependent, and has been observed to be
+212959 bytes on a CentOS 7 x86_64 system, although Dory's
+`--max_input_msg_size N` command line option may be used to enforce a lower
+limit.  Starting Dory with the `--allow_large_unix_datagrams` option will
+increase the limit (up to an observed value of 425951 bytes on a CentOS 7
+x86_64 system), although clients will have to increase the SO_SNDBUF socket
+option value to take advantage of the higher limit.  This may be difficult or
+impossible for a client written in an interpreted scripting language.
+
+To send larger messages, clients may use UNIX domain or local TCP stream
+sockets.  Even when using stream sockets, the Kafka brokers place a limit on
+message size which is determined by the `message.max.bytes` setting in the
+[broker configuration](https://kafka.apache.org/08/configuration.html).  A
+typical value is 1000000 bytes.  The value may be increased, although at some
+point broker performance will be adversely affected.  Clients written in
+programming languages that do not provide easy access to UNIX domain sockets
+may send messages to Dory over a local TCP connection.  It is better to use
+UNIX domain sockets if possible since this avoids the overhead imposed by the
+operating system's TCP/IP implementation.
+
+When sending messages by stream socket (UNIX domain or local TCP), a client can
+send an unlimited number of messages over a single connection.  After
+connecting to Dory, the client can simply start writing messages to the socket,
+one after another, and close the connection when finished.  As with UNIX domain
+datagrams, communication is purely one-way.  There is no need for Dory to send
+an ACK to the client since the operating system guarantees reliable message
+transmission.  Clients should never attempt to read from the socket, since Dory
+will never write anything.  Dory's `--max_stream_input_msg_size MAX_BYTES`
+option is intended to guard against a buggy client sending a ridiculously large
+message over a stream socket.  It should be set to a value substantially larger
+than the `message.max.bytes` setting in the Kafka broker configuration, and
+large enough that a nonbuggy client is unlikely to attempt to send a message
+that large.  If a client attempts to send a message that exceeds this limit (as
+indicated by the `Size` field documented
+[here](sending_messages.md#generic-message-format), Dory will immediately close
+the connection and log an error.  Messages that do not exceed the limit, but
+are still too large for Kafka to accept due to the `message.max.bytes` broker
+setting, will be discarded (and reported through Dory's discard reporting web
+interface).  However, in this case Dory will leave the connection open and
+continue reading messages.
+
+When the TCP input agent is active, Dory binds to the loopback interface.
+Therefore only local clients can connect.  Allowing remote clients to connect
+would be a mistake because sending messages to Dory is supposed to purely
+one-way.  As long as clients are local, the operating system guarantees
+reliable communication so there is no need for Dory to send an ACK on receipt
+of a message.  This simplifies clients, since they don't have to wait for an
+ACK, and possibly resend messages to Dory to ensure reliable communication.  A
+large part of Dory's purpose is to enable simple one-way "send it and forget
+it" message transmission from clients.
 
 ### Router Thread
 

@@ -62,8 +62,9 @@ so that your customized PATH setting (as described
 [here](centos_6_5_env.md#building-and-installing-gcc-482)) is seen and the
 newer version of gcc is used.  After performing the above steps, the path to
 the newly built Dory executable is now `out/release/dory/dory`.  If you omit
-`--release` above, you will create a debug build of Dory.  Before creating a
-debug build, you should read [this](dev_info.md#debug-builds).
+`--release` above, you will create a debug build of Dory and the location of
+the executable will be `out/debug/dory/dory`.  Before creating a debug build,
+you should read [this](dev_info.md#debug-builds).
 
 ### Building Dory's Client Library
 
@@ -98,14 +99,13 @@ cp src/dory/client/*.h /usr/include/dory/client
 One of the header files,
 [dory/client/dory_client_socket.h](../src/dory/client/dory_client_socket.h),
 provides a simple C++ wrapper class for the library functions that deal with
-Dory's UNIX domain socket.  Once the library is installed, C and C++ clients
-can specify `-ldory_client` when building with gcc.  The client library,
-header files, and command line program are included in Dory's RPM package.
-For example C code that uses the client library to send a message to Dory, see
-the big comment at the top of
+Dory's UNIX domain datagram socket.  Once the library is installed, C and C++
+clients can specify `-ldory_client` when building with gcc.  The client
+library, header files, and command line program are included in Dory's RPM
+package.  For example C code that uses the client library to send a message to
+Dory, see the big comment at the top of
 [dory/client/dory_client.h](../src/dory/client/dory_client.h).  For example
-C++ code, see
-[dory/client/to_dory.cc](../src/dory/client/to_dory.cc).
+C++ code, see [dory/client/to_dory.cc](../src/dory/client/to_dory.cc).
 
 ### More Details on Dory's Build System (including debug builds)
 

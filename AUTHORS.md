@@ -1,6 +1,7 @@
-Dory is a fork of [Bruce](https://github.com/ifwe/bruce), and is maintained by
-Dave Peterson, who created Bruce while employed at if(we).  Dory also contains
-code written by former Tagged/if(we) employees who worked on the
+Dory is the successor to [Bruce](https://github.com/ifwe/bruce), and is
+maintained by [Dave Peterson](https://github.com/dspeterson), who created Bruce
+while employed at [if(we)](http://www.ifwe.co/).  Dory also contains code
+written by former Tagged/if(we) employees who worked on the
 [Stig Database Project](http://www.stigdb.org/).  These contributors include
 [Jason Lucas](https://github.com/jasonl9000),
 [Joris Van Remoortere](https://github.com/jmlvanre),

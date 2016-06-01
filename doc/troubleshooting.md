@@ -28,6 +28,34 @@ no ACK is expected from Kafka for the given message set.
 [here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-ErrorCodes).
 * `XxxInputAgentDiscardXxx` and `DiscardXxx`: These counters are incremented
 when Dory discards messages for various reasons.
+* `NewUnixClient`: This is incremented each time Dory accepts an incoming
+connection from a client wishing to send messages over a UNIX domain stream
+socket.
+* `NewTcpClient`: This is incremented each time Dory accepts an incoming
+connection from a client wishing to send messages over a local TCP connection.
+* `UnixStreamInputCleanDisconnect`: This is incremented each time a UNIX domain
+stream client disconnects and there is no partially sent message remaining for
+Dory to read.  This is the expected case when a client disconnects.
+* `TcpInputCleanDisconnect`: This is incremented each time a local TCP client
+disconnects and there is no partially sent message remaining for Dory to read.
+This is the expected case when a client disconnects.
+* `UnixStreamInputUncleanDisconnect`: This is incremented each time a UNIX
+domain stream client disconnects and there is a partially sent message
+remaining for Dory to read.  This indicates a problem, such as a buggy client
+crashing while in the middle of sending a message.
+* `TcpInputUncleanDisconnect`: This is incremented each time a local TCP client
+disconnects and there is a partially sent message remaining for Dory to read.
+This indicates a problem, such as a buggy client crashing while in the middle
+of sending a message.
+* `UnixDgInputAgentForwardMsg`: This is incremented each time the UNIX datagram
+input agent receives a message from a client and queues it for processing by
+the router thread.
+* `UnixStreamInputForwardMsg`: This is incremented each time the UNIX stream
+input agent receives a message from a client and queues it for processing by
+the router thread.
+* `TcpInputForwardMsg`: This is incremented each time the TCP input agent
+receives a message from a client and queues it for processing by the router
+thread.
 * `BugXxx`: A nonzero value for any counter starting with the prefix `Bug`
 indicates a bug in Dory.
 * `MongooseXxx`: These counters indicate events related to Dory's web

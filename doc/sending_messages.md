@@ -2,11 +2,10 @@
 
 ### Using the Command Line Client
 
-The quickest way to get started sending messages to Dory is by using the
-command line client.  This client is included in Dory's RPM package, and can
-be built separately as described
-[here](build_install.md#building-dorys-client-library).  Sending a message to
-Dory can then be done as follows:
+An easy way to get started sending messages to Dory is by using the command
+line client.  This client is included in Dory's RPM package, and can be built
+separately as described [here](build_install.md#building-dorys-client-library).
+Sending a message to Dory can then be done as follows:
 
 ```
 to_dory --socket_path /var/run/dory/dory.socket --topic test_topic \
@@ -20,8 +19,25 @@ echo -n "hello world" | to_dory --socket_path /var/run/dory/dory.socket \
         --topic test_topic --stdin
 ```
 
-A full listing of the client's command line options may be obtained by typing
-`to_dory --help`.
+The above examples assume that you wish to send messages to Dory's UNIX domain
+datagram socket, which is usually the preferred method of sending messages.
+However, it is also possible to send messages by UNIX domain stream socket or
+local TCP.  Stream sockets allow sending messages that are too large to fit in
+a single datagram.  TCP makes Dory available to clients written in programming
+languages that do not provide easy access to UNIX domain sockets.  To send
+messages to Dory's UNIX domain stream socket, you would change the
+`--socket_path /var/run/dory/dory.socket` in the above examples to something
+like `--stream_socket_path /var/run/dory/dory.stream_socket`.  To send messages
+to Dory over a local TCP connection, you would replace
+`--socket_path /var/run/dory/dory.socket` with `--port N` where `N` is the port
+Dory listens on.  A full listing of the client's command line options may be
+obtained by typing `to_dory --help`.
+
+To send messages to Dory using a given communication mechanism (UNIX domain
+datagram sockets, UNIX domain stream sockets, or local TCP), Dory must be
+started with a command line option enabling the mechanism and specifying the
+UNIX domain socket path or port number, as described
+[here](sending_messages.md#communicating-with-dory).
 
 ### Other Clients
 
@@ -180,6 +196,28 @@ described
 
 Notice that the PartitionKey format is identical to the AnyPartition format
 except for the presence of the `PartitionKey` field.
+
+### Communicating with Dory
+
+Three options are available for sending messages to Dory:
+
+* UNIX domain datagram sockets
+* UNIX domain stream sockets
+* local TCP sockets
+
+To send messages using one of the above mechanisms, Dory must be started with a
+command line option enabling the mechanism and specifying the UNIX domain
+socket path or port number.  When starting Dory, you must specify at least one
+of (`--receive_socket_name PATH`, `--receive_stream_socket_name PATH`,
+`--input_port PORT`), as documented
+[here](detailed_config.md#command-line-arguments).  Also see the
+`--receive_socket_mode MODE` and `--receive_stream_socket_mode MODE` options.
+When sending messages, be sure to specify the same UNIX domain socket path or
+port number that Dory is using.
+
+All three input options are described in depth
+[here](design.md#options-for-clients), along with their intended purposes, and
+relative advantages and disadvantages.
 
 Once you are able to send messages to Dory, you will probably be interested
 in learning about its
