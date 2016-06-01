@@ -47,12 +47,12 @@ consider using Dory:
   an ACK is pending.
 
 * Dory provides uniformity of mechanism for status monitoring and data quality
-  reporting through its web interface.  Likewise, it provides a single point of
-  configuration for settings related to batching, compression, and other
-  aspects of interaction with Kafka.  This simplifies system administration, as
-  compared to a multitude of producer mechanisms for various programming
-  languages and applications, each with its own status monitoring, data quality
-  reporting, and configuration mechanisms (or lack thereof).
+  reporting through its web interface.  Likewise, it provides a unified
+  configuration mechanism for settings related to batching, compression, and
+  other aspects of interaction with Kafka.  This simplifies system
+  administration, as compared to a multitude of producer mechanisms for various
+  programming languages and applications, each with its own status monitoring,
+  data quality reporting, and configuration mechanisms (or lack thereof).
 
 * Dory may enable more efficient interaction with the Kafka cluster.  Dory's
   C++ implementation is likely to be less resource-intensive than producers
