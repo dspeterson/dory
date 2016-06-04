@@ -281,6 +281,21 @@ void TDiscardFileLogger::LogMalformedMsgDiscard(const void *msg_begin,
                  MaxMsgPrefixLen)));
 }
 
+void TDiscardFileLogger::LogUncleanDisconnectMsgDiscard(bool is_tcp,
+    const void *msg_begin, const void *msg_end) {
+  assert(this);
+
+  if (!Enabled) {
+    return;  // fast path for case where logging is disabled
+  }
+
+  size_t msg_size = reinterpret_cast<const uint8_t *>(msg_end) -
+      reinterpret_cast<const uint8_t *>(msg_begin);
+  WriteToLog(ComposeLogEntry(GetEpochMilliseconds(), "DISC",
+      is_tcp ? "UNCLEAN_T" : "UNCLEAN_U", std::string(), nullptr, 0, msg_begin,
+      std::min(msg_size, MaxMsgPrefixLen)));
+}
+
 void TDiscardFileLogger::LogUnsupportedApiKeyDiscard(const void *msg_begin,
     const void *msg_end, int api_key) {
   assert(this);

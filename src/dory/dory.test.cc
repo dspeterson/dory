@@ -1017,6 +1017,145 @@ namespace {
     ASSERT_EQ(server.GetDoryReturnValue(), EXIT_SUCCESS);
   }
 
+  TEST_F(TDoryTest, UncleanDisconnectTest) {
+    std::string topic("scooby_doo");
+    std::vector<std::string> kafka_config;
+    CreateKafkaConfig(2, topic.c_str(), 2, kafka_config);
+    TMockKafkaConfig kafka(kafka_config);
+    kafka.StartKafka();
+    Dory::MockKafkaServer::TMainThread &mock_kafka = *kafka.MainThread;
+
+    /* Translate virtual port from the mock Kafka server setup file into a
+       physical port.  See big comment in <dory/mock_kafka_server/port_map.h>
+       for an explanation of what is going on here. */
+    in_port_t port = mock_kafka.VirtualPortToPhys(10000);
+
+    assert(port);
+    TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
+    server.UseUnixDgSocket();
+    server.UseUnixStreamSocket();
+    server.UseTcpInputSocket();
+    bool started = server.SyncStart();
+    ASSERT_TRUE(started);
+    TDoryServer *dory = server.GetDory();
+
+    std::unique_ptr<TClientSenderBase> unix_stream_sender(
+        new TUnixStreamSender(server.GetUnixStreamSocketName()));
+    unix_stream_sender->PrepareToSend();
+    std::unique_ptr<TClientSenderBase> tcp_sender(
+        new TTcpSender(server.GetInputPort()));
+    tcp_sender->PrepareToSend();
+
+    /* Send a short message consisting of the first 2 bytes of the size field
+       and then disconnect. */
+    std::vector<uint8_t> msg_buf;
+    msg_buf.resize(2);
+    msg_buf[0] = 0;
+    msg_buf[1] = 0;
+    unix_stream_sender->Send(&msg_buf[0], msg_buf.size());
+    unix_stream_sender->Reset();
+
+    /* Reconnect, send a short message consisting of the first half of a
+       complete message, and then disconnect. */
+    unix_stream_sender.reset(
+        new TUnixStreamSender(server.GetUnixStreamSocketName()));
+    unix_stream_sender->PrepareToSend();
+    std::string msg_body("I like scooby snacks");
+    MakeDg(msg_buf, topic, msg_body);
+    unix_stream_sender->Send(&msg_buf[0], msg_buf.size() / 2);
+    unix_stream_sender->Reset();
+
+    /* Send the same truncated message over a TCP connection and then
+       disconnect. */
+    tcp_sender->Send(&msg_buf[0], msg_buf.size() / 2);
+    tcp_sender->Reset();
+
+    /* Reconnect using UNIX stream sockets, send a complete message, and
+       disconnect. */
+    unix_stream_sender.reset(
+        new TUnixStreamSender(server.GetUnixStreamSocketName()));
+    unix_stream_sender->PrepareToSend();
+    unix_stream_sender->Send(&msg_buf[0], msg_buf.size());
+    unix_stream_sender->Reset();
+
+    /* Reconnect using local TCP, send a complete message, and disconnect. */
+    tcp_sender.reset(new TTcpSender(server.GetInputPort()));
+    tcp_sender->PrepareToSend();
+    tcp_sender->Send(&msg_buf[0], msg_buf.size());
+    tcp_sender->Reset();
+
+    for (size_t num_tries = 0; ; ++num_tries) {
+      if (num_tries > 30) {
+        /* Test timed out. */
+        ASSERT_TRUE(false);
+        break;
+      }
+
+      SleepMilliseconds(1000);
+      TAnomalyTracker::TInfo bad_stuff;
+      dory->GetAnomalyTracker().GetInfo(bad_stuff);
+
+      if ((bad_stuff.UnixStreamUncleanDisconnectCount < 2) ||
+          (bad_stuff.TcpUncleanDisconnectCount < 1)) {
+        continue;
+      }
+
+      ASSERT_EQ(bad_stuff.MalformedMsgCount, 0U);
+      ASSERT_EQ(bad_stuff.UnixStreamUncleanDisconnectCount, 2U);
+      ASSERT_EQ(bad_stuff.TcpUncleanDisconnectCount, 1U);
+      ASSERT_EQ(bad_stuff.UnsupportedApiKeyMsgCount, 0U);
+      ASSERT_EQ(bad_stuff.UnsupportedVersionMsgCount, 0U);
+      ASSERT_EQ(bad_stuff.BadTopicMsgCount, 0U);
+      ASSERT_TRUE(bad_stuff.DiscardTopicMap.empty());
+      ASSERT_TRUE(bad_stuff.DuplicateTopicMap.empty());
+      ASSERT_TRUE(bad_stuff.RateLimitDiscardMap.empty());
+      ASSERT_TRUE(bad_stuff.MalformedMsgs.empty());
+      ASSERT_EQ(bad_stuff.UnixStreamUncleanDisconnectMsgs.size(), 2U);
+      ASSERT_EQ(bad_stuff.TcpUncleanDisconnectMsgs.size(), 1U);
+      ASSERT_TRUE(bad_stuff.UnsupportedVersionMsgs.empty());
+      ASSERT_TRUE(bad_stuff.LongMsgs.empty());
+      ASSERT_TRUE(bad_stuff.BadTopics.empty());
+      break;  // success
+    }
+
+    /* Now make sure the two complete messages were delivered successfully. */
+
+    using TTracker = TReceivedRequestTracker;
+    std::list<TTracker::TRequestInfo> received;
+    size_t num_received = 0;
+
+    for (size_t i = 0; i < 3000; ++i) {
+      mock_kafka.NonblockingGetHandledRequests(received);
+
+      for (auto &item : received) {
+        if (item.MetadataRequestInfo.IsKnown()) {
+          ASSERT_EQ(item.MetadataRequestInfo->ReturnedErrorCode, 0);
+        } else if (item.ProduceRequestInfo.IsKnown()) {
+          const TTracker::TProduceRequestInfo &info = *item.ProduceRequestInfo;
+          ASSERT_EQ(info.Topic, topic);
+          ASSERT_EQ(info.ReturnedErrorCode, 0);
+          ASSERT_EQ(info.FirstMsgValue, msg_body);
+          ++num_received;
+        } else {
+          ASSERT_TRUE(false);
+        }
+      }
+
+      if (num_received >= 2) {
+        break;
+      }
+
+      received.clear();
+      SleepMilliseconds(10);
+    }
+
+    ASSERT_EQ(num_received, 2U);
+
+    server.RequestShutdown();
+    server.Join();
+    ASSERT_EQ(server.GetDoryReturnValue(), EXIT_SUCCESS);
+  }
+
   TEST_F(TDoryTest, UnsupportedVersionMsgTest) {
     std::string topic("scooby_doo");
     std::vector<std::string> kafka_config;

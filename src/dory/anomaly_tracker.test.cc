@@ -25,6 +25,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <limits>
 #include <string>
 
@@ -191,6 +192,15 @@ namespace {
     cfg.AnomalyTracker.TrackMalformedMsgDiscard(bad_msg_2.data(),
         bad_msg_2.data() + bad_msg_2.size());
 
+    const char prefix[] = "prefix";
+    const char *prefix_end = prefix + std::strlen(prefix);
+    cfg.AnomalyTracker.TrackStreamClientUncleanDisconnect(false, prefix,
+        prefix_end);
+    cfg.AnomalyTracker.TrackStreamClientUncleanDisconnect(true, prefix,
+        prefix_end);
+    cfg.AnomalyTracker.TrackStreamClientUncleanDisconnect(true, prefix,
+        prefix_end);
+
     TAnomalyTracker::TInfo filling_report;
     std::shared_ptr<const TAnomalyTracker::TInfo> last_full_report =
         cfg.AnomalyTracker.GetInfo(filling_report);
@@ -232,6 +242,20 @@ namespace {
     ASSERT_EQ(*++malformed_iter, bad_msg_1);
     ASSERT_EQ(filling_report.MalformedMsgCount, 4U);
 
+    ASSERT_EQ(filling_report.UnixStreamUncleanDisconnectCount, 1U);
+    ASSERT_EQ(filling_report.TcpUncleanDisconnectCount, 2U);
+
+    ASSERT_EQ(filling_report.UnixStreamUncleanDisconnectMsgs.size(), 1U);
+    ASSERT_EQ(filling_report.TcpUncleanDisconnectMsgs.size(), 1U);
+
+    for (const auto &s : filling_report.UnixStreamUncleanDisconnectMsgs) {
+      ASSERT_EQ(s, prefix);
+    }
+
+    for (const auto &s : filling_report.TcpUncleanDisconnectMsgs) {
+      ASSERT_EQ(s, prefix);
+    }
+
     const std::list<std::string> &bad_topic = filling_report.BadTopics;
     ASSERT_EQ(bad_topic.size(), 3U);
     auto bad_topic_iter = bad_topic.begin();
@@ -252,11 +276,26 @@ namespace {
       ASSERT_EQ(last_full_report->DuplicateTopicMap.size(), 1U);
       ASSERT_EQ(last_full_report->MalformedMsgs.size(), 3U);
       ASSERT_EQ(last_full_report->BadTopics.size(), 3U);
+      ASSERT_EQ(last_full_report->UnixStreamUncleanDisconnectCount, 1U);
+      ASSERT_EQ(last_full_report->TcpUncleanDisconnectCount, 2U);
+
+      for (const auto &s : last_full_report->UnixStreamUncleanDisconnectMsgs) {
+        ASSERT_EQ(s, prefix);
+      }
+
+      for (const auto &s : last_full_report->TcpUncleanDisconnectMsgs) {
+        ASSERT_EQ(s, prefix);
+      }
+
       ASSERT_EQ(filling_report.GetReportId(), 1U);
       ASSERT_EQ(filling_report.DiscardTopicMap.size(), 0U);
       ASSERT_EQ(filling_report.DuplicateTopicMap.size(), 0U);
       ASSERT_EQ(filling_report.MalformedMsgs.size(), 0U);
       ASSERT_EQ(filling_report.BadTopics.size(), 0U);
+      ASSERT_EQ(filling_report.UnixStreamUncleanDisconnectCount, 0U);
+      ASSERT_EQ(filling_report.TcpUncleanDisconnectCount, 0U);
+      ASSERT_TRUE(filling_report.UnixStreamUncleanDisconnectMsgs.empty());
+      ASSERT_TRUE(filling_report.TcpUncleanDisconnectMsgs.empty());
     }
   }
 

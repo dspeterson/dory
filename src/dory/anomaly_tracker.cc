@@ -144,6 +144,31 @@ void TAnomalyTracker::TrackMalformedMsgDiscard(const void *prefix_begin,
                 MAX_MALFORMED_MSGS);
 }
 
+void TAnomalyTracker::TrackStreamClientUncleanDisconnect(bool is_tcp,
+    const void *prefix_begin, const void *prefix_end) {
+  assert(this);
+  uint64_t now = ClockFn();
+  DiscardFileLogger.LogUncleanDisconnectMsgDiscard(is_tcp, prefix_begin,
+      prefix_end);
+  prefix_end = EnforceMaxPrefixLen(prefix_begin, prefix_end);
+  std::string msg_prefix(reinterpret_cast<const char *>(prefix_begin),
+                         reinterpret_cast<const char *>(prefix_end));
+  std::list<std::string> *msg_list = nullptr;
+
+  std::lock_guard<std::mutex> lock(Mutex);
+  AdvanceReportPeriod(now);
+
+  if (is_tcp) {
+    ++FillingReport->TcpUncleanDisconnectCount;
+    msg_list = &FillingReport->TcpUncleanDisconnectMsgs;
+  } else {
+    ++FillingReport->UnixStreamUncleanDisconnectCount;
+    msg_list = &FillingReport->UnixStreamUncleanDisconnectMsgs;
+  }
+
+  UpdateLruList(std::move(msg_prefix), *msg_list, MAX_UNCLEAN_DISCONNECT_MSGS);
+}
+
 void TAnomalyTracker::TrackUnsupportedApiKeyDiscard(
     const void *prefix_begin, const void *prefix_end, int api_key) {
   assert(this);

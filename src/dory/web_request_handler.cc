@@ -482,6 +482,10 @@ void TWebRequestHandler::WriteDiscardReportPlain(std::ostream &os,
   os << "    report ID: " << info.GetReportId() << std::endl
       << "    start time: " << start_time << " " << time_buf << std::endl
       << "    malformed msg count: " << info.MalformedMsgCount << std::endl
+      << "    UNIX stream unclean disconnect count: "
+      << info.UnixStreamUncleanDisconnectCount << std::endl
+      << "    TCP unclean disconnect count: " << info.TcpUncleanDisconnectCount
+      << std::endl
       << "    unsupported API key msg count: "
       << info.UnsupportedApiKeyMsgCount << std::endl
       << "    unsupported version msg count: "
@@ -501,6 +505,38 @@ void TWebRequestHandler::WriteDiscardReportPlain(std::ostream &os,
     std::string encoded_msg = base64_encode(msg_bytes, msg.size());
     os << "    recent malformed msg: " << encoded_msg.size() << "["
         << encoded_msg << "]" << std::endl;
+  }
+
+  first_time = true;
+
+  for (const std::string &msg : info.UnixStreamUncleanDisconnectMsgs) {
+    if (first_time) {
+      os << std::endl;
+      first_time = false;
+    }
+
+    /* Message may contain binary data so we base64 encode it. */
+    const unsigned char *msg_bytes =
+        reinterpret_cast<const unsigned char *>(msg.data());
+    std::string encoded_msg = base64_encode(msg_bytes, msg.size());
+    os << "    recent UNIX stream unclean disconnect msg: "
+        << encoded_msg.size() << "[" << encoded_msg << "]" << std::endl;
+  }
+
+  first_time = true;
+
+  for (const std::string &msg : info.TcpUncleanDisconnectMsgs) {
+    if (first_time) {
+      os << std::endl;
+      first_time = false;
+    }
+
+    /* Message may contain binary data so we base64 encode it. */
+    const unsigned char *msg_bytes =
+        reinterpret_cast<const unsigned char *>(msg.data());
+    std::string encoded_msg = base64_encode(msg_bytes, msg.size());
+    os << "    recent TCP unclean disconnect msg: "
+        << encoded_msg.size() << "[" << encoded_msg << "]" << std::endl;
   }
 
   first_time = true;
@@ -594,6 +630,10 @@ void TWebRequestHandler::WriteDiscardReportJson(std::ostream &os,
       << ind0 << "\"start_time\": " << start_time << "," << std::endl
       << ind0 << "\"malformed_msg_count\": " << info.MalformedMsgCount << ","
       << std::endl
+      << ind0 << "\"unix_stream_unclean_disconnect_count\": "
+      << info.UnixStreamUncleanDisconnectCount << "," << std::endl
+      << ind0 << "\"tcp_unclean_disconnect_count\": "
+      << info.TcpUncleanDisconnectCount << "," << std::endl
       << ind0 << "\"unsupported_api_key_msg_count\": "
       << info.UnsupportedApiKeyMsgCount << "," << std::endl
       << ind0 << "\"unsupported_version_msg_count\": "
@@ -607,6 +647,54 @@ void TWebRequestHandler::WriteDiscardReportJson(std::ostream &os,
     bool first_time = true;
 
     for (const std::string &msg : info.MalformedMsgs) {
+      if (!first_time) {
+        os << "," << std::endl;
+      }
+
+      /* Message may contain binary data so we base64 encode it. */
+      const unsigned char *msg_bytes =
+          reinterpret_cast<const unsigned char *>(msg.data());
+      os << ind1 << "\"" << base64_encode(msg_bytes, msg.size()) << "\"";
+      first_time = false;
+    }
+
+    if (!first_time) {
+      os << std::endl;
+    }
+  }
+
+  os << ind0 << "]," << std::endl
+      << ind0 << "\"unix_stream_unclean_disconnect\": [" << std::endl;
+
+  {
+    TIndent ind1(ind0);
+    bool first_time = true;
+
+    for (const std::string &msg : info.UnixStreamUncleanDisconnectMsgs) {
+      if (!first_time) {
+        os << "," << std::endl;
+      }
+
+      /* Message may contain binary data so we base64 encode it. */
+      const unsigned char *msg_bytes =
+          reinterpret_cast<const unsigned char *>(msg.data());
+      os << ind1 << "\"" << base64_encode(msg_bytes, msg.size()) << "\"";
+      first_time = false;
+    }
+
+    if (!first_time) {
+      os << std::endl;
+    }
+  }
+
+  os << ind0 << "]," << std::endl
+      << ind0 << "\"tcp_unclean_disconnect\": [" << std::endl;
+
+  {
+    TIndent ind1(ind0);
+    bool first_time = true;
+
+    for (const std::string &msg : info.UnixStreamUncleanDisconnectMsgs) {
       if (!first_time) {
         os << "," << std::endl;
       }

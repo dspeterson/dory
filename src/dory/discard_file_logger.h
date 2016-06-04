@@ -143,6 +143,13 @@ namespace Dory {
        'msg_end' points one position past the last byte of the message. */
     void LogMalformedMsgDiscard(const void *msg_begin, const void *msg_end);
 
+    /* Write a log entry indicating that a partial message from an unclean
+       stream client disconnect is being discarded.  'msg_begin' points to the
+       first byte of the message.  'msg_end' points one position past the last
+       byte of the message. */
+    void LogUncleanDisconnectMsgDiscard(bool is_tcp, const void *msg_begin,
+        const void *msg_end);
+
     /* Write a log entry indicating that a message is being discarded due to
        unsupported API key.  'msg_begin' points to the first byte of the
        message.  'msg_end' points one position past the last byte of the

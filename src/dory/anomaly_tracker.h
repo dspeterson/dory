@@ -60,6 +60,12 @@ namespace Dory {
        a malformed message is received. */
     const size_t MAX_MALFORMED_MSGS = 25;
 
+    /* The maximum number of unclean disconnect message prefixes of a given
+       type (UNIX stream or TCP) to store info for.  Don't make this value too
+       large since a simple linear list search is done each time one of these
+       is received. */
+    const size_t MAX_UNCLEAN_DISCONNECT_MSGS = 25;
+
     /* The maximum number of too long messages to store info for.  Don't make
        this value too large since a simple linear list search is done each time
        a too long message is received. */
@@ -147,6 +153,14 @@ namespace Dory {
          certain length, only a prefix of the message is stored. */
       std::list<std::string> MalformedMsgs;
 
+      /* List of most recent partial messages from unclean UNIX stream client
+         disconnect. */
+      std::list<std::string> UnixStreamUncleanDisconnectMsgs;
+
+      /* List of most recent partial messages from unclean TCP client
+         disconnect. */
+      std::list<std::string> TcpUncleanDisconnectMsgs;
+
       /* Messages received with an unsupported protocol version.  The keys are
          protocol versions and the values are counts. */
       std::map<int, size_t> UnsupportedVersionMsgs;
@@ -164,6 +178,18 @@ namespace Dory {
       /* Count of discarded malformed messages. */
       size_t MalformedMsgCount;
 
+      /* This is incremented each time a UNIX domain stream client disconnects
+         with a partial message left behind.  This may indicate a client
+         problem, such as a buggy client crashing while in the middle of
+         sending a message. */
+      size_t UnixStreamUncleanDisconnectCount;
+
+      /* This is incremented each time a local TCP client disconnects with a
+         partial message left behind.  This may indicate a client problem, such
+         as a buggy client crashing while in the middle of sending a message.
+       */
+      size_t TcpUncleanDisconnectCount;
+
       /* Count of messages discarded due to unsupported API key. */
       size_t UnsupportedApiKeyMsgCount;
 
@@ -177,6 +203,8 @@ namespace Dory {
           : ReportId(0),
             StartTime(0),
             MalformedMsgCount(0),
+            UnixStreamUncleanDisconnectCount(0),
+            TcpUncleanDisconnectCount(0),
             UnsupportedApiKeyMsgCount(0),
             UnsupportedVersionMsgCount(0),
             BadTopicMsgCount(0) {
@@ -186,6 +214,8 @@ namespace Dory {
           : ReportId(report_id),
             StartTime(start_time),
             MalformedMsgCount(0),
+            UnixStreamUncleanDisconnectCount(0),
+            TcpUncleanDisconnectCount(0),
             UnsupportedApiKeyMsgCount(0),
             UnsupportedVersionMsgCount(0),
             BadTopicMsgCount(0) {
@@ -244,7 +274,14 @@ namespace Dory {
        We save prefixes of recently seen invalid message strings to facilitate
        troubleshooting. */
     void TrackMalformedMsgDiscard(const void *prefix_begin,
-                                  const void *prefix_end);
+        const void *prefix_end);
+
+    /* Track an event where a UNIX domain or local TCP stream client
+       disconnects with a partial message left behind.  This may indicate a
+       client problem, such as a buggy client crashing while in the middle of
+       sending a message. */
+    void TrackStreamClientUncleanDisconnect(bool is_tcp,
+        const void *prefix_begin, const void *prefix_end);
 
     void TrackUnsupportedApiKeyDiscard(const void *prefix_begin,
         const void *prefix_end, int api_key);

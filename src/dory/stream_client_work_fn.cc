@@ -367,6 +367,11 @@ void TStreamClientWorkFn::HandleClientClosed() const {
       UnixStreamInputCleanDisconnect.Increment();
     }
   } else {
+    const uint8_t *data_begin = ReceiveBuf.Data();
+    const uint8_t *data_end = data_begin + ReceiveBuf.DataSize();
+    AnomalyTracker->TrackStreamClientUncleanDisconnect(IsTcp, data_begin,
+        data_end);
+
     if (IsTcp) {
       TcpInputUncleanDisconnect.Increment();
       static TLogRateLimiter lim(std::chrono::seconds(30));
