@@ -374,7 +374,7 @@ void TManagedThreadPoolBase::TWorkerBase::DoPutBack(TWorkerBase *worker) {
 
   /* Allow worker to release any resources it holds before possibly returning
      to idle list. */
-  worker->PrepareForPutBack();
+  worker->ClearClientState();
 
   /* This is either empty or contains a single item: the smart pointer that
      owns the object pointed to by 'worker'.  If it goes out of scope nonempty
@@ -432,6 +432,23 @@ void TManagedThreadPoolBase::TWorkerBase::DoPutBack(TWorkerBase *worker) {
 
   if (shutdown_notify) {
     pool.AllWorkersFinished.Push();
+  }
+}
+
+void TManagedThreadPoolBase::TWorkerBase::ClearClientState() noexcept {
+  assert(this);
+
+  try {
+    /* This should not throw, but be prepared just in case it does. */
+    DoClearClientState();
+  } catch (const std::exception &x) {
+    std::string msg(
+        "Fatal exception while clearing thread pool worker state: ");
+    msg += x.what();
+    HandleFatalError(msg.c_str());
+  } catch (...) {
+    HandleFatalError("Fatal unknown exception while clearing thread pool "
+        "worker state");
   }
 }
 
@@ -493,11 +510,19 @@ void TManagedThreadPoolBase::TWorkerBase::DoBusyRun() {
        MyPool.PoolLock.  In this case, it's ok.  The test is not needed for
        correctness, but helps ensure fast response to a shutdown request. */
     if (MyPool.PoolIsReady) {
-      /* Perform work for client.  If client code throws, report error. */
+      /* Perform work for client.  If client code throws, report error.  Be
+         sure to clear client state afterwards, regardless of whether exception
+         was thrown. */
+
       try {
         DoWork();
       } catch (...) {
+        ClearClientState();
         error.emplace_back();
+      }
+
+      if (error.empty()) {
+        ClearClientState();
       }
     }
 

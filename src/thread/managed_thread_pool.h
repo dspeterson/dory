@@ -205,52 +205,23 @@ namespace Thread {
       }
 
       protected:
-      /* Perform work by calling the client-defined callable object.  When
-         finished, empty the function wrapper, releasing any resources held
-         within. */
+      /* Perform work by calling the client-defined callable object. */
       virtual void DoWork() override {
         assert(this);
-
-        /* Make sure any resources held by 'WorkFn' are released, even if the
-           call to 'WorkFn' throws. */
-
-        try {
-          WorkFn();
-        } catch (...) {
-          ClearWorkFn();
-          throw;
-        }
-
-        ClearWorkFn();
+        WorkFn();
       }
 
-      virtual void PrepareForPutBack() noexcept {
+      virtual void DoClearClientState() override {
         assert(this);
-        ClearWorkFn();
+
+        /* Depending on the type of TWorkCallable, this may invoke an
+           overloaded operator function, which must not throw since any
+           exception that escapes from here will cause invocation of the fatal
+           error handler. */
+        WorkFn = nullptr;
       }
 
       private:
-      /* Release any resources held within 'WorkFn' (in case it is a function
-         object) and reset it to its initial state. */
-      void ClearWorkFn() noexcept {
-        assert(this);
-
-        try {
-          /* Depending on the type of TWorkCallable, this may invoke an
-             overloaded operator function.  The function should not throw, but
-             be prepared just in case it does. */
-          WorkFn = nullptr;
-        } catch (const std::exception &x) {
-          std::string msg(
-              "Fatal exception while clearing thread pool worker function: ");
-          msg += x.what();
-          HandleFatalError(msg.c_str());
-        } catch (...) {
-          HandleFatalError("Fatal unknown exception while clearing thread "
-              "pool worker function");
-        }
-      }
-
       /* Function pointer or callable object that worker calls to perform work.
        */
       TWorkCallable WorkFn;

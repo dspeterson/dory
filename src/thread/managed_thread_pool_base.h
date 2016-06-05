@@ -563,13 +563,16 @@ namespace Thread {
          something to do. */
       virtual void DoWork() = 0;
 
-      /* Called by PutBack() before thread is released.  Subclass should
-         release any resources it holds here, to prevent resources from being
-         held by thread while on pool idle list. */
-      virtual void PrepareForPutBack() noexcept = 0;
+      /* Called when worker is about to be put back on idle list or destroyed.
+         Subclass should release any resources it holds here, to prevent
+         resources from being held by thread while on idle list.  Any
+         exceptions thrown will cause invocation of fatal error handler. */
+      virtual void DoClearClientState() = 0;
 
       private:
       static void DoPutBack(TWorkerBase *worker);
+
+      void ClearClientState() noexcept;
 
       /* Tell an idle worker to terminate.  Only the manager calls this.
          Worker will initially be sleeping on 'WakeupWait'. */
