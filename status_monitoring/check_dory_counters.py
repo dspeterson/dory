@@ -604,7 +604,9 @@ def CheckSocketErrorDeltas(deltas, old_nagios_code):
                       'MetadataResponseRead2UnexpectedEnd',
                       'ReadMetadataResponse2Fail',
                       'SendMetadataRequestFail',
-                      'SendMetadataRequestLostTcpConnection'
+                      'SendMetadataRequestLostTcpConnection',
+                      'UnixStreamInputSocketError',
+                      'TcpInputSocketError'
                     ]
     nonzero_counter_names = []
     sum = 0
@@ -661,6 +663,10 @@ def AnalyzeDeltas(deltas):
                              nagios_code)
     nagios_code = CheckDelta(deltas, 'GetMetadataFail', 0, EC_CRITICAL,
                              nagios_code)
+    nagios_code = CheckDelta(deltas, 'StreamClientWorkerStdException', 0,
+                             EC_CRITICAL, nagios_code)
+    nagios_code = CheckDelta(deltas, 'StreamClientWorkerUnknownException', 0,
+                             EC_CRITICAL, nagios_code)
 
     # Any number of instances of any of these is Warning.
     nagios_code = CheckDelta(deltas, 'MetadataResponseBadTopicNameLen', 0,
@@ -738,6 +744,18 @@ def AnalyzeDeltas(deltas):
                              nagios_code)
     nagios_code = CheckDelta(deltas, 'ConnectorTruncateLongTimeout', 0,
                              EC_WARNING, nagios_code)
+    nagios_code = CheckDelta(deltas, 'UnixStreamInputUncleanDisconnect', 0,
+                             EC_WARNING, nagios_code)
+    nagios_code = CheckDelta(deltas, 'UnixStreamInputShortSizeField', 0,
+                             EC_WARNING, nagios_code)
+    nagios_code = CheckDelta(deltas, 'UnixStreamInputLongSizeField', 0,
+                             EC_WARNING, nagios_code)
+    nagios_code = CheckDelta(deltas, 'TcpInputUncleanDisconnect', 0,
+                             EC_WARNING, nagios_code)
+    nagios_code = CheckDelta(deltas, 'TcpInputShortSizeField', 0, EC_WARNING,
+                             nagios_code)
+    nagios_code = CheckDelta(deltas, 'TcpInputLongSizeField', 0, EC_WARNING,
+                             nagios_code)
 
     # Check counters indicating socket-related errors.  These are summed
     # together and compared against thresholds for Warning and Critical.
