@@ -435,32 +435,26 @@ bool TDoryServer::StartMsgHandlingThreads() {
 static void ReportStreamClientWorkerErrors(
     const std::list<TManagedThreadPoolBase::TWorkerError> &error_list) {
   for (const auto &error : error_list) {
-    switch (error.ErrorType) {
-      case TManagedThreadPoolBase::TWorkerErrorType::ThrewStdException: {
-        StreamClientWorkerStdException.Increment();
-        static TLogRateLimiter lim(std::chrono::seconds(30));
+    try {
+      std::rethrow_exception(error.ThrownException);
+    } catch (const std::exception &x) {
+      StreamClientWorkerStdException.Increment();
+      static TLogRateLimiter lim(std::chrono::seconds(30));
 
-        /* TODO: Consider adding individual rate limits for different error
-           types. */
-        if (lim.Test()) {
-          syslog(LOG_ERR, "Stream input connection handler terminated on "
-              "error: %s", error.StdExceptionWhat.c_str());
-        }
-
-        break;
+      /* TODO: Consider adding individual rate limits for different error
+         types. */
+      if (lim.Test()) {
+        syslog(LOG_ERR, "Stream input connection handler terminated on error: "
+            "%s", x.what());
       }
-      case TManagedThreadPoolBase::TWorkerErrorType::ThrewUnknownException:{
-        StreamClientWorkerUnknownException.Increment();
-        static TLogRateLimiter lim(std::chrono::seconds(30));
+    } catch (...) {
+      StreamClientWorkerUnknownException.Increment();
+      static TLogRateLimiter lim(std::chrono::seconds(30));
 
-        if (lim.Test()) {
-          syslog(LOG_ERR, "Stream input connection handler terminated on "
-              "unknown error");
-        }
-
-        break;
+      if (lim.Test()) {
+        syslog(LOG_ERR, "Stream input connection handler terminated on "
+            "unknown error");
       }
-      NO_DEFAULT_CASE;
     }
   }
 }

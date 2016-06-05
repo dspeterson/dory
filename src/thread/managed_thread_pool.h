@@ -213,21 +213,15 @@ namespace Thread {
 
         /* Make sure any resources held by 'WorkFn' are released, even if the
            call to 'WorkFn' throws. */
-        class t_cleanup final {
-          public:
-          explicit t_cleanup(TWorker &worker)
-              : Worker(worker) {
-          }
 
-          ~t_cleanup() noexcept {
-            Worker.ClearWorkFn();
-          }
+        try {
+          WorkFn();
+        } catch (...) {
+          ClearWorkFn();
+          throw;
+        }
 
-          private:
-          TWorker &Worker;
-        } cleanup(*this);
-
-        WorkFn();
+        ClearWorkFn();
       }
 
       virtual void PrepareForPutBack() noexcept {
@@ -248,12 +242,12 @@ namespace Thread {
           WorkFn = nullptr;
         } catch (const std::exception &x) {
           std::string msg(
-              "Fatal error while clearing thread pool worker function: ");
+              "Fatal exception while clearing thread pool worker function: ");
           msg += x.what();
           HandleFatalError(msg.c_str());
         } catch (...) {
-          HandleFatalError("Fatal error while clearing thread pool worker "
-              "function: Unknown exception");
+          HandleFatalError("Fatal unknown exception while clearing thread "
+              "pool worker function");
         }
       }
 

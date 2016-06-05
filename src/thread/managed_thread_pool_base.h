@@ -24,6 +24,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <exception>
 #include <functional>
 #include <list>
 #include <memory>
@@ -98,33 +99,18 @@ namespace Thread {
     };  // TPoolNotReady
 
     /* For reporting exceptions thrown by client-supplied worker code. */
-    enum class TWorkerErrorType {
-      ThrewStdException,  // worker threw std::exception or subclass
-      ThrewUnknownException  // worker threw something else
-    };  // TWorkerErrorType
-
-    /* For reporting exceptions thrown by client-supplied worker code. */
-    struct TWorkerError final {
-      TWorkerErrorType ErrorType;
-
-      /* If ErrorType is TWorkerErrorType::ThrewStdException then this holds
-         the what() string from the exception.  Otherwise it is empty. */
-      std::string StdExceptionWhat;
-
-      /* Thread ID of worker that produced error. */
+    struct TWorkerError : public std::runtime_error {
+      /* Thread ID of worker that threw exception. */
       std::thread::id ThreadId;
 
-      TWorkerError();
+      /* Contains exception thrown by worker. */
+      std::exception_ptr ThrownException;
 
-      explicit TWorkerError(const char *std_exception_what);
-
-      TWorkerError(const TWorkerError &) = default;
-
-      TWorkerError(TWorkerError &&) = default;
-
-      TWorkerError &operator=(const TWorkerError &) = default;
-
-      TWorkerError &operator=(TWorkerError &&) = default;
+      TWorkerError()
+          : std::runtime_error("Thread pool worker threw exception"),
+            ThreadId(std::this_thread::get_id()),
+            ThrownException(std::current_exception()) {
+      }
     };  // TWorkerError
 
     /* Class for specifying thread pool config parameters. */

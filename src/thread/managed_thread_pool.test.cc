@@ -24,6 +24,7 @@
 #include <atomic>
 #include <cassert>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <stdexcept>
 
@@ -46,9 +47,11 @@ typedef void (*TThreadFnPtr)(void);
 
 using TManagedThreadFnPtrPool = TManagedThreadPool<TThreadFnPtr>;
 
+static const char EXCEPTION_BLURB[] = "nasty stuff";
+
 class TSimpleWorkFn {
   public:
-  static const char ErrorBlurb[];
+  static const char ERROR_BLURB[];
 
   enum class TThrowAction {
     ThrowNothing,
@@ -74,9 +77,9 @@ class TSimpleWorkFn {
       case TThrowAction::ThrowNothing:
         break;
       case TThrowAction::ThrowStdException:
-        throw std::runtime_error(ErrorBlurb);
+        throw std::runtime_error(ERROR_BLURB);
       case TThrowAction::ThrowCrap:
-        throw "nasty stuff";
+        throw EXCEPTION_BLURB;
     }
   }
 
@@ -86,7 +89,7 @@ class TSimpleWorkFn {
   TThrowAction ThrowAction;
 };  // TSimpleWorkFn
 
-const char TSimpleWorkFn::ErrorBlurb[] = "no smoking in powder magazine";
+const char TSimpleWorkFn::ERROR_BLURB[] = "no smoking in powder magazine";
 
 namespace {
 
@@ -537,10 +540,16 @@ namespace {
         pool.GetAllPendingErrors();
     ASSERT_FALSE(error_fd.IsReadable());
     ASSERT_EQ(error_list.size(), 1U);
-    ASSERT_EQ(error_list.front().ErrorType,
-        TManagedThreadPoolBase::TWorkerErrorType::ThrewStdException);
-    ASSERT_EQ(error_list.front().StdExceptionWhat, TSimpleWorkFn::ErrorBlurb);
-    ASSERT_EQ(error_list.front().ThreadId, w1_id);
+    TManagedThreadPoolBase::TWorkerError error = error_list.front();
+    error_list.pop_front();
+    ASSERT_EQ(error.ThreadId, w1_id);
+
+    try {
+      std::rethrow_exception(error.ThrownException);
+    } catch (const std::runtime_error &x) {
+      ASSERT_EQ(std::strcmp(x.what(), TSimpleWorkFn::ERROR_BLURB), 0);
+    }
+
     error_list = pool.GetAllPendingErrors();
     ASSERT_TRUE(error_list.empty());
 
@@ -570,10 +579,16 @@ namespace {
     error_list = pool.GetAllPendingErrors();
     ASSERT_FALSE(error_fd.IsReadable());
     ASSERT_EQ(error_list.size(), 1U);
-    ASSERT_EQ(error_list.front().ErrorType,
-        TManagedThreadPoolBase::TWorkerErrorType::ThrewUnknownException);
-    ASSERT_EQ(error_list.front().StdExceptionWhat, "");
-    ASSERT_EQ(error_list.front().ThreadId, w3_id);
+    error = error_list.front();
+    error_list.pop_front();
+    ASSERT_EQ(error.ThreadId, w3_id);
+
+    try {
+      std::rethrow_exception(error.ThrownException);
+    } catch (const char *x) {
+      ASSERT_EQ(std::strcmp(x, EXCEPTION_BLURB), 0);
+    }
+
     error_list = pool.GetAllPendingErrors();
     ASSERT_TRUE(error_list.empty());
     ASSERT_EQ(counter.load(), 3U);

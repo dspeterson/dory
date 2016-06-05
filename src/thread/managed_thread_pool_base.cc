@@ -32,18 +32,6 @@
 using namespace Base;
 using namespace Thread;
 
-TManagedThreadPoolBase::TWorkerError::TWorkerError()
-    : ErrorType(TWorkerErrorType::ThrewUnknownException),
-      ThreadId(std::this_thread::get_id()) {
-}
-
-TManagedThreadPoolBase::TWorkerError::TWorkerError(
-    const char *std_exception_what)
-    : ErrorType(TWorkerErrorType::ThrewStdException),
-      StdExceptionWhat(std_exception_what),
-      ThreadId(std::this_thread::get_id()) {
-}
-
 TManagedThreadPoolBase::TConfig::TConfig()
     : MinPoolSize(0),
       PruneQuantumMs(30000),
@@ -227,7 +215,7 @@ void TManagedThreadPoolBase::Start(bool populate) {
 std::list<TManagedThreadPoolBase::TWorkerError>
 TManagedThreadPoolBase::GetAllPendingErrors() {
   assert(this);
-  std::list<TManagedThreadPoolBase::TWorkerError> result;
+  std::list<TWorkerError> result;
 
   {
     std::lock_guard<std::mutex> lock(PoolLock);
@@ -303,12 +291,13 @@ void TManagedThreadPoolBase::TWorkerBase::PutBack(
     DoPutBack(worker);
     /* At this point, the worker may no longer exist. */
   } catch (const std::exception &x) {
-    std::string msg("Fatal error when releasing unused thread pool worker: ");
+    std::string msg(
+        "Fatal exception when releasing unused thread pool worker: ");
     msg += x.what();
     pool.HandleFatalError(msg.c_str());
   } catch (...) {
-    pool.HandleFatalError("Fatal error when releasing unused thread pool "
-        "worker: Unknown exception");
+    pool.HandleFatalError("Fatal unknown exception when releasing unused "
+        "thread pool worker");
   }
 }
 
@@ -507,10 +496,8 @@ void TManagedThreadPoolBase::TWorkerBase::DoBusyRun() {
       /* Perform work for client.  If client code throws, report error. */
       try {
         DoWork();
-      } catch (const std::exception &x) {
-        error.push_back(TWorkerError(x.what()));
       } catch (...) {
-        error.push_back(TWorkerError());
+        error.emplace_back();
       }
     }
 
@@ -569,21 +556,26 @@ void TManagedThreadPoolBase::TWorkerBase::DoBusyRun() {
 void TManagedThreadPoolBase::TWorkerBase::BusyRun() {
   assert(this);
 
+  /* If an exception escapes from DoBusyRun(), the source is the thread pool
+     implementation, not client code.  Any exceptions thrown by client code are
+     caught inside DoBusyRun(). */
   try {
     DoBusyRun();
   } catch (const std::exception &x) {
-    std::string msg("Fatal error in thread pool worker: ");
+    std::string msg("Fatal exception in thread pool worker: ");
     msg += x.what();
     MyPool.HandleFatalError(msg.c_str());
   } catch (...) {
-    MyPool.HandleFatalError(
-        "Fatal error in thread pool worker: Unknown exception");
+    MyPool.HandleFatalError("Fatal unknown exception in thread pool worker");
   }
 }
 
 void TManagedThreadPoolBase::TWorkerBase::IdleRun() {
   assert(this);
 
+  /* If an exception escapes from DoBusyRun(), the source is the thread pool
+     implementation, not client code.  Any exceptions thrown by client code are
+     caught inside DoBusyRun(). */
   try {
     WakeupWait.lock();  // sleep in idle state
 
@@ -591,12 +583,11 @@ void TManagedThreadPoolBase::TWorkerBase::IdleRun() {
       DoBusyRun();
     }
   } catch (const std::exception &x) {
-    std::string msg("Fatal error in thread pool worker: ");
+    std::string msg("Fatal exception in thread pool worker: ");
     msg += x.what();
     MyPool.HandleFatalError(msg.c_str());
   } catch (...) {
-    MyPool.HandleFatalError(
-        "Fatal error in thread pool worker: Unknown exception");
+    MyPool.HandleFatalError("Fatal unknown exception in thread pool worker");
   }
 }
 
@@ -690,12 +681,11 @@ void TManagedThreadPoolBase::TManager::Run() {
   try {
     DoRun();
   } catch (const std::exception &x) {
-    std::string msg("Fatal error in thread pool manager: ");
+    std::string msg("Fatal exception in thread pool manager: ");
     msg += x.what();
     MyPool.HandleFatalError(msg.c_str());
   } catch (...) {
-    MyPool.HandleFatalError(
-        "Fatal error in thread pool manager: Unknown exception");
+    MyPool.HandleFatalError("Fatal unknown exception in thread pool manager");
   }
 }
 
