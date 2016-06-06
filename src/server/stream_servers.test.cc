@@ -208,10 +208,6 @@ namespace {
     return std::move(fd);
   }
 
-  TFd UnixStreamConnect(const std::string &path) {
-    return UnixStreamConnect(path.c_str());
-  }
-
   TEST_F(TStreamServerTest, TcpIpv4Test) {
     std::list<TConnectionWorker> workers;
     TTcpIpv4Server server(16, htonl(INADDR_LOOPBACK), 0,
