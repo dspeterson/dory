@@ -258,7 +258,19 @@ void TManagedThreadPoolBase::WaitForShutdown() {
         "Cannot call WaitForShutdown() on thread pool that is not started");
   }
 
-  Manager.Join();
+  try {
+    Manager.Join();
+  } catch (const TFdManagedThread::TWorkerError &x) {
+    try {
+      std::rethrow_exception(x.ThrownException);
+    } catch (const std::exception &y) {
+      std::string msg("Thread pool manager threw exception: ");
+      msg += y.what();
+      HandleFatalError(msg.c_str());
+    } catch (...) {
+      HandleFatalError("Thread pool manager threw unknown exception");
+    }
+  }
 
   /* At this point the manager and all workers have terminated, so we shouldn't
      need to acquire 'PoolLock'.  Acquire it anyway, just in case a possibly

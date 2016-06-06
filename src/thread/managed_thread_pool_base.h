@@ -99,7 +99,7 @@ namespace Thread {
     };  // TPoolNotReady
 
     /* For reporting exceptions thrown by client-supplied worker code. */
-    struct TWorkerError : public std::runtime_error {
+    struct TWorkerError final : public std::runtime_error {
       /* Thread ID of worker that threw exception. */
       std::thread::id ThreadId;
 
