@@ -21,6 +21,8 @@
 
 #include <thread/fd_managed_thread.h>
 
+#include <cstring>
+#include <exception>
 #include <stdexcept>
 
 #include <unistd.h>
@@ -113,6 +115,10 @@ namespace {
     bool ThrowStdException;
   };  // TTestWorker3
 
+  const char BLURB_1[] = "blah";
+
+  const char BLURB_2[] = "random junk";
+
   void TTestWorker3::Run() {
     const TFd &fd = GetShutdownRequestFd();
 
@@ -123,10 +129,10 @@ namespace {
     Flag = true;
 
     if (ThrowStdException) {
-      throw std::length_error("blah");
+      throw std::length_error(BLURB_1);
     }
 
-    throw "random junk";
+    throw BLURB_2;
   }
 
   TEST_F(TFdManagedThreadTest, Test1) {
@@ -200,7 +206,7 @@ namespace {
 
     try {
       worker.Join();
-    } catch (const TFdManagedThread::TThreadThrewStdException &) {
+    } catch (const TFdManagedThread::TWorkerError &) {
       threw = true;
     }
 
@@ -220,8 +226,13 @@ namespace {
 
     try {
       worker.Join();
-    } catch (const TFdManagedThread::TThreadThrewStdException &) {
-      threw = true;
+    } catch (const TFdManagedThread::TWorkerError &x) {
+      try {
+        std::rethrow_exception(x.ThrownException);
+      } catch (const std::length_error &y) {
+        threw = true;
+        ASSERT_TRUE(std::strstr(y.what(), BLURB_1) != nullptr);
+      }
     }
 
     ASSERT_TRUE(flag);
@@ -243,8 +254,13 @@ namespace {
 
     try {
       worker.Join();
-    } catch (const TFdManagedThread::TThreadThrewUnknownException &) {
-      threw = true;
+    } catch (const TFdManagedThread::TWorkerError &x) {
+      try {
+        std::rethrow_exception(x.ThrownException);
+      } catch (const char *y) {
+        threw = true;
+        ASSERT_EQ(std::strcmp(y, BLURB_2), 0);
+      }
     }
 
     ASSERT_TRUE(flag);
@@ -263,8 +279,13 @@ namespace {
 
     try {
       worker.Join();
-    } catch (const TFdManagedThread::TThreadThrewUnknownException &) {
-      threw = true;
+    } catch (const TFdManagedThread::TWorkerError &x) {
+      try {
+        std::rethrow_exception(x.ThrownException);
+      } catch (const char *y) {
+        threw = true;
+        ASSERT_EQ(std::strcmp(y, BLURB_2), 0);
+      }
     }
 
     ASSERT_TRUE(flag);

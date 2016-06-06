@@ -583,14 +583,18 @@ static void ShutDownInputAgent(Thread::TFdManagedThread &agent,
     try {
       agent.Join();
       syslog(LOG_NOTICE, "%s input agent terminated normally", agent_name);
-    } catch (const TFdManagedThread::TThreadThrewStdException &x) {
-      shutdown_ok = false;
-      syslog(LOG_ERR, "%s input agent terminated on error: %s", agent_name,
-          x.what());
-    } catch (const TFdManagedThread::TThreadThrewUnknownException &) {
-      shutdown_ok = false;
-      syslog(LOG_ERR, "%s input agent terminated on unknown error",
-          agent_name);
+    } catch (const TFdManagedThread::TWorkerError &x) {
+      try {
+        std::rethrow_exception(x.ThrownException);
+      } catch (const std::exception &y) {
+        shutdown_ok = false;
+        syslog(LOG_ERR, "%s input agent terminated on error: %s", agent_name,
+            y.what());
+      } catch (...) {
+        shutdown_ok = false;
+        syslog(LOG_ERR, "%s input agent terminated on unknown error",
+            agent_name);
+      }
     }
   }
 }

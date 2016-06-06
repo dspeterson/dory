@@ -22,6 +22,7 @@
 #include <dory/mock_kafka_server/connect_handler_base.h>
 
 #include <cassert>
+#include <exception>
 
 #include <syslog.h>
 
@@ -109,10 +110,14 @@ void TConnectHandlerBase::DeleteThreadState(int shutdown_wait_fd) {
 
   try {
     iter->second.Worker->Join();
-  } catch (const TFdManagedThread::TThreadThrewStdException &x) {
-    syslog(LOG_ERR, "%s", x.what());
-  } catch (const TFdManagedThread::TThreadThrewUnknownException &x) {
-    syslog(LOG_ERR, "%s", x.what());
+  } catch (const TFdManagedThread::TWorkerError &x) {
+    try {
+      std::rethrow_exception(x.ThrownException);
+    } catch (const std::exception &y) {
+      syslog(LOG_ERR, "Worker threw exception: %s", y.what());
+    } catch (...) {
+      syslog(LOG_ERR, "Worker threw unknown exception");
+    }
   }
 
   Ss.PerConnectionMap.erase(iter);

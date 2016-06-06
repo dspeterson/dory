@@ -50,29 +50,17 @@ namespace Thread {
     NO_COPY_SEMANTICS(TFdManagedThread);
 
     public:
-    /* TODO: Eliminate TThreadThrewUnknownException and
-       TThreadThrewStdException.  There is a more standard way of doing this.
-     */
+    /* For reporting exceptions thrown by client-supplied worker code. */
+    struct TWorkerError final : public std::runtime_error {
+      /* Contains exception thrown by worker. */
+      std::exception_ptr ThrownException;
 
-    DEFINE_ERROR(TThreadThrewUnknownException, std::runtime_error,
-        "Worker thread threw unknown exception");
-
-    class TThreadThrewStdException final : public std::runtime_error {
-      public:
-      TThreadThrewStdException(const char *what_msg)
-          : std::runtime_error(MakeWhatMsg(what_msg)) {
+      explicit TWorkerError(std::exception_ptr &p)
+          : std::runtime_error("Worker thread threw exception"),
+            ThrownException(p) {
+        p = nullptr;
       }
-
-      TThreadThrewStdException(const TThreadThrewStdException &) = default;
-
-      virtual ~TThreadThrewStdException() noexcept { }
-
-      TThreadThrewStdException &
-      operator=(const TThreadThrewStdException &) = default;
-
-      private:
-      static std::string MakeWhatMsg(const char *msg);
-    };  // TThreadThrewStdException
+    };  // TWorkerError
 
     /* The destructor will terminate the thread if necessary.  However, in most
        cases it is probably better to shut down the thread manually before
@@ -104,11 +92,8 @@ namespace Thread {
        to terminate.  To avoid blocking for an extended period, one may test
        the file descriptor returned by GetShutdownWaitFd(), and defer calling
        this method until the descriptor becomes readable. If the thread allowed
-       an exception of type std::exception to escape from the Run() method,
-       this method will throw TThreadThrewStdException _after_ the thread has
-       terminated.  If the thread allowed an exception of some other type to
-       escape from the Run() method, this method will throw
-       TThreadThrewUnknownException _after_ the thread has terminated. */
+       an exception to escape from the Run() method, TWorkerError _after_ the
+       thread has terminated. */
     void Join();
 
     const std::thread &GetThread() const {
@@ -124,7 +109,8 @@ namespace Thread {
     }
 
     protected:
-    TFdManagedThread();
+    TFdManagedThread() {
+    }
 
     /* The thread immediately calls this method once it starts executing.
        Subclasses must provide an implementation to define thread-specific
@@ -133,9 +119,8 @@ namespace Thread {
        preparation for terminating.  The implementation then handles the
        details of making the file descriptor returned by GetShutdownWaitFd()
        readable and terminating the thread.  If this method lets any exceptions
-       escape from it, a corresponding exception (one of
-       { TThreadThrewStdException, TThreadThrewUnknownException }) will be
-       thrown by Join(). */
+       escape from it, an exception of type TWorkerError will be thrown by
+       Join(). */
     virtual void Run() = 0;
 
     /* This returns a file descriptor that the thread must monitor to detect a
@@ -169,9 +154,8 @@ namespace Thread {
 
     std::thread Thread;
 
-    bool ThreadThrewUnknownException;
-
-    Base::TOpt<std::exception> OptThrownByThread;
+    /* This is null unless the thread threw an exception. */
+    std::exception_ptr ThrownByThread;
   };  // TFdManagedThread
 
 }  // Thread

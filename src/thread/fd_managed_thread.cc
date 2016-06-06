@@ -26,17 +26,6 @@
 using namespace Base;
 using namespace Thread;
 
-std::string TFdManagedThread::TThreadThrewStdException::MakeWhatMsg(
-    const char *msg) {
-  std::string result("Worker thread threw standard exception: ");
-  result += msg;
-  return result;
-}
-
-TFdManagedThread::TFdManagedThread()
-    : ThreadThrewUnknownException(false) {
-}
-
 TFdManagedThread::~TFdManagedThread() noexcept {
   assert(this);
 
@@ -55,8 +44,7 @@ void TFdManagedThread::Start() {
 
   assert(!ShutdownRequestedSem.GetFd().IsReadable());
   assert(!ShutdownFinishedSem.GetFd().IsReadable());
-  assert(!ThreadThrewUnknownException);
-  assert(OptThrownByThread.IsUnknown());
+  assert(!ThrownByThread);
 
   /* Start the thread running. */
   Thread = std::thread(std::bind(&TFdManagedThread::RunAndTerminate, this));
@@ -90,21 +78,14 @@ void TFdManagedThread::Join() {
     throw std::logic_error("Cannot join nonexistent worker thread");
   }
 
-  ShutdownFinishedSem.Pop();
   Thread.join();
-  assert(!ShutdownFinishedSem.GetFd().IsReadable());
+  ShutdownFinishedSem.Reset();
   ShutdownRequestedSem.Reset();
 
-  if (OptThrownByThread.IsKnown()) {
-    assert(!ThreadThrewUnknownException);
-    std::string what_msg(OptThrownByThread->what());
-    OptThrownByThread.Reset();
-    throw TThreadThrewStdException(what_msg.c_str());
-  }
-
-  if (ThreadThrewUnknownException) {
-    ThreadThrewUnknownException = false;
-    THROW_ERROR(TThreadThrewUnknownException);
+  if (ThrownByThread) {
+    /* Note that the TWorkerError constructor leaves 'ThrownByThread' with a
+       null value. */
+    throw TWorkerError(ThrownByThread);
   }
 }
 
@@ -124,8 +105,7 @@ void TFdManagedThread::ShutdownOnDestroy() {
   assert(!ShutdownRequestedSem.GetFd().IsReadable());
   assert(!ShutdownFinishedSem.GetFd().IsReadable());
   assert(!Thread.joinable());
-  assert(!ThreadThrewUnknownException);
-  assert(OptThrownByThread.IsUnknown());
+  assert(!ThrownByThread);
 }
 
 void TFdManagedThread::RunAndTerminate() {
@@ -133,10 +113,8 @@ void TFdManagedThread::RunAndTerminate() {
 
   try {
     Run();
-  } catch (const std::exception &x) {
-    OptThrownByThread.MakeKnown(x);
   } catch (...) {
-    ThreadThrewUnknownException = true;
+    ThrownByThread = std::current_exception();
   }
 
   /* Let others know that we are about to terminate. */

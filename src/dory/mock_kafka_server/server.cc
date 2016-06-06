@@ -22,6 +22,7 @@
 #include <dory/mock_kafka_server/server.h>
 
 #include <cstdlib>
+#include <exception>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -145,10 +146,14 @@ void TServer::ShutDownWorkers() {
   for (auto item : state_map) {
     try {
       item.second.Worker->Join();
-    } catch (const TFdManagedThread::TThreadThrewStdException &x) {
-      syslog(LOG_ERR, "%s", x.what());
-    } catch (const TFdManagedThread::TThreadThrewUnknownException &x) {
-      syslog(LOG_ERR, "%s", x.what());
+    } catch (const TFdManagedThread::TWorkerError &x) {
+      try {
+        std::rethrow_exception(x.ThrownException);
+      } catch (const std::exception &y) {
+        syslog(LOG_ERR, "Worker threw exception: %s", y.what());
+      } catch (...) {
+        syslog(LOG_ERR, "Worker threw unknown exception");
+      }
     }
   }
 

@@ -30,6 +30,7 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
+#include <exception>
 #include <functional>
 #include <thread>
 #include <utility>
@@ -404,8 +405,12 @@ namespace {
 
     try {
       server.Join();
-    } catch (const TFdManagedThread::TThreadThrewStdException &) {
-      threw = true;
+    } catch (const TFdManagedThread::TWorkerError &x) {
+      try {
+        std::rethrow_exception(x.ThrownException);
+      } catch (const std::exception &) {
+        threw = true;
+      }
     }
 
     ASSERT_TRUE(threw);
