@@ -81,6 +81,7 @@ TStreamClientWorkFn &TStreamClientWorkFn::TStreamClientWorkFn::operator=(
   OutputQueue = nullptr;
   ShutdownRequestFd = nullptr;
   ClientSocket.Reset();
+  ReceiveBuf.Clear();
   return *this;
 }
 
