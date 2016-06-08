@@ -23,10 +23,12 @@
 
 #include <atomic>
 #include <cassert>
+#include <cerrno>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
+#include <system_error>
 
 #include <unistd.h>
 
@@ -99,6 +101,13 @@ namespace {
     CalledThreadWorkFn = true;
   }
 
+  void HandleOutOfMemory() {
+    std::cerr << "Failed to create worker thread due to not enough memory.  "
+        "Try running the stress tests on a system with more memory, or modify "
+        "them to create fewer worker threads." << std::endl;
+    _exit(1);
+  }
+
 }  // namespace
 
 class TStressTest1WorkFn {
@@ -150,7 +159,25 @@ class TStressTest1WorkFn {
       auto &fn = w.GetWorkFn();
       ASSERT_TRUE(fn == nullptr);
       fn = *this;
-      w.Launch();
+      bool out_of_memory = false;
+
+      try {
+        w.Launch();
+      } catch (const std::bad_alloc &) {
+        out_of_memory = true;
+      } catch (const std::system_error &x) {
+        int errno_value = x.code().value();
+
+        if ((errno_value != ENOMEM) && (errno_value != EAGAIN)) {
+          throw;
+        }
+
+        out_of_memory = true;
+      }
+
+      if (out_of_memory) {
+        HandleOutOfMemory();
+      }
     }
   }
 
@@ -223,7 +250,25 @@ class TStressTest2WorkFn {
     fn.SetCounter(*Counter);
     fn.SetWorkingCount(*WorkingCount);
     fn.SetRemainingCount(RemainingCount);
-    w.Launch();
+    bool out_of_memory = false;
+
+    try {
+      w.Launch();
+    } catch (const std::bad_alloc &) {
+      out_of_memory = true;
+    } catch (const std::system_error &x) {
+      int errno_value = x.code().value();
+
+      if ((errno_value != ENOMEM) && (errno_value != EAGAIN)) {
+        throw;
+      }
+
+      out_of_memory = true;
+    }
+
+    if (out_of_memory) {
+      HandleOutOfMemory();
+    }
 
     if ((RemainingCount % 10) == 0) {
       /* Exercise RAII behavior where TReadyWorker destructor returns
