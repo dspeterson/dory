@@ -834,7 +834,8 @@ TManagedThreadPoolBase::TManager::GetMaxThreadsToPrune() const noexcept {
   size_t max1 = MyPool.LiveWorkerCount - Config.GetMinPoolSize();
 
   /* Compute max prune count imposed by Config.GetMaxPruneFraction(). */
-  size_t max3 = MyPool.LiveWorkerCount * Config.GetMaxPruneFraction() / 1000;
+  size_t n = MyPool.LiveWorkerCount * Config.GetMaxPruneFraction() / 1000;
+  size_t max3 = Config.GetMaxPruneFraction() ? std::max<size_t>(1, n) : 0;
 
   /* To satisfy all 3 criteria, we must return the minimum of the 3 max prune
      counts. */

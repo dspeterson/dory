@@ -137,9 +137,15 @@ namespace Thread {
              max_prune_fraction: Must be >= 0 and <= 1000.  Prevents the
                  manager from performing a pruning operation that would destroy
                  more than this many thousandths of the total pool size (active
-                 + idle).  For instance, a value of 500 would prevent a single
-                 prune operation from destroying more than half of the worker
-                 threads.  Setting this to 0 disables pruning.
+                 + idle), _unless_ the operation prunes only a single thread
+                 and (max_prune_fraction > 0).  For instance, a value of 500
+                 and a pool size of 100 would allow pruning up to 50 threads.
+                 As another example, a value of 500 and a pool size of 1 would
+                 allow the single thread to be pruned even though this would
+                 destroy more than 500 thousandths of the pool size, since
+                 pruning a single thread is always allowed as long as
+                 (max_prune_fraction > 0).  Setting max_prune_fraction to 0
+                 disables pruning.
 
              min_idle_fraction: Must be >= 0 and <= 1000.  Prevents the
                  manager from performing a pruning operation that would leave
