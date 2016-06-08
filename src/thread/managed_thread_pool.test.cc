@@ -161,6 +161,10 @@ class TStressTest1WorkFn {
       fn = *this;
       bool out_of_memory = false;
 
+      /* If we run out of memory while trying to create a new worker thread,
+         report the problem and shut down immediately.  We want it to be
+         obvious that the test failed due to not enough memory rather than
+         buggy code. */
       try {
         w.Launch();
       } catch (const std::bad_alloc &) {
@@ -252,6 +256,9 @@ class TStressTest2WorkFn {
     fn.SetRemainingCount(RemainingCount);
     bool out_of_memory = false;
 
+    /* If we run out of memory while trying to create a new worker thread,
+       report the problem and shut down immediately.  We want it to be obvious
+       that the test failed due to not enough memory rather than buggy code. */
     try {
       w.Launch();
     } catch (const std::bad_alloc &) {
