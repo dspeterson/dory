@@ -26,6 +26,7 @@
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
+#include <exception>
 #include <iostream>
 #include <stdexcept>
 #include <system_error>
@@ -692,6 +693,24 @@ namespace {
     ASSERT_EQ(stats.LiveWorkerCount, 0U);
   }
 
+  void CheckForWorkerThreadErrors(
+      std::list<TManagedThreadPoolBase::TWorkerError> &errors) {
+    if (!errors.empty()) {
+      for (auto &e : errors) {
+        try {
+          std::rethrow_exception(e.ThrownException);
+        } catch (const std::exception &x) {
+          std::cerr << "Worker thread threw exception: " << x.what()
+              << std::endl;
+        } catch (...) {
+          std::cerr << "Worker thread threw unknown exception" << std::endl;
+        }
+      }
+
+      _exit(1);
+    }
+  }
+
   TEST_F(TManagedThreadPoolTest, StressTest1) {
     std::cout << "Running stress test 1.  This should take about 15-30 "
         << "seconds." << std::endl;
@@ -721,6 +740,8 @@ namespace {
       w.Launch();
     }
 
+    std::list<TManagedThreadPoolBase::TWorkerError> errors;
+
     /* Hopefully 600 seconds will be long enough for the test to finish, even
        on a slow machine. */
     for (size_t i = 0; (i < 600); ++i) {
@@ -732,6 +753,8 @@ namespace {
         break;
       }
 
+      errors = pool.GetAllPendingErrors();
+      CheckForWorkerThreadErrors(errors);
       sleep(1);
     }
 
@@ -777,6 +800,8 @@ namespace {
       w.Launch();
     }
 
+    std::list<TManagedThreadPoolBase::TWorkerError> errors;
+
     /* Hopefully 600 seconds will be long enough for the test to finish, even
        on a slow machine. */
     for (size_t i = 0; (i < 600); ++i) {
@@ -788,6 +813,8 @@ namespace {
         break;
       }
 
+      errors = pool.GetAllPendingErrors();
+      CheckForWorkerThreadErrors(errors);
       sleep(1);
     }
 
@@ -836,6 +863,8 @@ namespace {
         break;
       }
 
+      errors = pool.GetAllPendingErrors();
+      CheckForWorkerThreadErrors(errors);
       sleep(1);
     }
 
