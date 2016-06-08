@@ -47,10 +47,10 @@ namespace Thread {
      concurrently allocate idle threads and give them work to do, although the
      specifics of the work are defined by a subclass.  Allocated threads are
      placed on the busy list, and return to the idle list when they finish
-     their work.  If the idle list is empty on attempted allocation, a new
-     thread is created and added to the pool.  Thus the pool places no upper
-     bound on the number of threads.  Its only purpose is to reduce the
-     overhead associated with creating and destroying them.
+     their work.  By default, the pool places no upper bound on the number of
+     threads, creating one whenever the idle list is empty on attempted
+     allocation.  However it may be configured to place a fixed upper bound on
+     thread count.
 
      A manager thread periodically wakes up and prunes threads that have been
      idle for a long time.  The manager is also responsible for shutting down
@@ -122,17 +122,22 @@ namespace Thread {
 
              min_pool_size: Prevents pool manager from pruning threads if after
                  pruning, the pool size (active + idle) would be below this
-                 limit.  Must be >= 0.
+                 limit.  Must be >= 0.  Default value is 0.
+
+             max_pool_size: A value > 0 specifies the maximum total # of
+                 threads (not including the manager) that the pool may contain.
+                 A value of 0 specifies no upper bound.  Default value is 0.
 
              prune_quantum_ms: The prune interval length in milliseconds.  At
                  the end of each interval, the manager thread wakes up and sees
-                 if there is anything to prune.  Must be > 0.
+                 if there is anything to prune.  Must be > 0.  Default value is
+                 30000.
 
              prune_quantum_count: The number of intervals in the pool's idle
                  list.  Each interval corresponds to a time quantum whose
                  length is 'prune_quantum_ms'.  The manager only prunes threads
                  in the oldest quantum.  Must be > 0.  See TSegmentedList for
-                 details.
+                 details.  Default value is 10.
 
              max_prune_fraction: Must be >= 0 and <= 1000.  Prevents the
                  manager from performing a pruning operation that would destroy
@@ -145,18 +150,18 @@ namespace Thread {
                  destroy more than 500 thousandths of the pool size, since
                  pruning a single thread is always allowed as long as
                  (max_prune_fraction > 0).  Setting max_prune_fraction to 0
-                 disables pruning.
+                 disables pruning.  Default value is 500.
 
              min_idle_fraction: Must be >= 0 and <= 1000.  Prevents the
                  manager from performing a pruning operation that would leave
                  fewer than this many thousandths of the total pool size idle.
                  For instance, a value of 15 would prevent a pruning operation
                  that would leave fewer than 1.5 percent of the worker threads
-                 idle.
+                 idle.  Default value is 20.
        */
-      TConfig(size_t min_pool_size, size_t prune_quantum_ms,
-          size_t prune_quantum_count, size_t max_prune_fraction,
-          size_t min_idle_fraction);
+      TConfig(size_t min_pool_size, size_t max_pool_size,
+          size_t prune_quantum_ms, size_t prune_quantum_count,
+          size_t max_prune_fraction, size_t min_idle_fraction);
 
       TConfig(const TConfig &) = default;
 
@@ -177,6 +182,16 @@ namespace Thread {
       void SetMinPoolSize(size_t min_pool_size) noexcept {
         assert(this);
         MinPoolSize = min_pool_size;
+      }
+
+      size_t GetMaxPoolSize() const noexcept {
+        assert(this);
+        return MaxPoolSize;
+      }
+
+      void SetMaxPoolSize(size_t max_pool_size) noexcept {
+        assert(this);
+        MaxPoolSize = max_pool_size;
       }
 
       size_t GetPruneQuantumMs() const noexcept {
@@ -209,6 +224,8 @@ namespace Thread {
 
       private:
       size_t MinPoolSize;
+
+      size_t MaxPoolSize;
 
       size_t PruneQuantumMs;
 
@@ -247,6 +264,10 @@ namespace Thread {
       /* # of times a new worker was created because the pool had no idle
          workers. */
       size_t PoolMissCount;
+
+      /* # of times a worker was not obtained from the pool due to the
+         configured size limit. */
+      size_t PoolMaxSizeEnforceCount;
 
       /* # of times a new worker is created.  This includes pool misses and
          threads created to initially populate pool. */
@@ -306,10 +327,17 @@ namespace Thread {
 
       /* Put the worker to work and return its thread ID.  This is meant to be
          called after the client has allocated the worker and called any
-         subclass methods for giving the worker something to do. */
+         subclass methods for giving the worker something to do.  If pool is
+         configured with a maximum size, client must call IsLaunchable() to
+         verify that thread allocation succeeded before calling this method. */
       std::thread::id Launch() {
         assert(this);
-        assert(Worker);
+
+        if (!IsLaunchable()) {
+          throw std::logic_error(
+              "Cannot call Launch() method on empty TReadyWorkerBase");
+        }
+
         Worker->Activate();
         std::thread::id id = Worker->GetId();
         Worker = nullptr;
@@ -330,7 +358,10 @@ namespace Thread {
       }
 
       /* Returns true until Launch() or PutBack() has been called, or wrapper
-         has been assigned or move constructed from. */
+         has been assigned or move constructed from.  In case where pool is
+         configured with a maximum size, this method will return a true value
+         to indicate that a thread could not be allocated due to the size
+         limit. */
       bool IsLaunchable() noexcept {
         assert(this);
         return (Worker != nullptr);
@@ -342,10 +373,10 @@ namespace Thread {
       }
 
       /* Construct wrapper containing newly allocated thread (from call to
-         GetAvailableWorker()). */
+         GetAvailableWorker()), or no thread in case where allocation failed
+         due to configured pool size limit. */
       explicit TReadyWorkerBase(TWorkerBase *worker) noexcept
           : Worker(worker) {
-        assert(worker);
       }
 
       /* Move constructor transfers allocated thread (if any) from donor
@@ -698,13 +729,15 @@ namespace Thread {
        started. */
     virtual TWorkerBase *CreateWorker(bool start) = 0;
 
-    /* Returned worker will be on BusyList, but still sleeping (until client
-       performs any needed configuration and calls worker's Activate() method).
-       The derived class calls this when a client requests an available thread,
-       and returns an RAII wrapper object containing the requested thread.  The
-       wrapper destructor puts the thread back on the idle list if the thread's
-       Activate() method has not been called. */
-    TWorkerBase &GetAvailableWorker();
+    /* Return a pointer to an available worker, or nullptr in the case where
+       the pool is configured with a maximum size and allocation failed due to
+       the size limit.  Returned worker will be on BusyList, but still sleeping
+       (until client performs any needed configuration and calls worker's
+       Activate() method).  The derived class calls this when a client requests
+       an available thread, and then returns an RAII wrapper object containing
+       the requested thread.  The wrapper destructor puts the thread back on
+       the idle list if the wrapper is nonempty. */
+    TWorkerBase *GetAvailableWorker();
 
     private:
     /* Manager thread, which is responsible for pruning threads that have been
@@ -752,9 +785,9 @@ namespace Thread {
     };  // TManager
 
     /* 'ready_worker' is a single item list containing a ready worker.  Add it
-       to the busy list and return a reference to the newly added worker.
-       Caller must hold 'PoolLock'. */
-    TWorkerBase &AddToBusyList(
+       to the busy list and return a pointer to the newly added worker.  Caller
+       must hold 'PoolLock'. */
+    TWorkerBase *AddToBusyList(
         std::list<TWorkerBasePtr> &ready_worker) noexcept;
 
     /* Client-supplied fatal error handler.  This should report error and

@@ -318,6 +318,8 @@ namespace {
         << "MaxPrunedByOp: " << stats.MaxPrunedByOp << std::endl
         << "PoolHitCount: " << stats.PoolHitCount << std::endl
         << "PoolMissCount: " << stats.PoolMissCount << std::endl
+        << "PoolMaxSizeEnforceCount: " << stats.PoolMaxSizeEnforceCount
+        << std::endl
         << "CreateWorkerCount: " << stats.CreateWorkerCount << std::endl
         << "PutBackCount: " << stats.PutBackCount << std::endl
         << "FinishWorkCount: " << stats.FinishWorkCount << std::endl
@@ -380,6 +382,7 @@ namespace {
       ASSERT_EQ(stats.MaxPrunedByOp, 0U);
       ASSERT_EQ(stats.PoolHitCount, 0U);
       ASSERT_EQ(stats.PoolMissCount, 1U);
+      ASSERT_EQ(stats.PoolMaxSizeEnforceCount, 0U);
       ASSERT_EQ(stats.CreateWorkerCount, 1U);
       ASSERT_EQ(stats.PutBackCount, 0U);
       ASSERT_EQ(stats.FinishWorkCount, 0U);
@@ -390,6 +393,7 @@ namespace {
     stats = pool.GetStats();
     ASSERT_EQ(stats.PoolHitCount, 0U);
     ASSERT_EQ(stats.PoolMissCount, 1U);
+    ASSERT_EQ(stats.PoolMaxSizeEnforceCount, 0U);
     ASSERT_EQ(stats.CreateWorkerCount, 1U);
     ASSERT_EQ(stats.PutBackCount, 1U);
     ASSERT_EQ(stats.FinishWorkCount, 0U);
@@ -435,6 +439,7 @@ namespace {
       stats = pool.GetStats();
       ASSERT_EQ(stats.PoolHitCount, 0U);
       ASSERT_EQ(stats.PoolMissCount, 1U);
+      ASSERT_EQ(stats.PoolMaxSizeEnforceCount, 0U);
       ASSERT_EQ(stats.CreateWorkerCount, 1U);
       ASSERT_EQ(stats.PutBackCount, 0U);
       ASSERT_EQ(stats.FinishWorkCount, 0U);
@@ -453,6 +458,7 @@ namespace {
     stats = pool.GetStats();
     ASSERT_EQ(stats.PoolHitCount, 0U);
     ASSERT_EQ(stats.PoolMissCount, 1U);
+    ASSERT_EQ(stats.PoolMaxSizeEnforceCount, 0U);
     ASSERT_EQ(stats.CreateWorkerCount, 1U);
     ASSERT_EQ(stats.PutBackCount, 0U);
     ASSERT_EQ(stats.FinishWorkCount, 1U);
@@ -466,6 +472,7 @@ namespace {
       stats = pool.GetStats();
       ASSERT_EQ(stats.PoolHitCount, 1U);
       ASSERT_EQ(stats.PoolMissCount, 1U);
+      ASSERT_EQ(stats.PoolMaxSizeEnforceCount, 0U);
       ASSERT_EQ(stats.CreateWorkerCount, 1U);
       ASSERT_EQ(stats.PutBackCount, 0U);
       ASSERT_EQ(stats.FinishWorkCount, 1U);
@@ -475,6 +482,7 @@ namespace {
     stats = pool.GetStats();
     ASSERT_EQ(stats.PoolHitCount, 1U);
     ASSERT_EQ(stats.PoolMissCount, 1U);
+    ASSERT_EQ(stats.PoolMaxSizeEnforceCount, 0U);
     ASSERT_EQ(stats.CreateWorkerCount, 1U);
     ASSERT_EQ(stats.PutBackCount, 1U);
     ASSERT_EQ(stats.FinishWorkCount, 1U);
@@ -488,6 +496,7 @@ namespace {
       stats = pool.GetStats();
       ASSERT_EQ(stats.PoolHitCount, 2U);
       ASSERT_EQ(stats.PoolMissCount, 1U);
+      ASSERT_EQ(stats.PoolMaxSizeEnforceCount, 0U);
       ASSERT_EQ(stats.CreateWorkerCount, 1U);
       ASSERT_EQ(stats.PutBackCount, 1U);
       ASSERT_EQ(stats.FinishWorkCount, 1U);
@@ -507,6 +516,7 @@ namespace {
     stats = pool.GetStats();
     ASSERT_EQ(stats.PoolHitCount, 2U);
     ASSERT_EQ(stats.PoolMissCount, 1U);
+    ASSERT_EQ(stats.PoolMaxSizeEnforceCount, 0U);
     ASSERT_EQ(stats.CreateWorkerCount, 1U);
     ASSERT_EQ(stats.PutBackCount, 1U);
     ASSERT_EQ(stats.FinishWorkCount, 2U);
@@ -564,6 +574,7 @@ namespace {
     TManagedThreadPoolBase::TStats stats = pool.GetStats();
     ASSERT_EQ(stats.PoolHitCount, 1U);
     ASSERT_EQ(stats.PoolMissCount, 1U);
+    ASSERT_EQ(stats.PoolMaxSizeEnforceCount, 0U);
     ASSERT_EQ(stats.CreateWorkerCount, 1U);
     ASSERT_EQ(stats.QueueErrorCount, 0U);
     ASSERT_EQ(stats.NotifyErrorCount, 0U);
@@ -654,6 +665,7 @@ namespace {
     stats = pool.GetStats();
     ASSERT_EQ(stats.PoolHitCount, 2U);
     ASSERT_EQ(stats.PoolMissCount, 1U);
+    ASSERT_EQ(stats.PoolMaxSizeEnforceCount, 0U);
     ASSERT_EQ(stats.CreateWorkerCount, 3U);
     ASSERT_EQ(stats.QueueErrorCount, 2U);
     ASSERT_EQ(stats.NotifyErrorCount, 2U);
@@ -687,10 +699,38 @@ namespace {
     stats = pool.GetStats();
     ASSERT_EQ(stats.PoolHitCount, 5U);
     ASSERT_EQ(stats.PoolMissCount, 1U);
+    ASSERT_EQ(stats.PoolMaxSizeEnforceCount, 0U);
     ASSERT_EQ(stats.CreateWorkerCount, 3U);
     ASSERT_EQ(stats.QueueErrorCount, 2U);
     ASSERT_EQ(stats.NotifyErrorCount, 2U);
     ASSERT_EQ(stats.LiveWorkerCount, 0U);
+  }
+
+  TEST_F(TManagedThreadPoolTest, SizeLimitTest) {
+    TManagedThreadPoolBase::TConfig config;
+    config.SetMaxPoolSize(1);
+    TManagedThreadStdFnPool pool(TManagedThreadPoolTest::HandleFatalError,
+        config);
+    pool.Start();
+    TManagedThreadStdFnPool::TReadyWorker w1 = pool.GetReadyWorker();
+    TManagedThreadStdFnPool::TReadyWorker w2 = pool.GetReadyWorker();
+    ASSERT_TRUE(w1.IsLaunchable());
+    ASSERT_FALSE(w2.IsLaunchable());
+    w1.PutBack();
+    ASSERT_FALSE(w1.IsLaunchable());
+
+    pool.RequestShutdown();
+    pool.WaitForShutdown();
+
+    TManagedThreadPoolBase::TStats stats = pool.GetStats();
+    ASSERT_EQ(stats.PoolHitCount, 0U);
+    ASSERT_EQ(stats.PoolMissCount, 1U);
+    ASSERT_EQ(stats.PoolMaxSizeEnforceCount, 1U);
+    ASSERT_EQ(stats.CreateWorkerCount, 1U);
+    ASSERT_EQ(stats.QueueErrorCount, 0U);
+    ASSERT_EQ(stats.NotifyErrorCount, 0U);
+    ASSERT_EQ(stats.LiveWorkerCount, 0U);
+    ASSERT_FALSE(pool.GetErrorPendingFd().IsReadable());
   }
 
   void CheckForWorkerThreadErrors(

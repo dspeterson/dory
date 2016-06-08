@@ -159,12 +159,17 @@ namespace Thread {
     virtual ~TManagedThreadPool() noexcept {
     }
 
-    /* Allocate worker from pool and return a wrapper object containing it.
-       If pool idle list is empty, a new worker will be created and added to
-       pool. */
+    /* Allocate a worker from the pool and return a wrapper object containing
+       it.  If the pool idle list is empty prior to successful allocation, a
+       new worker will be created and added to pool.  In the case where a
+       maximum pool size has been configured, an empty wrapper will be returned
+       when allocation fails due to the size limit.  Call method IsLaunchable()
+       of TReadyWorker object to verify that the wrapper is nonempty before
+       attempting to launch the thread it contains (not necessary if no max
+       pool size is configured). */
     TReadyWorker GetReadyWorker() {
       assert(this);
-      return TReadyWorker(&static_cast<TWorker &>(GetAvailableWorker()));
+      return TReadyWorker(static_cast<TWorker *>(GetAvailableWorker()));
     }
 
     private:

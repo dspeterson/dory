@@ -34,6 +34,7 @@ using namespace Thread;
 
 TManagedThreadPoolBase::TConfig::TConfig()
     : MinPoolSize(0),
+      MaxPoolSize(0),
       PruneQuantumMs(30000),
       PruneQuantumCount(10),
       MaxPruneFraction(500),
@@ -41,9 +42,10 @@ TManagedThreadPoolBase::TConfig::TConfig()
 }
 
 TManagedThreadPoolBase::TConfig::TConfig(size_t min_pool_size,
-    size_t prune_quantum_ms, size_t prune_quantum_count,
+    size_t max_pool_size, size_t prune_quantum_ms, size_t prune_quantum_count,
     size_t max_prune_fraction, size_t min_idle_fraction)
     : MinPoolSize(min_pool_size),
+      MaxPoolSize(max_pool_size),
       PruneQuantumMs(prune_quantum_ms),
       PruneQuantumCount(prune_quantum_count),
       MaxPruneFraction(max_prune_fraction),
@@ -128,6 +130,7 @@ TManagedThreadPoolBase::TStats::TStats()
       MaxPrunedByOp(0),
       PoolHitCount(0),
       PoolMissCount(0),
+      PoolMaxSizeEnforceCount(0),
       CreateWorkerCount(0),
       PutBackCount(0),
       FinishWorkCount(0),
@@ -658,12 +661,18 @@ TManagedThreadPoolBase::TManagedThreadPoolBase(
     : TManagedThreadPoolBase(std::move(fatal_error_handler), TConfig()) {
 }
 
-TManagedThreadPoolBase::TWorkerBase &
+TManagedThreadPoolBase::TWorkerBase *
 TManagedThreadPoolBase::GetAvailableWorker() {
   assert(this);
 
   {
     std::lock_guard<std::mutex> lock(PoolLock);
+    size_t max_pool_size = Config.GetMaxPoolSize();
+
+    if (max_pool_size && (LiveWorkerCount >= max_pool_size)) {
+      ++Stats.PoolMaxSizeEnforceCount;
+      return nullptr;
+    }
 
     if (!PoolIsReady) {
       /* pool is shutting down or not yet started */
@@ -998,7 +1007,7 @@ void TManagedThreadPoolBase::TManager::DoRun() {
   HandleShutdownRequest();
 }
 
-TManagedThreadPoolBase::TWorkerBase &
+TManagedThreadPoolBase::TWorkerBase *
 TManagedThreadPoolBase::AddToBusyList(
     std::list<TWorkerBasePtr> &ready_worker) noexcept {
   assert(this);
@@ -1007,5 +1016,5 @@ TManagedThreadPoolBase::AddToBusyList(
   TWorkerBase &worker = *BusyList.front();
   assert(worker.BusyListPos == BusyList.end());
   worker.BusyListPos = BusyList.begin();
-  return worker;
+  return &worker;
 }
