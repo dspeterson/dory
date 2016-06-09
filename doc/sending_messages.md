@@ -97,7 +97,8 @@ sending these messages to partition 0.
 Here, low-level details are presented for the message formats that Dory expects
 to receive from its UNIX domain datagram socket.  The same notation described
 [here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol)
-is used below.
+is used below.  All multibyte integer fields are serialized in network byte
+order (big endian).
 
 #### Generic Message Format
 

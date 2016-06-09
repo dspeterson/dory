@@ -52,7 +52,7 @@ consider using Dory:
   other aspects of interaction with Kafka.  This simplifies system
   administration, as compared to a multitude of producer mechanisms for various
   programming languages and applications, each with its own status monitoring,
-  data quality reporting, and configuration mechanisms (or lack thereof).
+  data quality reporting, and configuration mechanisms or lack thereof.
 
 * Dory may enable more efficient interaction with the Kafka cluster.  Dory's
   C++ implementation is likely to be less resource-intensive than producers
@@ -92,8 +92,8 @@ appreciated.  Technical details on how to send messages to Dory are provided
 [here](doc/sending_messages.md).  Support for [running Dory inside a Docker
 container](Docker) is also available.  Dory requires at least version 0.8 of
 Kafka, and has been tested on versions 0.8, 0.9, and 0.10.  It runs on Linux,
-and has been tested on CentOS versions 7 and 6.5, and Ubuntu versions 15.04
-LTS, 14.04.1 LTS, and 13.10.
+and has been tested on CentOS versions 7 and 6.5, and Ubuntu versions 16.04
+LTS, 15.04 LTS, 14.04.1 LTS, and 13.10.
 
 Dory is the successor to [Bruce](https://github.com/ifwe/bruce), and is
 maintained by [Dave Peterson](https://github.com/dspeterson), who created Bruce
@@ -107,8 +107,8 @@ interested in contributing is provided [here](doc/dev_info.md) and
 To get Dory working, you need to set up a build environment.  Currently,
 instructions are available for [CentOS 7](doc/centos_7_env.md),
 [CentOS 6.5](doc/centos_6_5_env.md),
-[Ubuntu (15.04 LTS, 14.04.1 LTS, and 13.10)](doc/ubuntu_13-15_env.md), and
-[Debian 8](doc/debian_8_env.md).
+[Ubuntu (16.04 LTS, 15.04 LTS, 14.04.1 LTS, and 13.10)](doc/ubuntu_13-15_env.md),
+and [Debian 8](doc/debian_8_env.md).
 
 ## Building and Installing Dory
 
