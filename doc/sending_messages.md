@@ -95,7 +95,13 @@ sending these messages to partition 0.
 ### Message Formats
 
 Here, low-level details are presented for the message formats that Dory expects
-to receive from its UNIX domain datagram socket.  The same notation described
+to receive from clients.  The formats are the same regardless of whether
+messages are sent by UNIX domain datagram socket, UNIX domain stream socket, or
+local TCP.  In the case where stream sockets are used (UNIX domain or TCP),
+clients should simply write messages to the socket, one after another, and
+never attempt to read from the socket since Dory will never write anything.
+When finished sending messages, the client simply closes the socket.  The same
+notation described
 [here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol)
 is used below.  All multibyte integer fields are serialized in network byte
 order (big endian).
