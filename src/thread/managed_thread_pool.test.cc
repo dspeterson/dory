@@ -146,12 +146,7 @@ class TStressTest1WorkFn {
       case 1:
         break;
       default:
-        if (launch_count) {
-          WorkingCount += launch_count - 1;
-        } else {
-          --WorkingCount;
-        }
-
+        WorkingCount += launch_count - 1;
         break;
     }
 
