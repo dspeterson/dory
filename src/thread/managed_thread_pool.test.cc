@@ -134,7 +134,7 @@ class TStressTest1WorkFn {
     if (elapsed < 5000) {
       launch_count = 1;
     } else if (elapsed < 10000) {
-      launch_count = (num_working < (4 * InitialThreadCount)) ? 2 : 1;
+      launch_count = (num_working < (InitialThreadCount * 5 / 4)) ? 2 : 1;
     } else if (elapsed < 15000) {
       launch_count = 1;
     }
@@ -749,12 +749,12 @@ namespace {
   TEST_F(TManagedThreadPoolTest, StressTest1) {
     std::cout << "Running stress test 1.  This should take about 15-30 "
         << "seconds." << std::endl;
-    const size_t initial_thread_count = 100;
+    const size_t initial_thread_count = 60;
     std::atomic<size_t> counter(0);
     std::atomic<size_t> working_count(initial_thread_count);
     TManagedThreadPoolBase::TConfig config;
-    config.SetPruneQuantumMs(500);
-    config.SetPruneQuantumCount(3);
+    config.SetPruneQuantumMs(300);
+    config.SetPruneQuantumCount(5);
     TManagedThreadStdFnPool pool(TManagedThreadPoolTest::HandleFatalError,
         config);
     pool.Start();
@@ -808,12 +808,12 @@ namespace {
   TEST_F(TManagedThreadPoolTest, StressTest2) {
     std::cout << "Running stress test 2 part 1.  This should take about 30-60 "
         << "seconds." << std::endl;
-    const size_t initial_thread_count = 200;
+    const size_t initial_thread_count = 100;
     std::atomic<size_t> counter(0);
     std::atomic<size_t> working_count(initial_thread_count);
     TManagedThreadPoolBase::TConfig config;
-    config.SetPruneQuantumMs(500);
-    config.SetPruneQuantumCount(3);
+    config.SetPruneQuantumMs(300);
+    config.SetPruneQuantumCount(5);
     TManagedThreadFnObjPool pool(TManagedThreadPoolTest::HandleFatalError,
         config);
     pool.Start();
