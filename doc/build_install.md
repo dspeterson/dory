@@ -141,7 +141,7 @@ cp config/dory_conf.xml /etc/dory
 ```
 
 At this point, you are ready to
-[run Dory with a basic configuration](../README.md#running-dory-with-basic-configuration).
+[run Dory with a basic configuration](basic_config.md).
 
 -----
 

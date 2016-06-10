@@ -98,24 +98,28 @@ Dory's discard reporting web interface.  If you choose the plain option for
 you will get output that looks something like this:
 
 ```
-pid: 5843
-now: 1408659550 Thu Aug 21 15:19:10 2014
-version: 1.0.6.70.ga324763
+pid: 94870
+version: 1.0.28.102.gb2d28f2
+since: 1465103159 Sat Jun  4 22:05:59 2016
+now: 1465104059 Sat Jun  4 22:20:59 2016
 report interval in seconds: 600
 
 current (unfinished) reporting period:
-    report ID: 125
-    start time: 1408659029 Thu Aug 21 15:10:29 2014
+    report ID: 1
+    start time: 1465103759 Sat Jun  4 22:15:59 2016
     malformed msg count: 0
+    UNIX stream unclean disconnect count: 0
+    TCP unclean disconnect count: 0
     unsupported API key msg count: 0
     unsupported version msg count: 0
     bad topic msg count: 0
 
-
 latest finished reporting period:
-    report ID: 124
-    start time: 1408658429 Thu Aug 21 15:00:29 2014
+    report ID: 0
+    start time: 1465103159 Sat Jun  4 22:05:59 2016
     malformed msg count: 0
+    UNIX stream unclean disconnect count: 0
+    TCP unclean disconnect count: 0
     unsupported API key msg count: 0
     unsupported version msg count: 0
     bad topic msg count: 0
@@ -125,50 +129,53 @@ The above output shows the typical case where no discards are occurring.  A
 case in which discards are occurring might look something like this:
 
 ```
-pid: 17706
-now: 1408661249 Thu Aug 21 15:47:29 2014
-version: 1.0.6.70.ga324763
+pid: 52331
+version: 1.0.28.113.gbc41f4d
+since: 1465525168 Thu Jun  9 19:19:28 2016
+now: 1465525347 Thu Jun  9 19:22:27 2016
 report interval in seconds: 600
 
 current (unfinished) reporting period:
     report ID: 0
-    start time: 1408661147 Thu Aug 21 15:45:47 2014
+    start time: 1465525168 Thu Jun  9 19:19:28 2016
     malformed msg count: 0
+    UNIX stream unclean disconnect count: 0
+    TCP unclean disconnect count: 0
     unsupported API key msg count: 0
     unsupported version msg count: 0
-    bad topic msg count: 15
+    bad topic msg count: 25
 
     recent bad topic: 11[bad_topic_2]
     recent bad topic: 11[bad_topic_1]
 
-    rate limit discard topic: 6[topic1] count 123
+    rate limit discard topic: 7[topic_2] count 853
 
-    discard topic: 6[topic1] begin [1408661193503] end [1408661202191] count 34176
-    discard topic: 6[topic2] begin [1408661210436] end [1408661219378] count 32149
+    discard topic: 7[topic_1] begin [1465525287266] end [1465525294911] count 51066
+    discard topic: 7[topic_2] begin [1465525287266] end [1465525295832] count 118918
 ```
 
-In the above example, we see that 34176 messages were discarded for valid topic
-`topic1` and 32149 messages were discarded for valid topic `topic2`.  Of the
-discards for `topic1`, the earliest timestamp was 1408661193503 and the latest
-was 1408661202191.  Likewise, the earliest and latest timestamps of discarded
-messages for `topic2` are 1408661210436 and 1408661219378.  In the case of
-`topic1`, 123 messages were discarded due to the rate limit for that topic.
-These discards are included in the 32149 total discards for `topic1`.  Stated
-differently, of the 32149 total discards for topic `topic1`, 123 were due to
-Dory's rate limiting mechanism and the rest were due to other reasons.  Dory
-provides an optional per-topic message rate limiting mechanism, as documented
+In the above example, we see that 51066 messages were discarded for valid topic
+`topic_1` and 118918 messages were discarded for valid topic `topic_2`.  Of the
+discards for `topic_1`, the earliest timestamp was 1465525287266 and the latest
+was 1465525294911.  Likewise, the earliest and latest timestamps of discarded
+messages for `topic_2` are 1465525287266 and 1465525295832.  For `topic_2`, 853
+messages were discarded due to the rate limit for that topic.  These discards
+are included in the 118918 total discards for `topic_2`.  Stated differently,
+of the 118918 total discards for topic `topic_2`, 853 were due to Dory's rate
+limiting mechanism and the rest were due to other reasons.  Dory provides an
+optional per-topic message rate limiting mechanism, as documented
 [here](design.md#message-rate-limiting).  Detailed configuration information
 for this mechanism is given [here](detailed_config.md).
 
 The timestamps in the discard reports are the client-provided ones documented
 [here](sending_messages.md#message-formats), and are interpreted as
-milliseconds since the epoch.  A total of 15 messages with invalid topics were
-received, and recently received invalid topics are `bad_topic_1` and
-`bad_topic_2`.  Prefixes of recently received malformed messages also appear in
-Dory's discard reports in base64-encoded form.  Dory's process ID is 17706,
-and the time when the discard report was created is 1408661249 (represented in
+milliseconds since the epoch.  A total of 25 messages with invalid topics were
+received, and recently received invalid topics are `bad_topic_2` and
+`bad_topic_1`.  Prefixes of recently received malformed messages also appear in
+Dory's discard reports in base64-encoded form.  Dory's process ID is 52331,
+and the time when the discard report was created is 1465525347 (represented in
 seconds, not milliseconds, since the epoch).  The version of Dory that
-produced the report is `1.0.6.70.ga324763`.  The default discard report
+produced the report is `1.0.28.113.gbc41f4d`.  The default discard report
 interval, as shown above, is 600 seconds, and is configurable, as documented
 [here](detailed_config.md).
 
@@ -239,7 +246,7 @@ metadata.  Certain error conditions can also cause Dory to update its
 metadata, as described [here](design.md).
 
 At this point it is helpful to have some information on
-[Dory's design](../README.md#design-overview).
+[Dory's design](design.md).
 
 -----
 

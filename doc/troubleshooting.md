@@ -125,7 +125,7 @@ information can also be obtained from Dory's syslog messages.  As documented
 command line option configures Dory's logging verbosity.
 
 If you are interested in making custom modifications or contributing to Dory,
-information is provided [here](../README.md#modifying-dorys-implementation).
+information is provided [here](dev_info.md).
 
 -----
 

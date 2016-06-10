@@ -204,9 +204,6 @@ changes to Dory.
 
 Information on contributing to Dory is provided [here](../CONTRIBUTING.md).
 
-Information on getting help with Dory is provided
-[here](../README.md#getting-help).
-
 -----
 
 dev_info.md: Copyright 2014 if(we), Inc.

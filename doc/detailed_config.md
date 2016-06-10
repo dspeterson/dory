@@ -391,7 +391,7 @@ removed.  Its purpose is to provide compatibility with legacy infrastructure at
 if(we).
 
 Now that you are familiar with all of Dory's configuration options, you may
-find information on [troubleshooting](../README.md#troubleshooting) helpful.
+find information on [troubleshooting](troubleshooting.md) helpful.
 
 -----
 

@@ -108,7 +108,7 @@ kill -INT PROCESS_ID_OF_DORY
 ```
 
 Once Dory has been set up with a basic configuration, you can
-[send messages](../README.md#sending-messages).
+[send messages](sending_messages.md).
 
 -----
 

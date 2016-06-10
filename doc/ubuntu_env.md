@@ -14,7 +14,7 @@ sudo apt-get install g++
 ```
 
 Now proceed to
-[build, install, and configure Dory](../README.md#building-and-installing-dory).
+[build, install, and configure Dory](build_install.md).
 
 -----
 

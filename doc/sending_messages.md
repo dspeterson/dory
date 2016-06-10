@@ -228,7 +228,7 @@ relative advantages and disadvantages.
 
 Once you are able to send messages to Dory, you will probably be interested
 in learning about its
-[status monitoring interface](../README.md#status-monitoring).
+[status monitoring interface](status_monitoring.md).
 
 -----
 

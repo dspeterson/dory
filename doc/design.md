@@ -391,7 +391,7 @@ erroneously discarded by the rate limiting mechanism if the system clock is set
 back.  As with all other types of discards, messages discarded by the rate
 limiting mechanism will be included in Dory's discard reports.
 
-Next: [detailed configuration](../README.md#detailed-configuration).
+Next: [detailed configuration](detailed_config.md).
 
 -----
 

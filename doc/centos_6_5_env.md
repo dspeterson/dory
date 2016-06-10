@@ -124,7 +124,7 @@ virtualenv environment, Python 2.7.3 will be used by default.  Before building
 Dory, you must perform this step in the shell where you are doing the build.
 
 Now proceed to
-[build, install, and configure Dory](../README.md#building-and-installing-dory).
+[build, install, and configure Dory](build_install.md).
 
 -----
 
