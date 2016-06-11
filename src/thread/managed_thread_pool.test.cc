@@ -150,8 +150,17 @@ class TStressTest1WorkFn {
         break;
     }
 
-    for (size_t i = 0; i < launch_count; ++i) {
+    size_t launched = 0;
+
+    while (launched < launch_count) {
       TManagedThreadStdFnPool::TReadyWorker w = Pool.GetReadyWorker();
+
+      if (!w.IsLaunchable()) {
+        /* Unable to allocate worker because pool is at its configured max
+           size. */
+        break;
+      }
+
       auto &fn = w.GetWorkFn();
       ASSERT_TRUE(fn == nullptr);
       fn = *this;
@@ -163,6 +172,7 @@ class TStressTest1WorkFn {
          buggy code. */
       try {
         w.Launch();
+        ++launched;
       } catch (const std::bad_alloc &) {
         out_of_memory = true;
       } catch (const std::system_error &x) {
@@ -178,6 +188,10 @@ class TStressTest1WorkFn {
       if (out_of_memory) {
         HandleOutOfMemory();
       }
+    }
+
+    if (launched < launch_count) {
+      WorkingCount -= launch_count - launched;
     }
   }
 
@@ -753,6 +767,11 @@ namespace {
     std::atomic<size_t> counter(0);
     std::atomic<size_t> working_count(initial_thread_count);
     TManagedThreadPoolBase::TConfig config;
+
+    /* Put a hard upper bound on the pool size.  This will reduce our risk of
+       running out of memory on a test machine without much memory. */
+    config.SetMaxPoolSize(250);
+
     config.SetPruneQuantumMs(300);
     config.SetPruneQuantumCount(5);
     TManagedThreadStdFnPool pool(TManagedThreadPoolTest::HandleFatalError,
@@ -814,7 +833,7 @@ namespace {
   TEST_F(TManagedThreadPoolTest, StressTest2) {
     std::cout << "Running stress test 2 part 1.  This should take about 30-60 "
         << "seconds." << std::endl;
-    const size_t initial_thread_count = 100;
+    const size_t initial_thread_count = 50;
     std::atomic<size_t> counter(0);
     std::atomic<size_t> working_count(initial_thread_count);
     TManagedThreadPoolBase::TConfig config;
