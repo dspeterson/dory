@@ -97,10 +97,12 @@ LTS, 15.04 LTS, 14.04.1 LTS, and 13.10.
 
 Dory is the successor to [Bruce](https://github.com/ifwe/bruce), and is
 maintained by [Dave Peterson](https://github.com/dspeterson), who created Bruce
-while employed at [if(we)](http://www.ifwe.co/).  Code contributions from the
-community are welcomed and much appreciated.  Information for developers
-interested in contributing is provided [here](doc/dev_info.md) and
-[here](CONTRIBUTING.md).
+while employed at [if(we)](http://www.ifwe.co/).  Code contributions and ideas
+for new features and other improvements are welcomed and much appreciated.
+Information for developers interested in contributing is provided
+[here](doc/dev_info.md) and [here](CONTRIBUTING.md).  If you have ideas for
+things you would like to see in future versions of Dory, please add them
+[here](http://dory.wikidot.com/start).
 
 ## Setting Up a Build Environment
 
