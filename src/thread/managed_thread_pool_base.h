@@ -262,7 +262,9 @@ namespace Thread {
       size_t PoolHitCount;
 
       /* # of times a new worker was created because the pool had no idle
-         workers. */
+         workers.  This will be less than 'CreateWorkerCount' in the case where
+         the pool was populated with an initial set of workers on startup,
+         before handling any requests for workers. */
       size_t PoolMissCount;
 
       /* # of times a worker was not obtained from the pool due to the
@@ -273,7 +275,14 @@ namespace Thread {
          threads created to initially populate pool. */
       size_t CreateWorkerCount;
 
-      /* # of times a thread is released without being launched. */
+      /* # of times a worker is released without being launched.  Note that
+         the worker will not have an actual thread in the case where the worker
+         was just created due to the idle list being empty.  In this case the
+         worker gets immediately destroyed rather than moving to the idle list.
+         Likewise, If the pool is shutting down, the worker will not be placed
+         on the idle list even if it actually contains an actual thread.  For
+         both of these reasons, this value may be greater than
+         'PrunedThreadCount' once the pool has finished shutting down. */
       size_t PutBackCount;
 
       /* # of times a thread finishes work. */

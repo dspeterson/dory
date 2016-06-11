@@ -782,8 +782,8 @@ namespace {
     for (size_t i = 0; (i < 600); ++i) {
       TManagedThreadPoolBase::TStats stats = pool.GetStats();
 
-      if ((working_count.load() == 0) &&
-          (stats.IdleWorkerCount == stats.LiveWorkerCount) &&
+      if ((working_count.load() == 0) && (stats.IdleWorkerCount == 0) &&
+          (stats.LiveWorkerCount == 0) &&
           (stats.FinishWorkCount == counter.load())) {
         break;
       }
@@ -794,15 +794,21 @@ namespace {
     }
 
     TManagedThreadPoolBase::TStats stats = pool.GetStats();
-    ASSERT_EQ(stats.IdleWorkerCount, stats.LiveWorkerCount);
+    std::cout << "final count: " << counter.load() << std::endl;
+    PrintStats(stats);
+    errors = pool.GetAllPendingErrors();
+    CheckForWorkerThreadErrors(errors);
+    ASSERT_EQ(working_count.load(), 0U);
+    ASSERT_EQ(stats.IdleWorkerCount, 0U);
+    ASSERT_EQ(stats.LiveWorkerCount, 0U);
     ASSERT_EQ(stats.FinishWorkCount, counter.load());
     ASSERT_EQ(stats.QueueErrorCount, 0U);
     ASSERT_EQ(stats.NotifyErrorCount, 0U);
     ASSERT_FALSE(pool.GetErrorPendingFd().IsReadable());
-    std::cout << "final count: " << counter.load() << std::endl;
-    PrintStats(stats);
     pool.RequestShutdown();
     pool.WaitForShutdown();
+    errors = pool.GetAllPendingErrors();
+    CheckForWorkerThreadErrors(errors);
   }
 
   TEST_F(TManagedThreadPoolTest, StressTest2) {
@@ -842,6 +848,8 @@ namespace {
     for (size_t i = 0; (i < 600); ++i) {
       TManagedThreadPoolBase::TStats stats = pool.GetStats();
 
+      /* Exercise the code path where we don't wait for the manager to finish
+         pruning idle threads before we shut down. */
       if ((working_count.load() == 0) &&
           (stats.IdleWorkerCount == stats.LiveWorkerCount) &&
           (stats.FinishWorkCount == counter.load())) {
@@ -854,15 +862,28 @@ namespace {
     }
 
     TManagedThreadPoolBase::TStats stats = pool.GetStats();
+    PrintStats(stats);
+    errors = pool.GetAllPendingErrors();
+    CheckForWorkerThreadErrors(errors);
+    ASSERT_EQ(working_count.load(), 0U);
     ASSERT_EQ(stats.IdleWorkerCount, stats.LiveWorkerCount);
     ASSERT_EQ(stats.FinishWorkCount, counter.load());
     ASSERT_EQ(stats.QueueErrorCount, 0U);
     ASSERT_EQ(stats.NotifyErrorCount, 0U);
     ASSERT_FALSE(pool.GetErrorPendingFd().IsReadable());
     ASSERT_EQ(counter.load(), count_per_worker * initial_thread_count);
-    PrintStats(stats);
+
     pool.RequestShutdown();
     pool.WaitForShutdown();
+    errors = pool.GetAllPendingErrors();
+    CheckForWorkerThreadErrors(errors);
+    stats = pool.GetStats();
+    ASSERT_EQ(working_count.load(), 0U);
+    ASSERT_EQ(stats.IdleWorkerCount, 0U);
+    ASSERT_EQ(stats.LiveWorkerCount, 0U);
+    ASSERT_EQ(stats.FinishWorkCount, counter.load());
+    ASSERT_EQ(stats.QueueErrorCount, 0U);
+    ASSERT_EQ(stats.NotifyErrorCount, 0U);
 
     /* Rerun the above test, to make sure the pool behaves properly when
        restarted. */
@@ -892,8 +913,10 @@ namespace {
     for (size_t i = 0; (i < 600); ++i) {
       stats = pool.GetStats();
 
-      if ((working_count.load() == 0) &&
-          (stats.IdleWorkerCount == stats.LiveWorkerCount) &&
+      /* This time, exercise the code path where we wait for the manager to
+         finish pruning idle threads before we shut down. */
+      if ((working_count.load() == 0) && (stats.IdleWorkerCount == 0) &&
+          (stats.LiveWorkerCount == 0) &&
           (stats.FinishWorkCount == counter.load())) {
         break;
       }
@@ -904,15 +927,28 @@ namespace {
     }
 
     stats = pool.GetStats();
-    ASSERT_EQ(stats.IdleWorkerCount, stats.LiveWorkerCount);
+    PrintStats(stats);
+    errors = pool.GetAllPendingErrors();
+    CheckForWorkerThreadErrors(errors);
+    ASSERT_EQ(working_count.load(), 0U);
+    ASSERT_EQ(stats.IdleWorkerCount, 0U);
+    ASSERT_EQ(stats.LiveWorkerCount, 0U);
     ASSERT_EQ(stats.FinishWorkCount, counter.load());
     ASSERT_EQ(stats.QueueErrorCount, 0U);
     ASSERT_EQ(stats.NotifyErrorCount, 0U);
     ASSERT_FALSE(pool.GetErrorPendingFd().IsReadable());
     ASSERT_EQ(counter.load(), count_per_worker * initial_thread_count);
-    PrintStats(stats);
+
     pool.RequestShutdown();
     pool.WaitForShutdown();
+    errors = pool.GetAllPendingErrors();
+    CheckForWorkerThreadErrors(errors);
+    ASSERT_EQ(working_count.load(), 0U);
+    ASSERT_EQ(stats.IdleWorkerCount, 0U);
+    ASSERT_EQ(stats.LiveWorkerCount, 0U);
+    ASSERT_EQ(stats.FinishWorkCount, counter.load());
+    ASSERT_EQ(stats.QueueErrorCount, 0U);
+    ASSERT_EQ(stats.NotifyErrorCount, 0U);
   }
 
 }  // namespace
