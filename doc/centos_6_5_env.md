@@ -8,10 +8,7 @@ which may be installed as follows:
 
 ```
 yum groupinstall "Development tools"
-yum install scons
-yum install cmake
-yum install snappy-devel
-yum install boost-devel
+yum install scons cmake snappy-devel boost-devel
 ```
 
 ### Building and Installing gcc 4.8.2
@@ -21,38 +18,18 @@ x86-64 architecture Linux installation.  To build and install gcc 4.8.2, do the
 following:
 
 1. First install 32-bit versions of the glibc binaries (in addition to the
-   existing 64-bit binaries).  To do this, start by appending the following
-   line to `/etc/yum.conf`:
+   existing 64-bit binaries).  You can accomplish this by specifying the
+   32bit versions of the packages via yum like so:
 
    ```
-   multilib_policy=all
+   yum install glibc.i686 glibc-devel.i686 glibc-static.i686
    ```
-
-   Now install the packages shown below.  This will cause 32-bit versions to
-   be installed in addition to the 64-bit versions that are already installed.
-
-   ```
-   yum install glibc
-   yum install glibc-devel
-   yum install glibc-static
-   ```
-
-   Finally, remove the line you appended to `/etc/yum.conf` above.
 
 2. Next execute the following commands:
 
    ```
-   yum install elfutils-devel
-   yum install systemtap-runtime
-   yum install zlib-devel
-   yum install gettext
-   yum install dejagnu
-   yum install bison
-   yum install flex
-   yum install texinfo
-   yum install sharutils
-   yum install gmp-devel
-   yum install mpfr-devel
+   yum install elfutils-devel systemtap-runtime zlib-devel gettext \
+               dejagnu bison flex texinfo sharutils gmp-devel mpfr-devel
    wget http://dl.fedoraproject.org/pub/epel/6/x86_64/libmpc-0.8-3.el6.x86_64.rpm
    wget http://dl.fedoraproject.org/pub/epel/6/x86_64/libmpc-devel-0.8-3.el6.x86_64.rpm
    rpm -Uvh libmpc-0.8-3.el6.x86_64.rpm

@@ -3,8 +3,8 @@
 %global _prefix /usr/local/gcc-%{version}
 %define debug_package %{nil}
 
-Name:           gcc482
-Version:        4.8.2
+Name:           gcc48
+Version:        4.8.5
 Release:        1%{?dist}
 Summary:        Various compilers (C, C++, Objective-C, ...) 
 
