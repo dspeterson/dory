@@ -1,6 +1,6 @@
 %global multilib_64_archs x86_64
 %global gcc_target_platform %{_target_platform}
-%global _prefix /opt/gcc
+%global _prefix /usr/local/gcc-%{version}
 %define debug_package %{nil}
 
 Name:           gcc482
@@ -109,8 +109,8 @@ rm -rf $RPM_BUILD_ROOT
 %files 
 %defattr(-,root,root,-)
 %{_prefix}
-%docdir /opt/gcc/share/man
-%docdir /opt/gcc/share/info
+%docdir %{_prefix}/share/man
+%docdir %{_prefix}/share/info
 
 
 %changelog
