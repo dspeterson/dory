@@ -1,4 +1,4 @@
-alias build='scons -Q --up'
+alias build='python `which scons` -Q --up'
 
 # To build:
 #
