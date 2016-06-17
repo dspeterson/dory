@@ -134,6 +134,8 @@ check_version_file(out.Dir('dory').Dir('client').File('build_id.c').
 # Environment.
 prog_libs = {'pthread', 'dl', 'rt'}
 env = Environment(CFLAGS=['-Wwrite-strings'],
+                  CC='/usr/local/gcc-4.8.5/bin/gcc',
+                  CXX='/usr/local/gcc-4.8.5/bin/g++',
                   CCFLAGS=['-Wall', '-Wextra', '-Werror', '-Wformat=2',
                           '-Winit-self', '-Wunused-parameter', '-Wshadow',
                           '-Wpointer-arith', '-Wcast-align', '-Wlogical-op'],
