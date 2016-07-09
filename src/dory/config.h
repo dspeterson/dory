@@ -95,8 +95,6 @@ namespace Dory {
 
     size_t MinPauseDelay;
 
-    bool OmitTimestamp;
-
     size_t DiscardReportInterval;
 
     bool NoLogDiscard;
@@ -120,10 +118,6 @@ namespace Dory {
     size_t DiscardReportBadMsgPrefixSize;
 
     bool TopicAutocreate;
-
-    bool UseOldInputFormat;
-
-    bool UseOldOutputFormat;
   };  // TConfig
 
   void LogConfig(const TConfig &config);

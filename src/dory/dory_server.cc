@@ -379,8 +379,7 @@ bool TDoryServer::StartMsgHandlingThreads() {
     DiscardFileLogger.Init(Config->DiscardLogPath.c_str(),
         static_cast<uint64_t>(Config->DiscardLogMaxFileSize) * 1024,
         static_cast<uint64_t>(Config->DiscardLogMaxArchiveSize) * 1024,
-        Config->DiscardLogBadMsgPrefixSize,
-        Config->UseOldOutputFormat);
+        Config->DiscardLogBadMsgPrefixSize);
   }
 
   if (StreamClientWorkerPool.IsKnown()) {

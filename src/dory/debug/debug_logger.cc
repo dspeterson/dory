@@ -118,7 +118,7 @@ void TDebugLogger::LogMsg(const TMsg &msg) {
   LogEntry += Encoded;
   LogEntry += "] value: ";
   RawData.clear();
-  WriteValue(RawData, 0, msg, AddTimestamp, UseOldOutputFormat);
+  WriteValue(RawData, 0, msg);
   Encoded.clear();
 
   if (!RawData.empty()) {

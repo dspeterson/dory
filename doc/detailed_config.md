@@ -381,14 +381,6 @@ bytes to write to discard report available from Dory's web interface.  The
 default value is 256.
 * `--topic_autocreate`: Enable automatic topic creation.  For this to work, the
 brokers must be configured with `auto.create.topics.enable=true`.
-* `--omit_timestamp`: Do not use this option, since it will soon be removed.
-Its purpose is to provide compatibility with legacy infrastructure at if(we).
-* `--use_old_input_format`: Do not use this option, since it will soon be
-removed.  Its purpose is to provide compatibility with legacy infrastructure at
-if(we).
-* `--use_old_output_format`: Do not use this option, since it will soon be
-removed.  Its purpose is to provide compatibility with legacy infrastructure at
-if(we).
 
 Now that you are familiar with all of Dory's configuration options, you may
 find information on [troubleshooting](troubleshooting.md) helpful.

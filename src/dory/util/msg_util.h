@@ -59,25 +59,14 @@ namespace Dory {
        _no_ assumptions about the size of 'dst' on entry, and will never shrink
        'dst'.  It will never grow 'dst' any more than the minimum amount
        required to hold the entire output.  Return size in bytes of written
-       value, not including 'offset' value passed in.
-
-       This function becomes trivially simple when we get rid of the old output
-       format. */
+       value, not including 'offset' value passed in. */
     size_t WriteValue(std::vector<uint8_t> &dst, size_t offset,
-        const TMsg &msg, bool add_timestamp, bool use_old_output_format);
+        const TMsg &msg);
 
     /* This version of WriteValue() is similar to the above except that the
        value is written into the memory pointed to by 'dst'.  Here, it is
-       assumed that buffer 'dst' contains enough space for the entire value.
-       To find out how much space must be allocated for 'dst', one can call
-       ComputeValueSize() below. */
-    void WriteValue(uint8_t *dst, const TMsg &msg, bool add_timestamp,
-        bool use_old_output_format);
-
-    /* This is a temporary hack.  It will go away when we get rid of the old
-       output format. */
-    size_t ComputeValueSize(const TMsg &msg, bool add_timestamp,
-        bool use_old_output_format);
+       assumed that buffer 'dst' contains enough space for the entire value. */
+    void WriteValue(uint8_t *dst, const TMsg &msg);
 
   }  // Util
 

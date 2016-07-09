@@ -55,14 +55,12 @@
 #include <dory/client/tcp_sender.h>
 #include <dory/client/unix_dg_sender.h>
 #include <dory/client/unix_stream_sender.h>
-#include <dory/input_dg/old_v0_input_dg_writer.h>
 #include <dory/util/arg_parse_error.h>
 #include <tclap/CmdLine.h>
 
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Client;
-using namespace Dory::InputDg;
 using namespace Dory::Util;
 
 struct TConfig {

@@ -97,7 +97,6 @@ static void CreateDir(const char *dir) {
 
 TDiscardFileLogger::TDiscardFileLogger()
     : MaxMsgPrefixLen(std::numeric_limits<size_t>::max()),
-      UseOldOutputFormat(false),
       Enabled(false),
       MaxFileSize(0),
       MaxArchiveSize(0) {
@@ -120,8 +119,7 @@ TDiscardFileLogger::~TDiscardFileLogger() noexcept {
 }
 
 void TDiscardFileLogger::Init(const char *log_path, uint64_t max_file_size,
-    uint64_t max_archive_size, size_t max_msg_prefix_len,
-    bool use_old_output_format) {
+    uint64_t max_archive_size, size_t max_msg_prefix_len) {
   assert(this);
 
   /* Will contain absolute path of directory containing logfile. */
@@ -141,7 +139,6 @@ void TDiscardFileLogger::Init(const char *log_path, uint64_t max_file_size,
 
   CreateDir(log_dir.c_str());
   MaxMsgPrefixLen = max_msg_prefix_len;
-  UseOldOutputFormat = use_old_output_format;
 
   /* Since we are executing during server initialization before any threads can
      create log entries, we modify our internal state without grabbing 'Mutex'.
@@ -212,7 +209,7 @@ void TDiscardFileLogger::LogDiscard(const TMsg &msg, TDiscardReason reason) {
   WriteKey(key_buf, 0, msg);
   EnforceMaxPrefixLen(key_buf);
   std::vector<uint8_t> value_buf;
-  WriteValue(value_buf, 0, msg, false, UseOldOutputFormat);
+  WriteValue(value_buf, 0, msg);
   EnforceMaxPrefixLen(value_buf);
   const uint8_t *key_buf_begin = key_buf.empty() ? nullptr : &key_buf[0];
   const uint8_t *value_buf_begin = value_buf.empty() ? nullptr : &value_buf[0];
@@ -232,7 +229,7 @@ void TDiscardFileLogger::LogDuplicate(const TMsg &msg) {
   WriteKey(key_buf, 0, msg);
   EnforceMaxPrefixLen(key_buf);
   std::vector<uint8_t> value_buf;
-  WriteValue(value_buf, 0, msg, false, UseOldOutputFormat);
+  WriteValue(value_buf, 0, msg);
   EnforceMaxPrefixLen(value_buf);
   const uint8_t *key_buf_begin = key_buf.empty() ? nullptr : &key_buf[0];
   const uint8_t *value_buf_begin = value_buf.empty() ? nullptr : &value_buf[0];
@@ -368,7 +365,7 @@ void TDiscardFileLogger::LogBadTopicDiscard(const TMsg &msg) {
   WriteKey(key_buf, 0, msg);
   EnforceMaxPrefixLen(key_buf);
   std::vector<uint8_t> value_buf;
-  WriteValue(value_buf, 0, msg, false, UseOldOutputFormat);
+  WriteValue(value_buf, 0, msg);
   EnforceMaxPrefixLen(value_buf);
   const uint8_t *key_buf_begin = key_buf.empty() ? nullptr : &key_buf[0];
   const uint8_t *value_buf_begin = value_buf.empty() ? nullptr : &value_buf[0];
@@ -388,7 +385,7 @@ void TDiscardFileLogger::LogLongMsgDiscard(const TMsg &msg) {
   WriteKey(key_buf, 0, msg);
   EnforceMaxPrefixLen(key_buf);
   std::vector<uint8_t> value_buf;
-  WriteValue(value_buf, 0, msg, false, UseOldOutputFormat);
+  WriteValue(value_buf, 0, msg);
   EnforceMaxPrefixLen(value_buf);
   const uint8_t *key_buf_begin = key_buf.empty() ? nullptr : &key_buf[0];
   const uint8_t *value_buf_begin = value_buf.empty() ? nullptr : &value_buf[0];

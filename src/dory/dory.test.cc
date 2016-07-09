@@ -1202,15 +1202,11 @@ namespace {
       TAnomalyTracker::TInfo bad_stuff;
       dory->GetAnomalyTracker().GetInfo(bad_stuff);
 
-      if (bad_stuff.UnsupportedVersionMsgCount == 0) {
+      if (bad_stuff.UnsupportedApiKeyMsgCount == 0) {
         continue;
       }
 
-      ASSERT_EQ(bad_stuff.UnsupportedVersionMsgCount, 1U);
-      auto iter = bad_stuff.UnsupportedVersionMsgs.find(-1);
-      ASSERT_FALSE(iter == bad_stuff.UnsupportedVersionMsgs.end());
-      ASSERT_EQ(iter->first, -1);
-
+      ASSERT_EQ(bad_stuff.UnsupportedApiKeyMsgCount, 1U);
       ASSERT_EQ(bad_stuff.MalformedMsgCount, 0U);
       ASSERT_EQ(bad_stuff.MalformedMsgs.size(), 0U);
       ASSERT_EQ(bad_stuff.DuplicateTopicMap.size(), 0U);

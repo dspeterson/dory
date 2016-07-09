@@ -41,12 +41,9 @@ namespace Dory {
       NO_COPY_SEMANTICS(TDebugLogger);
 
       public:
-      TDebugLogger(const TDebugSetup &debug_setup, TDebugSetup::TLogId log_id,
-                   bool add_timestamp, bool use_old_output_format)
+      TDebugLogger(const TDebugSetup &debug_setup, TDebugSetup::TLogId log_id)
           : DebugSetup(debug_setup),
             LogId(log_id),
-            AddTimestamp(add_timestamp),
-            UseOldOutputFormat(use_old_output_format),
             Settings(debug_setup.GetSettings()),
             LogFd(Settings->GetLogFileDescriptor(log_id)),
             CachedSettingsVersion(Settings->GetVersion()),
@@ -86,10 +83,6 @@ namespace Dory {
       const TDebugSetup &DebugSetup;
 
       const TDebugSetup::TLogId LogId;
-
-      const bool AddTimestamp;
-
-      const bool UseOldOutputFormat;
 
       TSettings::TPtr Settings;
 

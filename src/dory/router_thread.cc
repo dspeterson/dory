@@ -111,8 +111,7 @@ TRouterThread::TRouterThread(const TConfig &config, const TConf &conf,
       KnownBrokers(conf.GetInitialBrokers()),
       PerTopicBatcher(batch_config.GetPerTopicConfig()),
       Dispatcher(dispatcher),
-      DebugLogger(debug_setup, TDebugSetup::TLogId::MSG_RECEIVE,
-                  !config.OmitTimestamp, config.UseOldOutputFormat) {
+      DebugLogger(debug_setup, TDebugSetup::TLogId::MSG_RECEIVE) {
 }
 
 TRouterThread::~TRouterThread() noexcept {

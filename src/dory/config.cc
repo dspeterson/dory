@@ -264,11 +264,6 @@ static void ParseArgs(int argc, char *argv[], TConfig &config,
         "metadata from Kafka in response to an error.", false,
         config.MinPauseDelay, "MIN_DELAY_MS");
     cmd.add(arg_min_pause_delay);
-    SwitchArg arg_omit_timestamp("", "omit_timestamp", "Omit timestamps from "
-        "messages (applicable only when using legacy input format).  Do not "
-        "use this option, since it will soon be removed.  Its purpose is to "
-        "provide compatibility with legacy infrastructure at if(we).", cmd,
-        config.OmitTimestamp);
     ValueArg<decltype(config.DiscardReportInterval)>
         arg_discard_report_interval("", "discard_report_interval",
         "Discard reporting interval in seconds.", false,
@@ -336,16 +331,6 @@ static void ParseArgs(int argc, char *argv[], TConfig &config,
     SwitchArg arg_topic_autocreate("", "topic_autocreate", "Enable support "
         "for automatic topic creation.  The Kafka brokers must also be "
         "configured to support this.", cmd, config.TopicAutocreate);
-    SwitchArg arg_use_old_input_format("", "use_old_input_format", "Expect "
-        "input UNIX datagrams to adhere to old format.  Do not use this "
-        "option, since it will soon be removed.  Its purpose is to provide "
-        "compatibility with legacy infrastructure at if(we).", cmd,
-        config.UseOldInputFormat);
-    SwitchArg arg_use_old_output_format("", "use_old_output_format", "Send "
-        "messages to Kafka using old format.  Do not use this option, since "
-        "it will soon be removed.  Its purpose is to provide compatibility "
-        "with legacy infrastructure at if(we).", cmd,
-        config.UseOldOutputFormat);
     cmd.parse(argc, &arg_vec[0]);
     config.ConfigPath = arg_config_path.getValue();
     config.LogLevel = StringToLogLevel(arg_log_level.getValue());
@@ -399,7 +384,6 @@ static void ParseArgs(int argc, char *argv[], TConfig &config,
     config.PauseRateLimitMaxDouble =
         arg_pause_rate_limit_max_double.getValue();
     config.MinPauseDelay = arg_min_pause_delay.getValue();
-    config.OmitTimestamp = arg_omit_timestamp.getValue();
     config.DiscardReportInterval = arg_discard_report_interval.getValue();
     config.NoLogDiscard = arg_no_log_discard.getValue();
     config.DebugDir = arg_debug_dir.getValue();
@@ -416,8 +400,6 @@ static void ParseArgs(int argc, char *argv[], TConfig &config,
     config.DiscardReportBadMsgPrefixSize =
         arg_discard_report_bad_msg_prefix_size.getValue();
     config.TopicAutocreate = arg_topic_autocreate.getValue();
-    config.UseOldInputFormat = arg_use_old_input_format.getValue();
-    config.UseOldOutputFormat = arg_use_old_output_format.getValue();
 
     if (!arg_receive_socket_name.isSet() &&
         !arg_receive_stream_socket_name.isSet() && !arg_input_port.isSet()) {
@@ -474,7 +456,6 @@ TConfig::TConfig(int argc, char *argv[], bool allow_input_bind_ephemeral)
       PauseRateLimitInitial(5000),
       PauseRateLimitMaxDouble(4),
       MinPauseDelay(5000),
-      OmitTimestamp(false),
       DiscardReportInterval(600),
       NoLogDiscard(false),
       DebugDir("/home/dory/debug"),
@@ -485,9 +466,7 @@ TConfig::TConfig(int argc, char *argv[], bool allow_input_bind_ephemeral)
       DiscardLogMaxArchiveSize(8 * 1024),
       DiscardLogBadMsgPrefixSize(256),
       DiscardReportBadMsgPrefixSize(256),
-      TopicAutocreate(false),
-      UseOldInputFormat(false),
-      UseOldOutputFormat(false) {
+      TopicAutocreate(false) {
   ParseArgs(argc, argv, *this, allow_input_bind_ephemeral);
 }
 
@@ -588,20 +567,8 @@ void Dory::LogConfig(const TConfig &config) {
          static_cast<unsigned long>(config.PauseRateLimitMaxDouble));
   syslog(LOG_NOTICE, "Minimum pause delay %lu milliseconds",
          static_cast<unsigned long>(config.MinPauseDelay));
-
-  if (config.UseOldInputFormat) {
-    syslog(LOG_NOTICE, "Omit timestamp from output: %s",
-           config.OmitTimestamp ? "true" : "false");
-  }
-
   syslog(LOG_NOTICE, "Discard reporting interval %lu seconds",
          static_cast<unsigned long>(config.DiscardReportInterval));
-
-  if (config.UseOldInputFormat) {
-    syslog(LOG_NOTICE, "Omit writing syslog messages when discards occur: %s",
-           config.NoLogDiscard ? "true" : "false");
-  }
-
   syslog(LOG_NOTICE, "Debug directory [%s]", config.DebugDir.c_str());
   syslog(LOG_NOTICE, "Message debug time limit %lu seconds",
          static_cast<unsigned long>(config.MsgDebugTimeLimit));
@@ -627,8 +594,4 @@ void Dory::LogConfig(const TConfig &config) {
   syslog(LOG_NOTICE, config.TopicAutocreate ?
          "Automatic topic creation enabled" :
          "Automatic topic creation disabled");
-  syslog(LOG_NOTICE, "Using %s input datagram format",
-         config.UseOldInputFormat ? "old" : "new");
-  syslog(LOG_NOTICE, "Using %s output format",
-         config.UseOldOutputFormat ? "old" : "new");
 }

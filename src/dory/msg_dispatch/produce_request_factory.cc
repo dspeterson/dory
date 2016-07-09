@@ -55,8 +55,7 @@ SERVER_COUNTER(SerializeTopicGroup);
 TProduceRequestFactory::TProduceRequestFactory(const TConfig &config,
     const TGlobalBatchConfig &batch_config,
     const TCompressionConf &compression_conf,
-    const TWireProtocol &kafka_protocol, size_t broker_index,
-    bool add_timestamp, bool use_old_output_format)
+    const TWireProtocol &kafka_protocol, size_t broker_index)
     : Config(config),
       BrokerIndex(broker_index),
       KafkaProtocol(kafka_protocol),
@@ -65,8 +64,6 @@ TProduceRequestFactory::TProduceRequestFactory(const TConfig &config,
       MaxCompressionRatio(compression_conf.GetSizeThresholdPercent() / 100.0f),
       RequiredAcks(kafka_protocol.GetRequiredAcks()),
       ReplicationTimeout(kafka_protocol.GetReplicationTimeout()),
-      AddTimestamp(add_timestamp),
-      UseOldOutputFormat(use_old_output_format),
       RequestWriter(kafka_protocol.CreateProduceRequestWriter()),
       MsgSetWriter(kafka_protocol.CreateMsgSetWriter()),
       DefaultTopicConf(compression_conf.GetDefaultTopicConfig()),
@@ -398,8 +395,7 @@ void TProduceRequestFactory::SerializeUncompressedMsgSet(
   for (const TMsg::TPtr &msg_ptr : msg_set) {
     const TMsg &msg = *msg_ptr;
     size_t key_size = msg.GetKeySize();
-    size_t value_size = ComputeValueSize(msg, AddTimestamp,
-                                         UseOldOutputFormat);
+    size_t value_size = msg.GetValueSize();
     RequestWriter->OpenMsg(0, key_size, value_size);
     size_t key_offset = RequestWriter->GetCurrentMsgKeyOffset();
     assert(dst.size() >= key_offset);
@@ -408,7 +404,7 @@ void TProduceRequestFactory::SerializeUncompressedMsgSet(
     assert(dst.size() >= value_offset);
     assert((dst.size() - value_offset) == value_size);
     WriteKey(&dst[0] + key_offset, msg);
-    WriteValue(&dst[0] + value_offset, msg, AddTimestamp, UseOldOutputFormat);
+    WriteValue(&dst[0] + value_offset, msg);
     RequestWriter->CloseMsg();
     SerializeMsg.Increment();
   }
@@ -423,8 +419,7 @@ void TProduceRequestFactory::SerializeToCompressionBuf(
   for (const TMsg::TPtr &msg_ptr : msg_set) {
     const TMsg &msg = *msg_ptr;
     size_t key_size = msg.GetKeySize();
-    size_t value_size = ComputeValueSize(msg, AddTimestamp,
-                                         UseOldOutputFormat);
+    size_t value_size = msg.GetValueSize();
     MsgSetWriter->OpenMsg(0, key_size, value_size);
     size_t key_offset = MsgSetWriter->GetCurrentMsgKeyOffset();
     assert(CompressionBuf.size() >= key_offset);
@@ -433,8 +428,7 @@ void TProduceRequestFactory::SerializeToCompressionBuf(
     assert(CompressionBuf.size() >= value_offset);
     assert((CompressionBuf.size() - value_offset) == value_size);
     WriteKey(&CompressionBuf[0] + key_offset, msg);
-    WriteValue(&CompressionBuf[0] + value_offset, msg, AddTimestamp,
-               UseOldOutputFormat);
+    WriteValue(&CompressionBuf[0] + value_offset, msg);
     MsgSetWriter->CloseMsg();
     SerializeMsg.Increment();
   }

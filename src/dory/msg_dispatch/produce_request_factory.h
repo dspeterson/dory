@@ -59,8 +59,8 @@ namespace Dory {
       TProduceRequestFactory(const TConfig &config,
           const Batch::TGlobalBatchConfig &batch_config,
           const Conf::TCompressionConf &compression_conf,
-          const KafkaProto::TWireProtocol &kafka_protocol, size_t broker_index,
-          bool add_timestamp, bool use_old_output_format);
+          const KafkaProto::TWireProtocol &kafka_protocol,
+          size_t broker_index);
 
       void Init(const Conf::TCompressionConf &compression_conf,
                 const std::shared_ptr<TMetadata> &md);
@@ -194,12 +194,6 @@ namespace Dory {
       const int16_t RequiredAcks;
 
       const int32_t ReplicationTimeout;
-
-      /* Temporary hack to support legacy output format. */
-      const bool AddTimestamp;
-
-      /* Temporary hack to support legacy output format. */
-      const bool UseOldOutputFormat;
 
       const std::unique_ptr<KafkaProto::TProduceRequestWriterApi>
           RequestWriter;

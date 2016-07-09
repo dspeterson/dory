@@ -101,8 +101,7 @@ namespace Dory {
        deleted in order from oldest to newest until 'max_archive_size' is no
        longer exceeded. */
     void Init(const char *log_path, uint64_t max_file_size,
-              uint64_t max_archive_size, size_t max_msg_prefix_len,
-              bool use_old_output_format);
+              uint64_t max_archive_size, size_t max_msg_prefix_len);
 
     /* Call this to disable logging and shut down the thread that deletes old
        logfiles.  It is harmless to call this method once or multiple times,
@@ -248,8 +247,6 @@ namespace Dory {
     void WriteToLog(const std::string &log_entry);
 
     size_t MaxMsgPrefixLen;
-
-    bool UseOldOutputFormat;
 
     /* Protects everything below.  However, reads of boolean 'Enabled' value
        may occur without acquiring 'Mutex' */
