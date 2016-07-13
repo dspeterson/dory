@@ -53,8 +53,8 @@ following:
 Now that gcc 4.8 has been built and installed, you should do the following
 before attempting to build and execute programs with the new compiler version:
 ```
-export PATH=/opt/gcc/bin:$PATH
-export LD_LIBRARY_PATH=/opt/gcc/lib64
+export PATH=/usr/local/gcc-4.8.5/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/gcc-4.8.5/lib64
 ```
 
 ### Building and Installing Python 2.7
