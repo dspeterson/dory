@@ -11,19 +11,24 @@ yum groupinstall "Development tools"
 yum install scons cmake snappy-devel boost-devel
 ```
 
-### Building and Installing gcc 4.8.2
+### Building and Installing gcc 4.8
 
 For simplicity, the following instructions assume that you are running on an
-x86-64 architecture Linux installation.  To build and install gcc 4.8.2, do the
+x86-64 architecture Linux installation.  To build and install gcc 4.8, do the
 following:
 
 1. First install 32-bit versions of the glibc binaries (in addition to the
-   existing 64-bit binaries).  You can accomplish this by specifying the
-   32bit versions of the packages via yum like so:
-
+   existing 64-bit binaries).  To do this, start by appending the following
+   line to `/etc/yum.conf`:
    ```
-   yum install glibc.i686 glibc-devel.i686 glibc-static.i686
+   multilib_policy=all
    ```
+   Now install the packages shown below. This will cause 32-bit versions to be
+   installed in addition to the 64-bit versions that are already installed.
+   ```
+   yum install glibc glibc-devel glibc-static
+   ```
+   Finally, remove the line you appended to `/etc/yum.conf` above.
 
 2. Next execute the following commands:
 
@@ -37,15 +42,15 @@ following:
    yum install rpm-build
    mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}  # or use a directory of your choice
    git clone https://github.com/dspeterson/dory.git
-   cp dory/centos6/gcc482.spec ~/rpmbuild/SPECS
-   wget http://mirrors.kernel.org/gnu/gcc/gcc-4.8.2/gcc-4.8.2.tar.bz2
-   cp gcc-4.8.2.tar.bz2 ~/rpmbuild/SOURCES
+   cp dory/centos6/gcc48.spec ~/rpmbuild/SPECS
+   wget http://mirrors.kernel.org/gnu/gcc/gcc-4.8.5/gcc-4.8.5.tar.bz2
+   cp gcc-4.8.5.tar.bz2 ~/rpmbuild/SOURCES
    cd ~/rpmbuild
-   rpmbuild --define "topdir `pwd`" -ba SPECS/gcc482.spec
-   rpm -Uvh RPMS/x86_64/gcc482-4.8.2-1.el6.x86_64.rpm
+   rpmbuild --define "topdir `pwd`" -ba SPECS/gcc48.spec
+   rpm -Uvh RPMS/x86_64/gcc48-4.8.5-1.el6.x86_64.rpm
    ```
 
-Now that gcc 4.8.2 has been built and installed, you should do the following
+Now that gcc 4.8 has been built and installed, you should do the following
 before attempting to build and execute programs with the new compiler version:
 ```
 export PATH=/opt/gcc/bin:$PATH
