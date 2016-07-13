@@ -92,7 +92,7 @@ appreciated.  Technical details on how to send messages to Dory are provided
 [here](doc/sending_messages.md).  Support for [running Dory inside a Docker
 container](Docker) is also available.  Dory requires at least version 0.8 of
 Kafka, and has been tested on versions 0.8, 0.9, and 0.10.  It runs on Linux,
-and has been tested on CentOS versions 7 and 6.5, and Ubuntu versions 16.04
+and has been tested on CentOS versions 7 and 6.8, and Ubuntu versions 16.04
 LTS, 15.04 LTS, 14.04.1 LTS, and 13.10.
 
 Dory is the successor to [Bruce](https://github.com/ifwe/bruce), and is
@@ -108,7 +108,7 @@ things you would like to see in future versions of Dory, please add them
 
 To get Dory working, you need to set up a build environment.  Currently,
 instructions are available for [CentOS 7](doc/centos_7_env.md),
-[CentOS 6.5](doc/centos_6_5_env.md),
+[CentOS 6.8](doc/centos_6_8_env.md),
 [Ubuntu (16.04 LTS, 15.04 LTS, 14.04.1 LTS, and 13.10)](doc/ubuntu_env.md),
 and [Debian 8](doc/debian_8_env.md).
 

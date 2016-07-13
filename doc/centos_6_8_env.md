@@ -1,8 +1,8 @@
-## Setting Up a CentOS 6.5 Build Environment
+## Setting Up a CentOS 6.8 Build Environment
 
 Dory is implemented in C++, and makes extensive use of C++11 features.
 Therefore, it must be built using a more recent version of gcc than what CentOS
-6.5 provides.  Likewise, a newer version of Python is required to support
+6.8 provides.  Likewise, a newer version of Python is required to support
 Dory's SCons-based Python build scripts.  Some RPM packages are also needed,
 which may be installed as follows:
 
@@ -110,9 +110,9 @@ Now proceed to
 
 -----
 
-centos_6_5_env.md: Copyright 2014 if(we), Inc.
+centos_6_8_env.md: Copyright 2014 if(we), Inc.
 
-centos_6_5_env.md is licensed under a Creative Commons Attribution-ShareAlike
+centos_6_8_env.md is licensed under a Creative Commons Attribution-ShareAlike
 4.0 International License.
 
 You should have received a copy of the license along with this work. If not,

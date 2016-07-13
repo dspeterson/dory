@@ -4,7 +4,7 @@ Once you have finished [setting up your build environment](../README.md#setting-
 you are ready to build Dory.  If you are building on CentOS 6, remember to set
 your `PATH` and `LD_LIBRARY_PATH` environment variables and activate your
 Python virtualenv environment before building, as detailed
-[here](centos_6_5_env.md).  The first step is to clone Dory's Git repository:
+[here](centos_6_8_env.md).  The first step is to clone Dory's Git repository:
 
 ```
 git clone https://github.com/dspeterson/dory.git
@@ -59,7 +59,7 @@ For CentOS 6, the steps are identical except that instead of
 The `--import_path` option tells the SCons build configuration to use the PATH
 environment variable setting from the external environment.  This is needed
 so that your customized PATH setting (as described
-[here](centos_6_5_env.md#building-and-installing-gcc-482)) is seen and the
+[here](centos_6_8_env.md#building-and-installing-gcc-482)) is seen and the
 newer version of gcc is used.  After performing the above steps, the path to
 the newly built Dory executable is now `out/release/dory/dory`.  If you omit
 `--release` above, you will create a debug build of Dory and the location of
@@ -124,7 +124,7 @@ rpm -Uvh out/pkg/rpm/dory-1.0.6.38.g66c5a2d-1.el6.x86_64.rpm
 
 Otherwise, you can copy the Dory executable to a location of your choice, such
 as `/usr/bin`.  If you are running on CentOS 6, remember that the gcc482 RPM
-package described [here](centos_6_5_env.md#building-and-installing-gcc-482)
+package described [here](centos_6_8_env.md#building-and-installing-gcc-482)
 must be installed, and `LD_LIBRARY_PATH` must contain `/opt/gcc/lib64` in the
 shell that you execute Dory from.  If you built your RPM package using the
 `rpm_noconfig` option described above, or you built Dory directly using SCons,
