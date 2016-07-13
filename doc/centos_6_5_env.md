@@ -90,7 +90,7 @@ For building Dory, you need to create a Python 2.7 virtualenv environment,
 which may be done as follows:
 
 ```
-virtualenv-2.7 --distribute ~/dory_env  # or use a directory of your choice
+virtualenv --distribute ~/dory_env  # or use a directory of your choice
 ```
 
 Now activate the virtualenv environment as follows:
