@@ -120,6 +120,29 @@ def get_one_dep_source(target_path, dep_suffixes, cwd_rel, dep_libs):
     return result
 
 
+# This is a workaround for a change in the signature of method
+# 'get_implicit_deps' of SCons class 'Node' that occurred in version 2.5.0.
+#
+# TODO: Look for a better workaround.
+def get_implicit_deps_wrapper(source):
+    def path_fn(scanner_param):
+        return (src,)
+
+    try:
+        # First try calling the method using the parameters it expects in SCons
+        # versions prior to 2.5.0.
+        result = source.get_implicit_deps(env, scanner, (src,))
+    except TypeError as err:
+        if str(err) != "'tuple' object is not callable":
+            raise
+
+        # If we get here, we saw the failure that started occurring in SCons
+        # version 2.5.0.  Therefore try the new invocation style.
+        result = source.get_implicit_deps(env, scanner, path_fn)
+
+    return result
+
+
 # If parameter 'main' is None, return None.  Otherwise, recursively find all of
 # the object files that main depends on, and return the result as a list of
 # File objects.  'dep_libs' is an initially empty set of libraries.  On return,
@@ -137,7 +160,7 @@ def get_dep_sources(main, dep_libs):
             if not source.srcnode().exists():
                 continue  # source file is generated during build
 
-            for dep_header in source.get_implicit_deps(env, scanner, (src,)):
+            for dep_header in get_implicit_deps_wrapper(source):
                 dep_source = get_one_dep_source(dep_header.get_path(src),
                                                 env['DEP_SUFFIXES'], False,
                                                 dep_libs)
