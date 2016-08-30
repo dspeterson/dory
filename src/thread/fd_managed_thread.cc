@@ -102,10 +102,8 @@ void TFdManagedThread::ShutdownOnDestroy() {
     }
   }
 
-  assert(!ShutdownRequestedSem.GetFd().IsReadable());
   assert(!ShutdownFinishedSem.GetFd().IsReadable());
   assert(!Thread.joinable());
-  assert(!ThrownByThread);
 }
 
 void TFdManagedThread::RunAndTerminate() {
