@@ -680,23 +680,15 @@ namespace {
     TDoryServer *dory = server.GetDory();
     std::string msg_body("rejected on 1st attempt");
 
-    /* Error code 6 is "not leader for partition", which causes the ProdMngr to
-       push the pause button. */
+    /* Error code 6 is "not leader for partition", which causes the dispatcher
+       to push the pause button. */
     bool success = kafka.Inj.InjectAckError(6, msg_body.c_str(), nullptr);
-    ASSERT_TRUE(success);
-
-    /* Inject a metadata response error.  In response to the pause, the router
-       thread will request metadata, and get this injected error.  Since the
-       error will leave no remaining valid topics, dory will send another
-       metadata request. */
-    success = kafka.Inj.InjectAllTopicsMetadataResponseError(-1, topic.c_str(),
-                                                             nullptr);
     ASSERT_TRUE(success);
 
     /* Kafka is having a really bad day today.  To make things interesting,
        make the mock Kafka server disconnect rather than sending a response on
-       the second attempted metadata request from dory.  dory should try
-       again and succeed on the third attempt. */
+       the attempted metadata request from dory.  dory should try again and
+       succeed on the second attempt. */
     success =
         kafka.Inj.InjectDisconnectBeforeAllTopicsMetadataResponse(nullptr);
     ASSERT_TRUE(success);
@@ -722,12 +714,12 @@ namespace {
     using TTracker = TReceivedRequestTracker;
     std::list<TTracker::TRequestInfo> received;
 
-    for (size_t i = 0; (received.size() < 6) && (i < 3000); ++i) {
+    for (size_t i = 0; (received.size() < 5) && (i < 3000); ++i) {
       mock_kafka.NonblockingGetHandledRequests(received);
       SleepMilliseconds(10);
     }
 
-    ASSERT_EQ(received.size(), 6U);
+    ASSERT_EQ(received.size(), 5U);
 
     /* initial metadata request from daemon startup */
     TTracker::TRequestInfo *req_info = &received.front();
@@ -745,13 +737,7 @@ namespace {
     ASSERT_EQ(prod_req_info->ReturnedErrorCode, 6);
     received.pop_front();
 
-    /* metadata request due to pause (injected metadata response error) */
-    req_info = &received.front();
-    ASSERT_TRUE(req_info->MetadataRequestInfo.IsKnown());
-    ASSERT_EQ(req_info->MetadataRequestInfo->ReturnedErrorCode, -1);
-    received.pop_front();
-
-    /* failed metadata request retry after injected metadata response error */
+    /* failed metadata request due to injected disconnect */
     req_info = &received.front();
     ASSERT_TRUE(req_info->MetadataRequestInfo.IsKnown());
     ASSERT_EQ(req_info->MetadataRequestInfo->ReturnedErrorCode, 0);

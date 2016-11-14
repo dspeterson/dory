@@ -126,8 +126,12 @@ std::unique_ptr<TMetadata> TMetadataFetcher::Fetch(int timeout_ms) {
   }
 
   if (result->GetTopics().empty()) {
+    /* Note: It's ok if no topics exist, since that's the initial state of a
+       newly provisioned broker cluster.  If automatic topic creation is
+       enabled, receipt of a message will cause us to create its topic before
+       we route the message to a broker.  Otherwise we will discard all
+       messages until a topic is created (i.e. by a sysadmin). */
     MetadataHasEmptyTopicList.Increment();
-    bad_metadata = true;
   }
 
   if (bad_metadata) {

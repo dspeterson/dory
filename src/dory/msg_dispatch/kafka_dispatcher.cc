@@ -212,14 +212,18 @@ void TKafkaDispatcher::StartSlowShutdown(uint64_t start_time) {
   assert(State != TState::Stopped);
   StartDispatcherSlowShutdown.Increment();
 
-  for (std::unique_ptr<TConnector> &c : Connectors) {
-    assert(c);
-    c->StartSlowShutdown(start_time);
-  }
+  if (Connectors.empty()) {
+    Ds.HandleAllThreadsFinished();
+  } else {
+    for (std::unique_ptr<TConnector> &c : Connectors) {
+      assert(c);
+      c->StartSlowShutdown(start_time);
+    }
 
-  for (std::unique_ptr<TConnector> &c : Connectors) {
-    assert(c);
-    c->WaitForShutdownAck();
+    for (std::unique_ptr<TConnector> &c : Connectors) {
+      assert(c);
+      c->WaitForShutdownAck();
+    }
   }
 
   State = TState::ShuttingDown;
@@ -230,14 +234,18 @@ void TKafkaDispatcher::StartFastShutdown() {
   assert(State != TState::Stopped);
   StartDispatcherFastShutdown.Increment();
 
-  for (std::unique_ptr<TConnector> &c : Connectors) {
-    assert(c);
-    c->StartFastShutdown();
-  }
+  if (Connectors.empty()) {
+    Ds.HandleAllThreadsFinished();
+  } else {
+    for (std::unique_ptr<TConnector> &c : Connectors) {
+      assert(c);
+      c->StartFastShutdown();
+    }
 
-  for (std::unique_ptr<TConnector> &c : Connectors) {
-    assert(c);
-    c->WaitForShutdownAck();
+    for (std::unique_ptr<TConnector> &c : Connectors) {
+      assert(c);
+      c->WaitForShutdownAck();
+    }
   }
 
   State = TState::ShuttingDown;

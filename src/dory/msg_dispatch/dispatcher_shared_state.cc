@@ -36,7 +36,7 @@ using namespace Dory::Debug;
 using namespace Dory::KafkaProto;
 using namespace Dory::MsgDispatch;
 
-SERVER_COUNTER(LastDispatcherThreadFinished);
+SERVER_COUNTER(AllDispatcherThreadsFinished);
 
 TDispatcherSharedState::TDispatcherSharedState(const TConfig &config,
      const TCompressionConf &compression_conf,
@@ -103,10 +103,14 @@ void TDispatcherSharedState::MarkThreadFinished() {
   assert(this);
 
   if (--RunningThreadCount == 0) {
-    syslog(LOG_NOTICE, "All connector threads finished shutting down");
-    LastDispatcherThreadFinished.Increment();
-    ShutdownFinished.Push();
+    HandleAllThreadsFinished();
   }
+}
+
+void TDispatcherSharedState::HandleAllThreadsFinished() {
+  syslog(LOG_NOTICE, "All connector threads finished shutting down");
+  AllDispatcherThreadsFinished.Increment();
+  ShutdownFinished.Push();
 }
 
 void TDispatcherSharedState::ResetThreadFinishedState() {

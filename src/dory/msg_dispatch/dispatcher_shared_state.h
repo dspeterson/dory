@@ -104,6 +104,8 @@ namespace Dory {
       /* Called by connector threads when finished shutting down. */
       void MarkThreadFinished();
 
+      void HandleAllThreadsFinished();
+
       void ResetThreadFinishedState();
 
       private:

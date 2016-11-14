@@ -28,9 +28,13 @@
 #include <syslog.h>
 
 #include <base/time_util.h>
+#include <server/counter.h>
 
 using namespace Base;
 using namespace Dory;
+
+SERVER_COUNTER(MetadataSanityCheckFail);
+SERVER_COUNTER(MetadataSanityCheckSuccess);
 
 bool TMetadata::TBroker::operator==(const TBroker &that) const {
   assert(this);
@@ -661,6 +665,18 @@ bool TMetadata::SanityCheckTopics(
 }
 
 bool TMetadata::SanityCheck() const {
+  bool result = DoSanityCheck();
+
+  if (result) {
+    MetadataSanityCheckSuccess.Increment();
+  } else {
+    MetadataSanityCheckFail.Increment();
+  }
+
+  return result;
+}
+
+bool TMetadata::DoSanityCheck() const {
   assert(this);
   std::unordered_set<size_t> in_service_broker_indexes;
 

@@ -68,7 +68,6 @@ SERVER_COUNTER(DiscardOnTopicAutocreateFail);
 SERVER_COUNTER(FinishRefreshMetadata);
 SERVER_COUNTER(GetMetadataFail);
 SERVER_COUNTER(GetMetadataSuccess);
-SERVER_COUNTER(InitialGetMetadataFail);
 SERVER_COUNTER(MetadataChangedOnRefresh);
 SERVER_COUNTER(MetadataUnchangedOnRefresh);
 SERVER_COUNTER(MetadataUpdated);
@@ -1437,9 +1436,13 @@ std::shared_ptr<TMetadata> TRouterThread::TryGetMetadata() {
            "broker");
   }
 
+  bool success = false;
+
   if (result) {
     if (result->SanityCheck()) {
+      success = true;
       syslog(LOG_INFO, "Metadata sanity check passed");
+      UpdateKnownBrokers(*result);
     } else {
       syslog(LOG_ERR, "Metadata sanity check failed!!!");
       result.reset();
@@ -1447,8 +1450,10 @@ std::shared_ptr<TMetadata> TRouterThread::TryGetMetadata() {
     }
   }
 
-  if (result) {
-    UpdateKnownBrokers(*result);
+  if (success) {
+    GetMetadataSuccess.Increment();
+  } else {
+    GetMetadataFail.Increment();
   }
 
   return std::move(result);
@@ -1475,7 +1480,6 @@ std::shared_ptr<TMetadata> TRouterThread::GetInitialMetadata() {
       break;  // success
     }
 
-    InitialGetMetadataFail.Increment();
     size_t delay = retry_rate_limiter.ComputeDelay();
     syslog(LOG_ERR, "Initial metadata request failed for all known brokers, "
            "waiting %lu milliseconds before retry",
@@ -1506,11 +1510,9 @@ std::shared_ptr<TMetadata> TRouterThread::GetMetadataBeforeSlowShutdown() {
     result = TryGetMetadata();
 
     if (result) {
-      GetMetadataSuccess.Increment();
       break;
     }
 
-    GetMetadataFail.Increment();
     size_t delay = retry_rate_limiter.ComputeDelay();
     syslog(LOG_ERR, "Metadata request failed for all known brokers, waiting "
            "%lu milliseconds before retry (1)",
@@ -1553,7 +1555,6 @@ std::shared_ptr<TMetadata> TRouterThread::GetMetadataDuringSlowShutdown() {
     }
 
     if (result) {
-      GetMetadataSuccess.Increment();
       break;
     }
 

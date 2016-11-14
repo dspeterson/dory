@@ -408,6 +408,8 @@ namespace Dory {
           TopicNameToIndex(std::move(topic_name_to_index)) {
     }
 
+    bool DoSanityCheck() const;
+
     bool CompareBrokers(const TMetadata &that) const;
 
     bool SingleTopicCompare(const TMetadata &that, const TTopic &this_topic,

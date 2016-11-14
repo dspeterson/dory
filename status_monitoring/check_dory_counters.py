@@ -659,7 +659,7 @@ def AnalyzeDeltas(deltas):
                              EC_CRITICAL, nagios_code)
     nagios_code = CheckDelta(deltas, 'TopicHasNoAvailablePartitions', 0,
                              EC_CRITICAL, nagios_code)
-    nagios_code = CheckDelta(deltas, 'InitialGetMetadataFail', 0, EC_CRITICAL,
+    nagios_code = CheckDelta(deltas, 'MetadataSanityCheckFail', 0, EC_CRITICAL,
                              nagios_code)
     nagios_code = CheckDelta(deltas, 'GetMetadataFail', 0, EC_CRITICAL,
                              nagios_code)
