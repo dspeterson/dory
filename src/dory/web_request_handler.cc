@@ -293,7 +293,7 @@ void TWebRequestHandler::HandleMetadataFetchTimeRequestJson(std::ostream &os,
         << ind1 << "\"since\": " << start_time << "," << std::endl
         << ind1 << "\"now\": " << now << "," << std::endl
         << ind1 << "\"last_updated\": " << last_update_time << "," << std::endl
-        << ind1 << "\"last_modified\": " << last_modified_time << ","
+        << ind1 << "\"last_modified\": " << last_modified_time
         << std::endl;
   }
 
