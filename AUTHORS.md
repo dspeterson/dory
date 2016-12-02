@@ -14,5 +14,6 @@ The former Stig Team has since formed its own company, OrlyAtomics, which was
 acquired by [Mesosphere](https://mesosphere.com).  Additional contributors
 include [Omid Aladini](https://github.com/omidaladini),
 [Ben Diamant](https://github.com/bendpx),
+[Michael McVady](https://github.com/femtonaut),
 [Si Westcott](https://github.com/swestcott), and
 [Pete Wright](https://github.com/rp-pwright).
