@@ -130,15 +130,15 @@ def get_implicit_deps_wrapper(source):
 
     try:
         # First try calling the method using the parameters it expects in SCons
-        # versions prior to 2.5.0.
-        result = source.get_implicit_deps(env, scanner, (src,))
+        # version 2.5.0 or later.
+        result = source.get_implicit_deps(env, scanner, path_fn)
     except TypeError as err:
-        if str(err) != "'tuple' object is not callable":
+        if str(err) != "path_fn() takes exactly 1 argument (0 given)":
             raise
 
-        # If we get here, we saw the failure that started occurring in SCons
-        # version 2.5.0.  Therefore try the new invocation style.
-        result = source.get_implicit_deps(env, scanner, path_fn)
+        # If we get here, we saw the failure that occurs when using an older
+        # version of SCons.  Therefore try the old invocation style.
+        result = source.get_implicit_deps(env, scanner, (src,))
 
     return result
 
