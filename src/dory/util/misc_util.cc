@@ -51,7 +51,7 @@ void Dory::Util::InitSyslog(const char *prog_name, int max_level,
   syslog(LOG_NOTICE, "Log started");
 }
 
-static bool RunTest(std::vector<uint8_t> &buf,
+static bool RunUnixDgSocketTest(std::vector<uint8_t> &buf,
     const TFd fd_pair[]) {
   std::fill(buf.begin(), buf.end(), 0xff);
 
@@ -108,14 +108,6 @@ TUnixDgSizeTestResult Dory::Util::TestUnixDgSize(size_t size) {
     return TUnixDgSizeTestResult::Fail;
   }
 
-  /* We must be able to read datagrams 1 byte larger than the requested size.
-     This allows us to detect and reject attempts by clients to send messages
-     that are too large, rather than silently passing them along truncated.
-
-     TODO: remove this old stull once legacy message format goes away
-   */
-  ++size;
-
   std::vector<uint8_t> buf(size);
   TFd fd_pair[2];
 
@@ -127,7 +119,7 @@ TUnixDgSizeTestResult Dory::Util::TestUnixDgSize(size_t size) {
     fd_pair[1] = tmp_fd_pair[1];
   }
 
-  if (RunTest(buf, fd_pair)) {
+  if (RunUnixDgSocketTest(buf, fd_pair)) {
     return TUnixDgSizeTestResult::Pass;
   }
 
@@ -142,7 +134,7 @@ TUnixDgSizeTestResult Dory::Util::TestUnixDgSize(size_t size) {
     IfLt0(ret);  // this will throw
   }
 
-  return RunTest(buf, fd_pair) ?
+  return RunUnixDgSocketTest(buf, fd_pair) ?
       TUnixDgSizeTestResult::PassWithLargeSendbuf :
       TUnixDgSizeTestResult::Fail;
 }

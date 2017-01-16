@@ -109,8 +109,13 @@ namespace Dory {
 
       private:
       /* We store these in a multiset.  Each record represents a topic batch
-         with a time limit.  The records are ordered by ascending expiry time.
-       */
+         with a time limit.  The records are ordered by ascending expiry time,
+         regardless of topic.  In other words, two records with the same
+         timestamp but different topics are considered equal from the
+         multiset's point of view.  The multiset contains at most one record
+         for a given topic.  No record for a given topic appears in the
+         multiset in the case where the batch for that topic is empty or has no
+         time limit. */
       class TBatchExpiryRecord final {
         public:
         TBatchExpiryRecord(TMsg::TTimestamp expiry, const std::string &topic)
@@ -141,13 +146,7 @@ namespace Dory {
 
         bool operator<(const TBatchExpiryRecord &that) const {
           assert(this);
-          /* FIXME: temporary hack until we switch from Starsha to SCons */
-#if 0
           return (Expiry < that.Expiry);
-#else
-          return (Expiry == that.Expiry) ?
-              (Topic < that.Topic) : (Expiry < that.Expiry);
-#endif
         }
 
         TMsg::TTimestamp GetExpiry() const {
@@ -164,14 +163,11 @@ namespace Dory {
         /* Batch expiry time. */
         TMsg::TTimestamp Expiry;
 
-        /* Batch topic.  The multiset contains at most one record for a given
-           topic.  No record for a given topic appears in the multiset in the
-           case where the batch for that topic is empty or has no time limit.
-         */
+        /* Batch topic. */
         std::string Topic;
       };  // TBatchExpiryRecord
 
-      using TExpiryRef = std::set<TBatchExpiryRecord>::const_iterator;
+      using TExpiryRef = std::multiset<TBatchExpiryRecord>::const_iterator;
 
       struct TBatchMapEntry {
         /* A batch for a single topic. */
@@ -200,12 +196,8 @@ namespace Dory {
 
       /* This contains a record for each nonempty topic batch with a time
          limit.  It lets us efficiently determine the soonest time limit
-         expiration.
-
-         TODO: Make this a multiset and change TBatchExpiryRecord::operator<()
-         so it compares only the expiration times.  Starsha seems to have
-         problems with multiset. */
-      std::set<TBatchExpiryRecord> ExpiryTracker;
+         expiration. */
+      std::multiset<TBatchExpiryRecord> ExpiryTracker;
     };  // TPerTopicBatcher
 
   }  // Batch

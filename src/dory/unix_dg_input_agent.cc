@@ -58,12 +58,7 @@ TUnixDgInputAgent::TUnixDgInputAgent(const TConfig &config, TPool &pool,
       MsgStateTracker(msg_state_tracker),
       AnomalyTracker(anomaly_tracker),
       InputSocket(SOCK_DGRAM, 0),
-
-      /* Add 1 to our buffer size so we can detect messages that are too large
-         and log them as discards, rather then silently passing them along
-         truncated. */
-      InputBuf(config.MaxInputMsgSize + 1),
-
+      InputBuf(config.MaxInputMsgSize),
       OutputQueue(output_queue),
       SyncStartSuccess(false),
       SyncStartNotify(nullptr) {

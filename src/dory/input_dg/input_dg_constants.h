@@ -29,6 +29,3 @@ enum { INPUT_DG_SZ_FIELD_SIZE = 4 };
 enum { INPUT_DG_API_KEY_FIELD_SIZE = 2 };
 
 enum { INPUT_DG_API_VERSION_FIELD_SIZE = 2 };
-
-/* TODO: remove this */
-enum { INPUT_DG_OLD_VER_FIELD_SIZE = 1 };

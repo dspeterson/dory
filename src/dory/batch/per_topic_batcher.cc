@@ -108,10 +108,8 @@ TPerTopicBatcher::AddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
     }
 
     if (add_new_expiry) {
-      auto result = ExpiryTracker.insert(
+      entry.ExpiryRef = ExpiryTracker.insert(
           TBatchExpiryRecord(*opt_nct_final, topic));
-      assert(result.second);
-      entry.ExpiryRef = result.first;
     }
 
     if (!complete_batch.empty()) {
