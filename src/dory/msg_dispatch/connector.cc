@@ -38,7 +38,8 @@
 #include <base/gettid.h>
 #include <base/no_default_case.h>
 #include <base/time_util.h>
-#include <dory/kafka_proto/wire_protocol.h>
+#include <dory/kafka_proto/errors.h>
+#include <dory/kafka_proto/request_response.h>
 #include <dory/msg_dispatch/produce_response_processor.h>
 #include <dory/msg_state_tracker.h>
 #include <dory/util/connect_to_host.h>
@@ -55,6 +56,7 @@ using namespace Dory;
 using namespace Dory::Batch;
 using namespace Dory::Debug;
 using namespace Dory::KafkaProto;
+using namespace Dory::KafkaProto::Produce;
 using namespace Dory::MsgDispatch;
 using namespace Dory::Util;
 
@@ -83,17 +85,16 @@ SERVER_COUNTER(SendProduceRequestOk);
 
 TConnector::TConnector(size_t my_broker_index, TDispatcherSharedState &ds)
     : MyBrokerIndex(my_broker_index),
-      SizeFieldSize(ds.KafkaProtocol.GetBytesNeededToGetResponseSize()),
       Ds(ds),
       DebugLoggerSend(ds.DebugSetup, TDebugSetup::TLogId::MSG_SEND),
       DebugLoggerReceive(ds.DebugSetup, TDebugSetup::TLogId::MSG_GOT_ACK),
       InputQueue(ds.BatchConfig, ds.MsgStateTracker),
       /* TODO: rethink DebugLogger stuff */
       RequestFactory(ds.Config, ds.BatchConfig, ds.CompressionConf,
-                     ds.KafkaProtocol, my_broker_index),
+                     ds.ProduceProtocol, my_broker_index),
       PauseInProgress(false),
       Destroying(false),
-      ResponseReader(ds.KafkaProtocol.CreateProduceResponseReader()),
+      ResponseReader(ds.ProduceProtocol->CreateProduceResponseReader()),
       OkShutdown(true) {
 }
 
@@ -538,19 +539,19 @@ bool TConnector::TryReadProduceResponses() {
      maximizing read size. */
   ReceiveBuf.MoveDataToFront();
 
-  if (ReceiveBuf.DataSize() < SizeFieldSize) {
-    if (!DoSockRead(SizeFieldSize - ReceiveBuf.DataSize())) {
+  if (ReceiveBuf.DataSize() < REQUEST_OR_RESPONSE_SIZE_SIZE) {
+    if (!DoSockRead(REQUEST_OR_RESPONSE_SIZE_SIZE - ReceiveBuf.DataSize())) {
       return false;  // socket error
     }
 
     did_read = true;
 
-    if (ReceiveBuf.DataSize() < SizeFieldSize) {
+    if (ReceiveBuf.DataSize() < REQUEST_OR_RESPONSE_SIZE_SIZE) {
       return true;  // still not enough data: try again later
     }
   }
 
-  size_t response_size = Ds.KafkaProtocol.GetResponseSize(ReceiveBuf.Data());
+  size_t response_size = GetRequestOrResponseSize(ReceiveBuf.Data());
 
   if ((ReceiveBuf.DataSize() < response_size) && !did_read &&
       !DoSockRead(response_size - ReceiveBuf.DataSize())) {
@@ -631,7 +632,7 @@ bool TConnector::TryProcessProduceResponses() {
       return false;
     }
 
-    if (ReceiveBuf.DataSize() < SizeFieldSize) {
+    if (ReceiveBuf.DataSize() < REQUEST_OR_RESPONSE_SIZE_SIZE) {
       /* 'ReceiveBuf' does not contain a full produce response.  Try again
          later after reading more response data. */
       break;
@@ -639,7 +640,7 @@ bool TConnector::TryProcessProduceResponses() {
 
     /* TODO: Add code to guard against a ridiculously large response size field
        written by a buggy Kafka broker. */
-    size_t response_size = Ds.KafkaProtocol.GetResponseSize(ReceiveBuf.Data());
+    size_t response_size = GetRequestOrResponseSize(ReceiveBuf.Data());
 
     if (ReceiveBuf.DataSize() < response_size) {
       /* 'ReceiveBuf' does not contain a full produce response.  Try again
@@ -690,7 +691,7 @@ bool TConnector::HandleSockReadReady() {
     if (!TryReadProduceResponses() || !TryProcessProduceResponses()) {
       return false;
     }
-  } catch (const TWireProtocol::TBadResponseSize &x) {
+  } catch (const TBadRequestOrResponseSize &x) {
     syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting "
         "pause due to unexpected response from broker: %s",
         static_cast<int>(Gettid()), static_cast<unsigned long>(MyBrokerIndex),

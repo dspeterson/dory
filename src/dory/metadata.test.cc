@@ -81,18 +81,18 @@ namespace {
     builder.AddBroker(3, "host4", 104);
     builder.CloseBrokerList();
     builder.OpenTopic("topic1");
-    builder.AddPartitionToTopic(6, 5, 9);
-    builder.AddPartitionToTopic(3, 2, 0);
-    builder.AddPartitionToTopic(7, 2, 5);  // out of service partition
-    builder.AddPartitionToTopic(4, 5, 0);
-    builder.AddPartitionToTopic(1, 7, 6);  // out of service partition
+    builder.AddPartitionToTopic(6, 5, true, 9);
+    builder.AddPartitionToTopic(3, 2, true, 0);
+    builder.AddPartitionToTopic(7, 2, false, 5);  // out of service partition
+    builder.AddPartitionToTopic(4, 5, true, 0);
+    builder.AddPartitionToTopic(1, 7, false, 6);  // out of service partition
     builder.CloseTopic();
     builder.OpenTopic("topic2");
     builder.CloseTopic();
     builder.OpenTopic("topic3");
-    builder.AddPartitionToTopic(8, 3, 0);
-    builder.AddPartitionToTopic(6, 5, 9);
-    builder.AddPartitionToTopic(3, 3, 0);
+    builder.AddPartitionToTopic(8, 3, true, 0);
+    builder.AddPartitionToTopic(6, 5, true, 9);
+    builder.AddPartitionToTopic(3, 3, true, 0);
     builder.CloseTopic();
     std::unique_ptr<TMetadata> md(builder.Build());
     ASSERT_TRUE(!!md);
@@ -314,16 +314,16 @@ namespace {
     builder.AddBroker(3, "host4", 104);
     builder.CloseBrokerList();
     builder.OpenTopic("topic1");
-    builder.AddPartitionToTopic(6, 5, 4);
-    builder.AddPartitionToTopic(3, 2, 8);
-    builder.AddPartitionToTopic(4, 5, 7);
+    builder.AddPartitionToTopic(6, 5, false, 4);
+    builder.AddPartitionToTopic(3, 2, false, 8);
+    builder.AddPartitionToTopic(4, 5, false, 7);
     builder.CloseTopic();
     builder.OpenTopic("topic2");
     builder.CloseTopic();
     builder.OpenTopic("topic3");
-    builder.AddPartitionToTopic(8, 3, 9);
-    builder.AddPartitionToTopic(6, 5, 0);
-    builder.AddPartitionToTopic(3, 3, 6);
+    builder.AddPartitionToTopic(8, 3, true, 9);
+    builder.AddPartitionToTopic(6, 5, true, 0);
+    builder.AddPartitionToTopic(3, 3, false, 6);
     builder.CloseTopic();
     std::unique_ptr<TMetadata> md1(builder.Build());
     ASSERT_TRUE(!!md1);
@@ -336,16 +336,16 @@ namespace {
     builder.AddBroker(5, "host1", 101);
     builder.CloseBrokerList();
     builder.OpenTopic("topic1");
-    builder.AddPartitionToTopic(4, 5, 7);
-    builder.AddPartitionToTopic(6, 5, 4);
-    builder.AddPartitionToTopic(3, 2, 8);
+    builder.AddPartitionToTopic(4, 5, false, 7);
+    builder.AddPartitionToTopic(6, 5, false, 4);
+    builder.AddPartitionToTopic(3, 2, false, 8);
     builder.CloseTopic();
     builder.OpenTopic("topic2");
     builder.CloseTopic();
     builder.OpenTopic("topic3");
-    builder.AddPartitionToTopic(3, 3, 6);
-    builder.AddPartitionToTopic(8, 3, 9);
-    builder.AddPartitionToTopic(6, 5, 0);
+    builder.AddPartitionToTopic(3, 3, false, 6);
+    builder.AddPartitionToTopic(8, 3, true, 9);
+    builder.AddPartitionToTopic(6, 5, true, 0);
     builder.CloseTopic();
     std::unique_ptr<TMetadata> md2(builder.Build());
     ASSERT_TRUE(!!md2);
@@ -363,16 +363,16 @@ namespace {
     builder.AddBroker(1, "host1", 101);
     builder.CloseBrokerList();
     builder.OpenTopic("topic1");
-    builder.AddPartitionToTopic(4, 1, 7);
-    builder.AddPartitionToTopic(6, 1, 4);
-    builder.AddPartitionToTopic(3, 2, 8);
+    builder.AddPartitionToTopic(4, 1, false, 7);
+    builder.AddPartitionToTopic(6, 1, false, 4);
+    builder.AddPartitionToTopic(3, 2, false, 8);
     builder.CloseTopic();
     builder.OpenTopic("topic2");
     builder.CloseTopic();
     builder.OpenTopic("topic3");
-    builder.AddPartitionToTopic(3, 3, 6);
-    builder.AddPartitionToTopic(8, 3, 9);
-    builder.AddPartitionToTopic(6, 1, 0);
+    builder.AddPartitionToTopic(3, 3, false, 6);
+    builder.AddPartitionToTopic(8, 3, true, 9);
+    builder.AddPartitionToTopic(6, 1, true, 0);
     builder.CloseTopic();
     std::unique_ptr<TMetadata> md3(builder.Build());
     ASSERT_TRUE(!!md3);
@@ -387,16 +387,16 @@ namespace {
     builder.AddBroker(5, "host1", 101);
     builder.CloseBrokerList();
     builder.OpenTopic("topic1");
-    builder.AddPartitionToTopic(4, 5, 7);
-    builder.AddPartitionToTopic(6, 5, 4);
-    builder.AddPartitionToTopic(3, 2, 8);
+    builder.AddPartitionToTopic(4, 5, false, 7);
+    builder.AddPartitionToTopic(6, 5, false, 4);
+    builder.AddPartitionToTopic(3, 2, false, 8);
     builder.CloseTopic();
     builder.OpenTopic("topic2");
     builder.CloseTopic();
     builder.OpenTopic("topic3");
-    builder.AddPartitionToTopic(3, 3, 6);
-    builder.AddPartitionToTopic(8, 3, 9);
-    builder.AddPartitionToTopic(6, 5, 0);
+    builder.AddPartitionToTopic(3, 3, false, 6);
+    builder.AddPartitionToTopic(8, 3, true, 9);
+    builder.AddPartitionToTopic(6, 5, true, 0);
     builder.CloseTopic();
     std::unique_ptr<TMetadata> md4(builder.Build());
     ASSERT_TRUE(!!md4);
@@ -411,16 +411,16 @@ namespace {
     builder.AddBroker(5, "host1", 105);
     builder.CloseBrokerList();
     builder.OpenTopic("topic1");
-    builder.AddPartitionToTopic(4, 5, 7);
-    builder.AddPartitionToTopic(6, 5, 4);
-    builder.AddPartitionToTopic(3, 2, 8);
+    builder.AddPartitionToTopic(4, 5, false, 7);
+    builder.AddPartitionToTopic(6, 5, false, 4);
+    builder.AddPartitionToTopic(3, 2, false, 8);
     builder.CloseTopic();
     builder.OpenTopic("topic2");
     builder.CloseTopic();
     builder.OpenTopic("topic3");
-    builder.AddPartitionToTopic(3, 3, 6);
-    builder.AddPartitionToTopic(8, 3, 9);
-    builder.AddPartitionToTopic(6, 5, 0);
+    builder.AddPartitionToTopic(3, 3, false, 6);
+    builder.AddPartitionToTopic(8, 3, true, 9);
+    builder.AddPartitionToTopic(6, 5, true, 0);
     builder.CloseTopic();
     std::unique_ptr<TMetadata> md5(builder.Build());
     ASSERT_TRUE(!!md5);
@@ -435,16 +435,16 @@ namespace {
     builder.AddBroker(5, "host1", 101);
     builder.CloseBrokerList();
     builder.OpenTopic("topic1");
-    builder.AddPartitionToTopic(1, 5, 7);
-    builder.AddPartitionToTopic(6, 5, 4);
-    builder.AddPartitionToTopic(3, 2, 8);
+    builder.AddPartitionToTopic(1, 5, false, 7);
+    builder.AddPartitionToTopic(6, 5, false, 4);
+    builder.AddPartitionToTopic(3, 2, false, 8);
     builder.CloseTopic();
     builder.OpenTopic("topic2");
     builder.CloseTopic();
     builder.OpenTopic("topic3");
-    builder.AddPartitionToTopic(3, 3, 6);
-    builder.AddPartitionToTopic(8, 3, 9);
-    builder.AddPartitionToTopic(6, 5, 0);
+    builder.AddPartitionToTopic(3, 3, false, 6);
+    builder.AddPartitionToTopic(8, 3, true, 9);
+    builder.AddPartitionToTopic(6, 5, true, 0);
     builder.CloseTopic();
     std::unique_ptr<TMetadata> md6(builder.Build());
     ASSERT_TRUE(!!md6);
@@ -459,16 +459,16 @@ namespace {
     builder.AddBroker(5, "host1", 101);
     builder.CloseBrokerList();
     builder.OpenTopic("topic1");
-    builder.AddPartitionToTopic(4, 5, 7);
-    builder.AddPartitionToTopic(6, 2, 4);
-    builder.AddPartitionToTopic(3, 2, 8);
+    builder.AddPartitionToTopic(4, 5, false, 7);
+    builder.AddPartitionToTopic(6, 2, false, 4);
+    builder.AddPartitionToTopic(3, 2, false, 8);
     builder.CloseTopic();
     builder.OpenTopic("topic2");
     builder.CloseTopic();
     builder.OpenTopic("topic3");
-    builder.AddPartitionToTopic(3, 3, 6);
-    builder.AddPartitionToTopic(8, 3, 9);
-    builder.AddPartitionToTopic(6, 5, 0);
+    builder.AddPartitionToTopic(3, 3, false, 6);
+    builder.AddPartitionToTopic(8, 3, true, 9);
+    builder.AddPartitionToTopic(6, 5, true, 0);
     builder.CloseTopic();
     std::unique_ptr<TMetadata> md7(builder.Build());
     ASSERT_TRUE(!!md7);
@@ -483,16 +483,16 @@ namespace {
     builder.AddBroker(5, "host1", 101);
     builder.CloseBrokerList();
     builder.OpenTopic("topic1");
-    builder.AddPartitionToTopic(4, 5, 7);
-    builder.AddPartitionToTopic(6, 5, 4);
-    builder.AddPartitionToTopic(3, 2, 8);
+    builder.AddPartitionToTopic(4, 5, false, 7);
+    builder.AddPartitionToTopic(6, 5, false, 4);
+    builder.AddPartitionToTopic(3, 2, false, 8);
     builder.CloseTopic();
     builder.OpenTopic("topic2");
     builder.CloseTopic();
     builder.OpenTopic("topic3");
-    builder.AddPartitionToTopic(3, 3, 6);
-    builder.AddPartitionToTopic(8, 3, 9);
-    builder.AddPartitionToTopic(6, 5, 5);
+    builder.AddPartitionToTopic(3, 3, false, 6);
+    builder.AddPartitionToTopic(8, 3, true, 9);
+    builder.AddPartitionToTopic(6, 5, false, 5);
     builder.CloseTopic();
     std::unique_ptr<TMetadata> md8(builder.Build());
     ASSERT_TRUE(!!md8);
@@ -524,9 +524,9 @@ namespace {
     builder.AddBroker(3, "host4", 104);
     builder.CloseBrokerList();
     builder.OpenTopic("topic1");
-    builder.AddPartitionToTopic(6, 5, 4);
-    builder.AddPartitionToTopic(3, 2, 8);
-    builder.AddPartitionToTopic(4, 5, 7);
+    builder.AddPartitionToTopic(6, 5, false, 4);
+    builder.AddPartitionToTopic(3, 2, false, 8);
+    builder.AddPartitionToTopic(4, 5, false, 7);
     builder.CloseTopic();
     threw = false;
 
@@ -546,11 +546,11 @@ namespace {
     builder.AddBroker(3, "host4", 104);
     builder.CloseBrokerList();
     builder.OpenTopic("topic1");
-    builder.AddPartitionToTopic(6, 5, 4);
+    builder.AddPartitionToTopic(6, 5, false, 4);
     threw = false;
 
     try {
-      builder.AddPartitionToTopic(3, 1, 8);
+      builder.AddPartitionToTopic(3, 1, false, 8);
     } catch (const TMetadata::TPartitionHasUnknownBroker &) {
       threw = true;
     }
@@ -565,11 +565,11 @@ namespace {
     builder.AddBroker(3, "host4", 104);
     builder.CloseBrokerList();
     builder.OpenTopic("topic1");
-    builder.AddPartitionToTopic(6, 5, 4);
+    builder.AddPartitionToTopic(6, 5, false, 4);
     threw = false;
 
     try {
-      builder.AddPartitionToTopic(6, 2, 8);
+      builder.AddPartitionToTopic(6, 2, false, 8);
     } catch (const TMetadata::TDuplicatePartition &) {
       threw = true;
     }

@@ -21,31 +21,15 @@
 
 #include <dory/compress/compression_init.h>
 
-#include <set>
-
 #include <dory/compress/get_compression_codec.h>
 #include <dory/compress/snappy/snappy_codec.h>
-#include <dory/conf/compression_type.h>
 
 using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::Compress::Snappy;
-using namespace Dory::Conf;
 
-void Dory::Compress::CompressionInit(const TCompressionConf &conf) {
-  std::set<TCompressionType> all_types;
-  all_types.insert(conf.GetDefaultTopicConfig().Type);
-  const TCompressionConf::TTopicMap &topic_map = conf.GetTopicConfigs();
-
-  for (const auto &item : topic_map) {
-    all_types.insert(item.second.Type);
-  }
-
-  /* For each needed compression type, force the associated compression library
-     to load.  This will throw if there is an error loading a library. */
-  for (TCompressionType type : all_types) {
-    GetCompressionCodec(type);
-  }
+void Dory::Compress::CompressionInit(TCompressionType type) {
+  GetCompressionCodec(type);
 }
 
 void Dory::Compress::CompressionInit() {

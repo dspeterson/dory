@@ -253,13 +253,16 @@ instance, `--receive_stream_socket_mode 0777` specifies unrestricted access.
 messages.  Allowed values are { LOG_ERR, LOG_WARNING, LOG_NOTICE, LOG_INFO,
 LOG_DEBUG }.  The default value is LOG_NOTICE.
 * `--log_echo`: Echo syslog messages to standard error.
-* `--protocol_version VERSION`: This specifies the protocol version to use when
-communicating with Kafka, as specified
+* `--metadata_api_version`: This specified the metadata protocol API version to
+use when communicating with Kafka, as specified
 [here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol).
-Currently 0 is the only allowed value.  Note: There should actually be two
-separate options: a metadata protocol version and a producer protocol version,
-since Kafka versions these parts of the protocol separately.  Some minor
-refactoring needs to be done to make Dory behave in this manner.
+Currently 0 is the only allowed value.  If unspecified, Dory will choose the
+highest API version supported by both Dory and the Kafka cluster.
+* `--produce_api_version`: This specified the produce protocol API version to
+use when communicating with Kafka, as specified
+[here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol).
+Currently 0 is the only allowed value.  If unspecified, Dory will choose the
+highest API version supported by both Dory and the Kafka cluster.
 * `--status_loopback_only`: This specifies that Dory's web interface should
 only be available on the loopback interface.
 * `--status_port PORT`: This specifies the port Dory uses for its web

@@ -55,7 +55,9 @@ namespace Dory {
 
     Base::TOpt<mode_t> ReceiveStreamSocketMode;
 
-    size_t ProtocolVersion;
+    Base::TOpt<size_t> MetadataApiVersion;
+
+    Base::TOpt<size_t> ProduceApiVersion;
 
     in_port_t StatusPort;
 

@@ -38,7 +38,6 @@ case "$1" in
       chgrp nobody /var/run/dory
 
       daemon --user=nobody "$DORY" --daemon \
-            --protocol_version "$PROTOCOL_VERSION" \
             --msg_buffer_max "$MSG_BUFFER_MAX" \
             --status_port "$STATUSPORT" \
             --receive_socket_name "$INPUT_SOCKET_NAME" \

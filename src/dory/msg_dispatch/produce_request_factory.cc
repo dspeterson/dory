@@ -35,7 +35,7 @@ using namespace Dory::Batch;
 using namespace Dory::Compress;
 using namespace Dory::Conf;
 using namespace Dory::Debug;
-using namespace Dory::KafkaProto;
+using namespace Dory::KafkaProto::Produce;
 using namespace Dory::MsgDispatch;
 using namespace Dory::Util;
 
@@ -55,17 +55,17 @@ SERVER_COUNTER(SerializeTopicGroup);
 TProduceRequestFactory::TProduceRequestFactory(const TConfig &config,
     const TGlobalBatchConfig &batch_config,
     const TCompressionConf &compression_conf,
-    const TWireProtocol &kafka_protocol, size_t broker_index)
+    const std::shared_ptr<TProduceProtocol> &produce_protocol,
+    size_t broker_index)
     : Config(config),
       BrokerIndex(broker_index),
-      KafkaProtocol(kafka_protocol),
+      ProduceProtocol(produce_protocol),
       ProduceRequestDataLimit(batch_config.GetProduceRequestDataLimit()),
       MessageMaxBytes(batch_config.GetMessageMaxBytes()),
+      SingleMsgOverhead(produce_protocol->GetSingleMsgOverhead()),
       MaxCompressionRatio(compression_conf.GetSizeThresholdPercent() / 100.0f),
-      RequiredAcks(kafka_protocol.GetRequiredAcks()),
-      ReplicationTimeout(kafka_protocol.GetReplicationTimeout()),
-      RequestWriter(kafka_protocol.CreateProduceRequestWriter()),
-      MsgSetWriter(kafka_protocol.CreateMsgSetWriter()),
+      RequestWriter(produce_protocol->CreateProduceRequestWriter()),
+      MsgSetWriter(produce_protocol->CreateMsgSetWriter()),
       DefaultTopicConf(compression_conf.GetDefaultTopicConfig()),
       CorrIdCounter(0) {
   InitTopicDataMap(compression_conf);
@@ -114,8 +114,8 @@ TOpt<TProduceRequest> TProduceRequestFactory::BuildRequest(
 
   const char *client_id_begin = Config.ClientId.data();
   RequestWriter->OpenRequest(dst, request.first, client_id_begin,
-      client_id_begin + Config.ClientId.size(), RequiredAcks,
-      ReplicationTimeout);
+      client_id_begin + Config.ClientId.size(), Config.RequiredAcks,
+      static_cast<int32_t>(Config.ReplicationTimeout));
   const TAllTopics &all_topics = request.second;
   assert(!all_topics.empty());
 
@@ -150,8 +150,7 @@ void TProduceRequestFactory::InitTopicDataMap(
       compression_conf.GetTopicConfigs();
 
   for (const auto &item : topic_map) {
-    TopicDataMap.insert(
-        std::make_pair(item.first, TTopicData(item.second, KafkaProtocol)));
+    TopicDataMap.insert(std::make_pair(item.first, TTopicData(item.second)));
   }
 }
 
@@ -162,7 +161,7 @@ TProduceRequestFactory::GetTopicData(const std::string &topic) {
 
   if (iter == TopicDataMap.end()) {
     auto ret = TopicDataMap.insert(
-        std::make_pair(topic, TTopicData(DefaultTopicConf, KafkaProtocol)));
+        std::make_pair(topic, TTopicData(DefaultTopicConf)));
     iter = ret.first;
   }
 
@@ -270,7 +269,7 @@ size_t TProduceRequestFactory::AddFirstMsg(TAllTopics &result) {
 
   if (topic_data.CompressionCodec) {
     assert(msg_set.DataSize == 0);
-    msg_set.DataSize = data_size + KafkaProtocol.GetSingleMsgOverhead();
+    msg_set.DataSize = data_size + SingleMsgOverhead;
   }
 
   msg_set.Contents.push_back(std::move(msg_ptr));
@@ -301,8 +300,7 @@ bool TProduceRequestFactory::TryConsumeFrontMsg(
   TMsgSet &msg_set = result[topic][msg_ptr->GetPartition()];
 
   if (topic_data.CompressionCodec) {
-    size_t new_data_size = msg_set.DataSize + data_size +
-        KafkaProtocol.GetSingleMsgOverhead();
+    size_t new_data_size = msg_set.DataSize + data_size + SingleMsgOverhead;
 
     if (new_data_size > MessageMaxBytes) {
       /* If we added this message to the message set, then we would get a
@@ -396,7 +394,7 @@ void TProduceRequestFactory::SerializeUncompressedMsgSet(
     const TMsg &msg = *msg_ptr;
     size_t key_size = msg.GetKeySize();
     size_t value_size = msg.GetValueSize();
-    RequestWriter->OpenMsg(0, key_size, value_size);
+    RequestWriter->OpenMsg(TCompressionType::None, key_size, value_size);
     size_t key_offset = RequestWriter->GetCurrentMsgKeyOffset();
     assert(dst.size() >= key_offset);
     assert((dst.size() - key_offset) >= key_size);
@@ -420,7 +418,7 @@ void TProduceRequestFactory::SerializeToCompressionBuf(
     const TMsg &msg = *msg_ptr;
     size_t key_size = msg.GetKeySize();
     size_t value_size = msg.GetValueSize();
-    MsgSetWriter->OpenMsg(0, key_size, value_size);
+    MsgSetWriter->OpenMsg(TCompressionType::None, key_size, value_size);
     size_t key_offset = MsgSetWriter->GetCurrentMsgKeyOffset();
     assert(CompressionBuf.size() >= key_offset);
     assert((CompressionBuf.size() - key_offset) >= key_size);
@@ -454,7 +452,7 @@ void TProduceRequestFactory::WriteOneMsgSet(
          indicate that it contains a compressed message set. */
       size_t max_compressed_size = codec.ComputeCompressedResultBufSpace(
           &CompressionBuf[0], CompressionBuf.size());
-      RequestWriter->OpenMsg(topic_data.CompressionAttributes, 0,
+      RequestWriter->OpenMsg(topic_data.CompressionType, 0,
           max_compressed_size);
       msg_opened = true;
       size_t value_offset = RequestWriter->GetCurrentMsgValueOffset();

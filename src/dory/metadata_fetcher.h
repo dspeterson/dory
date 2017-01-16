@@ -23,6 +23,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -30,7 +31,7 @@
 
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
-#include <dory/kafka_proto/wire_protocol.h>
+#include <dory/kafka_proto/metadata/metadata_protocol.h>
 #include <dory/metadata.h>
 
 namespace Dory {
@@ -56,7 +57,7 @@ namespace Dory {
     };  // TDisconnecter
 
     explicit TMetadataFetcher(
-        const KafkaProto::TWireProtocol &kafka_protocol);
+        const KafkaProto::Metadata::TMetadataProtocol *metadata_protocol);
 
     /* Return true on success or false on failure. */
     bool Connect(const char *host_name, in_port_t port);
@@ -100,7 +101,8 @@ namespace Dory {
 
     bool ReadResponse(int timeout_ms);
 
-    const KafkaProto::TWireProtocol &KafkaProtocol;
+    const std::unique_ptr<const KafkaProto::Metadata::TMetadataProtocol>
+        MetadataProtocol;
 
     /* This is the all topics metadata request that we send to a broker.  It is
        always the same sequence of bytes (since we always use a correlation ID

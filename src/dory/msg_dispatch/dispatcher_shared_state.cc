@@ -40,12 +40,10 @@ SERVER_COUNTER(AllDispatcherThreadsFinished);
 
 TDispatcherSharedState::TDispatcherSharedState(const TConfig &config,
      const TCompressionConf &compression_conf,
-     const TWireProtocol &kafka_protocol, TMsgStateTracker &msg_state_tracker,
-     TAnomalyTracker &anomaly_tracker, const TDebugSetup &debug_setup,
-     const TGlobalBatchConfig &batch_config)
+     TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
+     const TDebugSetup &debug_setup, const TGlobalBatchConfig &batch_config)
     : Config(config),
       CompressionConf(compression_conf),
-      KafkaProtocol(kafka_protocol),
       MsgStateTracker(msg_state_tracker),
       AnomalyTracker(anomaly_tracker),
       DebugSetup(debug_setup),

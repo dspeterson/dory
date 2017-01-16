@@ -37,8 +37,7 @@
 #include <base/no_copy_semantics.h>
 #include <base/opt.h>
 #include <dory/debug/debug_logger.h>
-#include <dory/kafka_proto/produce_request_writer_api.h>
-#include <dory/kafka_proto/produce_response_reader_api.h>
+#include <dory/kafka_proto/produce/produce_response_reader_api.h>
 #include <dory/metadata.h>
 #include <dory/msg.h>
 #include <dory/msg_dispatch/api_defs.h>
@@ -176,10 +175,6 @@ namespace Dory {
          TConnector. */
       const size_t MyBrokerIndex;
 
-      /* This is the minimum amount of data required to determine the size of a
-         produce response. */
-      const size_t SizeFieldSize;
-
       /* Dispatcher state shared by all TConnector objects. */
       TDispatcherSharedState &Ds;
 
@@ -285,7 +280,8 @@ namespace Dory {
 
       /* This handles the details of reading and processing produce responses.
        */
-      std::unique_ptr<KafkaProto::TProduceResponseReaderApi> ResponseReader;
+      std::unique_ptr<KafkaProto::Produce::TProduceResponseReaderApi>
+          ResponseReader;
 
       /* We read produce response data from the socket into this buffer.  For
          eficiency, we attempt to do large reads.  Therefore at any given

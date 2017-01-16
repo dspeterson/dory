@@ -91,7 +91,7 @@ void TMetadata::TBuilder::OpenTopic(const std::string &name) {
 }
 
 void TMetadata::TBuilder::AddPartitionToTopic(int32_t partition_id,
-    int32_t broker_id, int16_t error_code) {
+    int32_t broker_id, bool can_send_to_partition, int16_t error_code) {
   assert(this);
   assert(State == TState::AddingOneTopic);
   auto ret = CurrentTopicPartitions.insert(partition_id);
@@ -128,7 +128,7 @@ void TMetadata::TBuilder::AddPartitionToTopic(int32_t partition_id,
 
   TTopic &t = Topics[CurrentTopicIndex];
 
-  if (CanUsePartition(error_code)) {
+  if (can_send_to_partition) {
     t.OkPartitions.push_back(TPartition(partition_id, broker_index,
                                         error_code));
   } else {
@@ -429,11 +429,6 @@ bool TMetadata::SanityCheckOkPartitions(const TTopic &t,
       return false;
     }
 
-    if (!CanUsePartition(p.GetErrorCode())) {
-      syslog(LOG_ERR, "Bug!!! OkPartitions item is unusable");
-      return false;
-    }
-
     auto ret = broker_partition_map.insert(
         std::make_pair(p.BrokerIndex, std::unordered_set<int32_t>()));
     ret.first->second.insert(p.Id);
@@ -476,11 +471,6 @@ bool TMetadata::SanityCheckOutOfServicePartitions(const TTopic &t,
     if (p.BrokerIndex >= Brokers.size()) {
       syslog(LOG_ERR,
           "Bug!!! OutOfServicePartitions item has out of range BrokerIndex");
-      return false;
-    }
-
-    if (CanUsePartition(p.GetErrorCode())) {
-      syslog(LOG_ERR, "Bug!!! OutOfServicePartitions item is usable");
       return false;
     }
 

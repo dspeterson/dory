@@ -26,9 +26,9 @@
 #include <vector>
 
 #include <base/no_copy_semantics.h>
-#include <dory/conf/compression_type.h>
-#include <dory/kafka_proto/msg_set_reader_api.h>
-#include <dory/kafka_proto/produce_request_reader_api.h>
+#include <dory/compress/compression_type.h>
+#include <dory/kafka_proto/produce/msg_set_reader_api.h>
+#include <dory/kafka_proto/produce/produce_request_reader_api.h>
 #include <dory/mock_kafka_server/prod_req/msg.h>
 #include <dory/mock_kafka_server/prod_req/msg_set.h>
 #include <dory/mock_kafka_server/prod_req/prod_req.h>
@@ -45,7 +45,8 @@ namespace Dory {
 
         public:
         class TBuildError
-            : public KafkaProto::TProduceRequestReaderApi::TBadProduceRequest {
+            : public KafkaProto::Produce::TProduceRequestReaderApi::
+                  TBadProduceRequest {
           public:
           virtual ~TBuildError() noexcept { }
 
@@ -74,16 +75,6 @@ namespace Dory {
                   "Compressed message has invalid attributes") {
           }
         };  // TCompressedMsgInvalidAttributes
-
-        class TUnsupportedCompressionType : public TBuildError {
-          public:
-          virtual ~TUnsupportedCompressionType() noexcept { }
-
-          TUnsupportedCompressionType()
-              : TBuildError(
-                  "Produce request specifies unsupported compression type") {
-          }
-        };  // TUnsupportedCompressionType
 
         class TCompressedMsgSetNotAlone : public TBuildError {
           public:
@@ -115,8 +106,9 @@ namespace Dory {
           }
         };  // TUncompressFailed
 
-        TProdReqBuilder(KafkaProto::TProduceRequestReaderApi &request_reader,
-            KafkaProto::TMsgSetReaderApi &msg_set_reader)
+        TProdReqBuilder(
+            KafkaProto::Produce::TProduceRequestReaderApi &request_reader,
+            KafkaProto::Produce::TMsgSetReaderApi &msg_set_reader)
             : RequestReader(request_reader),
               MsgSetReader(msg_set_reader) {
         }
@@ -135,13 +127,13 @@ namespace Dory {
 
         TMsgSet BuildUncompressedMsgSet(int32_t partition,
             const std::vector<uint8_t> &msg_set_data,
-            Conf::TCompressionType compression_type);
+            Compress::TCompressionType compression_type);
 
         TMsgSet BuildMsgSet();
 
-        KafkaProto::TProduceRequestReaderApi &RequestReader;
+        KafkaProto::Produce::TProduceRequestReaderApi &RequestReader;
 
-        KafkaProto::TMsgSetReaderApi &MsgSetReader;
+        KafkaProto::Produce::TMsgSetReaderApi &MsgSetReader;
       };  // TProdReqBuilder
 
     }  // ProdReq

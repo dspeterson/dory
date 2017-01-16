@@ -33,9 +33,9 @@
 
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
-#include <dory/kafka_proto/msg_set_reader_api.h>
-#include <dory/kafka_proto/produce_request_reader_api.h>
-#include <dory/kafka_proto/produce_response_writer_api.h>
+#include <dory/kafka_proto/produce/msg_set_reader_api.h>
+#include <dory/kafka_proto/produce/produce_request_reader_api.h>
+#include <dory/kafka_proto/produce/produce_response_writer_api.h>
 #include <dory/mock_kafka_server/config.h>
 #include <dory/mock_kafka_server/mock_kafka_worker.h>
 #include <dory/mock_kafka_server/port_map.h>
@@ -104,12 +104,13 @@ namespace Dory {
         assert(PortOffset < Setup.Ports.size());
       }
 
-      virtual Dory::KafkaProto::TProduceRequestReaderApi &
+      virtual Dory::KafkaProto::Produce::TProduceRequestReaderApi &
       GetProduceRequestReader() = 0;
 
-      virtual Dory::KafkaProto::TMsgSetReaderApi &GetMsgSetReader() = 0;
+      virtual Dory::KafkaProto::Produce::TMsgSetReaderApi &
+      GetMsgSetReader() = 0;
 
-      virtual Dory::KafkaProto::TProduceResponseWriterApi &
+      virtual Dory::KafkaProto::Produce::TProduceResponseWriterApi &
       GetProduceResponseWriter() = 0;
 
       virtual bool ValidateMetadataRequestHeader() = 0;

@@ -17,8 +17,7 @@
    ----------------------------------------------------------------------------
 
    Class for dispatching messages to Kafka brokers.  For each broker, there is
-   a TCP connection and a pair of threads: one for sending produce requests and
-   one for receiving produce responses.
+   a TCP connection and a thread for sending requests and receiving responses.
  */
 
 #pragma once
@@ -38,7 +37,7 @@
 #include <dory/conf/compression_conf.h>
 #include <dory/config.h>
 #include <dory/debug/debug_setup.h>
-#include <dory/kafka_proto/wire_protocol.h>
+#include <dory/kafka_proto/produce/produce_protocol.h>
 #include <dory/metadata.h>
 #include <dory/msg.h>
 #include <dory/msg_dispatch/connector.h>
@@ -56,13 +55,15 @@ namespace Dory {
       public:
       TKafkaDispatcher(const TConfig &config,
           const Conf::TCompressionConf &compression_conf,
-          const KafkaProto::TWireProtocol &kafka_protocol,
           TMsgStateTracker &msg_state_tracker,
           TAnomalyTracker &anomaly_tracker,
           const Batch::TGlobalBatchConfig &batch_config,
           const Debug::TDebugSetup &debug_setup);
 
       virtual ~TKafkaDispatcher() noexcept { }
+
+      void SetProduceProtocol(
+          KafkaProto::Produce::TProduceProtocol *protocol) noexcept override;
 
       virtual TState GetState() const override;
 

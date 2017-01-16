@@ -62,6 +62,9 @@ namespace Dory {
 
       virtual ~TMockKafkaDispatcher() noexcept { }
 
+      void SetProduceProtocol(
+          KafkaProto::Produce::TProduceProtocol *protocol) noexcept override;
+
       virtual TState GetState() const override;
 
       virtual size_t GetBrokerCount() const override;

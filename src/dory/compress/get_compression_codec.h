@@ -22,7 +22,7 @@
 #pragma once
 
 #include <dory/compress/compression_codec_api.h>
-#include <dory/conf/compression_type.h>
+#include <dory/compress/compression_type.h>
 
 namespace Dory {
 
@@ -30,8 +30,7 @@ namespace Dory {
 
     /* Return a pointer to the compression codec singleton for 'type', or
        nullptr if 'type' specifies "no compression". */
-    const TCompressionCodecApi *GetCompressionCodec(
-        Conf::TCompressionType type);
+    const TCompressionCodecApi *GetCompressionCodec(TCompressionType type);
 
   }  // Compress
 

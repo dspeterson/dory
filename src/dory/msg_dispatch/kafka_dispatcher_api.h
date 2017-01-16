@@ -28,6 +28,7 @@
 
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
+#include <dory/kafka_proto/produce/produce_protocol.h>
 #include <dory/metadata.h>
 #include <dory/msg.h>
 #include <dory/msg_dispatch/api_defs.h>
@@ -45,6 +46,9 @@ namespace Dory {
       using TState = TDispatcherState;
 
       virtual ~TKafkaDispatcherApi() noexcept { }
+
+      virtual void SetProduceProtocol(
+          KafkaProto::Produce::TProduceProtocol *protocol) noexcept = 0;
 
       virtual TState GetState() const = 0;
 

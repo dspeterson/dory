@@ -32,15 +32,16 @@
 #include <base/gettid.h>
 #include <base/no_default_case.h>
 #include <base/opt.h>
-#include <dory/kafka_proto/msg_set_reader_api.h>
+#include <dory/compress/compression_type.h>
+#include <dory/kafka_proto/produce/msg_set_reader_api.h>
 #include <dory/mock_kafka_server/cmd.h>
 #include <dory/mock_kafka_server/cmd_bucket.h>
 #include <socket/address.h>
 
 using namespace Base;
 using namespace Dory;
-using namespace Dory::Conf;
-using namespace Dory::KafkaProto;
+using namespace Dory::Compress;
+using namespace Dory::KafkaProto::Produce;
 using namespace Dory::MockKafkaServer;
 using namespace Dory::MockKafkaServer::ProdReq;
 

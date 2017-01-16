@@ -30,7 +30,7 @@
 #include <unordered_map>
 
 #include <base/no_copy_semantics.h>
-#include <dory/conf/compression_type.h>
+#include <dory/compress/compression_type.h>
 #include <dory/conf/conf_error.h>
 
 namespace Dory {
@@ -42,18 +42,18 @@ namespace Dory {
       class TBuilder;
 
       struct TConf {
-        TCompressionType Type;
+        Compress::TCompressionType Type;
 
         /* Minimum total size of uncompressed message bodies required for
            compression to be used. */
         size_t MinSize;
 
         TConf()
-            : Type(TCompressionType::None),
+            : Type(Compress::TCompressionType::None),
               MinSize(0) {
         }
 
-        TConf(TCompressionType type, size_t min_size)
+        TConf(Compress::TCompressionType type, size_t min_size)
             : Type(type),
               MinSize(min_size) {
         }
@@ -65,10 +65,11 @@ namespace Dory {
 
       using TTopicMap = std::unordered_map<std::string, TConf>;
 
-      static bool StringToType(const char *s, TCompressionType &result);
+      static bool StringToType(const char *s,
+          Compress::TCompressionType &result);
 
       static bool StringToType(const std::string &s,
-          TCompressionType &result) {
+          Compress::TCompressionType &result) {
         return StringToType(s.c_str(), result);
       }
 
@@ -200,8 +201,8 @@ namespace Dory {
 
       void Reset();
 
-      void AddNamedConfig(const std::string &name, TCompressionType type,
-          size_t min_size);
+      void AddNamedConfig(const std::string &name,
+          Compress::TCompressionType type, size_t min_size);
 
       void SetSizeThresholdPercent(size_t size_threshold_percent);
 

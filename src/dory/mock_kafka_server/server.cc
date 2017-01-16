@@ -196,6 +196,7 @@ void TServer::InitKafkaPorts() {
         TClientHandlerFactoryBase::CreateFactory(Ss.Config, Ss.Setup));
 
     if (!ClientHandlerFactory) {
+      /* FIXME: clean up protocol version logic */
       THROW_ERROR(TUnsupportedProtocolVersion);
     }
   }

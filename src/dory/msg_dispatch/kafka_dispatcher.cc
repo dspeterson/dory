@@ -31,7 +31,7 @@ using namespace Dory;
 using namespace Dory::Batch;
 using namespace Dory::Conf;
 using namespace Dory::Debug;
-using namespace Dory::KafkaProto;
+using namespace Dory::KafkaProto::Produce;
 using namespace Dory::MsgDispatch;
 using namespace Dory::Util;
 
@@ -49,13 +49,17 @@ SERVER_COUNTER(StartKafkaDispatcher);
 
 TKafkaDispatcher::TKafkaDispatcher(const TConfig &config,
     const TCompressionConf &compression_conf,
-    const TWireProtocol &kafka_protocol, TMsgStateTracker &msg_state_tracker,
-    TAnomalyTracker &anomaly_tracker, const TGlobalBatchConfig &batch_config,
-    const TDebugSetup &debug_setup)
-    : Ds(config, compression_conf, kafka_protocol, msg_state_tracker,
-         anomaly_tracker, debug_setup, batch_config),
-      State(TState::Stopped),
+    TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
+    const TGlobalBatchConfig &batch_config, const TDebugSetup &debug_setup)
+    : Ds(config, compression_conf, msg_state_tracker, anomaly_tracker,
+      debug_setup, batch_config), State(TState::Stopped),
       OkShutdown(true) {
+}
+
+void TKafkaDispatcher::SetProduceProtocol(
+    TProduceProtocol *protocol) noexcept {
+  assert(this);
+  Ds.ProduceProtocol.reset(protocol);
 }
 
 TKafkaDispatcherApi::TState TKafkaDispatcher::GetState() const {
@@ -71,6 +75,7 @@ size_t TKafkaDispatcher::GetBrokerCount() const {
 void TKafkaDispatcher::Start(const std::shared_ptr<TMetadata> &md) {
   assert(this);
   assert(md);
+  assert(Ds.ProduceProtocol);
   assert(State == TState::Stopped);
   assert(!Ds.PauseButton.GetFd().IsReadable());
   assert(!Ds.GetShutdownWaitFd().IsReadable());

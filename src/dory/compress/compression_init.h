@@ -21,17 +21,17 @@
 
 #pragma once
 
-#include <dory/conf/compression_conf.h>
+#include <dory/compress/compression_type.h>
 
 namespace Dory {
 
   namespace Compress {
 
-    /* Load all compression libraries that are needed, according to information
-       from the config file.  This should be called before starting Dory.  The
-       idea is to fail early in the case where a compression library fails to
-       load. */
-    void CompressionInit(const Conf::TCompressionConf &conf);
+    /* Load the compression library for the given compression type.  Before
+       starting Dory, this should be called for each compression type that Dory
+       is configured to use.  The idea is to fail early in the case where a
+       compression library fails to load. */
+    void CompressionInit(TCompressionType type);
 
     /* Same as above, but don't be selective about which libraries we load.
        The mock Kafka server uses this, since it must be prepared to handle all

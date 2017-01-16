@@ -49,7 +49,6 @@
 #include <dory/config.h>
 #include <dory/debug/debug_logger.h>
 #include <dory/debug/debug_setup.h>
-#include <dory/kafka_proto/wire_protocol.h>
 #include <dory/metadata_timestamp.h>
 #include <dory/metadata.h>
 #include <dory/metadata_fetcher.h>
@@ -70,7 +69,6 @@ namespace Dory {
 
     public:
     TRouterThread(const TConfig &config, const Conf::TConf &conf,
-        const KafkaProto::TWireProtocol &kafka_protocol,
         TAnomalyTracker &anomaly_tracker, TMsgStateTracker &msg_state_tracker,
         const Batch::TGlobalBatchConfig &batch_config,
         const Debug::TDebugSetup &debug_setup,
@@ -222,6 +220,8 @@ namespace Dory {
 
     void DiscardFinalMsgs();
 
+    void InitWireProtocol();
+
     bool Init();
 
     void CheckDispatcherShutdown();
@@ -300,7 +300,7 @@ namespace Dory {
     TMsgRateLimiter MsgRateLimiter;
 
     /* Header overhead for a single message.  For checking message size. */
-    const size_t SingleMsgOverhead;
+    size_t SingleMsgOverhead;
 
     /* Maximum total message size (key + value + header space (see
        'SingleMsgOverhead' above)) allowed by Kafka brokers. */
@@ -332,7 +332,7 @@ namespace Dory {
     Thread::TGate<TMsg::TPtr> MsgChannel;
 
     /* Object responsible for getting metadata requests from brokers. */
-    TMetadataFetcher MetadataFetcher;
+    std::unique_ptr<TMetadataFetcher> MetadataFetcher;
 
     /* List of known Kafka brokers.  We pick one of these when we need to send
        a metadata request. */

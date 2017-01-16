@@ -50,6 +50,8 @@ namespace Dory {
       NO_COPY_SEMANTICS(TServer);
 
       public:
+      /* FIXME: make two different exceptions: one for unsupported produce API
+         version and one for unsupported metadata API version. */
       DEFINE_ERROR(TUnsupportedProtocolVersion, std::runtime_error,
           "Only protocol version 0 (used by Kafka 0.8) is currently "
           "supported.");

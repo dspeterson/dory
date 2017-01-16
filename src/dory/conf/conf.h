@@ -31,7 +31,6 @@
 #include <base/no_copy_semantics.h>
 #include <dory/conf/batch_conf.h>
 #include <dory/conf/compression_conf.h>
-#include <dory/conf/compression_type.h>
 #include <dory/conf/conf_error.h>
 #include <dory/conf/topic_rate_conf.h>
 #include <dory/util/host_and_port.h>

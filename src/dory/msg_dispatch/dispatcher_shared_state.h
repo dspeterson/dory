@@ -25,6 +25,7 @@
 #include <cassert>
 #include <cstddef>
 #include <list>
+#include <memory>
 #include <string>
 #include <unordered_set>
 
@@ -35,7 +36,7 @@
 #include <dory/conf/compression_conf.h>
 #include <dory/config.h>
 #include <dory/debug/debug_setup.h>
-#include <dory/kafka_proto/wire_protocol.h>
+#include <dory/kafka_proto/produce/produce_protocol.h>
 #include <dory/msg.h>
 #include <dory/msg_state_tracker.h>
 #include <dory/util/pause_button.h>
@@ -51,7 +52,7 @@ namespace Dory {
 
       Conf::TCompressionConf CompressionConf;
 
-      const KafkaProto::TWireProtocol &KafkaProtocol;
+      std::shared_ptr<KafkaProto::Produce::TProduceProtocol> ProduceProtocol;
 
       TMsgStateTracker &MsgStateTracker;
 
@@ -65,7 +66,6 @@ namespace Dory {
 
       TDispatcherSharedState(const TConfig &config,
           const Conf::TCompressionConf &compression_conf,
-          const KafkaProto::TWireProtocol &kafka_protocol,
           TMsgStateTracker &msg_state_tracker,
           TAnomalyTracker &anomaly_tracker,
           const Debug::TDebugSetup &debug_setup,

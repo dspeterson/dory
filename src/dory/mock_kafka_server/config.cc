@@ -41,10 +41,16 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
     CmdLine cmd("Mock Kafka server for testing Dory.", ' ', dory_build_id);
     SwitchArg arg_log_echo("", "log_echo", "Echo syslog messages to standard "
         "error.", cmd, config.LogEcho);
-    ValueArg<decltype(config.ProtocolVersion)> arg_protocol_version("",
-        "protocol_version", "Version of Kafka protocol to use (currently only "
-        "0 is supported).", false, config.ProtocolVersion, "VERSION");
-    cmd.add(arg_protocol_version);
+    ValueArg<decltype(config.ProduceApiVersion)> arg_produce_api_version("",
+        "produce_api_version", "Version of Kafka produce API to use "
+        "(currently only 0 is supported).", false, config.ProduceApiVersion,
+        "VERSION");
+    cmd.add(arg_produce_api_version);
+    ValueArg<decltype(config.MetadataApiVersion)> arg_metadata_api_version("",
+        "metadata_api_version", "Version of Kafka metadata API to use "
+        "(currently only 0 is supported).", false, config.MetadataApiVersion,
+        "VERSION");
+    cmd.add(arg_metadata_api_version);
     ValueArg<decltype(config.QuietLevel)> arg_quiet_level("", "quiet_level",
         "Limit output verbosity.", false, config.QuietLevel, "LEVEL");
     cmd.add(arg_quiet_level);
@@ -62,7 +68,8 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
         "output file for all clients", cmd, config.SingleOutputFile);
     cmd.parse(argc, &arg_vec[0]);
     config.LogEcho = arg_log_echo.getValue();
-    config.ProtocolVersion = arg_protocol_version.getValue();
+    config.ProduceApiVersion = arg_produce_api_version.getValue();
+    config.MetadataApiVersion = arg_metadata_api_version.getValue();
     config.QuietLevel = arg_quiet_level.getValue();
     config.SetupFile = arg_setup_file.getValue();
     config.OutputDir = arg_output_dir.getValue();
@@ -75,7 +82,8 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
 
 TConfig::TConfig(int argc, char *argv[])
     : LogEcho(false),
-      ProtocolVersion(0),
+      ProduceApiVersion(0),
+      MetadataApiVersion(0),
       QuietLevel(0),
       CmdPort(9080),
       SingleOutputFile(false) {

@@ -24,11 +24,13 @@
 #include <fstream>
 
 #include <base/tmp_file.h>
+#include <dory/compress/compression_type.h>
 
 #include <gtest/gtest.h>
 
 using namespace Base;
 using namespace Dory;
+using namespace Dory::Compress;
 using namespace Dory::Conf;
 
 namespace {

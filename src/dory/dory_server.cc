@@ -43,9 +43,10 @@
 #include <dory/batch/batch_config_builder.h>
 #include <dory/compress/compression_init.h>
 #include <dory/conf/batch_conf.h>
+#include <dory/conf/compression_conf.h>
 #include <dory/discard_file_logger.h>
-#include <dory/kafka_proto/choose_proto.h>
-#include <dory/kafka_proto/wire_protocol.h>
+#include <dory/kafka_proto/metadata/version_util.h>
+#include <dory/kafka_proto/produce/version_util.h>
 #include <dory/msg.h>
 #include <dory/util/misc_util.h>
 #include <dory/util/time_util.h>
@@ -61,7 +62,8 @@ using namespace Dory;
 using namespace Dory::Batch;
 using namespace Dory::Compress;
 using namespace Dory::Conf;
-using namespace Dory::KafkaProto;
+using namespace Dory::KafkaProto::Metadata;
+using namespace Dory::KafkaProto::Produce;
 using namespace Dory::Util;
 using namespace Signal;
 using namespace Socket;
@@ -70,6 +72,22 @@ using namespace Thread;
 SERVER_COUNTER(GotShutdownSignal);
 SERVER_COUNTER(StreamClientWorkerStdException);
 SERVER_COUNTER(StreamClientWorkerUnknownException);
+
+static void LoadCompressionLibraries(const TCompressionConf &conf) {
+  std::set<TCompressionType> in_use;
+  in_use.insert(conf.GetDefaultTopicConfig().Type);
+  const TCompressionConf::TTopicMap &topic_map = conf.GetTopicConfigs();
+
+  for (const auto &item : topic_map) {
+    in_use.insert(item.second.Type);
+  }
+
+  /* For each needed compression type, force the associated compression library
+     to load.  This will throw if there is an error loading a library. */
+  for (TCompressionType type : in_use) {
+    CompressionInit(type);
+  }
+}
 
 TDoryServer::TServerConfig
 TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
@@ -125,12 +143,18 @@ TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
     THROW_ERROR(TBadDiscardLogMaxFileSize);
   }
 
-  std::unique_ptr<const TWireProtocol> protocol(
-      ChooseProto(cfg->ProtocolVersion, cfg->RequiredAcks,
-          static_cast<int32_t>(cfg->ReplicationTimeout)));
+  /* Verify that Dory supports any requested API version(s).  Once Dory has
+     started, cases where the brokers don't support a requested API version
+     will be handled. */
 
-  if (!protocol) {
-    THROW_ERROR(TUnsupportedProtocolVersion);
+  if (cfg->MetadataApiVersion.IsKnown() &&
+      !IsMetadataApiVersionSupported(*cfg->MetadataApiVersion)) {
+    THROW_ERROR(TUnsupportedMetadataApiVersion);
+  }
+
+  if (cfg->ProduceApiVersion.IsKnown() &&
+      !IsProduceApiVersionSupported(*cfg->ProduceApiVersion)) {
+    THROW_ERROR(TUnsupportedProduceApiVersion);
   }
 
   Conf::TConf conf = Conf::TConf::TBuilder().Build(cfg->ConfigPath.c_str());
@@ -140,7 +164,7 @@ TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
   /* Load any compression libraries we need, according to the compression info
      from our config file.  This will throw if a library fails to load.  We
      want to fail early if there is a problem loading a library. */
-  CompressionInit(conf.GetCompressionConf());
+  LoadCompressionLibraries(conf.GetCompressionConf());
 
   /* The TDoryServer constructor will use the random number generator, so
      initialize it now. */
@@ -149,8 +173,7 @@ TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
   std::srand(static_cast<unsigned>(t.tv_sec ^ t.tv_nsec));
 
   return TServerConfig(std::move(cfg), std::move(conf),
-                       std::move(batch_config), std::move(protocol),
-                       pool_block_size);
+      std::move(batch_config), pool_block_size);
 }
 
 void TDoryServer::HandleShutdownSignal(int /*signum*/) {
@@ -171,7 +194,6 @@ TDoryServer::TDoryServer(TServerConfig &&config)
     : SigMask(TSet::Exclude, { SIGINT, SIGTERM }),
       Config(std::move(config.Config)),
       Conf(std::move(config.Conf)),
-      KafkaProtocol(std::move(config.KafkaProtocol)),
       PoolBlockSize(config.PoolBlockSize),
       Started(false),
       Pool(PoolBlockSize,
@@ -182,10 +204,10 @@ TDoryServer::TDoryServer(TServerConfig &&config)
       StatusPort(0),
       DebugSetup(Config->DebugDir.c_str(), Config->MsgDebugTimeLimit,
                  Config->MsgDebugByteLimit),
-      Dispatcher(*Config, Conf.GetCompressionConf(), *KafkaProtocol,
-          MsgStateTracker, AnomalyTracker, config.BatchConfig, DebugSetup),
-      RouterThread(*Config, Conf, *KafkaProtocol, AnomalyTracker,
-          MsgStateTracker, config.BatchConfig, DebugSetup, Dispatcher),
+      Dispatcher(*Config, Conf.GetCompressionConf(), MsgStateTracker,
+          AnomalyTracker, config.BatchConfig, DebugSetup),
+      RouterThread(*Config, Conf, AnomalyTracker, MsgStateTracker,
+          config.BatchConfig, DebugSetup, Dispatcher),
       MetadataTimestamp(RouterThread.GetMetadataTimestamp()),
       ShutdownRequested(ATOMIC_FLAG_INIT) {
   if (!Config->ReceiveStreamSocketName.empty() ||

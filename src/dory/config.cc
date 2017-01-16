@@ -165,10 +165,14 @@ static void ParseArgs(int argc, char *argv[], TConfig &config,
         "value, you must use a 0 prefix.  For instance, specify 0777 rather "
         "than 777 for unrestricted access.", false, "", "MODE");
     cmd.add(arg_receive_stream_socket_mode);
-    ValueArg<decltype(config.ProtocolVersion)> arg_protocol_version("",
-        "protocol_version", "Version of Kafka protocol to use.", false,
-        config.ProtocolVersion, "VERSION");
-    cmd.add(arg_protocol_version);
+    ValueArg<std::remove_reference<decltype(*config.MetadataApiVersion)>::type>
+        arg_metadata_api_version("", "metadata_api_version",
+        "Version of Kafka metadata API to use.", false, 0, "VERSION");
+    cmd.add(arg_metadata_api_version);
+    ValueArg<std::remove_reference<decltype(*config.ProduceApiVersion)>::type>
+        arg_produce_api_version("", "produce_api_version",
+        "Version of Kafka produce API to use.", false, 0, "VERSION");
+    cmd.add(arg_produce_api_version);
     ValueArg<decltype(config.StatusPort)> arg_status_port("", "status_port",
         "HTTP Status monitoring port.", false, config.StatusPort, "PORT");
     cmd.add(arg_status_port);
@@ -354,7 +358,15 @@ static void ParseArgs(int argc, char *argv[], TConfig &config,
         config.ReceiveSocketMode);
     ProcessModeArg(arg_receive_stream_socket_mode.getValue(),
         "receive_stream_socket_mode", config.ReceiveStreamSocketMode);
-    config.ProtocolVersion = arg_protocol_version.getValue();
+
+    if (arg_metadata_api_version.isSet()) {
+      config.MetadataApiVersion.MakeKnown(arg_metadata_api_version.getValue());
+    }
+
+    if (arg_produce_api_version.isSet()) {
+      config.ProduceApiVersion.MakeKnown(arg_produce_api_version.getValue());
+    }
+
     config.StatusPort = arg_status_port.getValue();
     config.StatusLoopbackOnly = arg_status_loopback_only.getValue();
     config.MsgBufferMax = arg_msg_buffer_max.getValue();
@@ -437,7 +449,6 @@ static void ParseArgs(int argc, char *argv[], TConfig &config,
 TConfig::TConfig(int argc, char *argv[], bool allow_input_bind_ephemeral)
     : LogLevel(LOG_NOTICE),
       LogEcho(false),
-      ProtocolVersion(0),
       StatusPort(9090),
       StatusLoopbackOnly(false),
       MsgBufferMax(256 * 1024),
@@ -526,8 +537,20 @@ void Dory::LogConfig(const TConfig &config) {
         BuildModeString(config.ReceiveStreamSocketMode).c_str());
   }
 
-  syslog(LOG_NOTICE, "Using Kafka protocol version %lu",
-         static_cast<unsigned long>(config.ProtocolVersion));
+  if (config.MetadataApiVersion.IsKnown()) {
+    syslog(LOG_NOTICE, "Metadata API version is specified as %lu",
+        static_cast<unsigned long>(*config.MetadataApiVersion));
+  } else {
+    syslog(LOG_NOTICE, "Metadata API version is unspecified");
+  }
+
+  if (config.ProduceApiVersion.IsKnown()) {
+    syslog(LOG_NOTICE, "Produce API version is specified as %lu",
+        static_cast<unsigned long>(*config.ProduceApiVersion));
+  } else {
+    syslog(LOG_NOTICE, "Produce API version is unspecified");
+  }
+
   syslog(LOG_NOTICE, "Listening on status port %u",
          static_cast<unsigned>(config.StatusPort));
   syslog(LOG_NOTICE, "Web interface loopback only: %s",

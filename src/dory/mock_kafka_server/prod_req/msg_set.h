@@ -26,7 +26,7 @@
 #include <cstdint>
 #include <vector>
 
-#include <dory/conf/compression_type.h>
+#include <dory/compress/compression_type.h>
 #include <dory/mock_kafka_server/prod_req/msg.h>
 
 namespace Dory {
@@ -39,7 +39,7 @@ namespace Dory {
         public:
         explicit TMsgSet(int32_t partition)
             : Partition(partition),
-              CompressionType(Conf::TCompressionType::None),
+              CompressionType(Compress::TCompressionType::None),
               MsgCrcsOk(true) {
         }
 
@@ -69,12 +69,12 @@ namespace Dory {
           return Partition;
         }
 
-        void SetCompressionType(Conf::TCompressionType compression_type) {
+        void SetCompressionType(Compress::TCompressionType compression_type) {
           assert(this);
           CompressionType = compression_type;
         }
 
-        Conf::TCompressionType GetCompressionType() const {
+        Compress::TCompressionType GetCompressionType() const {
           assert(this);
           return CompressionType;
         }
@@ -92,7 +92,7 @@ namespace Dory {
         private:
         int32_t Partition;
 
-        Conf::TCompressionType CompressionType;
+        Compress::TCompressionType CompressionType;
 
         bool MsgCrcsOk;
 

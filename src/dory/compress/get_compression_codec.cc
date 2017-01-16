@@ -27,7 +27,6 @@
 using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::Compress::Snappy;
-using namespace Dory::Conf;
 
 const TCompressionCodecApi *
 Dory::Compress::GetCompressionCodec(TCompressionType type) {

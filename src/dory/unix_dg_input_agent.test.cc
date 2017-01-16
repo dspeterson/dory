@@ -44,8 +44,6 @@
 #include <dory/config.h>
 #include <dory/debug/debug_setup.h>
 #include <dory/discard_file_logger.h>
-#include <dory/kafka_proto/choose_proto.h>
-#include <dory/kafka_proto/wire_protocol.h>
 #include <dory/metadata_timestamp.h>
 #include <dory/msg_state_tracker.h>
 #include <dory/test_util/misc_util.h>
@@ -58,7 +56,6 @@ using namespace Capped;
 using namespace Dory;
 using namespace Dory::Client;
 using namespace Dory::Debug;
-using namespace Dory::KafkaProto;
 using namespace Dory::TestUtil;
 using namespace Thread;
 
@@ -77,8 +74,6 @@ namespace {
     std::vector<const char *> Args;
 
     std::unique_ptr<TConfig> Cfg;
-
-    std::unique_ptr<TWireProtocol> Protocol;
 
     TPool Pool;
 
@@ -145,8 +140,6 @@ namespace {
     Args.push_back(nullptr);
     Cfg.reset(
         new TConfig(Args.size() - 1, const_cast<char **>(&Args[0]), true));
-    Protocol.reset(ChooseProto(Cfg->ProtocolVersion, Cfg->RequiredAcks,
-                   static_cast<int32_t>(Cfg->ReplicationTimeout)));
     OutputQueue.reset(new TGate<TMsg::TPtr>);
     UnixDgInputAgent.reset(new TUnixDgInputAgent(*Cfg, Pool, MsgStateTracker,
         AnomalyTracker, *OutputQueue));

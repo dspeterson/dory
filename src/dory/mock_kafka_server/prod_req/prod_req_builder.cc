@@ -30,7 +30,6 @@
 using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::Compress::Snappy;
-using namespace Dory::Conf;
 using namespace Dory::KafkaProto;
 using namespace Dory::MockKafkaServer;
 using namespace Dory::MockKafkaServer::ProdReq;
@@ -117,7 +116,8 @@ TMsgSet TProdReqBuilder::BuildUncompressedMsgSet(int32_t partition,
       continue;
     }
 
-    if (MsgSetReader.GetCurrentMsgAttributes()) {
+    if (MsgSetReader.GetCurrentMsgCompressionType() !=
+        TCompressionType::None) {
       throw TCompressedMsgInvalidAttributes();
     }
 
@@ -144,15 +144,11 @@ TMsgSet TProdReqBuilder::BuildMsgSet() {
       continue;
     }
 
-    switch (RequestReader.GetCurrentMsgAttributes()) {
-      case 0: {  // no compression
+    switch (RequestReader.GetCurrentMsgCompressionType()) {
+      case TCompressionType::None: {  // no compression
         break;
       }
-      case 1: {  // gzip compression not supported
-        GetCompressedData(msg_vec, compressed_data);
-        throw TUnsupportedCompressionType();
-      }
-      case 2: {  // snappy compression
+      case TCompressionType::Snappy: {  // snappy compression
         GetCompressedData(msg_vec, compressed_data);
         SnappyUncompressMsgSet(compressed_data, uncompressed_data);
         return BuildUncompressedMsgSet(partition, uncompressed_data,

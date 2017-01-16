@@ -31,8 +31,7 @@
 
 #include <base/no_copy_semantics.h>
 #include <dory/debug/debug_logger.h>
-#include <dory/kafka_proto/produce_response_reader_api.h>
-#include <dory/kafka_proto/wire_protocol.h>
+#include <dory/kafka_proto/produce/produce_response_reader_api.h>
 #include <dory/msg.h>
 #include <dory/msg_dispatch/common.h>
 #include <dory/msg_dispatch/dispatcher_shared_state.h>
@@ -60,7 +59,7 @@ namespace Dory {
       };  // TAction
 
       TProduceResponseProcessor(
-          KafkaProto::TProduceResponseReaderApi &response_reader,
+          KafkaProto::Produce::TProduceResponseReaderApi &response_reader,
           TDispatcherSharedState &ds, Debug::TDebugLogger &debug_logger,
           unsigned long my_broker_index, long my_broker_id)
           : MyBrokerIndex(my_broker_index),
@@ -117,7 +116,8 @@ namespace Dory {
       }
 
       private:
-      using TAckResultAction = KafkaProto::TWireProtocol::TAckResultAction;
+      using TAckResultAction =
+          KafkaProto::Produce::TProduceProtocol::TAckResultAction;
 
       void ReportBadResponseTopic(const std::string &topic) const;
 
@@ -139,7 +139,7 @@ namespace Dory {
       void ProcessNoAckMsgs(TAllTopics &all_topics);
 
       bool ProcessOneAck(std::list<TMsg::TPtr> &&msg_set, int16_t ack,
-          const std::string &topic, int32_t partition);
+          const std::string &topic);
 
       TAction ProcessResponseAcks(TProduceRequest &request);
 
@@ -149,7 +149,7 @@ namespace Dory {
 
       TDispatcherSharedState &Ds;
 
-      KafkaProto::TProduceResponseReaderApi &ResponseReader;
+      KafkaProto::Produce::TProduceResponseReaderApi &ResponseReader;
 
       Debug::TDebugLogger &DebugLogger;
 

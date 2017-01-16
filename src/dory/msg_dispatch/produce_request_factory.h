@@ -36,12 +36,14 @@
 #include <base/opt.h>
 #include <dory/batch/global_batch_config.h>
 #include <dory/compress/compression_codec_api.h>
+#include <dory/compress/compression_type.h>
 #include <dory/compress/get_compression_codec.h>
 #include <dory/conf/compression_conf.h>
-#include <dory/conf/compression_type.h>
 #include <dory/config.h>
 #include <dory/debug/debug_logger.h>
-#include <dory/kafka_proto/wire_protocol.h>
+#include <dory/kafka_proto/produce/msg_set_writer_api.h>
+#include <dory/kafka_proto/produce/produce_protocol.h>
+#include <dory/kafka_proto/produce/produce_request_writer_api.h>
 #include <dory/metadata.h>
 #include <dory/msg.h>
 #include <dory/msg_dispatch/any_partition_chooser.h>
@@ -59,7 +61,8 @@ namespace Dory {
       TProduceRequestFactory(const TConfig &config,
           const Batch::TGlobalBatchConfig &batch_config,
           const Conf::TCompressionConf &compression_conf,
-          const KafkaProto::TWireProtocol &kafka_protocol,
+          const std::shared_ptr<KafkaProto::Produce::TProduceProtocol>
+              &produce_protocol,
           size_t broker_index);
 
       void Init(const Conf::TCompressionConf &compression_conf,
@@ -142,17 +145,16 @@ namespace Dory {
            compression to be used. */
         const size_t MinCompressionSize;
 
-        const int8_t CompressionAttributes;
+        const Compress::TCompressionType CompressionType;
 
         TAnyPartitionChooser AnyPartitionChooser;
 
-        TTopicData(const Conf::TCompressionConf::TConf &compression_conf,
-            const KafkaProto::TWireProtocol &kafka_protocol)
+        explicit TTopicData(
+            const Conf::TCompressionConf::TConf &compression_conf)
             : CompressionCodec(
                   Compress::GetCompressionCodec(compression_conf.Type)),
               MinCompressionSize(compression_conf.MinSize),
-              CompressionAttributes(kafka_protocol.GetCompressionAttributes(
-                  compression_conf.Type)) {
+              CompressionType(compression_conf.Type) {
         }
       };  // TTopicData
 
@@ -180,25 +182,25 @@ namespace Dory {
 
       const size_t BrokerIndex;
 
-      const KafkaProto::TWireProtocol &KafkaProtocol;
+      const std::shared_ptr<KafkaProto::Produce::TProduceProtocol>
+          ProduceProtocol;
 
       const size_t ProduceRequestDataLimit;
 
       const size_t MessageMaxBytes;
+
+      const size_t SingleMsgOverhead;
 
       /* If (compressed message set size / uncompressed message set size)
          exceeds this value, then we send it uncompressed so the broker avoids
          spending CPU cycles dealing with the compression. */
       const float MaxCompressionRatio;
 
-      const int16_t RequiredAcks;
-
-      const int32_t ReplicationTimeout;
-
-      const std::unique_ptr<KafkaProto::TProduceRequestWriterApi>
+      const std::unique_ptr<KafkaProto::Produce::TProduceRequestWriterApi>
           RequestWriter;
 
-      const std::unique_ptr<KafkaProto::TMsgSetWriterApi> MsgSetWriter;
+      const std::unique_ptr<KafkaProto::Produce::TMsgSetWriterApi>
+          MsgSetWriter;
 
       Conf::TCompressionConf::TConf DefaultTopicConf;
 

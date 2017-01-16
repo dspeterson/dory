@@ -26,6 +26,7 @@
 #include <dory/util/misc_util.h>
 
 using namespace Dory;
+using namespace Dory::Compress;
 using namespace Dory::Conf;
 using namespace Dory::Util;
 

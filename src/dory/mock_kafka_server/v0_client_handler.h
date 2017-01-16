@@ -31,11 +31,11 @@
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
 #include <base/opt.h>
-#include <dory/kafka_proto/v0/metadata_request_reader.h>
-#include <dory/kafka_proto/v0/metadata_response_writer.h>
-#include <dory/kafka_proto/v0/msg_set_reader.h>
-#include <dory/kafka_proto/v0/produce_request_reader.h>
-#include <dory/kafka_proto/v0/produce_response_writer.h>
+#include <dory/kafka_proto/metadata/v0/metadata_request_reader.h>
+#include <dory/kafka_proto/metadata/v0/metadata_response_writer.h>
+#include <dory/kafka_proto/produce/v0/msg_set_reader.h>
+#include <dory/kafka_proto/produce/v0/produce_request_reader.h>
+#include <dory/kafka_proto/produce/v0/produce_response_writer.h>
 #include <dory/mock_kafka_server/config.h>
 #include <dory/mock_kafka_server/port_map.h>
 #include <dory/mock_kafka_server/setup.h>
@@ -61,12 +61,13 @@ namespace Dory {
       virtual ~TV0ClientHandler() noexcept;
 
       protected:
-      virtual Dory::KafkaProto::TProduceRequestReaderApi &
+      virtual Dory::KafkaProto::Produce::TProduceRequestReaderApi &
       GetProduceRequestReader() override;
 
-      virtual Dory::KafkaProto::TMsgSetReaderApi &GetMsgSetReader() override;
+      virtual Dory::KafkaProto::Produce::TMsgSetReaderApi &
+          GetMsgSetReader() override;
 
-      virtual Dory::KafkaProto::TProduceResponseWriterApi &
+      virtual Dory::KafkaProto::Produce::TProduceResponseWriterApi &
       GetProduceResponseWriter() override;
 
       virtual bool ValidateMetadataRequestHeader() override;
@@ -78,17 +79,20 @@ namespace Dory {
           const std::string &error_topic, size_t delay) override;
 
       private:
-      void WriteSingleTopic(KafkaProto::V0::TMetadataResponseWriter &writer,
+      void WriteSingleTopic(
+          KafkaProto::Metadata::V0::TMetadataResponseWriter &writer,
           const TSetup::TTopic &topic, const char *name_begin,
           const char *name_end, int16_t error);
 
-      Dory::KafkaProto::V0::TProduceRequestReader ProduceRequestReader;
+      Dory::KafkaProto::Produce::V0::TProduceRequestReader
+          ProduceRequestReader;
 
-      Dory::KafkaProto::V0::TMsgSetReader MsgSetReader;
+      Dory::KafkaProto::Produce::V0::TMsgSetReader MsgSetReader;
 
-      Dory::KafkaProto::V0::TProduceResponseWriter ProduceResponseWriter;
+      Dory::KafkaProto::Produce::V0::TProduceResponseWriter
+          ProduceResponseWriter;
 
-      Base::TOpt<KafkaProto::V0::TMetadataRequestReader>
+      Base::TOpt<KafkaProto::Metadata::V0::TMetadataRequestReader>
           OptMetadataRequestReader;
 
       std::vector<uint8_t> MdResponseBuf;

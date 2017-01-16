@@ -195,7 +195,7 @@ if 'run_tests' in target_set and 'tests' in target_set:
     target_set.remove('tests')
 
 all_apps = ['dory/dory',
-            'dory/kafka_proto/v0/mdrequest',
+            'dory/kafka_proto/metadata/v0/mdrequest',
             'dory/mock_kafka_server/mock_kafka_server',
             'dory/mock_kafka_server/inject_error/inject_error',
             'dory/client/to_dory']

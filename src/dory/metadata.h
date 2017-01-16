@@ -229,8 +229,7 @@ namespace Dory {
       private:
       TTopic() = default;
 
-      /* Partitions for this topic that messages can be sent to (error codes
-         are OK according to CanUsePartition()). */
+      /* Partitions for this topic that messages can be sent to. */
       std::vector<TPartition> OkPartitions;
 
       /* Partitions that are currently unavailable. */
@@ -272,7 +271,7 @@ namespace Dory {
       void OpenTopic(const std::string &name);
 
       void AddPartitionToTopic(int32_t partition_id, int32_t broker_id,
-          int16_t error_code);
+          bool can_send_to_partition, int16_t error_code);
 
       void CloseTopic();
 
@@ -391,13 +390,6 @@ namespace Dory {
     bool SanityCheck() const;
 
     private:
-    /* FIXME: this should go in protocol-specific code. */
-    static bool CanUsePartition(int16_t error_code) {
-      /* An error code of 9 means "replica not available".  In this case, it is
-         still OK to send to the leader. */
-      return (error_code == 0) || (error_code == 9);
-    }
-
     TMetadata(std::vector<TBroker> &&brokers, size_t in_service_broker_count,
         std::vector<int32_t> &&topic_broker_vec, std::vector<TTopic> &&topics,
         std::unordered_map<std::string, size_t> &&topic_name_to_index)

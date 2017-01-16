@@ -28,6 +28,8 @@
 #include <syslog.h>
 
 #include <base/io_utils.h>
+#include <dory/kafka_proto/errors.h>
+#include <dory/kafka_proto/request_response.h>
 #include <dory/util/connect_to_host.h>
 #include <dory/util/system_error_codes.h>
 #include <server/counter.h>
@@ -36,6 +38,7 @@
 using namespace Base;
 using namespace Dory;
 using namespace Dory::KafkaProto;
+using namespace Dory::KafkaProto::Metadata;
 using namespace Dory::Util;
 
 SERVER_COUNTER(BadMetadataContent);
@@ -59,15 +62,15 @@ SERVER_COUNTER(SendMetadataRequestUnexpectedEnd);
 SERVER_COUNTER(StartSendMetadataRequest);
 
 static std::vector<uint8_t>
-CreateMetadataRequest(const TWireProtocol &kafka_protocol) {
+CreateMetadataRequest(const TMetadataProtocol &metadata_protocol) {
   std::vector<uint8_t> result;
-  kafka_protocol.WriteMetadataRequest(result, 0);
+  metadata_protocol.WriteAllTopicsMetadataRequest(result, 0);
   return std::move(result);
 }
 
-TMetadataFetcher::TMetadataFetcher(const TWireProtocol &kafka_protocol)
-    : KafkaProtocol(kafka_protocol),
-      MetadataRequest(CreateMetadataRequest(kafka_protocol)) {
+TMetadataFetcher::TMetadataFetcher(const TMetadataProtocol *metadata_protocol)
+    : MetadataProtocol(metadata_protocol),
+      MetadataRequest(CreateMetadataRequest(*metadata_protocol)) {
 }
 
 bool TMetadataFetcher::Connect(const char *host_name, in_port_t port) {
@@ -105,9 +108,9 @@ std::unique_ptr<TMetadata> TMetadataFetcher::Fetch(int timeout_ms) {
   }
 
   try {
-    result = KafkaProtocol.BuildMetadataFromResponse(&ResponseBuf[0],
-        ResponseBuf.size());
-  } catch (const TWireProtocol::TBadMetadataResponse &x) {
+    result.reset(MetadataProtocol->BuildMetadataFromResponse(&ResponseBuf[0],
+        ResponseBuf.size()));
+  } catch (const TMetadataProtocol::TBadMetadataResponse &x) {
     BadMetadataResponse.Increment();
     syslog(LOG_ERR, "Failed to parse metadata response: %s", x.what());
     return std::move(result);
@@ -153,7 +156,7 @@ TMetadataFetcher::TopicAutocreate(const char *topic, int timeout_ms) {
   }
 
   std::vector<uint8_t> request;
-  KafkaProtocol.WriteSingleTopicMetadataRequest(request, topic, 0);
+  MetadataProtocol->WriteSingleTopicMetadataRequest(request, topic, 0);
 
   if (!SendRequest(request, timeout_ms) || !ReadResponse(timeout_ms)) {
     return TTopicAutocreateResult::TryOtherBroker;
@@ -162,9 +165,9 @@ TMetadataFetcher::TopicAutocreate(const char *topic, int timeout_ms) {
   bool success = false;
 
   try {
-    success = KafkaProtocol.TopicAutocreateWasSuccessful(topic,
+    success = MetadataProtocol->TopicAutocreateWasSuccessful(topic,
         &ResponseBuf[0], ResponseBuf.size());
-  } catch (const TWireProtocol::TBadMetadataResponse &x) {
+  } catch (const TMetadataProtocol::TBadMetadataResponse &x) {
     BadMetadataResponse.Increment();
     syslog(LOG_ERR, "Failed to parse metadata response: %s", x.what());
     return TTopicAutocreateResult::TryOtherBroker;
@@ -208,7 +211,7 @@ bool TMetadataFetcher::SendRequest(const std::vector<uint8_t> &request,
 bool TMetadataFetcher::ReadResponse(int timeout_ms) {
   assert(this);
   const size_t response_buf_initial_size =
-      std::max<size_t>(65536, KafkaProtocol.GetBytesNeededToGetResponseSize());
+      std::max<size_t>(64 * 1024, REQUEST_OR_RESPONSE_SIZE_SIZE);
   ResponseBuf.resize(response_buf_initial_size);
   size_t byte_count = 0;
 
@@ -230,8 +233,8 @@ bool TMetadataFetcher::ReadResponse(int timeout_ms) {
   size_t response_size = 0;
 
   try {
-    response_size = KafkaProtocol.GetResponseSize(&ResponseBuf[0]);
-  } catch (const TWireProtocol::TBadResponseSize &) {
+    response_size = GetRequestOrResponseSize(&ResponseBuf[0]);
+  } catch (const TBadRequestOrResponseSize &) {
     BadMetadataResponseSize.Increment();
     syslog(LOG_ERR, "Router thread got bad metadata response size");
     return false;

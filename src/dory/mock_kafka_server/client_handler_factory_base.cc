@@ -29,6 +29,8 @@ using namespace Dory::MockKafkaServer;
 TClientHandlerFactoryBase *
 TClientHandlerFactoryBase::CreateFactory(const TConfig &config,
     const TSetup::TInfo &setup) {
-    return (config.ProtocolVersion == 0) ?
-        new TV0ClientHandlerFactory(config, setup) : nullptr;
+  /* TODO: clean up API version logic */
+  return ((config.ProduceApiVersion == 0) &&
+      (config.MetadataApiVersion == 0)) ?
+      new TV0ClientHandlerFactory(config, setup) : nullptr;
 }

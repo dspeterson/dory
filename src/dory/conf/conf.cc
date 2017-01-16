@@ -30,11 +30,13 @@
 
 #include <base/no_default_case.h>
 #include <base/opt.h>
+#include <dory/compress/compression_type.h>
 #include <dory/util/misc_util.h>
 #include <third_party/pugixml-1.7/src/pugixml.hpp>
 
 using namespace Base;
 using namespace Dory;
+using namespace Dory::Compress;
 using namespace Dory::Conf;
 using namespace Dory::Util;
 using namespace pugi;

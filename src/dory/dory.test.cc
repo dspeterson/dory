@@ -56,11 +56,11 @@
 #include <dory/client/tcp_sender.h>
 #include <dory/client/unix_dg_sender.h>
 #include <dory/client/unix_stream_sender.h>
+#include <dory/compress/compression_type.h>
 #include <dory/config.h>
 #include <dory/debug/debug_setup.h>
 #include <dory/dory_server.h>
-#include <dory/kafka_proto/choose_proto.h>
-#include <dory/kafka_proto/v0/wire_proto.h>
+#include <dory/kafka_proto/produce/version_util.h>
 #include <dory/metadata_timestamp.h>
 #include <dory/msg_state_tracker.h>
 #include <dory/router_thread.h>
@@ -75,10 +75,10 @@ using namespace Base;
 using namespace Capped;
 using namespace Dory;
 using namespace Dory::Client;
-using namespace Dory::Conf;
+using namespace Dory::Compress;
 using namespace Dory::Debug;
 using namespace Dory::KafkaProto;
-using namespace Dory::KafkaProto::V0;
+using namespace Dory::KafkaProto::Produce;
 using namespace Dory::MockKafkaServer;
 using namespace Dory::TestUtil;
 using namespace Dory::Util;
@@ -1242,7 +1242,8 @@ namespace {
   }
 
   TEST_F(TDoryTest, CompressionTest) {
-    TWireProto proto(0, 0);
+    std::unique_ptr<TProduceProtocol>
+        produce_protocol(ChooseProduceProto(0));
     std::string topic("scooby_doo");
     std::vector<std::string> kafka_config;
     CreateKafkaConfig(2, topic.c_str(), 2, kafka_config);
@@ -1257,7 +1258,8 @@ namespace {
 
     assert(port);
     std::string msg_body_1("123456789");
-    size_t data_size = msg_body_1.size() + proto.GetSingleMsgOverhead();
+    size_t data_size = msg_body_1.size() +
+        produce_protocol->GetSingleMsgOverhead();
     TDoryTestServer server(port, 1024,
         CreateCompressionTestConf(port, 1 + (10 * data_size)));
     server.UseUnixDgSocket();

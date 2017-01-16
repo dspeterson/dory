@@ -234,12 +234,12 @@ void TProduceResponseProcessor::ProcessNoAckMsgs(TAllTopics &all_topics) {
 }
 
 bool TProduceResponseProcessor::ProcessOneAck(std::list<TMsg::TPtr> &&msg_set,
-    int16_t ack, const std::string &topic, int32_t partition) {
+    int16_t ack, const std::string &topic) {
   assert(this);
   assert(!msg_set.empty());
   Ds.IncrementAckCount();
 
-  switch (Ds.KafkaProtocol.ProcessAck(ack, topic, partition)) {
+  switch (Ds.ProduceProtocol->ProcessAck(ack)) {
     case TAckResultAction::Ok: {  // got successful ACK
       ConnectorGotSuccessfulAck.Increment();
       DebugLogger.LogMsgList(msg_set);
@@ -358,8 +358,7 @@ TProduceResponseProcessor::ProcessResponseAcks(TProduceRequest &request) {
       assert(!msg_set.empty());
 
       if (!ProcessOneAck(std::move(msg_set),
-              ResponseReader.GetCurrentPartitionErrorCode(), topic,
-              partition)) {
+              ResponseReader.GetCurrentPartitionErrorCode(), topic)) {
         got_pause_ack = true;  // we will pause, but keep processing ACKs
       }
 

@@ -44,7 +44,6 @@
 #include <dory/debug/debug_setup.h>
 #include <dory/discard_file_logger.h>
 #include <dory/unix_dg_input_agent.h>
-#include <dory/kafka_proto/wire_protocol.h>
 #include <dory/metadata_timestamp.h>
 #include <dory/msg_dispatch/kafka_dispatcher.h>
 #include <dory/msg_state_tracker.h>
@@ -62,9 +61,11 @@ namespace Dory {
     NO_COPY_SEMANTICS(TDoryServer);
 
     public:
-    DEFINE_ERROR(TUnsupportedProtocolVersion, std::runtime_error,
-                 "Only protocol version 0 (used by Kafka 0.8) is currently "
-                 "supported.  Kafka versions below 0.8 are not supported.");
+    DEFINE_ERROR(TUnsupportedMetadataApiVersion, std::runtime_error,
+                 "Requested metadata API version is not supported.");
+
+    DEFINE_ERROR(TUnsupportedProduceApiVersion, std::runtime_error,
+                 "Requested produce API version is not supported.");
 
     DEFINE_ERROR(TBadRequiredAcks, std::runtime_error,
                  "required_acks value must be >= -1");
@@ -112,12 +113,10 @@ namespace Dory {
       private:
       TServerConfig(std::unique_ptr<const TConfig> &&config,
           Conf::TConf &&conf, Batch::TGlobalBatchConfig &&batch_config,
-          std::unique_ptr<const KafkaProto::TWireProtocol> &&proto,
           size_t pool_block_size)
           : Config(std::move(config)),
             Conf(std::move(conf)),
             BatchConfig(std::move(batch_config)),
-            KafkaProtocol(std::move(proto)),
             PoolBlockSize(pool_block_size) {
       }
 
@@ -126,8 +125,6 @@ namespace Dory {
       Conf::TConf Conf;
 
       Batch::TGlobalBatchConfig BatchConfig;
-
-      std::unique_ptr<const KafkaProto::TWireProtocol> KafkaProtocol;
 
       size_t PoolBlockSize;
 
@@ -244,8 +241,6 @@ namespace Dory {
 
     /* Configuration obtained from config file. */
     Conf::TConf Conf;
-
-    const std::unique_ptr<const KafkaProto::TWireProtocol> KafkaProtocol;
 
     const size_t PoolBlockSize;
 

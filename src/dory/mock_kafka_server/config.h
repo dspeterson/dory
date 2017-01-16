@@ -37,7 +37,9 @@ namespace Dory {
 
       bool LogEcho;
 
-      size_t ProtocolVersion;
+      size_t ProduceApiVersion;
+
+      size_t MetadataApiVersion;
 
       size_t QuietLevel;
 

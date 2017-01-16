@@ -45,7 +45,9 @@ using namespace Base;
 using namespace Socket;
 using namespace Dory;
 using namespace Dory::KafkaProto;
-using namespace Dory::KafkaProto::V0;
+using namespace Dory::KafkaProto::Metadata::V0;
+using namespace Dory::KafkaProto::Produce;
+using namespace Dory::KafkaProto::Produce::V0;
 using namespace Dory::MockKafkaServer;
 
 TV0ClientHandler::~TV0ClientHandler() noexcept {

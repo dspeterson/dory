@@ -35,6 +35,10 @@
 #include <base/io_utils.h>
 #include <base/no_default_case.h>
 #include <base/time_util.h>
+#include <dory/kafka_proto/metadata/metadata_protocol.h>
+#include <dory/kafka_proto/metadata/version_util.h>
+#include <dory/kafka_proto/produce/produce_protocol.h>
+#include <dory/kafka_proto/produce/version_util.h>
 #include <dory/util/connect_to_host.h>
 #include <dory/util/system_error_codes.h>
 #include <dory/util/time_util.h>
@@ -47,7 +51,8 @@ using namespace Dory;
 using namespace Dory::Batch;
 using namespace Dory::Conf;
 using namespace Dory::Debug;
-using namespace Dory::KafkaProto;
+using namespace Dory::KafkaProto::Metadata;
+using namespace Dory::KafkaProto::Produce;
 using namespace Dory::MsgDispatch;
 using namespace Dory::Util;
 
@@ -90,15 +95,14 @@ static unsigned GetRandomNumber() {
 }
 
 TRouterThread::TRouterThread(const TConfig &config, const TConf &conf,
-    const TWireProtocol &kafka_protocol, TAnomalyTracker &anomaly_tracker,
-    TMsgStateTracker &msg_state_tracker,
+    TAnomalyTracker &anomaly_tracker, TMsgStateTracker &msg_state_tracker,
     const Batch::TGlobalBatchConfig &batch_config,
     const Debug::TDebugSetup &debug_setup,
     MsgDispatch::TKafkaDispatcherApi &dispatcher)
     : Config(config),
       TopicRateConf(conf.GetTopicRateConf()),
       MsgRateLimiter(TopicRateConf),
-      SingleMsgOverhead(kafka_protocol.GetSingleMsgOverhead()),
+      SingleMsgOverhead(0),
       MessageMaxBytes(batch_config.GetMessageMaxBytes()),
       AnomalyTracker(anomaly_tracker),
       MsgStateTracker(msg_state_tracker),
@@ -106,7 +110,6 @@ TRouterThread::TRouterThread(const TConfig &config, const TConf &conf,
       Destroying(false),
       NeedToContinueShutdown(false),
       OkShutdown(true),
-      MetadataFetcher(kafka_protocol),
       KnownBrokers(conf.GetInitialBrokers()),
       PerTopicBatcher(batch_config.GetPerTopicConfig()),
       Dispatcher(dispatcher),
@@ -247,7 +250,7 @@ bool TRouterThread::AutocreateTopic(TMsg::TPtr &msg) {
   assert(!KnownBrokers.empty());
   assert(msg);
   const std::string &topic = msg->GetTopic();
-  TMetadataFetcher::TDisconnecter disconnecter(MetadataFetcher);
+  TMetadataFetcher::TDisconnecter disconnecter(*MetadataFetcher);
   size_t chosen = std::rand() % KnownBrokers.size();
   bool fail = false;
 
@@ -259,7 +262,7 @@ bool TRouterThread::AutocreateTopic(TMsg::TPtr &msg) {
            "to broker %s port %d", topic.c_str(), broker.Host.c_str(),
            static_cast<int>(broker.Port));
 
-    if (!MetadataFetcher.Connect(broker.Host, broker.Port)) {
+    if (!MetadataFetcher->Connect(broker.Host, broker.Port)) {
       ConnectFailOnTopicAutocreate.Increment();
       syslog(LOG_ERR, "Router thread failed to connect to broker for topic "
              "autocreate");
@@ -268,7 +271,7 @@ bool TRouterThread::AutocreateTopic(TMsg::TPtr &msg) {
 
     ConnectSuccessOnTopicAutocreate.Increment();
 
-    switch (MetadataFetcher.TopicAutocreate(topic.c_str(),
+    switch (MetadataFetcher->TopicAutocreate(topic.c_str(),
         Config.KafkaSocketTimeout * 1000)) {
       case TMetadataFetcher::TTopicAutocreateResult::Success: {
         syslog(LOG_NOTICE, "Automatic creation of topic [%s] was successful: "
@@ -781,8 +784,34 @@ void TRouterThread::DiscardFinalMsgs() {
   }
 }
 
+void TRouterThread::InitWireProtocol() {
+  assert(this);
+
+  /* This code is just a placeholder, since Dory currently supports only
+     version 0 of the metadata and produce wire protocols.  Eventually code
+     will go here that handles cases where a specific metadata or produce
+     protocol version was not specified as a command line arg.  In this case,
+     we will probe the Kafka cluster and choose the highest version supported
+     by both Dory and the Kafka brokers. */
+  size_t metadata_api_version = Config.MetadataApiVersion.IsKnown() ?
+      *Config.MetadataApiVersion : 0;
+  std::unique_ptr<TMetadataProtocol> metadata_protocol(
+      ChooseMetadataProto(metadata_api_version));
+  assert(metadata_protocol);
+  size_t produce_api_version = Config.ProduceApiVersion.IsKnown() ?
+      *Config.ProduceApiVersion : 0;
+  std::unique_ptr<TProduceProtocol> produce_protocol(
+      ChooseProduceProto(produce_api_version));
+  assert(produce_protocol);
+
+  MetadataFetcher.reset(new TMetadataFetcher(metadata_protocol.release()));
+  SingleMsgOverhead = produce_protocol->GetSingleMsgOverhead();
+  Dispatcher.SetProduceProtocol(produce_protocol.release());
+}
+
 bool TRouterThread::Init() {
   assert(this);
+  InitWireProtocol();
   std::shared_ptr<TMetadata> meta;
 
   syslog(LOG_NOTICE, "Router thread sending initial metadata request");
@@ -1405,7 +1434,7 @@ void TRouterThread::UpdateKnownBrokers(const TMetadata &md) {
 std::shared_ptr<TMetadata> TRouterThread::TryGetMetadata() {
   assert(this);
   assert(!KnownBrokers.empty());
-  TMetadataFetcher::TDisconnecter disconnecter(MetadataFetcher);
+  TMetadataFetcher::TDisconnecter disconnecter(*MetadataFetcher);
   size_t chosen = std::rand() % KnownBrokers.size();
   std::shared_ptr<TMetadata> result;
 
@@ -1416,7 +1445,7 @@ std::shared_ptr<TMetadata> TRouterThread::TryGetMetadata() {
     syslog(LOG_INFO, "Router thread getting metadata from broker %s port %d",
            broker.Host.c_str(), static_cast<int>(broker.Port));
 
-    if (!MetadataFetcher.Connect(broker.Host, broker.Port)) {
+    if (!MetadataFetcher->Connect(broker.Host, broker.Port)) {
       ConnectFailOnTryGetMetadata.Increment();
       syslog(LOG_ERR, "Router thread failed to connect to broker for "
              "metadata");
@@ -1425,7 +1454,7 @@ std::shared_ptr<TMetadata> TRouterThread::TryGetMetadata() {
 
     ConnectSuccessOnTryGetMetadata.Increment();
     result = std::move(
-        MetadataFetcher.Fetch(Config.KafkaSocketTimeout * 1000));
+        MetadataFetcher->Fetch(Config.KafkaSocketTimeout * 1000));
 
     if (result) {
       break;  // success

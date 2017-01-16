@@ -29,7 +29,7 @@
 
 #include <base/no_copy_semantics.h>
 #include <base/opt.h>
-#include <dory/conf/compression_type.h>
+#include <dory/compress/compression_type.h>
 #include <thread/gate.h>
 
 namespace Dory {
@@ -52,7 +52,7 @@ namespace Dory {
 
         int32_t Partition;
 
-        Conf::TCompressionType CompressionType;
+        Compress::TCompressionType CompressionType;
 
         size_t MsgCount;
 
@@ -64,7 +64,7 @@ namespace Dory {
 
         TProduceRequestInfo()
             : Partition(0),
-              CompressionType(Conf::TCompressionType::None),
+              CompressionType(Compress::TCompressionType::None),
               MsgCount(0),
               ReturnedErrorCode(0) {
         }

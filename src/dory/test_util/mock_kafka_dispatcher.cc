@@ -39,6 +39,15 @@ TMockKafkaDispatcher::TMockKafkaDispatcher(const TConfig &/*config*/,
     const TDebugSetup &/*debug_setup*/) {
 }
 
+void TMockKafkaDispatcher::SetProduceProtocol(
+          KafkaProto::Produce::TProduceProtocol * /*protocol*/) noexcept {
+  assert(this);
+
+
+
+
+}
+
 TKafkaDispatcherApi::TState TMockKafkaDispatcher::GetState() const {
   assert(this);
 
