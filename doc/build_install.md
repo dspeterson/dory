@@ -18,12 +18,11 @@ package is not yet available.
 
 ### Building an RPM package
 
-If you will be running Dory on an RPM-based distribution such as CentOS or
-RHEL, you will probably want to build an RPM package.  Here you have two
-choices.  You can build either an RPM package that includes Dory's init script
-and config files or an RPM package that omits these files.  You might prefer
-the latter choice if you want to manage the config files separately using a
-tool such as Puppet.  To choose the first option, do the following:
+Here you have two choices.  You can build either an RPM package that includes
+Dory's init script and config files or an RPM package that omits these files.
+You might prefer the latter choice if you want to manage the config files
+separately using a tool such as Puppet.  To choose the first option, do the
+following:
 
 ```
 cd dory
