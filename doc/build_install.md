@@ -10,6 +10,12 @@ Python virtualenv environment before building, as detailed
 git clone https://github.com/dspeterson/dory.git
 ```
 
+If you will be running Dory on an RPM-based distribution such as CentOS or
+RHEL, you will probably want to build an RPM package (see below).  Otherwise,
+you will need to
+[build Dory directly](build_install.md#building-dory-directly), since a Debian
+package is not yet available.
+
 ### Building an RPM package
 
 If you will be running Dory on an RPM-based distribution such as CentOS or
