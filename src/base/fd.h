@@ -159,7 +159,7 @@ namespace Base {
       assert(&readable);
       assert(&writeable);
       int fds[2];
-      IfLt0(pipe2(fds, flags) < 0);
+      IfLt0(pipe2(fds, flags));
       readable = TFd(fds[0], NoThrow);
       writeable = TFd(fds[1], NoThrow);
     }
