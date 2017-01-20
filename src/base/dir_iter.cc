@@ -54,7 +54,10 @@ bool TDirIter::TryRefresh() const {
 
   while (Pos == NotFresh) {
     dirent *ptr;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     IfLt0(readdir_r(Handle, &DirEnt, &ptr));
+#pragma GCC diagnostic pop
 
     if (ptr) {
       if (DirEnt.d_type != DT_DIR || (strcmp(DirEnt.d_name, "..") &&
