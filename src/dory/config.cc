@@ -37,57 +37,12 @@
 #include <base/no_default_case.h>
 #include <dory/build_id.h>
 #include <dory/util/arg_parse_error.h>
+#include <dory/util/misc_util.h>
 #include <tclap/CmdLine.h>
 
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Util;
-
-static const char *LogLevelToString(int level) {
-  switch (level) {
-    case LOG_ERR:
-      return "LOG_ERR";
-    case LOG_WARNING:
-      return "LOG_WARNING";
-    case LOG_NOTICE:
-      return "LOG_NOTICE";
-    case LOG_INFO:
-      return "LOG_INFO";
-    case LOG_DEBUG:
-      break;
-    NO_DEFAULT_CASE;
-  }
-
-  return "LOG_DEBUG";
-}
-
-static int StringToLogLevel(const char *level_string) {
-  if (!std::strcmp(level_string, "LOG_ERR")) {
-    return LOG_ERR;
-  }
-
-  if (!std::strcmp(level_string, "LOG_WARNING")) {
-    return LOG_WARNING;
-  }
-
-  if (!std::strcmp(level_string, "LOG_NOTICE")) {
-    return LOG_NOTICE;
-  }
-
-  if (!std::strcmp(level_string, "LOG_INFO")) {
-    return LOG_INFO;
-  }
-
-  if (!std::strcmp(level_string, "LOG_DEBUG")) {
-    return LOG_DEBUG;
-  }
-
-  throw std::logic_error("Bad log level string");
-}
-
-static inline int StringToLogLevel(const std::string &level_string) {
-  return StringToLogLevel(level_string.c_str());
-}
 
 static void ProcessModeArg(const std::string &mode_string,
     const char *opt_name, TOpt<mode_t> &result) {

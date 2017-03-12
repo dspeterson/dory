@@ -25,6 +25,8 @@
 #include <cctype>
 #include <cerrno>
 #include <cstdint>
+#include <cstring>
+#include <stdexcept>
 #include <vector>
 
 #include <sys/types.h>
@@ -34,10 +36,53 @@
 #include <base/basename.h>
 #include <base/error_utils.h>
 #include <base/fd.h>
+#include <base/no_default_case.h>
 
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Util;
+
+const char *Dory::Util::LogLevelToString(int level) {
+  switch (level) {
+    case LOG_ERR:
+      return "LOG_ERR";
+    case LOG_WARNING:
+      return "LOG_WARNING";
+    case LOG_NOTICE:
+      return "LOG_NOTICE";
+    case LOG_INFO:
+      return "LOG_INFO";
+    case LOG_DEBUG:
+      break;
+    NO_DEFAULT_CASE;
+  }
+
+  return "LOG_DEBUG";
+}
+
+int Dory::Util::StringToLogLevel(const char *level_string) {
+  if (!std::strcmp(level_string, "LOG_ERR")) {
+    return LOG_ERR;
+  }
+
+  if (!std::strcmp(level_string, "LOG_WARNING")) {
+    return LOG_WARNING;
+  }
+
+  if (!std::strcmp(level_string, "LOG_NOTICE")) {
+    return LOG_NOTICE;
+  }
+
+  if (!std::strcmp(level_string, "LOG_INFO")) {
+    return LOG_INFO;
+  }
+
+  if (!std::strcmp(level_string, "LOG_DEBUG")) {
+    return LOG_DEBUG;
+  }
+
+  throw std::logic_error("Bad log level string");
+}
 
 void Dory::Util::InitSyslog(const char *prog_name, int max_level,
     bool log_echo) {
