@@ -138,37 +138,3 @@ TUnixDgSizeTestResult Dory::Util::TestUnixDgSize(size_t size) {
       TUnixDgSizeTestResult::PassWithLargeSendbuf :
       TUnixDgSizeTestResult::Fail;
 }
-
-size_t Dory::Util::FirstNonWhitespaceIndex(const std::string &s,
-    size_t start_index) {
-  if (start_index >= s.size()) {
-    return s.size();
-  }
-
-  size_t i = start_index;
-
-  for (; (i < s.size()) && std::isspace(s[i]); ++i);
-
-  return i;
-}
-
-void Dory::Util::TrimWhitespace(std::string &s) {
-  /* First remove trailing whitespace, including any newline characters. */
-
-  size_t i = s.size();
-
-  while (i > 0) {
-    size_t j = i - 1;
-
-    if (!std::isspace(s[j])) {
-      break;
-    }
-
-    i = j;
-  }
-
-  s.resize(i);
-
-  /* Now remove leading whitespace. */
-  s.erase(0, FirstNonWhitespaceIndex(s, 0));
-}

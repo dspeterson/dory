@@ -47,11 +47,6 @@ namespace Dory {
        error.  */
     TUnixDgSizeTestResult TestUnixDgSize(size_t size);
 
-    size_t FirstNonWhitespaceIndex(const std::string &s,
-                                   size_t start_index);
-
-    void TrimWhitespace(std::string &s);
-
   }  // Util
 
 }  // Dory
