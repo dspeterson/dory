@@ -23,6 +23,8 @@
 
 #include <utility>
 
+#include <strings.h>
+
 #include <dory/util/misc_util.h>
 
 using namespace Dory;
@@ -33,12 +35,12 @@ using namespace Dory::Util;
 bool TCompressionConf::StringToType(const char *s, TCompressionType &result) {
   assert(s);
 
-  if (StringsMatchNoCase(s, "none")) {
+  if (!strcasecmp(s, "none")) {
     result = TCompressionType::None;
     return true;
   }
 
-  if (StringsMatchNoCase(s, "snappy")) {
+  if (!strcasecmp(s, "snappy")) {
     result = TCompressionType::Snappy;
     return true;
   }
