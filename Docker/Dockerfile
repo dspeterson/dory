@@ -7,7 +7,7 @@ ENV LC_ALL en_US.UTF-8
 
 RUN yum -y group mark convert
 RUN yum -y groupinstall "Development Tools"
-RUN yum -y install git libasan snappy-devel boost-devel rpm-build wget unzip socat
+RUN yum -y install git libasan snappy-devel boost-devel xerces-c-devel rpm-build wget unzip socat
 RUN wget "http://downloads.sourceforge.net/project/scons/scons/2.3.6/scons-2.3.6-1.noarch.rpm?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fscons%2Ffiles%2Fscons%2F2.3.6%2F&ts=1439720375&use_mirror=skylineservers" -O scons.rpm && \
     rpm -i scons.rpm
 
