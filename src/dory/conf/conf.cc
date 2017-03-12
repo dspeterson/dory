@@ -21,140 +21,54 @@
 
 #include <dory/conf/conf.h>
 
-#include <cctype>
-#include <cstring>
-#include <fstream>
-#include <sstream>
+#include <netinet/in.h>
 
-#include <boost/lexical_cast.hpp>
-
+#include <base/file_reader.h>
 #include <base/no_default_case.h>
 #include <base/opt.h>
 #include <dory/compress/compression_type.h>
-#include <dory/util/misc_util.h>
-#include <third_party/pugixml-1.7/src/pugixml.hpp>
+#include <xml/config/config_errors.h>
+#include <xml/config/config_util.h>
+#include <xml/dom_document_util.h>
+#include <xml/xml_string_util.h>
+
+using namespace xercesc;
 
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::Conf;
 using namespace Dory::Util;
-using namespace pugi;
+using namespace Xml;
+using namespace Xml::Config;
 
-static const char *NodeTypeToString(xml_node_type type) {
-  switch (type) {
-    case node_null:
-      break;
-    case node_document:
-      return "DOCUMENT";
-    case node_element:
-      return "ELEMENT";
-    case node_pcdata:
-      return "PCDATA";
-    case node_cdata:
-      return "CDATA";
-    case node_comment:
-      return "COMMENT";
-    case node_pi:
-      return "PROCESSING INSTRUCTION";
-    case node_declaration:
-      return "DECLARATION";
-    case node_doctype:
-      return "DOCTYPE";
-    NO_DEFAULT_CASE;
-  }
-
-  return "NULL";
-}
-
-std::string TConf::TBuilder::TConfigFileOpenFailed::CreateMsg(
-    const std::string &filename) {
-  std::string msg("Failed to open config file [");
-  msg += filename;
-  msg += "]";
-  return std::move(msg);
-}
-
-std::string TConf::TBuilder::TConfigFileReadFailed::CreateMsg(
-    const std::string &filename) {
-  std::string msg("Failed to read config file [");
-  msg += filename;
-  msg += "]";
-  return std::move(msg);
-}
-
-std::string TConf::TBuilder::TConfigFileParseError::CreateMsg(size_t line_num,
-    const char *details) {
-  assert(details);
-  std::string msg("Parse error on line ");
-  msg += boost::lexical_cast<std::string>(line_num);
-  msg += " of config file: [";
-  msg += details;
-  msg += "]";
-  return std::move(msg);
-}
+using TOpts = TAttrReader::TOpts;
 
 TConf::TBuilder::TBuilder()
-    : XmlDoc(nullptr),
-      GotBatchingElem(false),
-      GotCompressionElem(false),
-      GotInitialBrokersElem(false) {
-}
-
-TConf::TBuilder::~TBuilder() noexcept {
-  delete XmlDoc;
+    : XmlDoc(MakeEmptyDomDocumentUniquePtr()) {
 }
 
 TConf TConf::TBuilder::Build(const char *config_filename) {
   assert(this);
   assert(config_filename);
   Reset();
-  std::vector<char> file_contents;
-  ReadConfigFile(config_filename, file_contents);
-  ParseXml(file_contents);
-  xml_node node = XmlDoc->first_child();
 
-  if (!node) {
-    throw TXmlDocumentError("Empty XML document");
+  {
+    std::string xml = TFileReader(config_filename).ReadIntoString();
+    XmlDoc.reset(ParseXmlConfig(xml.data(), xml.size(), "US-ASCII"));
   }
 
-  if ((node.type() != node_declaration) || std::strcmp(node.name(), "xml")) {
-    throw TXmlDocumentError("Missing XML declaration at start of document");
-  }
-
-  xml_attribute attr = node.attribute("encoding");
-
-  if (!attr) {
-    throw TXmlDocumentError("XML declaration is missing 'encoding' attribute");
-  }
-
-  if (!StringsMatchNoCase(attr.value(), "US-ASCII")) {
-    throw TXmlDocumentError("XML document encoding must be US-ASCII");
-  }
-
-  node = node.next_sibling();
-
-  if (!node || (node.type() != node_element)) {
-    throw TXmlDocumentError("XML document missing root element");
-  }
+  const DOMElement *root = XmlDoc->getDocumentElement();
+  assert(root);
+  std::string name = TranscodeToString(root->getNodeName());
 
   /* For backward compatibility with Bruce, allow root node to be named either
      "doryConfig" or "bruceConfig". */
-  if (std::strcmp(node.name(), "doryConfig") &&
-      std::strcmp(node.name(), "bruceConfig")) {
-    throw TXmlDocumentError(
-        std::string("Unknown XML document root element [") + node.name() +
-        "]: [doryConfig] or [bruceConfig] expected");
+  if ((name != "doryConfig") && (name != "bruceConfig")) {
+    throw TUnexpectedElementName(*root, "doryConfig");
   }
 
-  if (node.next_sibling()) {
-    std::string msg("Unexpected XML content after root element [");
-    msg += node.name();
-    msg += "]";
-    throw TXmlDocumentError(msg.c_str());
-  }
-
-  ProcessRootElem(node);
+  ProcessRootElem(*root);
   TConf result = std::move(BuildResult);
   Reset();
   return std::move(result);
@@ -162,489 +76,73 @@ TConf TConf::TBuilder::Build(const char *config_filename) {
 
 void TConf::TBuilder::Reset() {
   assert(this);
-  delete XmlDoc;
-  XmlDoc = nullptr;
+  XmlDoc.reset();
   BuildResult = TConf();
   BatchingConfBuilder.Reset();
   CompressionConfBuilder.Reset();
-  GotBatchingElem = false;
-  GotCompressionElem = false;
-  GotTopicRateElem = false;
-  GotInitialBrokersElem = false;
-}
-
-static void TraceNodeToRoot(const xml_node &node, std::string &result) {
-  result.clear();
-
-  if (!node) {
-    return;
-  }
-
-  xml_node current = node;
-  xml_node next;
-
-  for (; ; ) {
-    next = current.parent();
-
-    if (!next) {
-      break;
-    }
-
-    result += "[";
-    result += current.name();
-    result += "]";
-    current = next;
-  }
-}
-
-void TConf::TBuilder::ThrowOnUnexpectedContent(const xml_node &node) {
-  std::string msg("Unexpected XML content: type [");
-  msg += NodeTypeToString(node.type());
-  msg += "] name [";
-  msg += node.name();
-  msg += "] value [";
-  msg += node.value();
-  msg += "]: ";
-  std::string trace;
-  TraceNodeToRoot(node.parent(), trace);
-  msg += trace;
-  throw TXmlDocumentError(msg);
-}
-
-void TConf::TBuilder::ThrowOnDuplicateElem(const xml_node &duplicate_elem) {
-  std::string msg("Duplicate XML element: ");
-  std::string trace;
-  TraceNodeToRoot(duplicate_elem, trace);
-  msg += trace;
-  throw TXmlDocumentError(msg);
-}
-
-void TConf::TBuilder::ThrowOnMissingElem(const xml_node &parent_elem,
-    const char *missing_elem_name) {
-  std::string msg("Missing XML element [");
-  msg += missing_elem_name;
-  msg += "]: ";
-  std::string trace;
-  TraceNodeToRoot(parent_elem, trace);
-  msg += trace;
-  throw TXmlDocumentError(msg);
-}
-
-void TConf::TBuilder::ThrowOnUnexpectedAttr(const xml_node &elem,
-    const xml_attribute &attr) {
-  std::string msg("Unexpected XML attribute [");
-  msg += attr.name();
-  msg += "]: ";
-  std::string trace;
-  TraceNodeToRoot(elem, trace);
-  msg += trace;
-  throw TXmlDocumentError(msg);
-}
-
-void TConf::TBuilder::ThrowOnDuplicateAttr(const xml_node &elem,
-    const xml_attribute &attr) {
-  std::string msg("Duplicate XML attribute [");
-  msg += attr.name();
-  msg += "]: ";
-  std::string trace;
-  TraceNodeToRoot(elem, trace);
-  msg += trace;
-  throw TXmlDocumentError(msg);
-}
-
-void TConf::TBuilder::ThrowOnMissingAttr(const xml_node &elem,
-    const char *missing_attr_name) {
-  std::string msg("Missing XML attribute [");
-  msg += missing_attr_name;
-  msg += "]: ";
-  std::string trace;
-  TraceNodeToRoot(elem, trace);
-  msg += trace;
-  throw TXmlDocumentError(msg);
-}
-
-void TConf::TBuilder::ThrowOnBadAttrValue(const xml_node &elem,
-    const xml_attribute &attr) {
-  std::string msg("XML attribute [");
-  msg += attr.name();
-  msg += "] has invalid value [";
-  msg += attr.value();
-  msg += "]: ";
-  std::string trace;
-  TraceNodeToRoot(elem, trace);
-  msg += trace;
-  throw TXmlDocumentError(msg);
-}
-
-void TConf::TBuilder::ThrowOnDisableExpected(const xml_node &elem,
-    const xml_attribute &attr) {
-  std::string msg("XML attribute [");
-  msg += attr.name();
-  msg += "] has invalid 0 value: specify \"disable\" instead: ";
-  std::string trace;
-  TraceNodeToRoot(elem, trace);
-  msg += trace;
-  throw TXmlDocumentError(msg);
-}
-
-void TConf::TBuilder::ThrowOnUnexpectedNonemptyConfig(const xml_node &elem,
-    const char *attr_name) {
-  std::string msg("XML attribute [");
-  msg += attr_name;
-  msg += "] has unexpected nonempty value: either specify empty value or "
-         "delete attribute: ";
-  std::string trace;
-  TraceNodeToRoot(elem, trace);
-  msg += trace;
-  throw TXmlDocumentError(msg);
-}
-
-void TConf::TBuilder::ThrowIfNotLeaf(const xml_node &elem) {
-  if (elem.first_child()) {
-    std::string msg("XML element should be a leaf: ");
-    std::string trace;
-    TraceNodeToRoot(elem, trace);
-    msg += trace;
-    throw TXmlDocumentError(msg);
-  }
-}
-
-bool TConf::TBuilder::GetUnsigned(size_t &result, const xml_node &elem,
-    const xml_attribute &attr, bool allow_k, const char *alternate_keyword) {
-  assert(this);
-  size_t num = 0;
-  std::string value = attr.value();
-  TrimWhitespace(value);
-
-  if (alternate_keyword && StringsMatchNoCase(value, alternate_keyword)) {
-    return false;
-  }
-
-  if (value.empty()) {
-    ThrowOnBadAttrValue(elem, attr);
-  }
-
-  bool got_k = false;
-
-  if (allow_k && (std::tolower(value[value.size() - 1]) == 'k')) {
-    got_k = true;
-    value.pop_back();
-    TrimWhitespace(value);
-  }
-
-  try {
-    num = boost::lexical_cast<size_t>(value);
-  } catch (const boost::bad_lexical_cast &) {
-    ThrowOnBadAttrValue(elem, attr);
-  }
-
-  size_t final_num = num;
-
-  if (got_k) {
-    final_num <<= 10;
-
-    /* check for overflow */
-    if ((final_num >> 10) != num) {
-      ThrowOnBadAttrValue(elem, attr);
-    }
-  }
-
-  if (alternate_keyword && !std::strcmp(alternate_keyword, "disable") &&
-      (final_num == 0)) {
-    ThrowOnDisableExpected(elem, attr);
-  }
-
-  result = final_num;
-  return true;
-}
-
-bool TConf::TBuilder::GetBool(const xml_node &elem,
-    const xml_attribute &attr) {
-  assert(this);
-  std::string value = attr.value();
-  TrimWhitespace(value);
-
-  if (StringsMatchNoCase(value, "true")) {
-    return true;
-  }
-
-  if (!StringsMatchNoCase(value, "false")) {
-    ThrowOnBadAttrValue(elem, attr);
-  }
-
-  return false;
-}
-
-bool TConf::TBuilder::ProcessSingleUnsignedValueElem(size_t &result,
-    const xml_node &node, const char *attr_name, bool allow_k,
-    const char *alternate_keyword) {
-  assert(this);
-  ThrowIfNotLeaf(node);
-  bool got_value = false;
-  bool got_alternate_keyword = false;
-
-  for (xml_attribute attr = node.first_attribute();
-       attr;
-       attr = attr.next_attribute()) {
-    if (std::strcmp(attr.name(), attr_name)) {
-      ThrowOnUnexpectedAttr(node, attr);
-    }
-
-    if (got_value) {
-      ThrowOnDuplicateAttr(node, attr);
-    }
-
-    if (!GetUnsigned(result, node, attr, allow_k, alternate_keyword)) {
-      got_alternate_keyword = true;
-    }
-
-    got_value = true;
-  }
-
-  if (!got_value) {
-    ThrowOnMissingAttr(node, attr_name);
-  }
-
-  return !got_alternate_keyword;
-}
-
-std::string TConf::TBuilder::GetBatchingConfigName(
-    const xml_node &config_node) {
-  assert(this);
-  bool got_config_name = false;
-  std::string config_name;
-
-  for (xml_attribute attr = config_node.first_attribute();
-       attr;
-       attr = attr.next_attribute()) {
-    if (std::strcmp(attr.name(), "name")) {
-      ThrowOnUnexpectedAttr(config_node, attr);
-    }
-
-    if (got_config_name) {
-      ThrowOnDuplicateAttr(config_node, attr);
-    }
-
-    config_name = attr.value();
-    got_config_name = true;
-  }
-
-  if (!got_config_name) {
-    ThrowOnMissingAttr(config_node, "name");
-  }
-
-  TrimWhitespace(config_name);
-  return std::move(config_name);
+  TopicRateConfBuilder.Reset();
 }
 
 void TConf::TBuilder::ProcessSingleBatchingNamedConfig(
-    const xml_node &config_node) {
+    const DOMElement &config_elem) {
   assert(this);
-  std::string config_name = GetBatchingConfigName(config_node);
-  bool got_time_elem = false;
-  bool got_messages_elem = false;
-  bool got_bytes_elem = false;
-  bool time_elem_enable = false;
-  bool messages_elem_enable = false;
-  bool bytes_elem_enable = false;
-  size_t time_value = 0;
-  size_t messages_value = 0;
-  size_t bytes_value = 0;
-
-  for (xml_node node = config_node.first_child();
-       node;
-       node = node.next_sibling()) {
-    if (!std::strcmp(node.name(), "time")) {
-      if (got_time_elem) {
-        ThrowOnDuplicateElem(node);
-      }
-
-      time_elem_enable = ProcessSingleUnsignedValueElem(time_value, node,
-          "value", false, "disable");
-      got_time_elem = true;
-    } else if (!std::strcmp(node.name(), "messages")) {
-      if (got_messages_elem) {
-        ThrowOnDuplicateElem(node);
-      }
-
-      messages_elem_enable = ProcessSingleUnsignedValueElem(messages_value,
-          node, "value", true, "disable");
-      got_messages_elem = true;
-    } else if (!std::strcmp(node.name(), "bytes")) {
-      if (got_bytes_elem) {
-        ThrowOnDuplicateElem(node);
-      }
-
-      bytes_elem_enable = ProcessSingleUnsignedValueElem(bytes_value, node,
-          "value", true, "disable");
-      got_bytes_elem = true;
-    } else {
-      ThrowOnUnexpectedContent(node);
-    }
-  }
-
-  if (!got_time_elem) {
-    ThrowOnMissingElem(config_node, "time");
-  }
-
-  if (!got_messages_elem) {
-    ThrowOnMissingElem(config_node, "messages");
-  }
-
-  if (!got_bytes_elem) {
-    ThrowOnMissingElem(config_node, "bytes");
-  }
-
-  if (!time_elem_enable && !messages_elem_enable && !bytes_elem_enable) {
-    std::string msg("Named batching config [");
-    msg += config_name;
-    msg += "] must not have a setting of [disable] for all values";
-    throw TXmlDocumentError(msg);
-  }
-
+  std::string name = TAttrReader::GetString(config_elem, "name",
+      TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
+  RequireAllChildElementLeaves(config_elem);
+  auto subsection_map = GetSubsectionElements(config_elem,
+      {{"time", true}, {"messages", true}, {"bytes", true}}, false);
   TBatchConf::TBatchValues values;
+  values.OptTimeLimit = TAttrReader::GetOptInt2<size_t>(
+      *subsection_map["time"], "value", "disable",
+      TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE);
+  values.OptMsgCount = TAttrReader::GetOptInt2<size_t>(
+      *subsection_map["messages"], "value", "disable",
+      TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE | TOpts::ALLOW_K);
+  values.OptByteCount = TAttrReader::GetOptInt2<size_t>(
+      *subsection_map["bytes"], "value", "disable",
+      TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE | TOpts::ALLOW_K);
 
-  if (time_elem_enable) {
-    values.OptTimeLimit.MakeKnown(time_value);
+  if (values.OptTimeLimit.IsUnknown() && values.OptMsgCount.IsUnknown() &&
+      values.OptByteCount.IsUnknown()) {
+    std::string msg("Named batching config [");
+    msg += name;
+    msg += "] must not have a setting of [disable] for all values";
+    throw TElementError(msg.c_str(), config_elem);
   }
 
-  if (messages_elem_enable) {
-    values.OptMsgCount.MakeKnown(messages_value);
-  }
-
-  if (bytes_elem_enable) {
-    values.OptByteCount.MakeKnown(bytes_value);
-  }
-
-  BatchingConfBuilder.AddNamedConfig(config_name, values);
+  BatchingConfBuilder.AddNamedConfig(name, values);
 }
 
-void TConf::TBuilder::ProcessBatchingNamedConfigs(
-    const xml_node &batching_elem) {
+void TConf::TBuilder::ProcessTopicBatchConfig(const DOMElement &topic_elem,
+    TBatchConf::TTopicAction &action, std::string &config) {
   assert(this);
+  RequireLeaf(topic_elem);
+  std::string action_str = TAttrReader::GetString(topic_elem, "action",
+      TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
 
-  for (xml_node node = batching_elem.first_child();
-       node;
-       node = node.next_sibling()) {
-    if (!std::strcmp(node.name(), "namedConfigs")) {
-      for (xml_node node2 = node.next_sibling();
-           node2;
-           node2 = node2.next_sibling()) {
-        if (!std::strcmp(node2.name(), "namedConfigs")) {
-          ThrowOnDuplicateElem(node2);
-        }
-      }
-
-      for (xml_node config_node = node.first_child();
-           config_node;
-           config_node = config_node.next_sibling()) {
-        if (std::strcmp(config_node.name(), "config")) {
-          ThrowOnUnexpectedContent(config_node);
-        }
-
-        ProcessSingleBatchingNamedConfig(config_node);
-      }
-
-      break;
-    }
-  }
-}
-
-void TConf::TBuilder::ProcessBatchCombinedTopics(const xml_node &node) {
-  assert(this);
-  ThrowIfNotLeaf(node);
-  bool got_enable_attr = false;
-  bool got_config_attr = false;
-  bool enable = false;
-  std::string config;
-
-  for (xml_attribute attr = node.first_attribute();
-       attr;
-       attr = attr.next_attribute()) {
-    if (!std::strcmp(attr.name(), "enable")) {
-      if (got_enable_attr) {
-        ThrowOnDuplicateAttr(node, attr);
-      }
-
-      enable = GetBool(node, attr);
-      got_enable_attr = true;
-    } else if (!std::strcmp(attr.name(), "config")) {
-      if (got_config_attr) {
-        ThrowOnDuplicateAttr(node, attr);
-      }
-
-      config = attr.value();
-      TrimWhitespace(config);
-      got_config_attr = true;
-    } else {
-      ThrowOnUnexpectedAttr(node, attr);
-    }
+  if (!TBatchConf::StringToTopicAction(action_str, action)) {
+    throw TInvalidAttr(topic_elem, "action", action_str.c_str());
   }
 
-  if (!got_enable_attr) {
-    ThrowOnMissingAttr(node, "enable");
-  }
+  TOpt<std::string> opt_name = TAttrReader::GetOptString(topic_elem, "config",
+      TOpts::TRIM_WHITESPACE);
 
-  if (enable && !got_config_attr) {
-    ThrowOnMissingAttr(node, "config");
-  }
-
-  BatchingConfBuilder.SetCombinedTopicsConfig(enable, &config);
-}
-
-void TConf::TBuilder::ProcessTopicBatchConfig(const xml_node &topic_elem,
-    bool is_default, TBatchConf::TTopicAction &action, std::string &config) {
-  assert(this);
-  ThrowIfNotLeaf(topic_elem);
-  bool got_action_attr = false;
-  bool got_config_attr = false;
-  std::string action_str;
-  config.clear();
-
-  for (xml_attribute attr = topic_elem.first_attribute();
-       attr;
-       attr = attr.next_attribute()) {
-    if (!std::strcmp(attr.name(), "action")) {
-      if (got_action_attr) {
-        ThrowOnDuplicateAttr(topic_elem, attr);
-      }
-
-      action_str = attr.value();
-      TrimWhitespace(action_str);
-
-      if (!TBatchConf::StringToTopicAction(action_str, action)) {
-        ThrowOnBadAttrValue(topic_elem, attr);
-      }
-
-      got_action_attr = true;
-    } else if (!std::strcmp(attr.name(), "config")) {
-      if (got_config_attr) {
-        ThrowOnDuplicateAttr(topic_elem, attr);
-      }
-
-      config = attr.value();
-      TrimWhitespace(config);
-      got_config_attr = true;
-    } else if (is_default || std::strcmp(attr.name(), "name")) {
-      ThrowOnUnexpectedAttr(topic_elem, attr);
-    }
-  }
-
-  if (!got_action_attr) {
-    ThrowOnMissingAttr(topic_elem, "action");
+  if (opt_name.IsKnown() && opt_name->empty()) {
+    opt_name.Reset();
   }
 
   switch (action) {
     case TBatchConf::TTopicAction::PerTopic: {
-      if (!got_config_attr) {
-        ThrowOnMissingAttr(topic_elem, "config");
+      if (opt_name.IsUnknown()) {
+        throw TMissingAttrValue(topic_elem, "config");
       }
 
       break;
     }
     case TBatchConf::TTopicAction::CombinedTopics: {
-      if (got_config_attr && !config.empty()) {
-        ThrowOnUnexpectedNonemptyConfig(topic_elem, "config");
+      if (opt_name.IsKnown()) {
+        throw TAttrError("Attribute value should be missing or empty",
+            topic_elem, "config");
       }
 
       break;
@@ -654,542 +152,208 @@ void TConf::TBuilder::ProcessTopicBatchConfig(const xml_node &topic_elem,
     }
     NO_DEFAULT_CASE;
   }
-}
 
-void TConf::TBuilder::ProcessBatchSingleTopicConfig(const xml_node &node) {
-  assert(this);
-  std::string topic_name;
-  bool got_name = false;
+  config.clear();
 
-  for (xml_attribute attr = node.first_attribute();
-       attr;
-       attr = attr.next_attribute()) {
-    if (!std::strcmp(attr.name(), "name")) {
-      if (got_name) {
-        ThrowOnDuplicateAttr(node, attr);
-      }
-
-      topic_name = attr.value();
-      got_name = true;
-    }
-  }
-
-  TBatchConf::TTopicAction action = TBatchConf::TTopicAction::Disable;
-  std::string config;
-  ProcessTopicBatchConfig(node, false, action, config);
-  BatchingConfBuilder.SetTopicConfig(topic_name, action, &config);
-}
-
-void TConf::TBuilder::ProcessBatchTopicConfigs(
-    const xml_node &topic_configs_elem) {
-  assert(this);
-
-  for (xml_node node = topic_configs_elem.first_child();
-       node;
-       node = node.next_sibling()) {
-    if (std::strcmp(node.name(), "topic")) {
-      ThrowOnUnexpectedContent(node);
-    }
-
-    ThrowIfNotLeaf(node);
-    ProcessBatchSingleTopicConfig(node);
+  if (opt_name.IsKnown()) {
+    config = *opt_name;
   }
 }
 
-void TConf::TBuilder::ProcessBatchingElem(const xml_node &batching_elem) {
+void TConf::TBuilder::ProcessBatchingElem(const DOMElement &batching_elem) {
   assert(this);
-  ProcessBatchingNamedConfigs(batching_elem);
-  std::string config;
-  bool got_produce_request_data_limit = false;
-  bool got_message_max_bytes = false;
-  bool got_combined_topics = false;
-  bool got_default_topic = false;
-  bool got_topic_configs = false;
+  auto subsection_map = GetSubsectionElements(batching_elem,
+      {
+        {"namedConfigs", false}, {"produceRequestDataLimit", false},
+        {"messageMaxBytes", false}, {"combinedTopics", false},
+        {"defaultTopic", false}, {"topicConfigs", false}
+      },
+      false);
 
-  for (xml_node node = batching_elem.first_child();
-       node;
-       node = node.next_sibling()) {
-    if (!std::strcmp(node.name(), "produceRequestDataLimit")) {
-      if (got_produce_request_data_limit) {
-        ThrowOnDuplicateElem(node);
-      }
+  if (subsection_map.count("namedConfigs")) {
+    const DOMElement &elem = *subsection_map["namedConfigs"];
+    auto item_vec = GetItemListElements(elem, "config");
 
-      size_t limit = 0;
+    for (const auto &item: item_vec) {
+      ProcessSingleBatchingNamedConfig(*item);
+    }
+  }
 
-      if (!ProcessSingleUnsignedValueElem(limit, node, "value", true,
-          nullptr)) {
-        limit = 0;
-      }
+  if (subsection_map.count("produceRequestDataLimit")) {
+    const DOMElement &elem = *subsection_map["produceRequestDataLimit"];
+    RequireLeaf(elem);
+    BatchingConfBuilder.SetProduceRequestDataLimit(
+        TAttrReader::GetInt<size_t>(elem, "value", TOpts::ALLOW_K));
+  }
 
-      BatchingConfBuilder.SetProduceRequestDataLimit(limit);
-      got_produce_request_data_limit = true;
-    } else if (!std::strcmp(node.name(), "messageMaxBytes")) {
-      if (got_message_max_bytes) {
-        ThrowOnDuplicateElem(node);
-      }
+  if (subsection_map.count("messageMaxBytes")) {
+    const DOMElement &elem = *subsection_map["messageMaxBytes"];
+    RequireLeaf(elem);
+    BatchingConfBuilder.SetMessageMaxBytes(
+        TAttrReader::GetInt<size_t>(elem, "value", TOpts::ALLOW_K));
+  }
 
-      size_t message_max_bytes = 0;
+  if (subsection_map.count("combinedTopics")) {
+    const DOMElement &elem = *subsection_map["combinedTopics"];
+    RequireLeaf(elem);
+    std::string config;
+    bool enable = TAttrReader::GetBool(elem, "enable");
 
-      if (!ProcessSingleUnsignedValueElem(message_max_bytes, node, "value",
-                                          true, nullptr)) {
-        message_max_bytes = 0;
-      }
+    if (enable) {
+      config = TAttrReader::GetString(elem, "config",
+          TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
+    }
 
-      BatchingConfBuilder.SetMessageMaxBytes(message_max_bytes);
-      got_message_max_bytes = true;
-    } else if (!std::strcmp(node.name(), "combinedTopics")) {
-      if (got_combined_topics) {
-        ThrowOnDuplicateElem(node);
-      }
+    BatchingConfBuilder.SetCombinedTopicsConfig(enable, &config);
+  }
 
-      ProcessBatchCombinedTopics(node);
-      got_combined_topics = true;
-    } else if (!std::strcmp(node.name(), "defaultTopic")) {
-      if (got_default_topic) {
-        ThrowOnDuplicateElem(node);
-      }
+  if (subsection_map.count("defaultTopic")) {
+    TBatchConf::TTopicAction action = TBatchConf::TTopicAction::Disable;
+    std::string config;
+    ProcessTopicBatchConfig(*subsection_map["defaultTopic"], action, config);
+    BatchingConfBuilder.SetDefaultTopicConfig(action, &config);
+  }
 
+  if (subsection_map.count("topicConfigs")) {
+    auto item_vec = GetItemListElements(*subsection_map["topicConfigs"],
+        "topic");
+
+    for (const auto &item: item_vec) {
+      const DOMElement &elem = *item;
+      std::string name = TAttrReader::GetString(elem, "name",
+          TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
       TBatchConf::TTopicAction action = TBatchConf::TTopicAction::Disable;
-      ProcessTopicBatchConfig(node, true, action, config);
-      BatchingConfBuilder.SetDefaultTopicConfig(action, &config);
-      got_default_topic = true;
-    } else if (!std::strcmp(node.name(), "topicConfigs")) {
-      if (got_topic_configs) {
-        ThrowOnDuplicateElem(node);
-      }
-
-      ProcessBatchTopicConfigs(node);
-      got_topic_configs = true;
-    } else if (std::strcmp(node.name(), "namedConfigs")) {
-      ThrowOnUnexpectedContent(node);
+      std::string config;
+      ProcessTopicBatchConfig(elem, action, config);
+      BatchingConfBuilder.SetTopicConfig(name, action, &config);
     }
   }
 
   BuildResult.BatchConf = BatchingConfBuilder.Build();
 }
 
-std::string TConf::TBuilder::ProcessCompressionTopicConfig(
-    const xml_node &topic_elem, bool is_default) {
-  assert(this);
-  ThrowIfNotLeaf(topic_elem);
-  bool got_config_attr = false;
-  std::string config;
-
-  for (xml_attribute attr = topic_elem.first_attribute();
-       attr;
-       attr = attr.next_attribute()) {
-    if (!std::strcmp(attr.name(), "config")) {
-      if (got_config_attr) {
-        ThrowOnDuplicateAttr(topic_elem, attr);
-      }
-
-      config = attr.value();
-      TrimWhitespace(config);
-      got_config_attr = true;
-    } else if (is_default || std::strcmp(attr.name(), "name")) {
-      ThrowOnUnexpectedAttr(topic_elem, attr);
-    }
-  }
-
-  if (!got_config_attr) {
-    ThrowOnMissingAttr(topic_elem, "config");
-  }
-
-  return std::move(config);
-}
-
-void TConf::TBuilder::ProcessCompressionSingleTopicConfig(
-    const xml_node &node) {
-  assert(this);
-  std::string topic_name;
-  bool got_name = false;
-
-  for (xml_attribute attr = node.first_attribute();
-       attr;
-       attr = attr.next_attribute()) {
-    if (!std::strcmp(attr.name(), "name")) {
-      if (got_name) {
-        ThrowOnDuplicateAttr(node, attr);
-      }
-
-      topic_name = attr.value();
-      got_name = true;
-    }
-  }
-
-  std::string config_name = ProcessCompressionTopicConfig(node, false);
-  CompressionConfBuilder.SetTopicConfig(topic_name, config_name);
-}
-
-void TConf::TBuilder::ProcessCompressionTopicConfigsElem(
-    const xml_node &topic_configs_elem) {
-  assert(this);
-
-  for (xml_node node = topic_configs_elem.first_child();
-       node;
-       node = node.next_sibling()) {
-    if (std::strcmp(node.name(), "topic")) {
-      ThrowOnUnexpectedContent(node);
-    }
-
-    ThrowIfNotLeaf(node);
-    ProcessCompressionSingleTopicConfig(node);
-  }
-}
-
 void TConf::TBuilder::ProcessSingleCompressionNamedConfig(
-    const xml_node &config_node) {
+    const DOMElement &config_elem) {
   assert(this);
-  ThrowIfNotLeaf(config_node);
-  bool got_name = false;
-  bool got_type = false;
-  bool got_min_size = false;
-  std::string name;
+  std::string name = TAttrReader::GetString(config_elem, "name",
+      TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
   TCompressionType type = TCompressionType::None;
+  std::string type_str = TAttrReader::GetString(config_elem, "type",
+      TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
+
+  if (!TCompressionConf::StringToType(type_str, type)) {
+    throw TInvalidAttr("Invalid compression type attribute", config_elem,
+        "type", type_str.c_str());
+  }
+
   size_t min_size = 0;
 
-  for (xml_attribute attr = config_node.first_attribute();
-       attr;
-       attr = attr.next_attribute()) {
-    if (!std::strcmp(attr.name(), "name")) {
-      if (got_name) {
-        ThrowOnDuplicateAttr(config_node, attr);
-      }
-
-      name = attr.value();
-      TrimWhitespace(name);
-
-      if (name.empty()) {
-        ThrowOnBadAttrValue(config_node, attr);
-      }
-
-      got_name = true;
-    } else if (!std::strcmp(attr.name(), "type")) {
-      if (got_type) {
-        ThrowOnDuplicateAttr(config_node, attr);
-      }
-
-      std::string type_str = attr.value();
-      TrimWhitespace(type_str);
-
-      if (!TCompressionConf::StringToType(type_str, type)) {
-        ThrowOnBadAttrValue(config_node, attr);
-      }
-
-      got_type = true;
-    } else if (!std::strcmp(attr.name(), "minSize")) {
-      if (got_min_size) {
-        ThrowOnDuplicateAttr(config_node, attr);
-      }
-
-      GetUnsigned(min_size, config_node, attr, true, nullptr);
-      got_min_size = true;
-    } else {
-      ThrowOnUnexpectedAttr(config_node, attr);
-    }
-  }
-
-  if (!got_name) {
-    ThrowOnMissingAttr(config_node, "name");
-  }
-
-  if (!got_type) {
-    ThrowOnMissingAttr(config_node, "type");
-  }
-
-  if (!got_min_size && (type != TCompressionType::None)) {
-    ThrowOnMissingAttr(config_node, "minSize");
+  if (type != TCompressionType::None) {
+    min_size = TAttrReader::GetInt<size_t>(config_elem, "minSize",
+        TOpts::ALLOW_K);
   }
 
   CompressionConfBuilder.AddNamedConfig(name, type, min_size);
 }
 
-void TConf::TBuilder::ProcessCompressionNamedConfigs(
-    const xml_node &compression_elem) {
+void TConf::TBuilder::ProcessCompressionElem(
+    const DOMElement &compression_elem) {
   assert(this);
-  bool found = false;
+  auto subsection_map = GetSubsectionElements(compression_elem,
+      {
+        {"namedConfigs", false}, {"sizeThresholdPercent", false},
+        {"defaultTopic", false}, {"topicConfigs", false}
+      }, false);
 
-  for (xml_node node = compression_elem.first_child();
-       node;
-       node = node.next_sibling()) {
-    if (!std::strcmp(node.name(), "namedConfigs")) {
-      found = true;
+  if (subsection_map.count("namedConfigs")) {
+    const DOMElement &elem = *subsection_map["namedConfigs"];
+    RequireAllChildElementLeaves(elem);
+    auto item_vec = GetItemListElements(elem, "config");
 
-      for (xml_node node2 = node.next_sibling();
-           node2;
-           node2 = node2.next_sibling()) {
-        if (!std::strcmp(node2.name(), "namedConfigs")) {
-          ThrowOnDuplicateElem(node2);
-        }
-      }
-
-      for (xml_node config_node = node.first_child();
-           config_node;
-           config_node = config_node.next_sibling()) {
-        if (std::strcmp(config_node.name(), "config")) {
-          ThrowOnUnexpectedContent(config_node);
-        }
-
-        ProcessSingleCompressionNamedConfig(config_node);
-      }
-
-      break;
+    for (const auto &item: item_vec) {
+      ProcessSingleCompressionNamedConfig(*item);
     }
   }
 
-  if (!found) {
-    ThrowOnMissingElem(compression_elem, "namedConfigs");
+  if (subsection_map.count("sizeThresholdPercent")) {
+    const DOMElement &elem = *subsection_map["sizeThresholdPercent"];
+    RequireLeaf(elem);
+    CompressionConfBuilder.SetSizeThresholdPercent(
+        TAttrReader::GetInt<size_t>(elem, "value"));
   }
-}
 
-void TConf::TBuilder::ProcessCompressionElem(
-    const xml_node &compression_elem) {
-  assert(this);
-  ProcessCompressionNamedConfigs(compression_elem);
-  bool got_size_threshold_percent = false;
-  bool got_default_topic = false;
-  bool got_topic_configs = false;
+  if (subsection_map.count("defaultTopic")) {
+    const DOMElement &elem = *subsection_map["defaultTopic"];
+    RequireLeaf(elem);
+    CompressionConfBuilder.SetDefaultTopicConfig(
+        TAttrReader::GetString(elem, "config",
+            TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY));
+  }
 
-  for (xml_node node = compression_elem.first_child();
-       node;
-       node = node.next_sibling()) {
-    if (!std::strcmp(node.name(), "sizeThresholdPercent")) {
-      if (got_size_threshold_percent) {
-        ThrowOnDuplicateElem(node);
-      }
+  if (subsection_map.count("topicConfigs")) {
+    const DOMElement &topic_configs_elem = *subsection_map["topicConfigs"];
+    RequireAllChildElementLeaves(topic_configs_elem);
+    auto item_vec = GetItemListElements(topic_configs_elem, "topic");
 
-      size_t size_threshold_percent = 0;
-      ProcessSingleUnsignedValueElem(size_threshold_percent, node, "value",
-          false, nullptr);
-      CompressionConfBuilder.SetSizeThresholdPercent(size_threshold_percent);
-      got_size_threshold_percent = true;
-    } else if (!std::strcmp(node.name(), "defaultTopic")) {
-      if (got_default_topic) {
-        ThrowOnDuplicateElem(node);
-      }
-
-      std::string config_name = ProcessCompressionTopicConfig(node, true);
-      CompressionConfBuilder.SetDefaultTopicConfig(config_name);
-      got_default_topic = true;
-    } else if (!std::strcmp(node.name(), "topicConfigs")) {
-      if (got_topic_configs) {
-        ThrowOnDuplicateElem(node);
-      }
-
-      ProcessCompressionTopicConfigsElem(node);
-      got_topic_configs = true;
-    } else if (std::strcmp(node.name(), "namedConfigs")) {
-      ThrowOnUnexpectedContent(node);
+    for (const auto &item: item_vec) {
+      const DOMElement &elem = *item;
+      std::string name = TAttrReader::GetString(elem, "name",
+          TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
+      CompressionConfBuilder.SetTopicConfig(name,
+          TAttrReader::GetString(elem, "config",
+              TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY));
     }
   }
 
   BuildResult.CompressionConf = CompressionConfBuilder.Build();
 }
 
-void TConf::TBuilder::ProcessSingleTopicRateNamedConfig(
-    const xml_node &config_node) {
+void TConf::TBuilder::ProcessTopicRateElem(const DOMElement &topic_rate_elem) {
   assert(this);
-  ThrowIfNotLeaf(config_node);
-  bool got_name = false;
-  bool got_interval = false;
-  bool got_max_count = false;
-  std::string name;
-  size_t interval = 1;
-  TOpt<size_t> opt_max_count;
+  auto subsection_map = GetSubsectionElements(topic_rate_elem,
+      {
+        {"namedConfigs", true}, {"defaultTopic", false},
+        {"topicConfigs", false}
+      }, false);
+  const DOMElement &named_configs_elem = *subsection_map["namedConfigs"];
+  RequireAllChildElementLeaves(named_configs_elem);
+  auto item_vec = GetItemListElements(named_configs_elem, "config");
 
-  for (xml_attribute attr = config_node.first_attribute();
-       attr;
-       attr = attr.next_attribute()) {
-    if (!std::strcmp(attr.name(), "name")) {
-      if (got_name) {
-        ThrowOnDuplicateAttr(config_node, attr);
-      }
+  for (const auto &item: item_vec) {
+    const DOMElement &elem = *item;
+    std::string name = TAttrReader::GetString(elem, "name",
+        TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
+    TOpt<size_t> opt_max_count = TAttrReader::GetOptInt2<size_t>(elem,
+        "maxCount", "unlimited",
+        TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE | TOpts::ALLOW_K);
 
-      name = attr.value();
-      TrimWhitespace(name);
-
-      if (name.empty()) {
-        ThrowOnBadAttrValue(config_node, attr);
-      }
-
-      got_name = true;
-    } else if (!std::strcmp(attr.name(), "interval")) {
-      if (got_interval) {
-        ThrowOnDuplicateAttr(config_node, attr);
-      }
-
-      GetUnsigned(interval, config_node, attr, false, nullptr);
-      got_interval = true;
-    } else if (!std::strcmp(attr.name(), "maxCount")) {
-      if (got_max_count) {
-        ThrowOnDuplicateAttr(config_node, attr);
-      }
-
-      size_t max_count = 0;
-
-      /* A false return value from GetUnsigned() indicates that "unlimited" was
-         specified. */
-      if (GetUnsigned(max_count, config_node, attr, true, "unlimited")) {
-        opt_max_count.MakeKnown(max_count);
-      }
-
-      got_max_count = true;
+    if (opt_max_count.IsKnown()) {
+      TopicRateConfBuilder.AddBoundedNamedConfig(name,
+          TAttrReader::GetInt<size_t>(elem, "interval"), *opt_max_count);
     } else {
-      ThrowOnUnexpectedAttr(config_node, attr);
+      TopicRateConfBuilder.AddUnlimitedNamedConfig(name);
     }
   }
 
-  if (!got_name) {
-    ThrowOnMissingAttr(config_node, "name");
+  if (subsection_map.count("defaultTopic")) {
+    const DOMElement &elem = *subsection_map["defaultTopic"];
+    RequireLeaf(elem);
+    TopicRateConfBuilder.SetDefaultTopicConfig(TAttrReader::GetString(
+        elem, "config", TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY));
   }
 
-  if (!got_interval) {
-    ThrowOnMissingAttr(config_node, "interval");
-  }
+  if (subsection_map.count("topicConfigs")) {
+    const DOMElement &elem = *subsection_map["topicConfigs"];
+    RequireAllChildElementLeaves(elem);
+    auto topic_item_vec = GetItemListElements(elem, "topic");
 
-  if (!got_max_count) {
-    ThrowOnMissingAttr(config_node, "maxCount");
-  }
-
-  if (opt_max_count.IsKnown()) {
-    TopicRateConfBuilder.AddBoundedNamedConfig(name, interval, *opt_max_count);
-  } else {
-    TopicRateConfBuilder.AddUnlimitedNamedConfig(name);
-  }
-}
-
-void TConf::TBuilder::ProcessTopicRateNamedConfigs(
-    const xml_node &topic_rate_elem) {
-  assert(this);
-  bool found = false;
-
-  for (xml_node node = topic_rate_elem.first_child();
-       node;
-       node = node.next_sibling()) {
-    if (!std::strcmp(node.name(), "namedConfigs")) {
-      found = true;
-
-      for (xml_node node2 = node.next_sibling();
-           node2;
-           node2 = node2.next_sibling()) {
-        if (!std::strcmp(node2.name(), "namedConfigs")) {
-          ThrowOnDuplicateElem(node2);
-        }
-      }
-
-      for (xml_node config_node = node.first_child();
-           config_node;
-           config_node = config_node.next_sibling()) {
-        if (std::strcmp(config_node.name(), "config")) {
-          ThrowOnUnexpectedContent(config_node);
-        }
-
-        ProcessSingleTopicRateNamedConfig(config_node);
-      }
-
-      break;
-    }
-  }
-
-  if (!found) {
-    ThrowOnMissingElem(topic_rate_elem, "namedConfigs");
-  }
-}
-
-std::string TConf::TBuilder::ProcessTopicRateTopicConfig(
-    const xml_node &topic_elem, bool is_default) {
-  assert(this);
-  ThrowIfNotLeaf(topic_elem);
-  bool got_config_attr = false;
-  std::string config;
-
-  for (xml_attribute attr = topic_elem.first_attribute();
-       attr;
-       attr = attr.next_attribute()) {
-    if (!std::strcmp(attr.name(), "config")) {
-      if (got_config_attr) {
-        ThrowOnDuplicateAttr(topic_elem, attr);
-      }
-
-      config = attr.value();
-      TrimWhitespace(config);
-      got_config_attr = true;
-    } else if (is_default || std::strcmp(attr.name(), "name")) {
-      ThrowOnUnexpectedAttr(topic_elem, attr);
-    }
-  }
-
-  if (!got_config_attr) {
-    ThrowOnMissingAttr(topic_elem, "config");
-  }
-
-  return std::move(config);
-}
-
-void TConf::TBuilder::ProcessTopicRateSingleTopicConfig(const xml_node &node) {
-  assert(this);
-  std::string topic_name;
-  bool got_name = false;
-
-  for (xml_attribute attr = node.first_attribute();
-       attr;
-       attr = attr.next_attribute()) {
-    if (!std::strcmp(attr.name(), "name")) {
-      if (got_name) {
-        ThrowOnDuplicateAttr(node, attr);
-      }
-
-      topic_name = attr.value();
-      got_name = true;
-    }
-  }
-
-  std::string config_name = ProcessTopicRateTopicConfig(node, false);
-  TopicRateConfBuilder.SetTopicConfig(topic_name, config_name);
-}
-
-void TConf::TBuilder::ProcessTopicRateTopicConfigsElem(
-    const xml_node &topic_configs_elem) {
-  assert(this);
-
-  for (xml_node node = topic_configs_elem.first_child();
-       node;
-       node = node.next_sibling()) {
-    if (std::strcmp(node.name(), "topic")) {
-      ThrowOnUnexpectedContent(node);
-    }
-
-    ThrowIfNotLeaf(node);
-    ProcessTopicRateSingleTopicConfig(node);
-  }
-}
-
-void TConf::TBuilder::ProcessTopicRateElem(const xml_node &topic_rate_elem) {
-  assert(this);
-  ProcessTopicRateNamedConfigs(topic_rate_elem);
-  bool got_default_topic = false;
-  bool got_topic_configs = false;
-
-  for (xml_node node = topic_rate_elem.first_child();
-       node;
-       node = node.next_sibling()) {
-    if (!std::strcmp(node.name(), "defaultTopic")) {
-      if (got_default_topic) {
-        ThrowOnDuplicateElem(node);
-      }
-
-      std::string config_name = ProcessTopicRateTopicConfig(node, true);
-      TopicRateConfBuilder.SetDefaultTopicConfig(config_name);
-      got_default_topic = true;
-    } else if (!std::strcmp(node.name(), "topicConfigs")) {
-      if (got_topic_configs) {
-        ThrowOnDuplicateElem(node);
-      }
-
-      ProcessTopicRateTopicConfigsElem(node);
-      got_topic_configs = true;
-    } else if (std::strcmp(node.name(), "namedConfigs")) {
-      ThrowOnUnexpectedContent(node);
+    for (const auto &item: topic_item_vec) {
+      const DOMElement &topic_elem = *item;
+      std::string name = TAttrReader::GetString(topic_elem, "name",
+          TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
+      TopicRateConfBuilder.SetTopicConfig(name,
+          TAttrReader::GetString(topic_elem, "config",
+              TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY));
     }
   }
 
@@ -1197,205 +361,50 @@ void TConf::TBuilder::ProcessTopicRateElem(const xml_node &topic_rate_elem) {
 }
 
 void TConf::TBuilder::ProcessInitialBrokersElem(
-    const xml_node &initial_brokers_elem) {
+    const DOMElement &initial_brokers_elem) {
   assert(this);
   std::vector<TBroker> broker_vec;
-  std::string value;
+  RequireAllChildElementLeaves(initial_brokers_elem);
+  auto broker_elem_vec = GetItemListElements(initial_brokers_elem, "broker");
 
-  for (xml_node node = initial_brokers_elem.first_child();
-       node;
-       node = node.next_sibling()) {
-    if ((node.type() != node_element) ||
-        std::strcmp(node.name(), "broker")) {
-      ThrowOnUnexpectedContent(node);
-    }
-
-    ThrowIfNotLeaf(node);
-    bool got_host = false;
-    std::string host;
-    bool got_port = false;
-    in_port_t port = DEFAULT_BROKER_PORT;
-
-    for (xml_attribute attr = node.first_attribute();
-         attr;
-         attr = attr.next_attribute()) {
-      if (!strcmp(attr.name(), "host")) {
-        if (got_host) {
-          ThrowOnDuplicateAttr(node, attr);
-        }
-
-        host = attr.value();
-        TrimWhitespace(host);
-
-        if (host.empty()) {
-          throw TXmlDocumentError("[broker] element of [initialBrokers] has "
-              "empty [host] attribute");
-        }
-
-        got_host = true;
-      } else if (!strcmp(attr.name(), "port")) {
-        if (got_port) {
-          ThrowOnDuplicateAttr(node, attr);
-        }
-
-        value = attr.value();
-        TrimWhitespace(value);
-
-        try {
-          port = boost::lexical_cast<in_port_t>(value);
-        } catch (const boost::bad_lexical_cast &) {
-          ThrowOnBadAttrValue(node, attr);
-        }
-
-        if (port == 0) {
-          ThrowOnBadAttrValue(node, attr);
-        }
-
-        got_port = true;
-      } else {
-        ThrowOnUnexpectedAttr(node, attr);
-      }
-    }
-
-    if (!got_host) {
-      ThrowOnMissingAttr(node, "host");
-    }
-
+  for (const auto &item : broker_elem_vec) {
+    const DOMElement &elem = *item;
+    std::string host = TAttrReader::GetString(elem, "host",
+        TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
+    TOpt<in_port_t> opt_port = TAttrReader::GetOptInt<in_port_t>(elem, "port");
+    in_port_t port = opt_port.IsKnown() ?
+        *opt_port : in_port_t(DEFAULT_BROKER_PORT);
     broker_vec.push_back(TBroker(std::move(host), port));
   }
 
   if (broker_vec.empty()) {
-    throw TXmlDocumentError(
-        "[initialBrokers] element contains no [broker] elements");
+    throw TElementError("Initial brokers missing", initial_brokers_elem);
   }
 
   BuildResult.InitialBrokers = std::move(broker_vec);
 }
 
-void TConf::TBuilder::ProcessRootElem(const xml_node &root_elem) {
+void TConf::TBuilder::ProcessRootElem(const DOMElement &root_elem) {
   assert(this);
+  auto subsection_map = GetSubsectionElements(root_elem,
+      {
+        {"batching", true}, {"compression", true},
+        {"topicRateLimiting", false}, {"initialBrokers", true}
+      },
+      false);
 
-  for (xml_node node = root_elem.first_child();
-       node;
-       node = node.next_sibling()) {
-    if (node.type() != node_element) {
-      ThrowOnUnexpectedContent(node);
-    }
+  ProcessBatchingElem(*subsection_map["batching"]);
+  ProcessCompressionElem(*subsection_map["compression"]);
 
-    if (!std::strcmp(node.name(), "batching")) {
-      if (GotBatchingElem) {
-        ThrowOnDuplicateElem(node);
-      }
-
-      ProcessBatchingElem(node);
-      GotBatchingElem = true;
-    } else if (!std::strcmp(node.name(), "compression")) {
-      if (GotCompressionElem) {
-        ThrowOnDuplicateElem(node);
-      }
-
-      ProcessCompressionElem(node);
-      GotCompressionElem = true;
-    } else if (!std::strcmp(node.name(), "topicRateLimiting")) {
-      if (GotTopicRateElem) {
-        ThrowOnDuplicateElem(node);
-      }
-
-      ProcessTopicRateElem(node);
-      GotTopicRateElem = true;
-    } else if (!std::strcmp(node.name(), "initialBrokers")) {
-      if (GotInitialBrokersElem) {
-        ThrowOnDuplicateElem(node);
-      }
-
-      ProcessInitialBrokersElem(node);
-      GotInitialBrokersElem = true;
-    } else {
-      ThrowOnUnexpectedContent(node);
-    }
-  }
-
-  if (!GotBatchingElem) {
-    ThrowOnMissingElem(root_elem, "batching");
-  }
-
-  if (!GotCompressionElem) {
-    ThrowOnMissingElem(root_elem, "compression");
-  }
-
-  if (!GotTopicRateElem) {
-    /* If the config file has no <topicRateLimiting> element, create a default
+  if (subsection_map.count("topicRateLimiting")) {
+    ProcessTopicRateElem(*subsection_map["topicRateLimiting"]);
+  } else {
+    /* The config file has no <topicRateLimiting> element, so create a default
        config that imposes no rate limit on any topic. */
     TopicRateConfBuilder.AddUnlimitedNamedConfig("unlimited");
     TopicRateConfBuilder.SetDefaultTopicConfig("unlimited");
     BuildResult.TopicRateConf = TopicRateConfBuilder.Build();
   }
 
-  if (!GotInitialBrokersElem) {
-    ThrowOnMissingElem(root_elem, "initialBrokers");
-  }
-}
-
-void TConf::TBuilder::ReadConfigFile(const char *config_filename,
-    std::vector<char> &file_contents) {
-  assert(this);
-  std::ifstream infile(config_filename,
-                       std::ios_base::in | std::ios_base::binary);
-
-  if (!infile.is_open()) {
-    throw TConfigFileOpenFailed(config_filename);
-  }
-
-  infile.exceptions(std::ifstream::badbit);
-
-  try {
-    infile.seekg(0, infile.end);
-    size_t size = infile.tellg();
-    infile.seekg(0);
-    file_contents.resize(size);
-    infile.read(reinterpret_cast<char *>(&file_contents[0]),
-                file_contents.size());
-  } catch (const std::ifstream::failure &) {
-    throw TConfigFileReadFailed(config_filename);
-  }
-}
-
-void TConf::TBuilder::ThrowOnParseError(
-    const std::vector<char> &file_contents,
-    const xml_parse_result &result) {
-  assert(this);
-  std::string s(&file_contents[0], file_contents.size());
-  std::istringstream in(s);
-  std::string line;
-  size_t line_num = 0;
-  size_t byte_count = 0;
-
-  while (std::getline(in, line)) {
-    ++line_num;
-    byte_count += line.size();
-
-    if (byte_count >= static_cast<size_t>(result.offset)) {
-      break;
-    }
-  }
-
-  throw TConfigFileParseError(line_num, result.description());
-}
-
-void TConf::TBuilder::ParseXml(const std::vector<char> &file_contents) {
-  assert(this);
-
-  if (file_contents.empty()) {
-    throw TConfigFileIsEmpty();
-  }
-
-  delete XmlDoc;
-  XmlDoc = nullptr;
-  XmlDoc = new xml_document;
-  xml_parse_result result = XmlDoc->load_buffer(&file_contents[0],
-      file_contents.size(), parse_declaration | parse_escapes);
-
-  if (result.status != status_ok) {
-    ThrowOnParseError(file_contents, result);
-  }
+  ProcessInitialBrokersElem(*subsection_map["initialBrokers"]);
 }

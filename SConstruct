@@ -134,7 +134,10 @@ check_version_file(out.Dir('dory').Dir('client').File('build_id.c').
 xerces_lib_deps = ['xerces-c']
 
 ext_lib_deps = [
-    [r'^xml/.*', xerces_lib_deps]
+    [r'^dory/dory\.test$', xerces_lib_deps],
+    [r'^dory/conf/conf\.test$', xerces_lib_deps],
+    [r'^xml/.*', xerces_lib_deps],
+    [r'^dory/dory$', xerces_lib_deps]
 ]
 
 # Environment.

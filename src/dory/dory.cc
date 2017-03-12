@@ -19,36 +19,92 @@
    Kafka producer daemon.
  */
 
+#include <cassert>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
+#include <string>
 
 #include <signal.h>
 #include <sys/types.h>
 #include <syslog.h>
 #include <unistd.h>
+#include <xercesc/util/XMLException.hpp>
 
 #include <base/opt.h>
 #include <dory/dory_server.h>
 #include <dory/build_id.h>
 #include <dory/config.h>
 #include <dory/util/arg_parse_error.h>
+#include <dory/util/handle_xml_errors.h>
 #include <dory/util/misc_util.h>
 #include <server/daemonize.h>
 #include <signal/handler_installer.h>
+#include <xml/xml_initializer.h>
+#include <xml/xml_string_util.h>
+
+using namespace xercesc;
 
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Util;
+using namespace Xml;
+
+class TDoryXmlInit final : public TXmlInitializer {
+  public:
+  TDoryXmlInit()
+      : TXmlInitializer(false) {
+  }
+
+  protected:
+  virtual bool HandleInitError(const XMLException &x);
+
+  virtual void HandleCleanupError(const XMLException &x) noexcept;
+
+  virtual void HandleUnknownErrorOnCleanup() noexcept;
+};  // TDoryXmlInit
+
+bool TDoryXmlInit::HandleInitError(const XMLException &x) {
+  std::string msg("Xerces XML library initialization error: ");
+  msg += TranscodeToString(x.getMessage());
+  throw std::runtime_error(msg);
+}
+
+void TDoryXmlInit::HandleCleanupError(const XMLException &x) noexcept {
+  try {
+    std::string msg("Xerces XML library cleanup error: ");
+    msg += TranscodeToString(x.getMessage());
+    syslog(LOG_ERR, "Xerces XML library cleanup error: %s", msg.c_str());
+  } catch (...) {
+    syslog(LOG_ERR, "Xerces XML library cleanup error");
+  }
+}
+
+void TDoryXmlInit::HandleUnknownErrorOnCleanup() noexcept {
+  syslog(LOG_ERR, "Unknown error while doing Xerces XML library cleanup");
+}
 
 static int DoryMain(int argc, char *argv[]) {
+  TDoryXmlInit xml_init;
   TOpt<TDoryServer::TServerConfig> dory_config;
   bool large_sendbuf_required = false;
 
   try {
-    dory_config.MakeKnown(TDoryServer::CreateConfig(argc, argv,
-        large_sendbuf_required, false));
+    xml_init.Init();
+    TOpt<std::string> opt_err_msg = HandleXmlErrors(
+        [&]() -> void {
+          dory_config.MakeKnown(TDoryServer::CreateConfig(argc, argv,
+              large_sendbuf_required, false));
+        }
+    );
+
+    if (opt_err_msg.IsKnown()) {
+      std::cerr << *opt_err_msg << std::endl;
+      return EXIT_FAILURE;
+    }
+
     const TConfig &config = dory_config->GetCmdLineConfig();
 
     if (config.Daemon) {

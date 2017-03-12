@@ -68,6 +68,7 @@
 #include <dory/unix_dg_input_agent.h>
 #include <dory/util/misc_util.h>
 #include <thread/fd_managed_thread.h>
+#include <xml/test/xml_test_initializer.h>
 
 #include <gtest/gtest.h>
 
@@ -83,6 +84,8 @@ using namespace Dory::MockKafkaServer;
 using namespace Dory::TestUtil;
 using namespace Dory::Util;
 using namespace Thread;
+using namespace Xml;
+using namespace Xml::Test;
 
 namespace {
 
@@ -467,6 +470,8 @@ namespace {
 
     virtual void TearDown() {
     }
+
+    TXmlTestInitializer Initializer;  // initializes Xerces XML library
   };  // TDoryTest
 
   TEST_F(TDoryTest, SuccessfulDeliveryTest) {

@@ -25,6 +25,7 @@
 
 #include <base/tmp_file.h>
 #include <dory/compress/compression_type.h>
+#include <xml/test/xml_test_initializer.h>
 
 #include <gtest/gtest.h>
 
@@ -32,6 +33,8 @@ using namespace Base;
 using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::Conf;
+using namespace Xml;
+using namespace Xml::Test;
 
 namespace {
 
@@ -49,6 +52,8 @@ namespace {
 
     virtual void TearDown() {
     }
+
+    TXmlTestInitializer Initializer;  // initializes Xerces XML library
   };  // TConfTest
 
   TEST_F(TConfTest, Test1) {
