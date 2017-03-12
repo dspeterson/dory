@@ -131,7 +131,10 @@ check_version_file(out.Dir('dory').File('build_id.c').get_abspath())
 check_version_file(out.Dir('dory').Dir('client').File('build_id.c').
         get_abspath())
 
+xerces_lib_deps = ['xerces-c']
+
 ext_lib_deps = [
+    [r'^xml/.*', xerces_lib_deps]
 ]
 
 # Environment.
