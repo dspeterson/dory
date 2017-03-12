@@ -34,6 +34,7 @@
 import functools
 import os
 import os.path
+import re
 import subprocess
 import sys
 
@@ -258,6 +259,25 @@ def dedupe(a):
     return result
 
 
+def build_ext_lib_matchers(ext_lib_deps):
+    result = []
+
+    for dep in ext_lib_deps:
+        result.append([re.compile(dep[0]), dep[1]])
+
+    return result
+
+
+def compute_ext_dep_libs(path, matchers):
+    libs = []
+
+    for m in matchers:
+        if m[0].match(path) is not None:
+            libs += m[1]
+
+    return dedupe(libs)
+
+
 specify_generated_file(Dir('dory').File('build_id.c.in'),
         Dir('dory').File('build_id.c'), Dir('dory').File('build_id.h'),
         Dir('dory').Dir('scripts').File('gen_version'),
@@ -277,9 +297,12 @@ common_prog_libs = env['PROG_LIBS']
 common_test_libs = dedupe([googletest_lib_1, googletest_lib_2, 'pthread'] + \
         common_prog_libs)
 
+ext_lib_matchers = build_ext_lib_matchers(env['EXT_LIB_DEPS'])
+
 # For each given target path, try to build it.
 for target_path in BUILD_TARGETS:
     target = cwd.File(target_path)
+    target_rel_path = target.get_path(out)
     ext = os.path.splitext(target_path)[1]
 
     # Validate that the file kind is supported.
@@ -329,9 +352,10 @@ for target_path in BUILD_TARGETS:
         if dep_path not in BUILD_TARGETS:
             BUILD_TARGETS.append(dep_path)
 
+    ext_dep_libs = compute_ext_dep_libs(target_rel_path, ext_lib_matchers)
     dep_lib_array = [lib for lib in dep_libs]
-    prog_libs = common_prog_libs + dep_lib_array
-    test_libs = common_test_libs + dep_lib_array
+    prog_libs = common_prog_libs + ext_dep_libs + dep_lib_array
+    test_libs = common_test_libs + ext_dep_libs + dep_lib_array
 
     # Choose the correct builder based on the target_path's extension.
     {env['PROGSUFFIX'] : functools.partial(env.Program, LIBS=prog_libs),

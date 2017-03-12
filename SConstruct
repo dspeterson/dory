@@ -131,19 +131,22 @@ check_version_file(out.Dir('dory').File('build_id.c').get_abspath())
 check_version_file(out.Dir('dory').Dir('client').File('build_id.c').
         get_abspath())
 
+ext_lib_deps = [
+]
+
 # Environment.
 prog_libs = {'pthread', 'dl', 'rt'}
 env = Environment(CFLAGS=['-Wwrite-strings'],
-                  CCFLAGS=['-Wall', '-Wextra', '-Werror', '-Wformat=2',
-                          '-Winit-self', '-Wunused-parameter', '-Wshadow',
-                          '-Wpointer-arith', '-Wcast-align', '-Wlogical-op',
-                          '-Wno-nonnull-compare'],
-                  CPPDEFINES=[('SRC_ROOT', '\'"' + src.abspath + '"\'')],
-                  CPPPATH=[src, tclap, gtestincdir],
-                  CXXFLAGS=['-std=c++11', '-Wold-style-cast'],
-                  DEP_SUFFIXES=['.cc', '.cpp', '.c', '.cxx', '.c++', '.C'],
-                  PROG_LIBS=[lib for lib in prog_libs],
-                  TESTSUFFIX='.test')
+        CCFLAGS=['-Wall', '-Wextra', '-Werror', '-Wformat=2', '-Winit-self',
+                '-Wunused-parameter', '-Wshadow', '-Wpointer-arith',
+                '-Wcast-align', '-Wlogical-op', '-Wno-nonnull-compare'],
+        CPPDEFINES=[('SRC_ROOT', '\'"' + src.abspath + '"\'')],
+        CPPPATH=[src, tclap, gtestincdir],
+        CXXFLAGS=['-std=c++11', '-Wold-style-cast'],
+        DEP_SUFFIXES=['.cc', '.cpp', '.c', '.cxx', '.c++', '.C'],
+        PROG_LIBS=[lib for lib in prog_libs],
+        TESTSUFFIX='.test',
+        EXT_LIB_DEPS=ext_lib_deps)
 
 if GetOption('import_path'):
     env['ENV']['PATH'] = os.environ['PATH']
