@@ -56,6 +56,9 @@ exts = {env[suffix] for suffix in {'PROGSUFFIX',
                                    'SHOBJSUFFIX',
                                    'TESTSUFFIX'}}
 
+lib_header_map = {}
+generated_source_map = {}
+
 
 # Input parameter 'target_path' is a filename which may represent a header
 # file, object file, or library.  For instance, some possibilities are:
@@ -84,7 +87,6 @@ exts = {env[suffix] for suffix in {'PROGSUFFIX',
 # directory.  Otherwise 'target_path' is interpreted as relative to 'src'.
 def get_one_dep_source(target_path, dep_suffixes, cwd_rel, dep_libs):
     (prefix, suffix) = os.path.splitext(target_path)
-    lib_header_map = env['LIB_HEADER_MAP']
 
     if lib_header_map.has_key(target_path):
         # Handle case where 'target_path' is a header for a library that we
@@ -93,11 +95,9 @@ def get_one_dep_source(target_path, dep_suffixes, cwd_rel, dep_libs):
         dep_libs.add(lib_header_map[target_path])
         return None
 
-    gen_map = env['GENERATED_SOURCE_MAP']
-
-    if gen_map.has_key(target_path):
+    if generated_source_map.has_key(target_path):
         # Handle case where corresponding non-header is a generated file.
-        result = gen_map[target_path]
+        result = generated_source_map[target_path]
     else:
         result = None
 
@@ -216,7 +216,7 @@ def specify_generated_file(in_node, out_node, header_node, script_node,
     # Specify that header depends on file generated during the build.  For
     # instance, 'dory/build_id.h' depends on 'dory/build_id.c'.  This
     # information is taken into account when dependencies are computed.
-    env['GENERATED_SOURCE_MAP'][header_node.get_path()] = out_node
+    generated_source_map[header_node.get_path()] = out_node
 
 
 # Input parameter 'headers' is a list of header files for a library 'lib' that
@@ -225,7 +225,7 @@ def specify_generated_file(in_node, out_node, header_node, script_node,
 # 'lib' will be added as a dependency of foo.cc.
 def specify_lib_headers(lib, headers):
     for h in headers:
-        env['LIB_HEADER_MAP'][h.get_path()] = lib
+        lib_header_map[h.get_path()] = lib
 
 
 def third_party_build_dir():
@@ -247,7 +247,8 @@ def make_third_party_build_cmd(dir_name):
             ' && ' + script.get_path()
 
 
-def make_unique(a):
+# remove duplicates from list 'a' while preserving ordering of remaining items
+def dedupe(a):
     result = []
 
     for x in a:
@@ -273,9 +274,8 @@ googletest_lib_2 = third_party_out_dir('googletest').File('libgtest_main.a')
 env.Command(googletest_lib_1, "", make_third_party_build_cmd('googletest'))
 env.Command(googletest_lib_2, "", make_third_party_build_cmd('googletest'))
 common_prog_libs = env['PROG_LIBS']
-common_test_libs = make_unique(
-        [googletest_lib_1, googletest_lib_2, 'pthread'] + common_prog_libs)
-
+common_test_libs = dedupe([googletest_lib_1, googletest_lib_2, 'pthread'] + \
+        common_prog_libs)
 
 # For each given target path, try to build it.
 for target_path in BUILD_TARGETS:

@@ -143,9 +143,7 @@ env = Environment(CFLAGS=['-Wwrite-strings'],
                   CXXFLAGS=['-std=c++11', '-Wold-style-cast'],
                   DEP_SUFFIXES=['.cc', '.cpp', '.c', '.cxx', '.c++', '.C'],
                   PROG_LIBS=[lib for lib in prog_libs],
-                  TESTSUFFIX='.test',
-                  GENERATED_SOURCE_MAP={},
-                  LIB_HEADER_MAP={})
+                  TESTSUFFIX='.test')
 
 if GetOption('import_path'):
     env['ENV']['PATH'] = os.environ['PATH']
