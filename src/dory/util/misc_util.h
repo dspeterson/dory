@@ -52,23 +52,6 @@ namespace Dory {
 
     void TrimWhitespace(std::string &s);
 
-    /* Return true if strings match by case-insensitive comparison.  Otherwise
-       return false. */
-    bool StringsMatchNoCase(const char *s1, const char *s2);
-
-    inline bool StringsMatchNoCase(const std::string &s1,
-        const std::string &s2) {
-      return StringsMatchNoCase(s1.c_str(), s2.c_str());
-    }
-
-    inline bool StringsMatchNoCase(const std::string &s1, const char *s2) {
-      return StringsMatchNoCase(s1.c_str(), s2);
-    }
-
-    inline bool StringsMatchNoCase(const char *s1, const std::string &s2) {
-      return StringsMatchNoCase(s1, s2.c_str());
-    }
-
   }  // Util
 
 }  // Dory

@@ -172,26 +172,3 @@ void Dory::Util::TrimWhitespace(std::string &s) {
   /* Now remove leading whitespace. */
   s.erase(0, FirstNonWhitespaceIndex(s, 0));
 }
-
-bool Dory::Util::StringsMatchNoCase(const char *s1, const char *s2) {
-  assert(s1);
-  assert(s2);
-
-  for (; ; ) {
-    char c1 = *s1;
-    char c2 = *s2;
-
-    if (std::toupper(c1) != std::toupper(c2)) {
-      return false;
-    }
-
-    if (c1 == '\0') {
-      break;
-    }
-
-    ++s1;
-    ++s2;
-  }
-
-  return true;
-}
