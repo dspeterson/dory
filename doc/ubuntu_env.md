@@ -9,6 +9,7 @@ sudo apt-get install cmake
 sudo apt-get install libsnappy-dev
 sudo apt-get install libasan0
 sudo apt-get install libboost-all-dev
+sudo apt-get install libxerces-c-dev
 sudo apt-get install git
 sudo apt-get install g++
 ```

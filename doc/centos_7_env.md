@@ -9,6 +9,7 @@ yum install libasan
 yum install cmake
 yum install snappy-devel
 yum install boost-devel
+yum install xerces-c-devel
 yum install rpm-build
 ```
 
