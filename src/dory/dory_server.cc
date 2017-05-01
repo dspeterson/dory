@@ -89,29 +89,37 @@ static void LoadCompressionLibraries(const TCompressionConf &conf) {
   }
 }
 
+static bool CheckUnixDgSize(const TConfig &cfg) {
+  bool large_sendbuf_required = false;
+
+  if (!cfg.ReceiveSocketName.empty()) {
+    switch (TestUnixDgSize(cfg.MaxInputMsgSize)) {
+      case TUnixDgSizeTestResult::Pass:
+        break;
+      case TUnixDgSizeTestResult::PassWithLargeSendbuf:
+        large_sendbuf_required = true;
+
+        if (!cfg.AllowLargeUnixDatagrams) {
+          THROW_ERROR(TDoryServer::TMustAllowLargeDatagrams);
+        }
+
+        break;
+      case TUnixDgSizeTestResult::Fail:
+        THROW_ERROR(TDoryServer::TMaxInputMsgSizeTooLarge);
+        break;
+      NO_DEFAULT_CASE;
+    }
+  }
+
+  return large_sendbuf_required;
+}
+
 TDoryServer::TServerConfig
 TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
     bool allow_input_bind_ephemeral, size_t pool_block_size) {
-  large_sendbuf_required = false;
   std::unique_ptr<TConfig> cfg(
       new TConfig(argc, argv, allow_input_bind_ephemeral));
-
-  switch (TestUnixDgSize(cfg->MaxInputMsgSize)) {
-    case TUnixDgSizeTestResult::Pass:
-      break;
-    case TUnixDgSizeTestResult::PassWithLargeSendbuf:
-      large_sendbuf_required = true;
-
-      if (!cfg->AllowLargeUnixDatagrams) {
-        THROW_ERROR(TMustAllowLargeDatagrams);
-      }
-
-      break;
-    case TUnixDgSizeTestResult::Fail:
-      THROW_ERROR(TMaxInputMsgSizeTooLarge);
-      break;
-    NO_DEFAULT_CASE;
-  }
+  large_sendbuf_required = CheckUnixDgSize(*cfg);
 
   if (cfg->DiscardReportInterval < 1) {
     THROW_ERROR(TBadDiscardReportInterval);
@@ -227,8 +235,8 @@ TDoryServer::TDoryServer(TServerConfig &&config)
         Config->ReceiveStreamSocketName, CreateStreamClientHandler(false),
         UnixStreamServerFatalErrorHandler);
 
-    if (Config->ReceiveSocketMode.IsKnown()) {
-      UnixStreamInputAgent->SetMode(*Config->ReceiveSocketMode);
+    if (Config->ReceiveStreamSocketMode.IsKnown()) {
+      UnixStreamInputAgent->SetMode(*Config->ReceiveStreamSocketMode);
     }
   }
 
