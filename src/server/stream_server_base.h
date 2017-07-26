@@ -108,16 +108,6 @@ namespace Server {
 
     void Reset();
 
-    const TConnectionHandlerApi &GetConectionHandler() const noexcept {
-      assert(this);
-      return *ConnectionHandler;
-    }
-
-    TConnectionHandlerApi &GetConectionHandler() noexcept {
-      assert(this);
-      return *ConnectionHandler;
-    }
-
     protected:
     /* Derived class constructor should initialize any info, such as port or
        UNIX domain socket path, necessary for bind().  Parameters:
