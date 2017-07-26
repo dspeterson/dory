@@ -174,7 +174,7 @@ void TConf::TBuilder::ProcessBatchingElem(const DOMElement &batching_elem) {
     const DOMElement &elem = *subsection_map["namedConfigs"];
     auto item_vec = GetItemListElements(elem, "config");
 
-    for (const auto &item: item_vec) {
+    for (const auto &item : item_vec) {
       ProcessSingleBatchingNamedConfig(*item);
     }
   }
@@ -218,7 +218,7 @@ void TConf::TBuilder::ProcessBatchingElem(const DOMElement &batching_elem) {
     auto item_vec = GetItemListElements(*subsection_map["topicConfigs"],
         "topic");
 
-    for (const auto &item: item_vec) {
+    for (const auto &item : item_vec) {
       const DOMElement &elem = *item;
       std::string name = TAttrReader::GetString(elem, "name",
           TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
@@ -270,7 +270,7 @@ void TConf::TBuilder::ProcessCompressionElem(
     RequireAllChildElementLeaves(elem);
     auto item_vec = GetItemListElements(elem, "config");
 
-    for (const auto &item: item_vec) {
+    for (const auto &item : item_vec) {
       ProcessSingleCompressionNamedConfig(*item);
     }
   }
@@ -295,7 +295,7 @@ void TConf::TBuilder::ProcessCompressionElem(
     RequireAllChildElementLeaves(topic_configs_elem);
     auto item_vec = GetItemListElements(topic_configs_elem, "topic");
 
-    for (const auto &item: item_vec) {
+    for (const auto &item : item_vec) {
       const DOMElement &elem = *item;
       std::string name = TAttrReader::GetString(elem, "name",
           TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
@@ -319,7 +319,7 @@ void TConf::TBuilder::ProcessTopicRateElem(const DOMElement &topic_rate_elem) {
   RequireAllChildElementLeaves(named_configs_elem);
   auto item_vec = GetItemListElements(named_configs_elem, "config");
 
-  for (const auto &item: item_vec) {
+  for (const auto &item : item_vec) {
     const DOMElement &elem = *item;
     std::string name = TAttrReader::GetString(elem, "name",
         TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
@@ -347,7 +347,7 @@ void TConf::TBuilder::ProcessTopicRateElem(const DOMElement &topic_rate_elem) {
     RequireAllChildElementLeaves(elem);
     auto topic_item_vec = GetItemListElements(elem, "topic");
 
-    for (const auto &item: topic_item_vec) {
+    for (const auto &item : topic_item_vec) {
       const DOMElement &topic_elem = *item;
       std::string name = TAttrReader::GetString(topic_elem, "name",
           TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
