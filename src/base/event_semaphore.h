@@ -48,7 +48,7 @@ namespace Base {
 
     /* If the nonblocking option was passed to the constructor, this returns
        true if the pop was successful, or false if the pop failed because the
-       semaphore had a count of 0 immediately before the call.  It the
+       semaphore had a count of 0 immediately before the call.  If the
        nonblocking option was not passed to the constructor, this always
        returns true. */
     bool Pop();
