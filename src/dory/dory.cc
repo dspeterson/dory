@@ -31,7 +31,6 @@
 #include <sys/types.h>
 #include <syslog.h>
 #include <unistd.h>
-#include <xercesc/util/XMLException.hpp>
 
 #include <base/opt.h>
 #include <dory/dory_server.h>
@@ -40,10 +39,8 @@
 #include <dory/util/arg_parse_error.h>
 #include <dory/util/handle_xml_errors.h>
 #include <dory/util/misc_util.h>
+#include <dory/util/dory_xml_init.h>
 #include <server/daemonize.h>
-#include <signal/handler_installer.h>
-#include <xml/xml_initializer.h>
-#include <xml/xml_string_util.h>
 
 using namespace xercesc;
 
@@ -51,40 +48,6 @@ using namespace Base;
 using namespace Dory;
 using namespace Dory::Util;
 using namespace Xml;
-
-class TDoryXmlInit final : public TXmlInitializer {
-  public:
-  TDoryXmlInit()
-      : TXmlInitializer(false) {
-  }
-
-  protected:
-  virtual bool HandleInitError(const XMLException &x);
-
-  virtual void HandleCleanupError(const XMLException &x) noexcept;
-
-  virtual void HandleUnknownErrorOnCleanup() noexcept;
-};  // TDoryXmlInit
-
-bool TDoryXmlInit::HandleInitError(const XMLException &x) {
-  std::string msg("Xerces XML library initialization error: ");
-  msg += TranscodeToString(x.getMessage());
-  throw std::runtime_error(msg);
-}
-
-void TDoryXmlInit::HandleCleanupError(const XMLException &x) noexcept {
-  try {
-    std::string msg("Xerces XML library cleanup error: ");
-    msg += TranscodeToString(x.getMessage());
-    syslog(LOG_ERR, "Xerces XML library cleanup error: %s", msg.c_str());
-  } catch (...) {
-    syslog(LOG_ERR, "Xerces XML library cleanup error");
-  }
-}
-
-void TDoryXmlInit::HandleUnknownErrorOnCleanup() noexcept {
-  syslog(LOG_ERR, "Unknown error while doing Xerces XML library cleanup");
-}
 
 static int DoryMain(int argc, char *argv[]) {
   TDoryXmlInit xml_init;
@@ -141,10 +104,6 @@ static int DoryMain(int argc, char *argv[]) {
   }
 
   dory_config.Reset();
-  Signal::THandlerInstaller
-      sigint_installer(SIGINT, &TDoryServer::HandleShutdownSignal);
-  Signal::THandlerInstaller
-      sigterm_installer(SIGTERM, &TDoryServer::HandleShutdownSignal);
 
   /* Fail early if server is already running. */
   dory->BindStatusSocket(false);
@@ -158,6 +117,7 @@ static int DoryMain(int argc, char *argv[]) {
 
   syslog(LOG_NOTICE, "Pool block size is %lu bytes",
          static_cast<unsigned long>(dory->GetPoolBlockSize()));
+  TDoryServer::TSignalHandlerInstaller handler_installer;
   return dory->Run();
 }
 

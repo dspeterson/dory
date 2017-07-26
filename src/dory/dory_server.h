@@ -52,7 +52,7 @@
 #include <dory/stream_client_work_fn.h>
 #include <server/tcp_ipv4_server.h>
 #include <server/unix_stream_server.h>
-#include <signal/set.h>
+#include <signal/handler_installer.h>
 #include <thread/managed_thread_pool.h>
 
 namespace Dory {
@@ -131,6 +131,20 @@ namespace Dory {
       friend class TDoryServer;
     };  // TServerConfig
 
+    /* Caller should instantiate this class before calling the Run() method of
+       any TDoryServer instances. */
+    class TSignalHandlerInstaller final {
+      NO_COPY_SEMANTICS(TSignalHandlerInstaller);
+
+      public:
+      TSignalHandlerInstaller();
+
+      private:
+      Signal::THandlerInstaller SigintInstaller;
+
+      Signal::THandlerInstaller SigtermInstaller;
+    };  // TSignalHandlerInstaller
+
     static TServerConfig CreateConfig(int argc, char **argv,
         bool &large_sendbuf_required, bool allow_input_bind_ephemeral,
         size_t pool_block_size = 128);
@@ -198,21 +212,13 @@ namespace Dory {
        connections. */
     using TWorkerPool = TStreamClientHandler::TWorkerPool;
 
-    static void WorkerPoolFatalErrorHandler(const char *msg) noexcept;
-
-    static void UnixStreamServerFatalErrorHandler(const char *msg) noexcept;
-
-    static void TcpServerFatalErrorHandler(const char *msg) noexcept;
-
-    void BlockAllSignals();
-
     TStreamClientHandler *CreateStreamClientHandler(bool is_tcp);
 
     /* Return true on success or false on error starting one of the input
        agents. */
     bool StartMsgHandlingThreads();
 
-    void HandleEvents();
+    bool HandleEvents();
 
     void DiscardFinalMsgs(std::list<TMsg::TPtr> &msg_list);
 
@@ -227,11 +233,6 @@ namespace Dory {
 
     /* Global list of all TDoryServer objects. */
     static std::list<TDoryServer *> ServerList;
-
-    /* The main thread handles all signals.  It blocks them all except in
-       specific places where it is ready to handle them.  In such places, this
-       defines the set of masked signals. */
-    const Signal::TSet SigMask;
 
     /* Points to item in 'ServerList' for this TDoryServer object. */
     std::list<TDoryServer *>::iterator MyServerListItem;

@@ -28,7 +28,7 @@
 #include <limits>
 #include <memory>
 #include <set>
-#include <system_error>
+#include <stdexcept>
 
 #include <arpa/inet.h>
 #include <poll.h>
@@ -48,11 +48,14 @@
 #include <dory/kafka_proto/metadata/version_util.h>
 #include <dory/kafka_proto/produce/version_util.h>
 #include <dory/msg.h>
+#include <dory/util/init_notifier.h>
 #include <dory/util/misc_util.h>
 #include <dory/util/time_util.h>
 #include <dory/web_interface.h>
 #include <server/counter.h>
 #include <server/daemonize.h>
+#include <signal/masker.h>
+#include <signal/set.h>
 #include <socket/address.h>
 #include <socket/option.h>
 
@@ -112,6 +115,11 @@ static bool CheckUnixDgSize(const TConfig &cfg) {
   }
 
   return large_sendbuf_required;
+}
+
+TDoryServer::TSignalHandlerInstaller::TSignalHandlerInstaller()
+    : SigintInstaller(SIGINT, &HandleShutdownSignal),
+      SigtermInstaller(SIGTERM, &HandleShutdownSignal) {
 }
 
 TDoryServer::TServerConfig
@@ -193,14 +201,28 @@ void TDoryServer::HandleShutdownSignal(int /*signum*/) {
   }
 }
 
+static void WorkerPoolFatalErrorHandler(const char *msg) noexcept {
+  syslog(LOG_ERR, "Fatal worker pool error: %s", msg);
+  _exit(1);
+}
+
+static void UnixStreamServerFatalErrorHandler(const char *msg) noexcept {
+  syslog(LOG_ERR, "Fatal UNIX stream input agent error: %s", msg);
+  _exit(1);
+}
+
+static void TcpServerFatalErrorHandler(const char *msg) noexcept {
+  syslog(LOG_ERR, "Fatal TCP input agent error: %s", msg);
+  _exit(1);
+}
+
 static inline size_t
 ComputeBlockCount(size_t max_buffer_kb, size_t block_size) {
   return std::max<size_t>(1, (1024 * max_buffer_kb) / block_size);
 }
 
 TDoryServer::TDoryServer(TServerConfig &&config)
-    : SigMask(TSet::Exclude, { SIGINT, SIGTERM }),
-      Config(std::move(config.Config)),
+    : Config(std::move(config.Config)),
       Conf(std::move(config.Conf)),
       PoolBlockSize(config.PoolBlockSize),
       Started(false),
@@ -284,37 +306,7 @@ int TDoryServer::Run() {
   /* Regardless of what happens, we must notify test code when we have either
      finished initialization or are shutting down (possibly due to a fatal
      exception). */
-  class t_init_wait_notifier final {
-    NO_COPY_SEMANTICS(t_init_wait_notifier);
-
-    public:
-    explicit t_init_wait_notifier(TEventSemaphore &init_wait_sem)
-        : Notified(false),
-        NotifySem(init_wait_sem) {
-    }
-
-    ~t_init_wait_notifier() noexcept {
-      Notify();
-    }
-
-    void Notify() noexcept {
-      if (!Notified) {
-        try {
-          NotifySem.Push();
-          Notified = true;
-        } catch (const std::system_error &x) {
-          syslog(LOG_ERR, "Error notifying on server init finished: %s",
-              x.what());
-          _exit(1);
-        }
-      }
-    }
-
-    private:
-    bool Notified;
-
-    TEventSemaphore &NotifySem;
-  } init_wait_notifier(InitWaitSem);  // t_init_wait_notifier
+  TInitNotifier init_notifier(InitWaitSem);
 
   if (Started) {
     throw std::logic_error("Multiple calls to Run() method not supported");
@@ -327,7 +319,7 @@ int TDoryServer::Run() {
      handling.  It is important that we have all signals blocked when creating
      threads, since they inherit our signal mask, and we want them to block all
      signals. */
-  BlockAllSignals();
+  TMasker block_all(*TSet(TSet::Full));
 
   syslog(LOG_NOTICE, "Server started");
 
@@ -338,9 +330,11 @@ int TDoryServer::Run() {
       MetadataTimestamp, RouterThread.GetMetadataUpdateRequestSem(),
       DebugSetup);
 
+  bool no_error = StartMsgHandlingThreads();
+
   /* This starts the input agents and router thread but doesn't wait for the
      router thread to finish initialization. */
-  if (StartMsgHandlingThreads()) {
+  if (no_error) {
     /* Initialization of all input agents succeeded.  Start the Mongoose HTTP
        server, which provides Dory's web interface.  It runs in separate
        threads. */
@@ -352,14 +346,16 @@ int TDoryServer::Run() {
     syslog(LOG_NOTICE,
         "Started web interface, waiting for signals and errors");
 
-    init_wait_notifier.Notify();
+    init_notifier.Notify();
 
     /* Wait for signals and fatal errors.  Return when it is time for the
        server to shut down. */
-    HandleEvents();
+    if (!HandleEvents()) {
+      no_error = false;
+    }
   }
 
-  return Shutdown() ? EXIT_SUCCESS : EXIT_FAILURE;
+  return Shutdown() && no_error ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 void TDoryServer::RequestShutdown() {
@@ -369,28 +365,6 @@ void TDoryServer::RequestShutdown() {
     GotShutdownSignal.Increment();
     ShutdownRequestSem.Push();
   }
-}
-
-void TDoryServer::WorkerPoolFatalErrorHandler(const char *msg) noexcept {
-  syslog(LOG_ERR, "Fatal worker pool error: %s", msg);
-  _exit(1);
-}
-
-void TDoryServer::UnixStreamServerFatalErrorHandler(const char *msg) noexcept {
-  syslog(LOG_ERR, "Fatal UNIX stream input agent: %s", msg);
-  _exit(1);
-}
-
-void TDoryServer::TcpServerFatalErrorHandler(const char *msg) noexcept {
-  syslog(LOG_ERR, "Fatal UNIX stream input agent: %s", msg);
-  _exit(1);
-}
-
-void TDoryServer::BlockAllSignals() {
-  assert(this);
-
-  const Signal::TSet block_all(Signal::TSet::Full);
-  pthread_sigmask(SIG_SETMASK, block_all.Get(), nullptr);
 }
 
 TStreamClientHandler *TDoryServer::CreateStreamClientHandler(bool is_tcp) {
@@ -488,7 +462,7 @@ static void ReportStreamClientWorkerErrors(
   }
 }
 
-void TDoryServer::HandleEvents() {
+bool TDoryServer::HandleEvents() {
   assert(this);
 
   /* This is for periodically verifying that we are getting queried for discard
@@ -538,7 +512,8 @@ void TDoryServer::HandleEvents() {
       item.revents = 0;
     }
 
-    int ret = ppoll(&events[0], events.size(), nullptr, SigMask.Get());
+    int ret = ppoll(&events[0], events.size(), nullptr,
+        TSet(TSet::Exclude, { SIGINT, SIGTERM }).Get());
     assert(ret);
 
     if ((ret < 0) && (errno != EINTR)) {
@@ -598,6 +573,8 @@ void TDoryServer::HandleEvents() {
       break;
     }
   }
+
+  return !fatal_error;
 }
 
 static void ShutDownInputAgent(Thread::TFdManagedThread &agent,
@@ -613,14 +590,14 @@ static void ShutDownInputAgent(Thread::TFdManagedThread &agent,
       agent.Join();
       syslog(LOG_NOTICE, "%s input agent terminated normally", agent_name);
     } catch (const TFdManagedThread::TWorkerError &x) {
+      shutdown_ok = false;
+
       try {
         std::rethrow_exception(x.ThrownException);
       } catch (const std::exception &y) {
-        shutdown_ok = false;
         syslog(LOG_ERR, "%s input agent terminated on error: %s", agent_name,
             y.what());
       } catch (...) {
-        shutdown_ok = false;
         syslog(LOG_ERR, "%s input agent terminated on unknown error",
             agent_name);
       }
@@ -681,6 +658,7 @@ bool TDoryServer::Shutdown() {
         StreamClientWorkerPool->GetAllPendingErrors());
   }
 
+  /* TODO: Make this more uniform relative to shutdown of input agents. */
   bool router_thread_started = RouterThread.IsStarted();
 
   if (router_thread_started) {
