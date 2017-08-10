@@ -80,16 +80,16 @@ namespace {
     builder.AddBroker(7, "host3", 103);
     builder.AddBroker(3, "host4", 104);
     builder.CloseBrokerList();
-    builder.OpenTopic("topic1");
+    ASSERT_TRUE(builder.OpenTopic("topic1"));
     builder.AddPartitionToTopic(6, 5, true, 9);
     builder.AddPartitionToTopic(3, 2, true, 0);
     builder.AddPartitionToTopic(7, 2, false, 5);  // out of service partition
     builder.AddPartitionToTopic(4, 5, true, 0);
     builder.AddPartitionToTopic(1, 7, false, 6);  // out of service partition
     builder.CloseTopic();
-    builder.OpenTopic("topic2");
+    ASSERT_TRUE(builder.OpenTopic("topic2"));
     builder.CloseTopic();
-    builder.OpenTopic("topic3");
+    ASSERT_TRUE(builder.OpenTopic("topic3"));
     builder.AddPartitionToTopic(8, 3, true, 0);
     builder.AddPartitionToTopic(6, 5, true, 9);
     builder.AddPartitionToTopic(3, 3, true, 0);
@@ -313,14 +313,14 @@ namespace {
     builder.AddBroker(7, "host3", 103);
     builder.AddBroker(3, "host4", 104);
     builder.CloseBrokerList();
-    builder.OpenTopic("topic1");
+    ASSERT_TRUE(builder.OpenTopic("topic1"));
     builder.AddPartitionToTopic(6, 5, false, 4);
     builder.AddPartitionToTopic(3, 2, false, 8);
     builder.AddPartitionToTopic(4, 5, false, 7);
     builder.CloseTopic();
-    builder.OpenTopic("topic2");
+    ASSERT_TRUE(builder.OpenTopic("topic2"));
     builder.CloseTopic();
-    builder.OpenTopic("topic3");
+    ASSERT_TRUE(builder.OpenTopic("topic3"));
     builder.AddPartitionToTopic(8, 3, true, 9);
     builder.AddPartitionToTopic(6, 5, true, 0);
     builder.AddPartitionToTopic(3, 3, false, 6);
@@ -335,14 +335,14 @@ namespace {
     builder.AddBroker(2, "host2", 102);
     builder.AddBroker(5, "host1", 101);
     builder.CloseBrokerList();
-    builder.OpenTopic("topic1");
+    ASSERT_TRUE(builder.OpenTopic("topic1"));
     builder.AddPartitionToTopic(4, 5, false, 7);
     builder.AddPartitionToTopic(6, 5, false, 4);
     builder.AddPartitionToTopic(3, 2, false, 8);
     builder.CloseTopic();
-    builder.OpenTopic("topic2");
+    ASSERT_TRUE(builder.OpenTopic("topic2"));
     builder.CloseTopic();
-    builder.OpenTopic("topic3");
+    ASSERT_TRUE(builder.OpenTopic("topic3"));
     builder.AddPartitionToTopic(3, 3, false, 6);
     builder.AddPartitionToTopic(8, 3, true, 9);
     builder.AddPartitionToTopic(6, 5, true, 0);
@@ -362,14 +362,14 @@ namespace {
     builder.AddBroker(2, "host2", 102);
     builder.AddBroker(1, "host1", 101);
     builder.CloseBrokerList();
-    builder.OpenTopic("topic1");
+    ASSERT_TRUE(builder.OpenTopic("topic1"));
     builder.AddPartitionToTopic(4, 1, false, 7);
     builder.AddPartitionToTopic(6, 1, false, 4);
     builder.AddPartitionToTopic(3, 2, false, 8);
     builder.CloseTopic();
-    builder.OpenTopic("topic2");
+    ASSERT_TRUE(builder.OpenTopic("topic2"));
     builder.CloseTopic();
-    builder.OpenTopic("topic3");
+    ASSERT_TRUE(builder.OpenTopic("topic3"));
     builder.AddPartitionToTopic(3, 3, false, 6);
     builder.AddPartitionToTopic(8, 3, true, 9);
     builder.AddPartitionToTopic(6, 1, true, 0);
@@ -386,14 +386,14 @@ namespace {
     builder.AddBroker(2, "host2", 102);
     builder.AddBroker(5, "host1", 101);
     builder.CloseBrokerList();
-    builder.OpenTopic("topic1");
+    ASSERT_TRUE(builder.OpenTopic("topic1"));
     builder.AddPartitionToTopic(4, 5, false, 7);
     builder.AddPartitionToTopic(6, 5, false, 4);
     builder.AddPartitionToTopic(3, 2, false, 8);
     builder.CloseTopic();
-    builder.OpenTopic("topic2");
+    ASSERT_TRUE(builder.OpenTopic("topic2"));
     builder.CloseTopic();
-    builder.OpenTopic("topic3");
+    ASSERT_TRUE(builder.OpenTopic("topic3"));
     builder.AddPartitionToTopic(3, 3, false, 6);
     builder.AddPartitionToTopic(8, 3, true, 9);
     builder.AddPartitionToTopic(6, 5, true, 0);
@@ -410,14 +410,14 @@ namespace {
     builder.AddBroker(2, "host2", 102);
     builder.AddBroker(5, "host1", 105);
     builder.CloseBrokerList();
-    builder.OpenTopic("topic1");
+    ASSERT_TRUE(builder.OpenTopic("topic1"));
     builder.AddPartitionToTopic(4, 5, false, 7);
     builder.AddPartitionToTopic(6, 5, false, 4);
     builder.AddPartitionToTopic(3, 2, false, 8);
     builder.CloseTopic();
-    builder.OpenTopic("topic2");
+    ASSERT_TRUE(builder.OpenTopic("topic2"));
     builder.CloseTopic();
-    builder.OpenTopic("topic3");
+    ASSERT_TRUE(builder.OpenTopic("topic3"));
     builder.AddPartitionToTopic(3, 3, false, 6);
     builder.AddPartitionToTopic(8, 3, true, 9);
     builder.AddPartitionToTopic(6, 5, true, 0);
@@ -434,14 +434,14 @@ namespace {
     builder.AddBroker(2, "host2", 102);
     builder.AddBroker(5, "host1", 101);
     builder.CloseBrokerList();
-    builder.OpenTopic("topic1");
+    ASSERT_TRUE(builder.OpenTopic("topic1"));
     builder.AddPartitionToTopic(1, 5, false, 7);
     builder.AddPartitionToTopic(6, 5, false, 4);
     builder.AddPartitionToTopic(3, 2, false, 8);
     builder.CloseTopic();
-    builder.OpenTopic("topic2");
+    ASSERT_TRUE(builder.OpenTopic("topic2"));
     builder.CloseTopic();
-    builder.OpenTopic("topic3");
+    ASSERT_TRUE(builder.OpenTopic("topic3"));
     builder.AddPartitionToTopic(3, 3, false, 6);
     builder.AddPartitionToTopic(8, 3, true, 9);
     builder.AddPartitionToTopic(6, 5, true, 0);
@@ -458,14 +458,14 @@ namespace {
     builder.AddBroker(2, "host2", 102);
     builder.AddBroker(5, "host1", 101);
     builder.CloseBrokerList();
-    builder.OpenTopic("topic1");
+    ASSERT_TRUE(builder.OpenTopic("topic1"));
     builder.AddPartitionToTopic(4, 5, false, 7);
     builder.AddPartitionToTopic(6, 2, false, 4);
     builder.AddPartitionToTopic(3, 2, false, 8);
     builder.CloseTopic();
-    builder.OpenTopic("topic2");
+    ASSERT_TRUE(builder.OpenTopic("topic2"));
     builder.CloseTopic();
-    builder.OpenTopic("topic3");
+    ASSERT_TRUE(builder.OpenTopic("topic3"));
     builder.AddPartitionToTopic(3, 3, false, 6);
     builder.AddPartitionToTopic(8, 3, true, 9);
     builder.AddPartitionToTopic(6, 5, true, 0);
@@ -482,14 +482,14 @@ namespace {
     builder.AddBroker(2, "host2", 102);
     builder.AddBroker(5, "host1", 101);
     builder.CloseBrokerList();
-    builder.OpenTopic("topic1");
+    ASSERT_TRUE(builder.OpenTopic("topic1"));
     builder.AddPartitionToTopic(4, 5, false, 7);
     builder.AddPartitionToTopic(6, 5, false, 4);
     builder.AddPartitionToTopic(3, 2, false, 8);
     builder.CloseTopic();
-    builder.OpenTopic("topic2");
+    ASSERT_TRUE(builder.OpenTopic("topic2"));
     builder.CloseTopic();
-    builder.OpenTopic("topic3");
+    ASSERT_TRUE(builder.OpenTopic("topic3"));
     builder.AddPartitionToTopic(3, 3, false, 6);
     builder.AddPartitionToTopic(8, 3, true, 9);
     builder.AddPartitionToTopic(6, 5, false, 5);
@@ -506,75 +506,78 @@ namespace {
     builder.OpenBrokerList();
     builder.AddBroker(5, "host1", 101);
     builder.AddBroker(2, "host2", 102);
-    bool threw = false;
-
-    try {
-      builder.AddBroker(2, "host3", 103);
-    } catch (const TMetadata::TDuplicateBroker &) {
-      threw = true;
-    }
-
-    ASSERT_TRUE(threw);
-    builder.Reset();
-
-    builder.OpenBrokerList();
-    builder.AddBroker(5, "host1", 101);
-    builder.AddBroker(2, "host2", 102);
     builder.AddBroker(7, "host3", 103);
     builder.AddBroker(3, "host4", 104);
+
+    /* The builder should ignore this attempt to add a duplicate broker ID. */
+    builder.AddBroker(3, "host5", 104);
+
     builder.CloseBrokerList();
-    builder.OpenTopic("topic1");
-    builder.AddPartitionToTopic(6, 5, false, 4);
-    builder.AddPartitionToTopic(3, 2, false, 8);
-    builder.AddPartitionToTopic(4, 5, false, 7);
+    ASSERT_TRUE(builder.OpenTopic("topic1"));
+    builder.AddPartitionToTopic(6, 5, true, 0);
+
+    /* The builder should ignore this attempt to add a duplicate partition. */
+    builder.AddPartitionToTopic(6, 2, true, 0);
+
+    /* The builder should ignore this attempt to add a partition with an
+       unknown broker ID. */
+    builder.AddPartitionToTopic(3, 1, true, 0);
+
     builder.CloseTopic();
-    threw = false;
 
-    try {
-      builder.OpenTopic("topic1");
-    } catch (const TMetadata::TDuplicateTopic &) {
-      threw = true;
+    /* The builder should reject an attempt to add a duplicate topic. */
+    ASSERT_FALSE(builder.OpenTopic("topic1"));
+
+    /* We should still be able to add another topic even though our attempt to
+       add a duplicate topic was rejected. */
+    ASSERT_TRUE(builder.OpenTopic("topic2"));
+
+    builder.AddPartitionToTopic(2, 7, true, 0);
+    builder.CloseTopic();
+    std::unique_ptr<TMetadata> md(builder.Build());
+
+    /* Make sure the metadata is correct. */
+
+    const auto &broker_vec = md->GetBrokers();
+    ASSERT_EQ(broker_vec.size(), 4U);
+    ASSERT_EQ(md->NumInServiceBrokers(), 2U);
+    std::unordered_set<int32_t> id_set;
+
+    for (const auto &broker : broker_vec) {
+      id_set.insert(broker.GetId());
     }
 
-    ASSERT_TRUE(threw);
-    builder.Reset();
+    ASSERT_EQ(id_set.size(), 4U);
+    ASSERT_FALSE(id_set.find(5) == id_set.end());
+    ASSERT_FALSE(id_set.find(2) == id_set.end());
+    ASSERT_FALSE(id_set.find(7) == id_set.end());
+    ASSERT_FALSE(id_set.find(3) == id_set.end());
+    const auto &topic_vec = md->GetTopics();
+    ASSERT_EQ(topic_vec.size(), 2U);
 
-    builder.OpenBrokerList();
-    builder.AddBroker(5, "host1", 101);
-    builder.AddBroker(2, "host2", 102);
-    builder.AddBroker(7, "host3", 103);
-    builder.AddBroker(3, "host4", 104);
-    builder.CloseBrokerList();
-    builder.OpenTopic("topic1");
-    builder.AddPartitionToTopic(6, 5, false, 4);
-    threw = false;
+    int index = md->FindTopicIndex("topic1");
+    ASSERT_GE(index, 0);
+    ASSERT_LT(index, 2);
+    const TMetadata::TTopic &topic_1 = topic_vec[index];
+    ASSERT_TRUE(topic_1.GetOutOfServicePartitions().empty());
+    const auto &topic_1_ok_partitions = topic_1.GetOkPartitions();
+    const auto &topic_1_all_partitions = topic_1.GetOkPartitions();
+    ASSERT_EQ(topic_1_ok_partitions.size(), 1U);
+    ASSERT_EQ(topic_1_all_partitions.size(), 1U);
+    ASSERT_EQ(topic_1_ok_partitions[0].GetId(), 6);
+    ASSERT_EQ(topic_1_all_partitions[0].GetId(), 6);
 
-    try {
-      builder.AddPartitionToTopic(3, 1, false, 8);
-    } catch (const TMetadata::TPartitionHasUnknownBroker &) {
-      threw = true;
-    }
-
-    ASSERT_TRUE(threw);
-    builder.Reset();
-
-    builder.OpenBrokerList();
-    builder.AddBroker(5, "host1", 101);
-    builder.AddBroker(2, "host2", 102);
-    builder.AddBroker(7, "host3", 103);
-    builder.AddBroker(3, "host4", 104);
-    builder.CloseBrokerList();
-    builder.OpenTopic("topic1");
-    builder.AddPartitionToTopic(6, 5, false, 4);
-    threw = false;
-
-    try {
-      builder.AddPartitionToTopic(6, 2, false, 8);
-    } catch (const TMetadata::TDuplicatePartition &) {
-      threw = true;
-    }
-
-    ASSERT_TRUE(threw);
+    index = md->FindTopicIndex("topic2");
+    ASSERT_GE(index, 0);
+    ASSERT_LT(index, 2);
+    const TMetadata::TTopic &topic_2 = topic_vec[index];
+    ASSERT_TRUE(topic_2.GetOutOfServicePartitions().empty());
+    const auto &topic_2_ok_partitions = topic_2.GetOkPartitions();
+    const auto &topic_2_all_partitions = topic_2.GetOkPartitions();
+    ASSERT_EQ(topic_2_ok_partitions.size(), 1U);
+    ASSERT_EQ(topic_2_all_partitions.size(), 1U);
+    ASSERT_EQ(topic_2_ok_partitions[0].GetId(), 2);
+    ASSERT_EQ(topic_2_all_partitions[0].GetId(), 2);
   }
 
 }  // namespace

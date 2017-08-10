@@ -91,16 +91,19 @@ TMetadata *TMetadataProto::BuildMetadataFromResponse(const void *response_buf,
 
     name.assign(reader.GetCurrentTopicNameBegin(),
         reader.GetCurrentTopicNameEnd());
-    builder.OpenTopic(name);
 
-    while (reader.NextPartitionInTopic()) {
-      int16_t error_code = reader.GetCurrentPartitionErrorCode();
-      builder.AddPartitionToTopic(reader.GetCurrentPartitionId(),
-          reader.GetCurrentPartitionLeaderId(),
-          CanSendToPartition(error_code), error_code);
+    /* If OpenTopic() returns false, we got a duplicate topic.  In this case,
+       the builder logs a warning and we ignore the topic. */
+    if (builder.OpenTopic(name)) {
+      while (reader.NextPartitionInTopic()) {
+        int16_t error_code = reader.GetCurrentPartitionErrorCode();
+        builder.AddPartitionToTopic(reader.GetCurrentPartitionId(),
+            reader.GetCurrentPartitionLeaderId(),
+            CanSendToPartition(error_code), error_code);
+      }
+
+      builder.CloseTopic();
     }
-
-    builder.CloseTopic();
   }
 
   return builder.Build();

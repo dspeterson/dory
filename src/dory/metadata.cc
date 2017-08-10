@@ -33,6 +33,10 @@
 using namespace Base;
 using namespace Dory;
 
+SERVER_COUNTER(MetadataDuplicateBrokerId);
+SERVER_COUNTER(MetadataDuplicatePartition);
+SERVER_COUNTER(MetadataDuplicateTopic);
+SERVER_COUNTER(MetadataPartitionHasUnknownBroker);
 SERVER_COUNTER(MetadataSanityCheckFail);
 SERVER_COUNTER(MetadataSanityCheckSuccess);
 
@@ -61,11 +65,13 @@ void TMetadata::TBuilder::AddBroker(int32_t kafka_id, std::string &&hostname,
   assert(State == TState::AddingBrokers);
   auto result = BrokerMap.insert(std::make_pair(kafka_id, Brokers.size()));
 
-  if (!result.second) {
-    THROW_ERROR(TDuplicateBroker);
+  if (result.second) {
+    Brokers.push_back(TBroker(kafka_id, std::move(hostname), port));
+  } else {
+    MetadataDuplicateBrokerId.Increment();
+    syslog(LOG_WARNING, "Ignoring duplicate broker ID %d in metadata response",
+        static_cast<int>(kafka_id));
   }
-
-  Brokers.push_back(TBroker(kafka_id, std::move(hostname), port));
 }
 
 void TMetadata::TBuilder::CloseBrokerList() {
@@ -74,36 +80,42 @@ void TMetadata::TBuilder::CloseBrokerList() {
   State = TState::AddingTopics;
 }
 
-void TMetadata::TBuilder::OpenTopic(const std::string &name) {
+bool TMetadata::TBuilder::OpenTopic(const std::string &name) {
   assert(this);
   assert(State == TState::AddingTopics);
-  auto result = TopicNameToIndex.insert(std::make_pair(name, Topics.size()));
+  bool success =
+      TopicNameToIndex.insert(std::make_pair(name, Topics.size())).second;
 
-  if (!result.second) {
-    THROW_ERROR(TDuplicateTopic);
+  if (success) {
+    CurrentTopicIndex = Topics.size();
+    Topics.push_back(TTopic());
+    CurrentTopicPartitions.clear();
+    State = TState::AddingOneTopic;
+    assert(TopicNameToIndex.size() == Topics.size());
+    CurrentTopicName = name;
+  } else {
+    MetadataDuplicateTopic.Increment();
+    syslog(LOG_WARNING, "Ignoring duplicate topic [%s] in metadata response",
+        name.c_str());
   }
 
-  CurrentTopicIndex = Topics.size();
-  Topics.push_back(TTopic());
-  CurrentTopicPartitions.clear();
-  State = TState::AddingOneTopic;
-  assert(TopicNameToIndex.size() == Topics.size());
+  return success;
 }
 
 void TMetadata::TBuilder::AddPartitionToTopic(int32_t partition_id,
     int32_t broker_id, bool can_send_to_partition, int16_t error_code) {
   assert(this);
   assert(State == TState::AddingOneTopic);
-  auto ret = CurrentTopicPartitions.insert(partition_id);
-
-  if (!ret.second) {
-    THROW_ERROR(TDuplicatePartition);
-  }
-
   auto iter = BrokerMap.find(broker_id);
 
   if (iter == BrokerMap.end()) {
-    THROW_ERROR(TPartitionHasUnknownBroker);
+    MetadataPartitionHasUnknownBroker.Increment();
+    syslog(LOG_WARNING, "Ignoring partition ID %d for topic [%s] in "
+        "metadata response due to unknown broker ID %d.  This can occur when "
+        "a partition with only one replica resides on a broker that is "
+        "currently down.", static_cast<int>(partition_id),
+        CurrentTopicName.c_str(), static_cast<int>(broker_id));
+    return;
   }
 
   size_t broker_index = iter->second;
@@ -114,6 +126,16 @@ void TMetadata::TBuilder::AddPartitionToTopic(int32_t partition_id,
            "TMetadata::TBuilder::AddPartitionToTopic() is out of range: size "
            "%lu", static_cast<unsigned long>(broker_index),
            static_cast<unsigned long>(Brokers.size()));
+    return;
+  }
+
+  auto ret = CurrentTopicPartitions.insert(partition_id);
+
+  if (!ret.second) {
+    MetadataDuplicatePartition.Increment();
+    syslog(LOG_WARNING, "Ignoring duplicate partition ID %d for topic [%s] in "
+        "metadata response", static_cast<int>(partition_id),
+        CurrentTopicName.c_str());
     return;
   }
 
@@ -218,6 +240,7 @@ void TMetadata::TBuilder::CloseTopic() {
      will make an observable difference in practice, but it doesn't hurt. */
   std::shuffle(t.OkPartitions.begin(), t.OkPartitions.end(), RandomEngine);
 
+  CurrentTopicName.clear();
   State = TState::AddingTopics;
 }
 

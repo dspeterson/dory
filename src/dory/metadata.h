@@ -42,29 +42,6 @@ namespace Dory {
     NO_COPY_SEMANTICS(TMetadata);
 
     public:
-    /* Exception base class for metadata errors. */
-    class TBadMetadata : public std::runtime_error {
-      public:
-      virtual ~TBadMetadata() noexcept { }
-
-      protected:
-      explicit TBadMetadata(const char *msg)
-          : std::runtime_error(msg) {
-      }
-    };  // TBadMetadata
-
-    DEFINE_ERROR(TDuplicateBroker, TBadMetadata,
-        "Metadata contains duplicate broker ID");
-
-    DEFINE_ERROR(TDuplicateTopic, TBadMetadata,
-        "Metadata contains duplicate topic");
-
-    DEFINE_ERROR(TPartitionHasUnknownBroker, TBadMetadata,
-        "Metadata contains partition with unknown broker ID");
-
-    DEFINE_ERROR(TDuplicatePartition, TBadMetadata,
-        "Metadata contains duplicate partition for topic");
-
     class TBroker final {
       public:
       int32_t GetId() const {
@@ -268,7 +245,8 @@ namespace Dory {
 
       void CloseBrokerList();
 
-      void OpenTopic(const std::string &name);
+      /* Return true on success, or false on duplicate topic. */
+      bool OpenTopic(const std::string &name);
 
       void AddPartitionToTopic(int32_t partition_id, int32_t broker_id,
           bool can_send_to_partition, int16_t error_code);
@@ -300,6 +278,8 @@ namespace Dory {
 
       /* Key is Kafka ID, and value is index in 'Brokers' vector. */
       std::unordered_map<int32_t, size_t> BrokerMap;
+
+      std::string CurrentTopicName;
 
       size_t CurrentTopicIndex;
 

@@ -114,11 +114,6 @@ std::unique_ptr<TMetadata> TMetadataFetcher::Fetch(int timeout_ms) {
     BadMetadataResponse.Increment();
     syslog(LOG_ERR, "Failed to parse metadata response: %s", x.what());
     return std::move(result);
-  } catch (const TMetadata::TBadMetadata &x) {
-    BadMetadataContent.Increment();
-    syslog(LOG_ERR, "Failed to build metadata structure from response: %s",
-           x.what());
-    return std::move(result);
   }
 
   bool bad_metadata = false;
