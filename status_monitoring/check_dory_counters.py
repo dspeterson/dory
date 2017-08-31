@@ -597,12 +597,8 @@ def CheckSocketErrorDeltas(deltas, old_nagios_code):
                       'ConnectorSocketBrokerClose',
                       'ConnectorSocketError',
                       'ConnectorSocketTimeout',
-                      'MetadataResponseRead1LostTcpConnection',
-                      'MetadataResponseRead1TimedOut',
-                      'MetadataResponseRead2LostTcpConnection',
-                      'MetadataResponseRead2TimedOut',
-                      'MetadataResponseRead2UnexpectedEnd',
-                      'ReadMetadataResponse2Fail',
+                      'MetadataResponseReadLostTcpConnection',
+                      'MetadataResponseReadTimeout',
                       'SendMetadataRequestFail',
                       'SendMetadataRequestLostTcpConnection',
                       'UnixStreamInputSocketError',
@@ -698,11 +694,9 @@ def AnalyzeDeltas(deltas):
                              EC_WARNING, nagios_code)
     nagios_code = CheckDelta(deltas, 'MetadataResponseNegativeBrokerCount', 0,
                              EC_WARNING, nagios_code)
-    nagios_code = CheckDelta(deltas, 'MetadataResponseHasExtraJunk', 0,
+    nagios_code = CheckDelta(deltas, 'ShortMetadataResponse', 0,
                              EC_WARNING, nagios_code)
     nagios_code = CheckDelta(deltas, 'BadMetadataResponseSize', 0, EC_WARNING,
-                             nagios_code)
-    nagios_code = CheckDelta(deltas, 'BadMetadataContent', 0, EC_WARNING,
                              nagios_code)
     nagios_code = CheckDelta(deltas, 'BadMetadataResponse', 0, EC_WARNING,
                              nagios_code)
@@ -746,16 +740,16 @@ def AnalyzeDeltas(deltas):
                              EC_WARNING, nagios_code)
     nagios_code = CheckDelta(deltas, 'UnixStreamInputUncleanDisconnect', 0,
                              EC_WARNING, nagios_code)
-    nagios_code = CheckDelta(deltas, 'UnixStreamInputShortSizeField', 0,
-                             EC_WARNING, nagios_code)
-    nagios_code = CheckDelta(deltas, 'UnixStreamInputLongSizeField', 0,
-                             EC_WARNING, nagios_code)
     nagios_code = CheckDelta(deltas, 'TcpInputUncleanDisconnect', 0,
                              EC_WARNING, nagios_code)
-    nagios_code = CheckDelta(deltas, 'TcpInputShortSizeField', 0, EC_WARNING,
+    nagios_code = CheckDelta(deltas, 'TcpInputInvalidSizeField', 0, EC_WARNING,
                              nagios_code)
-    nagios_code = CheckDelta(deltas, 'TcpInputLongSizeField', 0, EC_WARNING,
+    nagios_code = CheckDelta(deltas, 'TcpInputMsgBodyTooLarge', 0, EC_WARNING,
                              nagios_code)
+    nagios_code = CheckDelta(deltas, 'UnixStreamInputInvalidSizeField', 0,
+                             EC_WARNING, nagios_code)
+    nagios_code = CheckDelta(deltas, 'UnixStreamInputMsgBodyTooLarge', 0,
+                             EC_WARNING, nagios_code)
 
     # Check counters indicating socket-related errors.  These are summed
     # together and compared against thresholds for Warning and Critical.
