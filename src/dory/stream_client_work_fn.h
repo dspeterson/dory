@@ -27,6 +27,7 @@
 #include <base/buf.h>
 #include <base/fd.h>
 #include <base/field_access.h>
+#include <base/stream_msg_with_size_reader.h>
 #include <capped/pool.h>
 #include <dory/anomaly_tracker.h>
 #include <dory/config.h>
@@ -58,43 +59,9 @@ namespace Dory {
       ShutdownRequest = 1
     };  // TMainLoopPollItem
 
-    enum class TSockReadStatus {
-      Open,
-      ClientClosed,
-      Error
-    };  // TSockReadResult
-
-    enum class TMsgReadResult {
-      MsgReady,
-      NeedMoreData,
-      ClientClosed,
-      Error
-    };  // TSockReadResult
-
-    static const size_t SIZE_FIELD_SIZE = sizeof(int32_t);
-
-    TSockReadStatus DoSockRead(size_t min_size);
-
-    void HandleShortMsgSize(size_t msg_size);
-
-    void HandleLongMsgSize(size_t msg_size);
-
-    int32_t ReadSizeField() const {
-      assert(this);
-      assert(ReceiveBuf.DataSize() >= SIZE_FIELD_SIZE);
-
-      /* The size field is always first, and gives the size of the entire
-         message, including the size field. */
-      return ReadInt32FromHeader(ReceiveBuf.Data());
-    }
-
-    bool CheckMsgSize(int32_t msg_size);
-
-    TMsgReadResult TryReadMsgData();
-
-    bool TryProcessMsgData();
-
     void HandleClientClosed() const;
+
+    void HandleDataInvalid();
 
     bool HandleSockReadReady();
 
@@ -122,10 +89,10 @@ namespace Dory {
     /* UNIX domain stream or local TCP socket connected to client. */
     Base::TFd ClientSocket;
 
-    /* We read input message data from the socket into this buffer.  For
-       efficiency, we attempt to do large reads.  Therefore at any given
-       instant, the buffer may contain data for multiple messages. */
-    Base::TBuf<uint8_t> ReceiveBuf;
+    using TStreamReader = Base::TStreamMsgWithSizeReader<int32_t>;
+
+    /* This handles the details of reading messages from the client socket. */
+    TStreamReader StreamReader;
 
     /* Used for poll() system call in main loop. */
     Util::TPollArray<TMainLoopPollItem, 2> MainLoopPollArray;

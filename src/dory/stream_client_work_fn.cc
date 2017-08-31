@@ -22,6 +22,7 @@
 #include <dory/stream_client_work_fn.h>
 
 #include <cassert>
+#include <system_error>
 #include <utility>
 
 #include <poll.h>
@@ -45,16 +46,16 @@ SERVER_COUNTER(NewTcpClient);
 SERVER_COUNTER(NewUnixClient);
 SERVER_COUNTER(TcpInputCleanDisconnect);
 SERVER_COUNTER(TcpInputForwardMsg);
-SERVER_COUNTER(TcpInputLongSizeField);
-SERVER_COUNTER(TcpInputShortSizeField);
+SERVER_COUNTER(TcpInputInvalidSizeField);
+SERVER_COUNTER(TcpInputMsgBodyTooLarge);
 SERVER_COUNTER(TcpInputSocketError);
 SERVER_COUNTER(TcpInputSocketGotData);
 SERVER_COUNTER(TcpInputSocketRead);
 SERVER_COUNTER(TcpInputUncleanDisconnect);
 SERVER_COUNTER(UnixStreamInputCleanDisconnect);
 SERVER_COUNTER(UnixStreamInputForwardMsg);
-SERVER_COUNTER(UnixStreamInputLongSizeField);
-SERVER_COUNTER(UnixStreamInputShortSizeField);
+SERVER_COUNTER(UnixStreamInputInvalidSizeField);
+SERVER_COUNTER(UnixStreamInputMsgBodyTooLarge);
 SERVER_COUNTER(UnixStreamInputSocketError);
 SERVER_COUNTER(UnixStreamInputSocketGotData);
 SERVER_COUNTER(UnixStreamInputSocketRead);
@@ -67,7 +68,10 @@ TStreamClientWorkFn::TStreamClientWorkFn(nullptr_t) noexcept
       MsgStateTracker(nullptr),
       AnomalyTracker(nullptr),
       OutputQueue(nullptr),
-      ShutdownRequestFd(nullptr) {
+      ShutdownRequestFd(nullptr),
+      /* The value of 0 for the max message body size is just a placeholder.
+         The real value will be set in SetState(). */
+      StreamReader(true, true, 0, 64 * 1024) {
 }
 
 TStreamClientWorkFn &TStreamClientWorkFn::TStreamClientWorkFn::operator=(
@@ -81,7 +85,7 @@ TStreamClientWorkFn &TStreamClientWorkFn::TStreamClientWorkFn::operator=(
   OutputQueue = nullptr;
   ShutdownRequestFd = nullptr;
   ClientSocket.Reset();
-  ReceiveBuf.Clear();
+  StreamReader.Reset();
   return *this;
 }
 
@@ -93,6 +97,8 @@ void TStreamClientWorkFn::operator()() {
   assert(AnomalyTracker);
   assert(OutputQueue);
   assert(ShutdownRequestFd);
+  assert(ClientSocket >= 0);
+  assert(StreamReader.GetFd() == ClientSocket);
 
   if (IsTcp) {
     NewTcpClient.Increment();
@@ -115,7 +121,7 @@ void TStreamClientWorkFn::operator()() {
     int ret = IfLt0(poll(MainLoopPollArray, MainLoopPollArray.Size(), -1));
     assert(ret > 0);
     assert(sock_item.revents || shutdown_item.revents);
-  } while (sock_item.revents && HandleSockReadReady());
+  } while (!shutdown_item.revents && HandleSockReadReady());
 }
 
 void TStreamClientWorkFn::SetState(bool is_tcp, const TConfig &config,
@@ -131,245 +137,20 @@ void TStreamClientWorkFn::SetState(bool is_tcp, const TConfig &config,
   OutputQueue = &output_queue;
   ShutdownRequestFd = &shutdown_request_fd;
   ClientSocket = std::move(client_socket);
-}
-
-TStreamClientWorkFn::TSockReadStatus
-TStreamClientWorkFn::DoSockRead(size_t min_size) {
-  assert(this);
-  assert(min_size);
-
-  if (IsTcp) {
-    TcpInputSocketRead.Increment();
-  } else {
-    UnixStreamInputSocketRead.Increment();
-  }
-
-  ReceiveBuf.EnsureSpace(min_size);
-  ssize_t result = 0;
-
-  try {
-    result = IfLt0(recv(ClientSocket, ReceiveBuf.Space(),
-        ReceiveBuf.SpaceSize(), 0));
-  } catch (const std::system_error &x) {
-    if (LostTcpConnection(x)) {
-      if (IsTcp) {
-        TcpInputSocketError.Increment();
-      } else {
-        UnixStreamInputSocketError.Increment();
-      }
-
-      syslog(LOG_ERR, "%s input thread lost client connection: %s",
-          IsTcp ? "TCP" : "UNIX stream", x.what());
-      return TSockReadStatus::Error;
-    }
-
-    throw;  // anything else is fatal
-  }
-
-  assert(result >= 0);
-
-  if (result == 0) {
-    return TSockReadStatus::ClientClosed;
-  }
-
-  /* Read was successful, although the amount of data obtained may be less than
-     what the caller hoped for. */
-  ReceiveBuf.MarkSpaceConsumed(result);
-
-  if (IsTcp) {
-    TcpInputSocketGotData.Increment();
-  } else {
-    UnixStreamInputSocketGotData.Increment();
-  }
-
-  return TSockReadStatus::Open;
-}
-
-void TStreamClientWorkFn::HandleShortMsgSize(size_t msg_size) {
-  assert(this);
-
-  if (IsTcp) {
-    TcpInputShortSizeField.Increment();
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR, "Got TCP input message with short size: %lu",
-          static_cast<unsigned long>(msg_size));
-    }
-  } else {
-    UnixStreamInputShortSizeField.Increment();
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR, "Got UNIX stream input message with short size: %lu",
-          static_cast<unsigned long>(msg_size));
-    }
-  }
-
-  const uint8_t *data_begin = reinterpret_cast<const uint8_t *>(
-      ReceiveBuf.Data());
-  const uint8_t *data_end = data_begin + ReceiveBuf.DataSize();
-  AnomalyTracker->TrackMalformedMsgDiscard(data_begin, data_end);
-}
-
-void TStreamClientWorkFn::HandleLongMsgSize(size_t msg_size) {
-  assert(this);
-
-  if (IsTcp) {
-    TcpInputLongSizeField.Increment();
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR, "Disconnecting on large TCP input message: %lu",
-          static_cast<unsigned long>(msg_size));
-    }
-  } else {
-    UnixStreamInputLongSizeField.Increment();
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR,
-          "Disconnecting on large UNIX stream input message: %lu",
-          static_cast<unsigned long>(msg_size));
-    }
-  }
-
-  const uint8_t *data_begin = reinterpret_cast<const uint8_t *>(
-      ReceiveBuf.Data());
-  const uint8_t *data_end = data_begin + ReceiveBuf.DataSize();
-  AnomalyTracker->TrackMalformedMsgDiscard(data_begin, data_end);
-}
-
-bool TStreamClientWorkFn::CheckMsgSize(int32_t msg_size) {
-  assert(this);
-
-  if (msg_size < static_cast<int32_t>(SIZE_FIELD_SIZE)) {
-    HandleShortMsgSize(msg_size);
-    return false;
-  }
-
-  if (static_cast<size_t>(msg_size) > Config->MaxStreamInputMsgSize) {
-    HandleLongMsgSize(msg_size);
-    return false;
-  }
-
-  return true;
-}
-
-TStreamClientWorkFn::TMsgReadResult
-TStreamClientWorkFn::TryReadMsgData() {
-  assert(this);
-  bool did_read = false;
-
-  /* Move any message data to front of buffer.  This improves efficiency by
-     maximizing read size. */
-  ReceiveBuf.MoveDataToFront();
-
-  if (ReceiveBuf.DataSize() < SIZE_FIELD_SIZE) {
-    switch (DoSockRead(SIZE_FIELD_SIZE - ReceiveBuf.DataSize())) {
-      case TSockReadStatus::Open: {
-        break;
-      }
-      case TSockReadStatus::ClientClosed: {
-        return TMsgReadResult::ClientClosed;
-      }
-      case TSockReadStatus::Error: {
-        return TMsgReadResult::Error;
-      }
-      NO_DEFAULT_CASE;
-    }
-
-    did_read = true;
-
-    if (ReceiveBuf.DataSize() < SIZE_FIELD_SIZE) {
-      return TMsgReadResult::NeedMoreData;  // try again later
-    }
-  }
-
-  /* The size field is always first, and gives the size of the entire message,
-     including the size field. */
-  int32_t msg_size = ReadSizeField();
-
-  if (!CheckMsgSize(msg_size)) {
-    return TMsgReadResult::Error;
-  }
-
-  if (ReceiveBuf.DataSize() >= static_cast<size_t>(msg_size)) {
-    return TMsgReadResult::MsgReady;
-  }
-
-  if (did_read) {
-    return TMsgReadResult::NeedMoreData;  // try again later
-  }
-
-  switch (DoSockRead(msg_size - ReceiveBuf.DataSize())) {
-    case TSockReadStatus::Open: {
-      break;
-    }
-    case TSockReadStatus::ClientClosed: {
-      return TMsgReadResult::ClientClosed;
-    }
-    case TSockReadStatus::Error: {
-      return TMsgReadResult::Error;
-    }
-    NO_DEFAULT_CASE;
-  }
-
-  return (ReceiveBuf.DataSize() >= static_cast<size_t>(msg_size)) ?
-      TMsgReadResult::MsgReady : TMsgReadResult::NeedMoreData;
-}
-
-bool TStreamClientWorkFn::TryProcessMsgData() {
-  assert(this);
-
-  /* On entry, we know we have at least one complete message.  Process that
-     message and any additional complete messages now available. */
-
-  int32_t msg_size = ReadSizeField();
-  assert((msg_size >= static_cast<int32_t>(SIZE_FIELD_SIZE)) &&
-      (static_cast<size_t>(msg_size) <= Config->MaxStreamInputMsgSize));
-
-  do {
-    char * const msg_begin = reinterpret_cast<char *>(&ReceiveBuf.Data()[0]);
-    TMsg::TPtr msg = InputDg::BuildMsgFromDg(msg_begin, msg_size, *Config,
-        *Pool, *AnomalyTracker, *MsgStateTracker);
-
-    if (msg) {
-      OutputQueue->Put(std::move(msg));
-
-      if (IsTcp) {
-        TcpInputForwardMsg.Increment();
-      } else {
-        UnixStreamInputForwardMsg.Increment();
-      }
-    }
-
-    ReceiveBuf.MarkDataConsumed(msg_size);
-
-    if (ReceiveBuf.DataSize() < SIZE_FIELD_SIZE) {
-      break;
-    }
-
-    msg_size = ReadSizeField();
-
-    if (!CheckMsgSize(msg_size)) {
-      return false;
-    }
-  } while (ReceiveBuf.DataSize() >= static_cast<size_t>(msg_size));
-
-  return true;
+  StreamReader.Reset(ClientSocket);
+  StreamReader.SetMaxMsgBodySize(config.MaxStreamInputMsgSize);
 }
 
 void TStreamClientWorkFn::HandleClientClosed() const {
-  if (ReceiveBuf.DataIsEmpty()) {
+  if (StreamReader.GetDataSize() == 0) {
     if (IsTcp) {
       TcpInputCleanDisconnect.Increment();
     } else {
       UnixStreamInputCleanDisconnect.Increment();
     }
   } else {
-    const uint8_t *data_begin = ReceiveBuf.Data();
-    const uint8_t *data_end = data_begin + ReceiveBuf.DataSize();
+    const uint8_t *data_begin = StreamReader.GetData();
+    const uint8_t *data_end = data_begin + StreamReader.GetDataSize();
     AnomalyTracker->TrackStreamClientUncleanDisconnect(IsTcp, data_begin,
         data_end);
 
@@ -393,29 +174,126 @@ void TStreamClientWorkFn::HandleClientClosed() const {
   }
 }
 
-bool TStreamClientWorkFn::HandleSockReadReady() {
+void TStreamClientWorkFn::HandleDataInvalid() {
   assert(this);
+  assert(StreamReader.GetDataInvalidReason().IsKnown());
 
-  switch (TryReadMsgData()) {
-    case TMsgReadResult::MsgReady: {
-      if (!TryProcessMsgData()) {
-        return false;
+  switch (*StreamReader.GetDataInvalidReason()) {
+    case TStreamMsgWithSizeReaderBase::TDataInvalidReason::InvalidSizeField: {
+      if (IsTcp) {
+        TcpInputInvalidSizeField.Increment();
+        static TLogRateLimiter lim(std::chrono::seconds(30));
+
+        if (lim.Test()) {
+          syslog(LOG_ERR, "Got TCP input message with invalid size");
+        }
+      } else {
+        UnixStreamInputInvalidSizeField.Increment();
+        static TLogRateLimiter lim(std::chrono::seconds(30));
+
+        if (lim.Test()) {
+          syslog(LOG_ERR, "Got UNIX stream input message with invalid size");
+        }
       }
 
       break;
     }
-    case TMsgReadResult::NeedMoreData: {
+    case TStreamMsgWithSizeReaderBase::TDataInvalidReason::MsgBodyTooLarge: {
+      if (IsTcp) {
+        TcpInputMsgBodyTooLarge.Increment();
+        static TLogRateLimiter lim(std::chrono::seconds(30));
+
+        if (lim.Test()) {
+          syslog(LOG_ERR, "Got too large TCP input message");
+        }
+      } else {
+        UnixStreamInputMsgBodyTooLarge.Increment();
+        static TLogRateLimiter lim(std::chrono::seconds(30));
+
+        if (lim.Test()) {
+          syslog(LOG_ERR, "Got too large UNIX stream input message");
+        }
+      }
+
       break;
-    }
-    case TMsgReadResult::ClientClosed: {
-      HandleClientClosed();
-      return false;
-    }
-    case TMsgReadResult::Error: {
-      return false;
     }
     NO_DEFAULT_CASE;
   }
+
+  const uint8_t *data_begin = StreamReader.GetData();
+  const uint8_t *data_end = data_begin + StreamReader.GetDataSize();
+  AnomalyTracker->TrackMalformedMsgDiscard(data_begin, data_end);
+}
+
+bool TStreamClientWorkFn::HandleSockReadReady() {
+  assert(this);
+
+  if (IsTcp) {
+    TcpInputSocketRead.Increment();
+  } else {
+    UnixStreamInputSocketRead.Increment();
+  }
+
+  TStreamMsgReader::TState reader_state = TStreamMsgReader::TState::AtEnd;
+
+  try {
+    reader_state = StreamReader.Read();
+  } catch (const std::system_error &x) {
+    if (LostTcpConnection(x)) {
+      if (IsTcp) {
+        TcpInputSocketError.Increment();
+      } else {
+        UnixStreamInputSocketError.Increment();
+      }
+
+      syslog(LOG_ERR, "%s input thread lost client connection: %s",
+          IsTcp ? "TCP" : "UNIX stream", x.what());
+      return false;
+    }
+
+    throw;  // anything else is fatal
+  }
+
+  do {
+    switch (reader_state) {
+      case TStreamMsgReader::TState::ReadNeeded: {
+        break;
+      }
+      case TStreamMsgReader::TState::MsgReady: {
+        TMsg::TPtr msg = InputDg::BuildMsgFromDg(StreamReader.GetReadyMsg(),
+            StreamReader.GetReadyMsgSize(), *Config, *Pool, *AnomalyTracker,
+            *MsgStateTracker);
+
+        if (msg) {
+          OutputQueue->Put(std::move(msg));
+
+          if (IsTcp) {
+            TcpInputForwardMsg.Increment();
+          } else {
+            UnixStreamInputForwardMsg.Increment();
+          }
+        }
+
+        reader_state = StreamReader.ConsumeReadyMsg();
+        break;
+      }
+      case TStreamMsgReader::TState::DataInvalid: {
+        HandleDataInvalid();
+        return false;
+      }
+      case TStreamMsgReader::TState::AtEnd: {
+        HandleClientClosed();
+        return false;
+      }
+      NO_DEFAULT_CASE;
+    }
+
+    if (IsTcp) {
+      TcpInputSocketGotData.Increment();
+    } else {
+      UnixStreamInputSocketGotData.Increment();
+    }
+  } while (reader_state == TStreamMsgReader::TState::MsgReady);
 
   return true;
 }
