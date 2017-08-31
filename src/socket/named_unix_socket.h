@@ -80,6 +80,6 @@ namespace Socket {
     /* See <socket/address.h>. */
     friend void ::Socket::Bind(TNamedUnixSocket &socket,
         const TAddress &address);
-  };  // class TNamedUnixSocket
+  };  // TNamedUnixSocket
 
 }  // Socket
