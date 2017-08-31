@@ -223,8 +223,10 @@ void TV0ClientHandler::WriteSingleTopic(TMetadataResponseWriter &writer,
   for (size_t i = 0; i < pvec.size(); ++i) {
     writer.OpenPartition(0, i, node_id);
     writer.OpenReplicaList();
+    writer.AddReplica(node_id);
     writer.CloseReplicaList();
     writer.OpenCaughtUpReplicaList();
+    writer.AddCaughtUpReplica(node_id);
     writer.CloseCaughtUpReplicaList();
     writer.ClosePartition();
     node_id = (node_id + 1) % node_count;
