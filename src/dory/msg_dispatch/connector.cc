@@ -38,7 +38,6 @@
 #include <base/gettid.h>
 #include <base/no_default_case.h>
 #include <base/time_util.h>
-#include <dory/kafka_proto/errors.h>
 #include <dory/kafka_proto/request_response.h>
 #include <dory/msg_dispatch/produce_response_processor.h>
 #include <dory/msg_state_tracker.h>
@@ -95,7 +94,12 @@ TConnector::TConnector(size_t my_broker_index, TDispatcherSharedState &ds)
       PauseInProgress(false),
       Destroying(false),
       ResponseReader(ds.ProduceProtocol->CreateProduceResponseReader()),
+      /* Note: The max message body size value is a loose upper bound to guard
+         against a response with a ridiculously large size field. */
+      StreamReader(false, true, 4 * 1024 * 1024, 64 * 1024),
       OkShutdown(true) {
+  static_assert(sizeof(TStreamReader::TSizeFieldType) ==
+      REQUEST_OR_RESPONSE_SIZE_SIZE, "Wrong size field size for StreamReader");
 }
 
 TConnector::~TConnector() noexcept {
@@ -491,84 +495,10 @@ bool TConnector::HandleSockWriteReady() {
   return true;
 }
 
-bool TConnector::DoSockRead(size_t min_size) {
-  assert(this);
-  assert(min_size);
-  ConnectorDoSocketRead.Increment();
-  ReceiveBuf.EnsureSpace(min_size);
-  ssize_t result = 0;
-
-  try {
-    result = IfLt0(recv(Sock, ReceiveBuf.Space(), ReceiveBuf.SpaceSize(), 0));
-  } catch (const std::system_error &x) {
-    if (LostTcpConnection(x)) {
-      syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting "
-          "pause due to lost TCP connection on attempted read: %s",
-          static_cast<int>(Gettid()),
-          static_cast<unsigned long>(MyBrokerIndex), MyBrokerId(), x.what());
-      ConnectorSocketError.Increment();
-      Ds.PauseButton.Push();
-      return false;
-    }
-
-    throw;  // anything else is fatal
-  }
-
-  if (result == 0) {
-    syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting "
-        "pause because TCP connection unexpectedly closed by broker on "
-        "attempted read", static_cast<int>(Gettid()),
-        static_cast<unsigned long>(MyBrokerIndex), MyBrokerId());
-    ConnectorSocketBrokerClose.Increment();
-    Ds.PauseButton.Push();
-    return false;
-  }
-
-  /* Read was successful, although the amount of data obtained may be less than
-     what the caller hoped for. */
-  ReceiveBuf.MarkSpaceConsumed(result);
-  ConnectorSocketReadSuccess.Increment();
-  return true;
-}
-
-bool TConnector::TryReadProduceResponses() {
-  assert(this);
-  bool did_read = false;
-
-  /* Move any response data to front of buffer.  This improves efficiency by
-     maximizing read size. */
-  ReceiveBuf.MoveDataToFront();
-
-  if (ReceiveBuf.DataSize() < REQUEST_OR_RESPONSE_SIZE_SIZE) {
-    if (!DoSockRead(REQUEST_OR_RESPONSE_SIZE_SIZE - ReceiveBuf.DataSize())) {
-      return false;  // socket error
-    }
-
-    did_read = true;
-
-    if (ReceiveBuf.DataSize() < REQUEST_OR_RESPONSE_SIZE_SIZE) {
-      return true;  // still not enough data: try again later
-    }
-  }
-
-  size_t response_size = GetRequestOrResponseSize(ReceiveBuf.Data());
-
-  if ((ReceiveBuf.DataSize() < response_size) && !did_read &&
-      !DoSockRead(response_size - ReceiveBuf.DataSize())) {
-    return false;  // socket error
-  }
-
-  /* Ok, we made our best attempt to get enough data for a produce request
-     without blocking.  Return true to indicate that no error occurred.  Our
-     caller will determine whether there is now enough data, and act
-     appropriately. */
-  return true;
-}
-
-bool TConnector::ProcessSingleProduceResponse(size_t response_size) {
+bool TConnector::ProcessSingleProduceResponse() {
   assert(this);
   assert(!AckWaitQueue.empty());
-  assert(ReceiveBuf.DataSize() >= response_size);
+  assert(StreamReader.GetState() == TStreamMsgReader::TState::MsgReady);
   bool keep_running = true;
   bool pause = false;
   TProduceRequest request(std::move(AckWaitQueue.front()));
@@ -576,31 +506,41 @@ bool TConnector::ProcessSingleProduceResponse(size_t response_size) {
   TProduceResponseProcessor processor(*ResponseReader, Ds, DebugLoggerReceive,
       MyBrokerIndex, MyBrokerId());
 
-  switch (processor.ProcessResponse(request, ReceiveBuf.Data(),
-      response_size)) {
-    case TProduceResponseProcessor::TAction::KeepRunning: {
-      break;
-    }
-    case TProduceResponseProcessor::TAction::PauseAndDeferFinish: {
-      /* Start pause but keep processing produce responses until fast shutdown
-         time limit expiry. */
-      SetPauseInProgress();
-      pause = true;
-      break;
-    }
-    case TProduceResponseProcessor::TAction::PauseAndFinishNow: {
-      /* A serious enough error occurred that communication with the broker can
-         not continue.  Shut down immediately after telling the other threads
-         to pause. */
-      keep_running = false;
-      pause = true;
+  try {
+    switch (processor.ProcessResponse(request, StreamReader.GetReadyMsg(),
+        StreamReader.GetReadyMsgSize())) {
+      case TProduceResponseProcessor::TAction::KeepRunning: {
+        break;
+      }
+      case TProduceResponseProcessor::TAction::PauseAndDeferFinish: {
+        /* Start pause but keep processing produce responses until fast
+           shutdown time limit expiry. */
+        SetPauseInProgress();
+        pause = true;
+        break;
+      }
+      case TProduceResponseProcessor::TAction::PauseAndFinishNow: {
+        /* A serious enough error occurred that communication with the broker
+           can not continue.  Shut down immediately after telling the other
+           threads to pause. */
+        keep_running = false;
+        pause = true;
 
-      /* Handle any messages that we got no ACK for. */
-      NoAckAfterPause.splice(NoAckAfterPause.end(),
-          processor.TakeMsgsWithoutAcks());
-      break;
+        /* Handle any messages that we got no ACK for. */
+        NoAckAfterPause.splice(NoAckAfterPause.end(),
+            processor.TakeMsgsWithoutAcks());
+        break;
+      }
+      NO_DEFAULT_CASE;
     }
-    NO_DEFAULT_CASE;
+  } catch (const TProduceResponseReaderApi::TBadProduceResponse &x) {
+    syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting "
+        "pause due to unexpected response from broker: %s",
+        static_cast<int>(Gettid()), static_cast<unsigned long>(MyBrokerIndex),
+        MyBrokerId(), x.what());
+    BadProduceResponse.Increment();
+    keep_running = false;
+    pause = true;
   }
 
   if (pause) {
@@ -617,46 +557,6 @@ bool TConnector::ProcessSingleProduceResponse(size_t response_size) {
   RequestFactory.PutFront(processor.TakeImmediateResendAckMsgs());
 
   return keep_running;
-}
-
-bool TConnector::TryProcessProduceResponses() {
-  assert(this);
-
-  for (; ; ) {
-    if (AckWaitQueue.empty() && !ReceiveBuf.DataIsEmpty()) {
-      syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting "
-          "pause due to unexpected response data from broker during response "
-          "processing", static_cast<int>(Gettid()),
-          static_cast<unsigned long>(MyBrokerIndex), MyBrokerId());
-      Ds.PauseButton.Push();
-      return false;
-    }
-
-    if (ReceiveBuf.DataSize() < REQUEST_OR_RESPONSE_SIZE_SIZE) {
-      /* 'ReceiveBuf' does not contain a full produce response.  Try again
-         later after reading more response data. */
-      break;
-    }
-
-    /* TODO: Add code to guard against a ridiculously large response size field
-       written by a buggy Kafka broker. */
-    size_t response_size = GetRequestOrResponseSize(ReceiveBuf.Data());
-
-    if (ReceiveBuf.DataSize() < response_size) {
-      /* 'ReceiveBuf' does not contain a full produce response.  Try again
-         later after reading more response data. */
-      break;
-    }
-
-    if (!ProcessSingleProduceResponse(response_size)) {
-      return false;
-    }
-
-    /* Mark produce response as consumed. */
-    ReceiveBuf.MarkDataConsumed(response_size);
-  }
-
-  return true;
 }
 
 /* Attempt a single large read (possibly more bytes than a single produce
@@ -686,30 +586,73 @@ bool TConnector::TryProcessProduceResponses() {
            loop will call us again when appropriate. */
 bool TConnector::HandleSockReadReady() {
   assert(this);
+  assert(!AckWaitQueue.empty());
+  TStreamMsgReader::TState reader_state = TStreamMsgReader::TState::AtEnd;
 
   try {
-    if (!TryReadProduceResponses() || !TryProcessProduceResponses()) {
+    reader_state = StreamReader.Read();
+  } catch (const std::system_error &x) {
+    if (LostTcpConnection(x)) {
+      syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting "
+          "pause due to lost TCP connection on attempted read: %s",
+          static_cast<int>(Gettid()),
+          static_cast<unsigned long>(MyBrokerIndex), MyBrokerId(), x.what());
+      ConnectorSocketError.Increment();
+      Ds.PauseButton.Push();
       return false;
     }
-  } catch (const TBadRequestOrResponseSize &x) {
-    syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting "
-        "pause due to unexpected response from broker: %s",
-        static_cast<int>(Gettid()), static_cast<unsigned long>(MyBrokerIndex),
-        MyBrokerId(), x.what());
-    BadProduceResponseSize.Increment();
-    Ds.PauseButton.Push();
-    return false;
-  } catch (const TProduceResponseReaderApi::TBadProduceResponse &x) {
-    syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting "
-        "pause due to unexpected response from broker: %s",
-        static_cast<int>(Gettid()), static_cast<unsigned long>(MyBrokerIndex),
-        MyBrokerId(), x.what());
-    BadProduceResponse.Increment();
-    Ds.PauseButton.Push();
-    return false;
+
+    throw;  // anything else is fatal
   }
 
-  return true;  // keep executing
+  for (; ; ) {
+    switch (reader_state) {
+      case TStreamMsgReader::TState::ReadNeeded: {
+        return true;
+      }
+      case TStreamMsgReader::TState::MsgReady: {
+        break;
+      }
+      case TStreamMsgReader::TState::DataInvalid: {
+        syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting "
+            "pause due to invalid response size response from broker",
+            static_cast<int>(Gettid()),
+            static_cast<unsigned long>(MyBrokerIndex), MyBrokerId());
+        BadProduceResponseSize.Increment();
+        Ds.PauseButton.Push();
+        return false;
+      }
+      case TStreamMsgReader::TState::AtEnd: {
+        syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting "
+            "pause because TCP connection unexpectedly closed by broker while "
+            "processing produce responses", static_cast<int>(Gettid()),
+            static_cast<unsigned long>(MyBrokerIndex), MyBrokerId());
+        ConnectorSocketBrokerClose.Increment();
+        Ds.PauseButton.Push();
+        return false;
+      }
+      NO_DEFAULT_CASE;
+    }
+
+    if (!ProcessSingleProduceResponse()) {
+      break;  // error processing produce response
+    }
+
+    /* Mark produce response as consumed. */
+    reader_state = StreamReader.ConsumeReadyMsg();
+
+    if (AckWaitQueue.empty() &&
+        (reader_state == TStreamMsgReader::TState::MsgReady)) {
+      syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting "
+          "pause due to unexpected response data from broker during response "
+          "processing", static_cast<int>(Gettid()),
+          static_cast<unsigned long>(MyBrokerIndex), MyBrokerId());
+      Ds.PauseButton.Push();
+      break;
+    }
+  }
+
+  return false;  // we only get here on error
 }
 
 bool TConnector::PrepareForPoll(uint64_t now, int &poll_timeout) {
@@ -819,6 +762,8 @@ void TConnector::DoRun() {
   if (!ConnectToBroker()) {
     return;
   }
+
+  StreamReader.Reset(Sock);
 
   for (; ; ) {
     int poll_timeout = -1;

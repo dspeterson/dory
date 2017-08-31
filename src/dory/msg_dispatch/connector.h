@@ -36,6 +36,7 @@
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
 #include <base/opt.h>
+#include <base/stream_msg_with_size_reader.h>
 #include <dory/debug/debug_logger.h>
 #include <dory/kafka_proto/produce/produce_response_reader_api.h>
 #include <dory/metadata.h>
@@ -144,13 +145,7 @@ namespace Dory {
 
       bool HandleSockWriteReady();
 
-      bool DoSockRead(size_t min_size);
-
-      bool TryReadProduceResponses();
-
-      bool ProcessSingleProduceResponse(size_t response_size);
-
-      bool TryProcessProduceResponses();
+      bool ProcessSingleProduceResponse();
 
       bool HandleSockReadReady();
 
@@ -278,16 +273,16 @@ namespace Dory {
          finished sending the request and are waiting for the response. */
       Base::TOpt<TProduceRequest> CurrentRequest;
 
-      /* This handles the details of reading and processing produce responses.
+      /* This handles the details of parsing and processing produce responses.
        */
       std::unique_ptr<KafkaProto::Produce::TProduceResponseReaderApi>
           ResponseReader;
 
-      /* We read produce response data from the socket into this buffer.  For
-         eficiency, we attempt to do large reads.  Therefore at any given
-         instant, the buffer may contain data belonging to multiple produce
-         responses. */
-      Base::TBuf<uint8_t> ReceiveBuf;
+      using TStreamReader = Base::TStreamMsgWithSizeReader<int32_t>;
+
+      /* This handles the details of reading produce responses from the socket.
+       */
+      TStreamReader StreamReader;
 
       /* FIFO queue of sent produce requests waiting for responses. */
       std::list<TProduceRequest> AckWaitQueue;
