@@ -83,8 +83,8 @@ namespace Dory {
          TakeImmediateResendAckMsgs(), and TakePauseAndResendAckMsgs() may
          be called to retrieve internally stored messages that did not receive
          successful ACKs. */
-      TAction ProcessResponse(TProduceRequest &request, uint8_t *response_buf,
-          size_t response_buf_size);
+      TAction ProcessResponse(TProduceRequest &request,
+          const uint8_t *response_buf, size_t response_buf_size);
 
       /* Return all messages from the input produce request that we were unable
          to obtain any kind of ACK for.  These will need to be rerouted after

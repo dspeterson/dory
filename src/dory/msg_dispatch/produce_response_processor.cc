@@ -53,7 +53,7 @@ SERVER_COUNTER(ProduceResponseUnexpectedTopic);
 
 TProduceResponseProcessor::TAction
 TProduceResponseProcessor::ProcessResponse(TProduceRequest &request,
-    uint8_t *response_buf, size_t response_buf_size) {
+    const uint8_t *response_buf, size_t response_buf_size) {
   assert(this);
   ResponseReader.SetResponse(response_buf, response_buf_size);
   TCorrId corr_id = ResponseReader.GetCorrelationId();
