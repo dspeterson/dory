@@ -136,6 +136,7 @@ xerces_lib_deps = ['xerces-c']
 ext_lib_deps = [
     [r'^dory/dory\.test$', xerces_lib_deps],
     [r'^dory/conf/conf\.test$', xerces_lib_deps],
+    [r'^dory/mkserver/config_file_settings\.test$', xerces_lib_deps],
     [r'^xml/.*', xerces_lib_deps],
     [r'^dory/dory$', xerces_lib_deps]
 ]
