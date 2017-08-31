@@ -25,12 +25,15 @@
 #include <cstddef>
 #include <stdexcept>
 
+#include <poll.h>
 #include <syslog.h>
 
 #include <base/io_utils.h>
-#include <dory/kafka_proto/errors.h>
+#include <base/no_default_case.h>
+#include <base/time_util.h>
 #include <dory/kafka_proto/request_response.h>
 #include <dory/util/connect_to_host.h>
+#include <dory/util/poll_array.h>
 #include <dory/util/system_error_codes.h>
 #include <server/counter.h>
 #include <socket/db/error.h>
@@ -41,24 +44,18 @@ using namespace Dory::KafkaProto;
 using namespace Dory::KafkaProto::Metadata;
 using namespace Dory::Util;
 
-SERVER_COUNTER(BadMetadataContent);
 SERVER_COUNTER(BadMetadataResponse);
 SERVER_COUNTER(BadMetadataResponseSize);
 SERVER_COUNTER(MetadataHasEmptyBrokerList);
 SERVER_COUNTER(MetadataHasEmptyTopicList);
-SERVER_COUNTER(MetadataResponseHasExtraJunk);
-SERVER_COUNTER(MetadataResponseRead1LostTcpConnection);
-SERVER_COUNTER(MetadataResponseRead1Success);
-SERVER_COUNTER(MetadataResponseRead1TimedOut);
-SERVER_COUNTER(MetadataResponseRead2LostTcpConnection);
-SERVER_COUNTER(MetadataResponseRead2TimedOut);
-SERVER_COUNTER(MetadataResponseRead2UnexpectedEnd);
+SERVER_COUNTER(MetadataResponseReadLostTcpConnection);
 SERVER_COUNTER(MetadataResponseReadSuccess);
-SERVER_COUNTER(ReadMetadataResponse2Fail);
+SERVER_COUNTER(MetadataResponseReadTimeout);
 SERVER_COUNTER(SendMetadataRequestFail);
 SERVER_COUNTER(SendMetadataRequestLostTcpConnection);
 SERVER_COUNTER(SendMetadataRequestSuccess);
 SERVER_COUNTER(SendMetadataRequestUnexpectedEnd);
+SERVER_COUNTER(ShortMetadataResponse);
 SERVER_COUNTER(StartSendMetadataRequest);
 
 static std::vector<uint8_t>
@@ -70,7 +67,12 @@ CreateMetadataRequest(const TMetadataProtocol &metadata_protocol) {
 
 TMetadataFetcher::TMetadataFetcher(const TMetadataProtocol *metadata_protocol)
     : MetadataProtocol(metadata_protocol),
-      MetadataRequest(CreateMetadataRequest(*metadata_protocol)) {
+      MetadataRequest(CreateMetadataRequest(*metadata_protocol)),
+      /* Note: The max message body size value is a loose upper bound to guard
+         against a response with a ridiculously large size field. */
+      StreamReader(false, true, 4 * 1024 * 1024, 64 * 1024) {
+  static_assert(sizeof(TStreamReaderType::TSizeFieldType) ==
+      REQUEST_OR_RESPONSE_SIZE_SIZE, "Wrong size field size for StreamReader");
 }
 
 bool TMetadataFetcher::Connect(const char *host_name, in_port_t port) {
@@ -91,7 +93,12 @@ bool TMetadataFetcher::Connect(const char *host_name, in_port_t port) {
     return false;
   }
 
-  return Sock.IsOpen();
+  if (!Sock.IsOpen()) {
+    return false;
+  }
+
+  StreamReader.Reset(Sock);
+  return true;
 }
 
 std::unique_ptr<TMetadata> TMetadataFetcher::Fetch(int timeout_ms) {
@@ -107,9 +114,23 @@ std::unique_ptr<TMetadata> TMetadataFetcher::Fetch(int timeout_ms) {
     return std::move(result);
   }
 
+  assert(StreamReader.GetState() == TStreamMsgReader::TState::MsgReady);
+  std::vector<uint8_t> response;
+  size_t response_size = StreamReader.GetReadyMsgSize();
+
+  if (response_size == 0) {
+    BadMetadataResponse.Increment();
+    syslog(LOG_ERR, "Got empty metadata response while getting metadata");
+    return std::move(result);
+  }
+
+  const uint8_t *response_begin = StreamReader.GetReadyMsg();
+  response.assign(response_begin, response_begin + response_size);
+  StreamReader.ConsumeReadyMsg();
+
   try {
-    result.reset(MetadataProtocol->BuildMetadataFromResponse(&ResponseBuf[0],
-        ResponseBuf.size()));
+    result.reset(MetadataProtocol->BuildMetadataFromResponse(&response[0],
+        response_size));
   } catch (const TMetadataProtocol::TBadMetadataResponse &x) {
     BadMetadataResponse.Increment();
     syslog(LOG_ERR, "Failed to parse metadata response: %s", x.what());
@@ -157,11 +178,24 @@ TMetadataFetcher::TopicAutocreate(const char *topic, int timeout_ms) {
     return TTopicAutocreateResult::TryOtherBroker;
   }
 
+  assert(StreamReader.GetState() == TStreamMsgReader::TState::MsgReady);
+  std::vector<uint8_t> response;
+  size_t response_size = StreamReader.GetReadyMsgSize();
+
+  if (response_size == 0) {
+    BadMetadataResponse.Increment();
+    syslog(LOG_ERR, "Got empty metadata response during topic autocreate");
+    return TTopicAutocreateResult::Fail;
+  }
+
+  const uint8_t *response_begin = StreamReader.GetReadyMsg();
+  response.assign(response_begin, response_begin + response_size);
+  StreamReader.ConsumeReadyMsg();
   bool success = false;
 
   try {
     success = MetadataProtocol->TopicAutocreateWasSuccessful(topic,
-        &ResponseBuf[0], ResponseBuf.size());
+        &response[0], response_size);
   } catch (const TMetadataProtocol::TBadMetadataResponse &x) {
     BadMetadataResponse.Increment();
     syslog(LOG_ERR, "Failed to parse metadata response: %s", x.what());
@@ -203,67 +237,73 @@ bool TMetadataFetcher::SendRequest(const std::vector<uint8_t> &request,
   return true;
 }
 
+enum class TReadResponsePollItem {
+  SockIo = 0
+};  // TReadResponsePollItem
+
 bool TMetadataFetcher::ReadResponse(int timeout_ms) {
   assert(this);
-  const size_t response_buf_initial_size =
-      std::max<size_t>(64 * 1024, REQUEST_OR_RESPONSE_SIZE_SIZE);
-  ResponseBuf.resize(response_buf_initial_size);
-  size_t byte_count = 0;
+  TPollArray<TReadResponsePollItem, 1> poll_array;
+  struct pollfd &sock_item = poll_array[TReadResponsePollItem::SockIo];
+  sock_item.events = POLLIN;
+  sock_item.fd = StreamReader.GetFd();
+  uint64_t start_time = GetMonotonicRawMilliseconds();
+  uint64_t current_time = start_time;
+  uint64_t elapsed = 0;
 
-  try {
-    byte_count = ReadAtMost(Sock, &ResponseBuf[0], ResponseBuf.size(),
-                            timeout_ms);
-  } catch (const std::system_error &x) {
-    if (LostTcpConnection(x)) {
-      MetadataResponseRead1LostTcpConnection.Increment();
-      syslog(LOG_ERR, "Lost TCP connection to broker while trying to read "
-             "metadata response: %s", x.what());
+  for (; ; ) {
+    int time_left = (timeout_ms < 0) ? -1 : (timeout_ms - elapsed);
+
+    /* Don't check for EINTR, since this thread has signals masked. */
+    if (IfLt0(poll(poll_array, poll_array.Size(), time_left)) == 0) {
+      MetadataResponseReadTimeout.Increment();
       return false;
     }
 
-    throw;  // anything else is fatal
-  }
-
-  MetadataResponseRead1Success.Increment();
-  size_t response_size = 0;
-
-  try {
-    response_size = GetRequestOrResponseSize(&ResponseBuf[0]);
-  } catch (const TBadRequestOrResponseSize &) {
-    BadMetadataResponseSize.Increment();
-    syslog(LOG_ERR, "Router thread got bad metadata response size");
-    return false;
-  }
-
-  ResponseBuf.resize(response_size);
-
-  if (ResponseBuf.size() < byte_count) {
-    MetadataResponseHasExtraJunk.Increment();
-    syslog(LOG_WARNING, "Broker acting strange: metadata response followed by "
-           "extra junk");
-  } else if (ResponseBuf.size() > byte_count) {
     try {
-      if (!TryReadExactly(Sock, &ResponseBuf[byte_count],
-                          ResponseBuf.size() - byte_count, timeout_ms)) {
-        ReadMetadataResponse2Fail.Increment();
-        syslog(LOG_ERR, "Router thread failed to read metadata response");
-        return false;
+      if (StreamReader.Read() != TStreamMsgReader::TState::ReadNeeded) {
+        break;
       }
     } catch (const std::system_error &x) {
       if (LostTcpConnection(x)) {
-        MetadataResponseRead2LostTcpConnection.Increment();
+        MetadataResponseReadLostTcpConnection.Increment();
         syslog(LOG_ERR, "Lost TCP connection to broker while trying to read "
-               "metadata response: %s", x.what());
+            "metadata response: %s", x.what());
         return false;
       }
 
       throw;  // anything else is fatal
-    } catch (const TUnexpectedEnd &) {
-      MetadataResponseRead2UnexpectedEnd.Increment();
-      syslog(LOG_ERR, "Lost TCP connection to broker while trying to read "
-             "metadata response");
+    }
+
+    current_time = GetMonotonicRawMilliseconds();
+    elapsed = current_time - start_time;
+
+    if ((timeout_ms >= 0) && (elapsed >= static_cast<uint64_t>(timeout_ms))) {
       return false;
     }
+
+    sock_item.revents = 0;
+  }
+
+  switch (StreamReader.GetState()) {
+    case TStreamMsgReader::TState::ReadNeeded: {
+      throw std::logic_error(
+          "TMetadataFetcher internal error in ReadResponse()");
+    }
+    case TStreamMsgReader::TState::MsgReady: {
+      break;
+    }
+    case TStreamMsgReader::TState::DataInvalid: {
+      BadMetadataResponseSize.Increment();
+      syslog(LOG_ERR, "Router thread got bad metadata response size");
+      return false;
+    }
+    case TStreamMsgReader::TState::AtEnd: {
+      ShortMetadataResponse.Increment();
+      syslog(LOG_ERR, "Router thread got short metadata response");
+      return false;
+    }
+    NO_DEFAULT_CASE;
   }
 
   MetadataResponseReadSuccess.Increment();

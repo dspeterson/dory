@@ -31,6 +31,7 @@
 
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
+#include <base/stream_msg_with_size_reader.h>
 #include <dory/kafka_proto/metadata/metadata_protocol.h>
 #include <dory/metadata.h>
 
@@ -112,7 +113,11 @@ namespace Dory {
 
     Base::TFd Sock;
 
-    std::vector<uint8_t> ResponseBuf;
+    using TStreamReaderType = Base::TStreamMsgWithSizeReader<int32_t>;
+
+    /* This handles the details of reading produce responses from the socket.
+     */
+    TStreamReaderType StreamReader;
   };  // TMetadataFetcher
 
 }  // Dory
