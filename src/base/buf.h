@@ -31,13 +31,12 @@ namespace Base {
 
   /* Buffer of items, where T gives the type of items in the buffer.  T must be
      a POD type, and is typically expected to be a built-in integer type such
-     as char.  Items are added to the right and consumed from the left.  Items
-     may be moved to the beginning (left end) of the buffer to make more space
-     for additional items while avoiding unnecessary memory allocation.  The
-     buffer's storage space may be removed and provided to the caller as a
-     vector, leaving the buffer empty.  The caller may then fill the storage
-     space with items and move the newly populated storage back into the
-     buffer. */
+     as char.  Items are added to the end and consumed from the front.  Items
+     may be moved to the front of the buffer to make more space for additional
+     items while avoiding unnecessary memory allocation.  The buffer's storage
+     space may be removed and provided to the caller as a vector, leaving the
+     buffer empty.  The caller may then fill the storage space with items and
+     move the newly populated storage back into the buffer. */
   template <typename T>
   class TBuf final {
     public:
@@ -59,7 +58,7 @@ namespace Base {
 
     /* Construct buffer, populating it with 'items', whose contents are moved
        into the container. */
-    TBuf(TStorage &&items)
+    TBuf(TStorage &&items) noexcept
         : Storage(std::move(items)),
           ItemOffset(0),
           ItemCount(Storage.size()) {
@@ -68,7 +67,7 @@ namespace Base {
     TBuf(const TBuf &) = default;
 
     /* Move constructor leaves 'that' empty. */
-    TBuf(TBuf &&that)
+    TBuf(TBuf &&that) noexcept
         : Storage(std::move(that.Storage)),
           ItemOffset(that.ItemOffset),
           ItemCount(that.ItemCount) {
@@ -127,7 +126,7 @@ namespace Base {
        move-assigning data back into buffer.  Doing this allows easy refilling
        by routines that take as input a vector to fill with data.  It allows
        underlying memory allocated for storage to be reused. */
-    TStorage TakeStorage() {
+    TStorage TakeStorage() noexcept {
       assert(this);
       ItemOffset = 0;
       ItemCount = 0;
@@ -198,9 +197,9 @@ namespace Base {
       return (DataSize() == 0);
     }
 
-    /* Move items to front (left end) of buffer.  This makes additional space
-       available without allocating memory.  This method is a no-op if the
-       buffer is empty or its items are already at the front. */
+    /* Move items to front of buffer.  This makes additional space available
+       without allocating memory.  This method is a no-op if the buffer is
+       empty or its items are already at the front. */
     void MoveDataToFront() noexcept {
       assert(this);
       assert(Storage.empty() || (ItemOffset < Storage.size()));
@@ -216,9 +215,9 @@ namespace Base {
 
     /* Make room for at least 'min_to_add' additional items to be added (beyond
        any initially available space).  This is accomplished by first moving
-       the items to the left end of the buffer, and then growing the storage by
+       the items to the front of the buffer, and then growing the storage by
        the minimal extra amount necessary to ensure that space is available for
-       'min_to_add' items.  Note that moving the items to the left may make
+       'min_to_add' items.  Note that moving the items to the front may make
        more than 'min_to_add' extra space available. */
     void AddSpace(size_t min_to_add) {
       assert(this);
@@ -231,7 +230,7 @@ namespace Base {
     }
 
     /* Ensure that space for at least 'min_size' items is available.  If
-       necessary, move items to left end of buffer and possibly allocate
+       necessary, move items to front of buffer and possibly allocate
        additional storage. */
     void EnsureSpace(size_t min_size) {
       assert(this);
@@ -246,7 +245,7 @@ namespace Base {
 
     /* Ensure that the total available item count plus the number of additional
        items the buffer can hold is at least 'min_size'.  If necessary, move
-       items to left end of buffer and possibly allocate additional storage. */
+       items to front of buffer and possibly allocate additional storage. */
     void EnsureDataPlusSpace(size_t min_size) {
       assert(this);
       assert(Storage.empty() || (ItemOffset < Storage.size()));
@@ -273,9 +272,8 @@ namespace Base {
     /* Record that 'size' items have been consumed, starting at the location
        returned by Data().  This decreases the value returned by DataSize().
        It leaves the value returned by SpaceSize() unchanged, since the
-       available space indicated by SpaceSize() is to the right of the
-       unconsumed items, and consuming items makes space available at the left.
-     */
+       available space indicated by SpaceSize() follows the unconsumed items,
+       and consuming items makes space available at the front. */
     void MarkDataConsumed(size_t size) noexcept {
       assert(this);
       assert(Storage.empty() || (ItemOffset < Storage.size()));
@@ -303,9 +301,9 @@ namespace Base {
       }
     }
 
-    /* Storage for buffer.  Items are added to the right and consumed from the
-       left.  Items may be moved to left end of buffer to make space for more
-       to be added. */
+    /* Storage for buffer.  Items are added to the end and consumed from the
+       front.  Items may be moved to front of buffer to make space for more to
+       be added. */
     TStorage Storage;
 
     /* Indicates position in 'Storage' of first item that is ready to be
