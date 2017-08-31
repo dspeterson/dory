@@ -42,6 +42,7 @@ SERVER_COUNTER(MetadataResponseIncomplete6);
 SERVER_COUNTER(MetadataResponseIncomplete7);
 SERVER_COUNTER(MetadataResponseIncomplete8);
 SERVER_COUNTER(MetadataResponseIncomplete9);
+SERVER_COUNTER(MetadataResponseIncomplete10);
 SERVER_COUNTER(MetadataResponseInvalidLeaderNodeId);
 SERVER_COUNTER(MetadataResponseNegativeBrokerCount);
 SERVER_COUNTER(MetadataResponseNegativeBrokerNodeId);
@@ -72,7 +73,6 @@ TMetadataResponseReader::TMetadataResponseReader(const void *buf,
       CurrentCaughtUpReplicaOffset(0) {
   assert(Buf);
   assert((Buf + BufSize) > Buf);
-  assert(BufSize >= MinSize());
 }
 
 int32_t TMetadataResponseReader::GetCorrelationId() const {
@@ -94,6 +94,12 @@ size_t TMetadataResponseReader::GetBrokerCount() const {
 
 bool TMetadataResponseReader::FirstBroker() {
   assert(this);
+
+  if (BufSize < MinSize()) {
+    MetadataResponseIncomplete1.Increment();
+    THROW_ERROR(TIncompleteMetadataResponse);
+  }
+
   State = TState::InBrokerList;
   BrokersLeft = GetBrokerCount();
   CurrentBrokerOffset = THdr::BROKER_LIST_OFFSET;
@@ -186,7 +192,7 @@ size_t TMetadataResponseReader::GetTopicCount() const {
   assert(BufSize >= CurrentBrokerOffset);
 
   if ((BufSize - CurrentBrokerOffset) < THdr::TOPIC_COUNT_SIZE) {
-    MetadataResponseIncomplete1.Increment();
+    MetadataResponseIncomplete2.Increment();
     THROW_ERROR(TIncompleteMetadataResponse);
   }
 
@@ -480,7 +486,7 @@ TMetadataResponseReader::GetCurrentPartitionCaughtUpReplicaCount() const {
   assert(BufSize >= CurrentReplicaOffset);
 
   if ((BufSize - CurrentReplicaOffset) < THdr::CAUGHT_UP_REPLICA_COUNT_SIZE) {
-    MetadataResponseIncomplete2.Increment();
+    MetadataResponseIncomplete3.Increment();
     THROW_ERROR(TIncompleteMetadataResponse);
   }
 
@@ -611,7 +617,7 @@ bool TMetadataResponseReader::InitBroker() {
 
   if (broker_space < (THdr::REL_BROKER_HOST_LENGTH_OFFSET +
       THdr::BROKER_HOST_LENGTH_SIZE)) {
-    MetadataResponseIncomplete3.Increment();
+    MetadataResponseIncomplete4.Increment();
     THROW_ERROR(TIncompleteMetadataResponse);
   }
 
@@ -624,7 +630,7 @@ bool TMetadataResponseReader::InitBroker() {
   }
 
   if (broker_space < BrokerSize(CurrentBrokerHostLength)) {
-    MetadataResponseIncomplete4.Increment();
+    MetadataResponseIncomplete5.Increment();
     THROW_ERROR(TIncompleteMetadataResponse);
   }
 
@@ -644,7 +650,7 @@ bool TMetadataResponseReader::InitTopic() {
 
   if (topic_space <
       (THdr::REL_TOPIC_NAME_LENGTH_OFFSET + THdr::TOPIC_NAME_LENGTH_SIZE)) {
-    MetadataResponseIncomplete5.Increment();
+    MetadataResponseIncomplete6.Increment();
     THROW_ERROR(TIncompleteMetadataResponse);
   }
 
@@ -658,7 +664,7 @@ bool TMetadataResponseReader::InitTopic() {
 
   if (topic_space < (THdr::RelPartitionCountOffset(CurrentTopicNameLength) +
       THdr::PARTITION_COUNT_SIZE)) {
-    MetadataResponseIncomplete6.Increment();
+    MetadataResponseIncomplete7.Increment();
     THROW_ERROR(TIncompleteMetadataResponse);
   }
 
@@ -677,7 +683,7 @@ bool TMetadataResponseReader::InitPartition() {
 
   if (partition_space < (THdr::REL_REPLICA_COUNT_OFFSET +
       THdr::REPLICA_COUNT_SIZE)) {
-    MetadataResponseIncomplete7.Increment();
+    MetadataResponseIncomplete8.Increment();
     THROW_ERROR(TIncompleteMetadataResponse);
   }
 
@@ -695,7 +701,7 @@ bool TMetadataResponseReader::InitReplica() {
   size_t replica_space = BufSize - CurrentReplicaOffset;
 
   if (replica_space < THdr::REPLICA_NODE_ID_SIZE) {
-    MetadataResponseIncomplete8.Increment();
+    MetadataResponseIncomplete9.Increment();
     THROW_ERROR(TIncompleteMetadataResponse);
   }
 
@@ -713,7 +719,7 @@ bool TMetadataResponseReader::InitCaughtUpReplica() {
   size_t replica_space = BufSize - CurrentCaughtUpReplicaOffset;
 
   if (replica_space < THdr::CAUGHT_UP_REPLICA_NODE_ID_SIZE) {
-    MetadataResponseIncomplete9.Increment();
+    MetadataResponseIncomplete10.Increment();
     THROW_ERROR(TIncompleteMetadataResponse);
   }
 
