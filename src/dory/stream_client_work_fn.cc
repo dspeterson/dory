@@ -32,6 +32,7 @@
 #include <base/no_default_case.h>
 #include <dory/input_dg/input_dg_util.h>
 #include <dory/msg.h>
+#include <dory/util/poll_array.h>
 #include <dory/util/system_error_codes.h>
 #include <dory/util/time_util.h>
 #include <server/counter.h>
@@ -100,25 +101,30 @@ void TStreamClientWorkFn::operator()() {
   assert(ClientSocket >= 0);
   assert(StreamReader.GetFd() == ClientSocket);
 
+  enum class t_poll_item {
+    Sock = 0,
+    ShutdownRequest = 1
+  };  // t_poll_item
+
   if (IsTcp) {
     NewTcpClient.Increment();
   } else {
     NewUnixClient.Increment();
   }
 
-  struct pollfd &sock_item = MainLoopPollArray[TMainLoopPollItem::Sock];
-  struct pollfd &shutdown_item =
-      MainLoopPollArray[TMainLoopPollItem::ShutdownRequest];
+  TPollArray<t_poll_item, 2> poll_array;
+  struct pollfd &sock_item = poll_array[t_poll_item::Sock];
+  struct pollfd &shutdown_item = poll_array[t_poll_item::ShutdownRequest];
   sock_item.fd = ClientSocket;
   sock_item.events = POLLIN;
   shutdown_item.fd = *ShutdownRequestFd;
   shutdown_item.events = POLLIN;
 
   do {
-    MainLoopPollArray.ClearRevents();
+    poll_array.ClearRevents();
 
     /* Don't check for EINTR, since this thread has signals masked. */
-    int ret = IfLt0(poll(MainLoopPollArray, MainLoopPollArray.Size(), -1));
+    int ret = IfLt0(poll(poll_array, poll_array.Size(), -1));
     assert(ret > 0);
     assert(sock_item.revents || shutdown_item.revents);
   } while (!shutdown_item.revents && HandleSockReadReady());

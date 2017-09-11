@@ -24,15 +24,12 @@
 #include <cstddef>
 #include <cstdint>
 
-#include <base/buf.h>
 #include <base/fd.h>
-#include <base/field_access.h>
 #include <base/stream_msg_with_size_reader.h>
 #include <capped/pool.h>
 #include <dory/anomaly_tracker.h>
 #include <dory/config.h>
 #include <dory/msg_state_tracker.h>
-#include <dory/util/poll_array.h>
 #include <thread/gate_put_api.h>
 
 namespace Dory {
@@ -54,11 +51,6 @@ namespace Dory {
         Base::TFd &&client_socket) noexcept;
 
     private:
-    enum class TMainLoopPollItem {
-      Sock = 0,
-      ShutdownRequest = 1
-    };  // TMainLoopPollItem
-
     void HandleClientClosed() const;
 
     void HandleDataInvalid();
@@ -93,9 +85,6 @@ namespace Dory {
 
     /* This handles the details of reading messages from the client socket. */
     TStreamReader StreamReader;
-
-    /* Used for poll() system call in main loop. */
-    Util::TPollArray<TMainLoopPollItem, 2> MainLoopPollArray;
   };  // TStreamClientWorkFn
 
 }  // Dory

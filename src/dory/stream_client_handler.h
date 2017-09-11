@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <base/no_copy_semantics.h>
 #include <dory/stream_client_work_fn.h>
 #include <server/stream_server_base.h>
 #include <thread/managed_thread_pool.h>
