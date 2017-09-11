@@ -330,7 +330,7 @@ static TClientSenderBase *CreateSender(const TConfig &cfg) {
   return new TTcpSender(*cfg.Port);
 }
 
-int to_dory_main(int argc, char **argv) {
+static int ToDoryMain(int argc, char *argv[]) {
   std::unique_ptr<TConfig> cfg;
 
   try {
@@ -368,18 +368,14 @@ int to_dory_main(int argc, char **argv) {
   return EXIT_SUCCESS;
 }
 
-int main(int argc, char **argv) {
-  int ret = EXIT_SUCCESS;
-
+int main(int argc, char *argv[]) {
   try {
-    ret = to_dory_main(argc, argv);
+    return ToDoryMain(argc, argv);
   } catch (const std::exception &ex) {
     std::cerr << "error: " << ex.what() << std::endl;
-    ret = EXIT_FAILURE;
   } catch (...) {
     std::cerr << "error: unknown exception" << std::endl;
-    ret = EXIT_FAILURE;
   }
 
-  return ret;
+  return EXIT_FAILURE;
 }
