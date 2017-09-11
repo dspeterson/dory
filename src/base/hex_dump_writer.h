@@ -46,9 +46,8 @@ namespace Base {
        printable. */
     using TPrintFn = std::function<void(const std::string &, bool)>;
 
-    /* Default "is printable" function if none is supplied by client.  Whether
-       a given byte value is printable may vary by platform.  This function
-       defines a conservative set of printable values. */
+    /* Default "is printable" function if none is supplied by client.  Returns
+       the same result as std::isprint(value). */
     static bool DefaultIsPrintableFn(uint8_t value) noexcept;
 
     /* Default print function if none is supplied by client.  This writes to

@@ -21,13 +21,14 @@
 
 #include <base/hex_dump_writer.h>
 
+#include <cctype>
 #include <cstdio>
 #include <iostream>
 
 using namespace Base;
 
 bool THexDumpWriter::DefaultIsPrintableFn(uint8_t value) noexcept {
-  return (value >= 0x20) && (value <= 0x7e);
+  return std::isprint(value);
 }
 
 void THexDumpWriter::DefaultPrintFn(const std::string &output,
