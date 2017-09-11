@@ -81,7 +81,7 @@ TStreamMsgReader::TState TStreamMsgReader::Read() {
   return TryAdvanceToNextMsg();
 }
 
-TStreamMsgReader::TState TStreamMsgReader::ConsumeReadyMsg() noexcept {
+TStreamMsgReader::TState TStreamMsgReader::ConsumeReadyMsg() {
   assert(this);
 
   if (State != TState::MsgReady) {
@@ -181,7 +181,7 @@ TStreamMsgReader::TStreamMsgReader(int fd)
       EndOfInput(fd < 0) {
 }
 
-TStreamMsgReader::TState TStreamMsgReader::TryAdvanceToNextMsg() noexcept {
+TStreamMsgReader::TState TStreamMsgReader::TryAdvanceToNextMsg() {
   assert(this);
   RestrictReadyMsgCalls = true;
   TGetMsgResult result = GetNextMsg();

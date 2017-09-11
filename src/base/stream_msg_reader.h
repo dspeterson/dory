@@ -73,7 +73,7 @@ namespace Base {
 
     /* When in state TState::MsgReady, client calls this to indicate that the
        ready message has been processed.  Returns next state of reader. */
-    TState ConsumeReadyMsg() noexcept;
+    TState ConsumeReadyMsg();
 
     /* Returns current state of reader. */
     TState GetState() const noexcept {
@@ -247,7 +247,7 @@ namespace Base {
 
     /* Base class calls this to see if a message is ready for consumption yet.
      */
-    virtual TGetMsgResult GetNextMsg() noexcept = 0;
+    virtual TGetMsgResult GetNextMsg() = 0;
 
     /* At the start of a Reset() call, the base class calls this method to
        allow the derived class to reset any internal state it maintains. */
@@ -256,12 +256,12 @@ namespace Base {
     /* The base class calls this method immediately before a ready message is
        about to be consumed.  Subclass code may use this for updating its
        internal state. */
-    virtual void BeforeConsumeReadyMsg() noexcept = 0;
+    virtual void BeforeConsumeReadyMsg() = 0;
 
     private:
     /* See if there is a complete message in the buffer and update state
        accordingly. */
-    TState TryAdvanceToNextMsg() noexcept;
+    TState TryAdvanceToNextMsg();
 
     /* Client-visible state of message reader. */
     TState State;

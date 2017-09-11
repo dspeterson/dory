@@ -121,17 +121,17 @@ namespace Base {
       return OptDataInvalidReason;
     }
 
-    virtual ~TStreamMsgWithSizeReaderBase() {
+    virtual ~TStreamMsgWithSizeReaderBase() noexcept {
     }
 
     protected:
     virtual size_t GetNextReadSize() override;
 
-    virtual TGetMsgResult GetNextMsg() noexcept override;
+    virtual TGetMsgResult GetNextMsg() override;
 
     virtual void HandleReset() noexcept override;
 
-    virtual void BeforeConsumeReadyMsg() noexcept override;
+    virtual void BeforeConsumeReadyMsg() override;
 
     private:
     typedef TOpt<uint64_t> (*TSizeFieldReadFn)(const uint8_t *field_loc);

@@ -95,7 +95,7 @@ size_t TStreamMsgWithSizeReaderBase::GetNextReadSize() {
 }
 
 TStreamMsgReader::TGetMsgResult
-TStreamMsgWithSizeReaderBase::GetNextMsg() noexcept {
+TStreamMsgWithSizeReaderBase::GetNextMsg() {
   assert(this);
   size_t data_size = GetDataSize();
 
@@ -155,7 +155,7 @@ void TStreamMsgWithSizeReaderBase::HandleReset() noexcept {
   OptDataInvalidReason.Reset();
 }
 
-void TStreamMsgWithSizeReaderBase::BeforeConsumeReadyMsg() noexcept {
+void TStreamMsgWithSizeReaderBase::BeforeConsumeReadyMsg() {
   assert(this);
   OptMsgBodySize.Reset();
 }
