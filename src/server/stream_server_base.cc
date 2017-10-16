@@ -30,6 +30,7 @@
 #include <poll.h>
 
 #include <base/error_utils.h>
+#include <base/on_destroy.h>
 
 using namespace Base;
 using namespace Server;
@@ -139,24 +140,15 @@ void TStreamServerBase::CloseListeningSocket(TFd &sock) {
 
 void TStreamServerBase::Run() {
   assert(this);
-
-  class t_closer final {
-    public:
-    explicit t_closer(TStreamServerBase &server) noexcept
-        : Server(server) {
-    }
-
-    ~t_closer() noexcept {
-      try {
-        Server.CloseListeningSocket(Server.ListeningSocket);
-      } catch (...) {
-        Server.FatalErrorHandler("Failed to close listening socket");
+  TOnDestroy close_socket(
+      [this]() noexcept {
+        try {
+          CloseListeningSocket(ListeningSocket);
+        } catch (...) {
+          FatalErrorHandler("Failed to close listening socket");
+        }
       }
-    }
-
-    private:
-    TStreamServerBase &Server;
-  } closer(*this);
+  );
 
   try {
     if (!IsBound()) {

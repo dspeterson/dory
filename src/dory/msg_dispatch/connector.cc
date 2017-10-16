@@ -37,6 +37,7 @@
 #include <base/error_utils.h>
 #include <base/gettid.h>
 #include <base/no_default_case.h>
+#include <base/on_destroy.h>
 #include <base/time_util.h>
 #include <dory/kafka_proto/request_response.h>
 #include <dory/msg_dispatch/produce_response_processor.h>
@@ -211,21 +212,11 @@ void TConnector::Run() {
   long broker_id = ~0;
 
   try {
-    class t_socket_closer final {
-      public:
-      t_socket_closer(TConnector &c)
-          : Connector(c) {
-      }
-
-      ~t_socket_closer() noexcept {
-        /* Close TCP connection to broker if open. */
-        Connector.Sock.Reset();
-      }
-
-      private:
-      TConnector &Connector;
-    } closer(*this);  // t_socket_closer
-
+    TOnDestroy close_socket(
+        [this]() noexcept {
+          Sock.Reset();  // close TCP connection to broker if open
+        }
+    );
     assert(MyBrokerIndex < Metadata->GetBrokers().size());
     broker_id = MyBrokerId();
     syslog(LOG_NOTICE, "Connector thread %d (index %lu broker %ld) started",
