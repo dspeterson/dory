@@ -86,6 +86,8 @@ in_port_t TTcpIpv6Server::GetBindPort() const {
 void TTcpIpv6Server::InitListeningSocket(TFd &sock) {
   assert(this);
   TFd sock_fd(socket(AF_INET6, SOCK_STREAM, 0));
+  int flag = true;
+  IfLt0(setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag)));
   struct sockaddr_in6 serv_addr;
   std::memset(&serv_addr, 0, sizeof(serv_addr));
   serv_addr.sin6_family = AF_INET6;
