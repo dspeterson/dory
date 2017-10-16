@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # -----------------------------------------------------------------------------
-# Copyright 2015 Dave Peterson <dave@dspeterson.com>
+# Copyright 2017 Dave Peterson <dave@dspeterson.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 # limitations under the License.
 # -----------------------------------------------------------------------------
 #
-# Script for building Google Test Framework.
+# Script for building lz4 compression library.
 
-src_dir="googletest-release-1.7.0"
+src_dir="lz4-1.8.0"
 
 usage() {
   echo "Usage: `basename $0`" 1>&2
@@ -33,10 +33,12 @@ check_dir() {
 }
 
 do_build() {
-  echo ===== Building Google Test Framework =====
-  cmake $src_dir
+  echo ===== Building lz4 compression library =====
+  cd $src_dir
   make
-  echo ===== Finished building Google Test Framework =====
+  cp lib/liblz4.a ..
+  cd ..
+  echo ===== Finished building lz4 compression library =====
 }
 
 if [ $# -ne 0 ]; then

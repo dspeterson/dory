@@ -289,12 +289,20 @@ specify_generated_file(Dir('dory').Dir('client').File('build_id.c.in'),
         src.Dir('dory').Dir('scripts').File('gen_version'))
 specify_lib_headers(Dir('dory').Dir('client').File('libdory_client.a'),
     [Dir('dory').Dir('client').File('dory_client.h')])
-googletest_lib_1 = third_party_out_dir('googletest').File('libgtest.a')
-googletest_lib_2 = third_party_out_dir('googletest').File('libgtest_main.a')
-env.Command(googletest_lib_1, "", make_third_party_build_cmd('googletest'))
-env.Command(googletest_lib_2, "", make_third_party_build_cmd('googletest'))
-common_prog_libs = env['PROG_LIBS']
-common_test_libs = dedupe([googletest_lib_1, googletest_lib_2, 'pthread'] + \
+
+googletest_dir = 'googletest'
+googletest_lib_1 = third_party_out_dir(googletest_dir).File('libgtest.a')
+googletest_lib_2 = third_party_out_dir(googletest_dir).File('libgtest_main.a')
+env.Command(googletest_lib_1, "", make_third_party_build_cmd(googletest_dir))
+env.Command(googletest_lib_2, "", make_third_party_build_cmd(googletest_dir))
+
+lz4_dir = 'lz4'
+lz4_lib = third_party_out_dir(lz4_dir).File('liblz4.a')
+env.Command(lz4_lib, "", make_third_party_build_cmd(lz4_dir))
+
+common_prog_libs = env['PROG_LIBS'] + [lz4_lib]
+common_test_libs = dedupe(
+        [googletest_lib_1, googletest_lib_2, lz4_lib, 'pthread'] + \
         common_prog_libs)
 
 ext_lib_matchers = build_ext_lib_matchers(env['EXT_LIB_DEPS'])
