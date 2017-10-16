@@ -49,7 +49,7 @@ namespace {
   };  // TEventSemaphoreNotifierTest
 
   TEST_F(TEventSemaphoreNotifierTest, Test1) {
-    Base::TEventSemaphore sem;
+    TEventSemaphore sem;
     ASSERT_FALSE(sem.GetFd().IsReadable());
 
     {
@@ -68,7 +68,7 @@ namespace {
   }
 
   TEST_F(TEventSemaphoreNotifierTest, Test2) {
-    Base::TEventSemaphore sem;
+    TEventSemaphore sem;
     ASSERT_FALSE(sem.GetFd().IsReadable());
 
     {
