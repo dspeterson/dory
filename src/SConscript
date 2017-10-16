@@ -241,7 +241,7 @@ def make_third_party_build_cmd(dir_name):
     root = Dir('#')
     dir_1 = third_party_build_dir()
     dir_2 = root.Dir('src').Dir('third_party').Dir(dir_name)
-    dir_3 = third_party_out_dir('googletest')
+    dir_3 = third_party_out_dir(dir_name)
     script = dir_3.File('build_' + dir_name)
     return 'mkdir -p ' + dir_1.get_path() + ' && cp -a ' + dir_2.get_path() + \
             ' ' + dir_1.get_path() + ' && cd ' + dir_3.get_path() + \
