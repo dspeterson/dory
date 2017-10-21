@@ -21,10 +21,12 @@
 
 #pragma once
 
+#include <cassert>
 #include <cstddef>
 #include <stdexcept>
 
 #include <base/no_copy_semantics.h>
+#include <base/opt.h>
 
 namespace Dory {
 
@@ -49,21 +51,58 @@ namespace Dory {
 
       virtual ~TCompressionCodecApi() noexcept { }
 
+      /* Parameter 'requested_level' is a compression level requested by the
+         user, which is empty in the case where no level is requested.  Return
+         a result indicating the actual compression level that the algorithm
+         will use.  If the algorithm does not support compression levels, it
+         will return an empty result regardless of the input.  If the algorithm
+         supports compression, then it returns a result as follows:
+
+             - If the input value is empty, it returns the default compression
+               level.
+
+             - If the input value is nonempty and specifies a level that the
+               algorithm recognizes as valid, it returns the input value.
+
+             - If the algorithm views the input value as invalid, it returns
+               the default compression level.
+       */
+      virtual Base::TOpt<int> GetRealCompressionLevel(
+          const Base::TOpt<int> &requested_level) const noexcept = 0;
+
+      /* Return true if the algorithm supports compression levels, or false
+         otherwise. */
+      bool SupportsCompressionLevels() const noexcept {
+        assert(this);
+        return GetRealCompressionLevel(Base::TOpt<int>()).IsKnown();
+      }
+
       /* Return the maximum compressed size in bytes of 'uncompressed_size'
          bytes of data in buffer 'uncompressed_data'.  Throw TError on error.
-       */
-      virtual size_t ComputeCompressedResultBufSpace(
-          const void *uncompressed_data,
-          size_t uncompressed_size) const = 0;
+         Parameter 'compression_level' is an optional requested compression
+         level. */
+      size_t ComputeCompressedResultBufSpace(const void *uncompressed_data,
+          size_t uncompressed_size,
+          const Base::TOpt<int> &compression_level) const {
+        assert(this);
+        return DoComputeCompressedResultBufSpace(uncompressed_data,
+            uncompressed_size, GetRealCompressionLevel(compression_level));
+      }
 
       /* Compress data in 'input_buf' of size 'input_buf_size' bytes.  Place
          compressed result in 'output_buf' of size 'output_buf_size' bytes.
          Return actual size in bytes of compressed data, which will be at most
          'output_buf_size'.  Throw TError on error.  Call
          ComputeCompressedResultBufSpace() to determine how many bytes to
-         allocate for 'output_buf'. */
+         allocate for 'output_buf'.  Parameter 'compression_level' is an
+         optional requested compression level. */
       virtual size_t Compress(const void *input_buf, size_t input_buf_size,
-          void *output_buf, size_t output_buf_size) const = 0;
+          void *output_buf, size_t output_buf_size,
+          const Base::TOpt<int> &compression_level) const {
+        assert(this);
+        return DoCompress(input_buf, input_buf_size, output_buf,
+            output_buf_size, GetRealCompressionLevel(compression_level));
+      }
 
       /* Return the maximum uncompressed size in bytes of 'compressed_size'
          bytes of data in buffer 'compressed_data'.  Throw TError on error. */
@@ -80,6 +119,14 @@ namespace Dory {
           void *output_buf, size_t output_buf_size) const = 0;
 
       protected:
+      virtual size_t DoComputeCompressedResultBufSpace(
+          const void *uncompressed_data, size_t uncompressed_size,
+          const Base::TOpt<int> &compression_level) const = 0;
+
+      virtual size_t DoCompress(const void *input_buf, size_t input_buf_size,
+          void *output_buf, size_t output_buf_size,
+          const Base::TOpt<int> &compression_level) const = 0;
+
       TCompressionCodecApi() = default;
     };  // TCompressionCodecApi
 

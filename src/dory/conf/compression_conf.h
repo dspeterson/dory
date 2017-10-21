@@ -30,6 +30,7 @@
 #include <unordered_map>
 
 #include <base/no_copy_semantics.h>
+#include <base/opt.h>
 #include <dory/compress/compression_type.h>
 #include <dory/conf/conf_error.h>
 
@@ -48,14 +49,19 @@ namespace Dory {
            compression to be used. */
         size_t MinSize;
 
+        /* Compression level, if specified. */
+        Base::TOpt<int> Level;
+
         TConf()
             : Type(Compress::TCompressionType::None),
               MinSize(0) {
         }
 
-        TConf(Compress::TCompressionType type, size_t min_size)
+        TConf(Compress::TCompressionType type, size_t min_size,
+            const Base::TOpt<int> &level)
             : Type(type),
-              MinSize(min_size) {
+              MinSize(min_size),
+              Level(level) {
         }
 
         TConf(const TConf &) = default;
@@ -202,7 +208,8 @@ namespace Dory {
       void Reset();
 
       void AddNamedConfig(const std::string &name,
-          Compress::TCompressionType type, size_t min_size);
+          Compress::TCompressionType type, size_t min_size,
+          const Base::TOpt<int> &level);
 
       void SetSizeThresholdPercent(size_t size_threshold_percent);
 

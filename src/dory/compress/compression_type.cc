@@ -1,7 +1,7 @@
-/* <dory/compress/compression_type.h>
+/* <dory/compress/compression_type.cc>
 
    ----------------------------------------------------------------------------
-   Copyright 2013-2014 if(we)
+   Copyright 2017 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,22 +16,26 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Specification of supported compression types.
+   Implements <dory/compress/compression_type.h>.
  */
 
-#pragma once
+#include <dory/compress/compression_type.h>
 
-namespace Dory {
+#include <base/no_default_case.h>
 
-  namespace Compress {
+using namespace Dory;
+using namespace Dory::Compress;
 
-    enum class TCompressionType {
-      None,
-      Snappy
-    };  // TCompressionType
+const char *Dory::Compress::ToString(TCompressionType type) noexcept {
+  switch (type) {
+    case TCompressionType::None: {
+      break;
+    }
+    case TCompressionType::Snappy: {
+      return "snappy";
+    }
+    NO_DEFAULT_CASE;
+  }
 
-    const char *ToString(TCompressionType type) noexcept;
-
-  }  // Compress
-
-}  // Dory
+  return "none";
+}

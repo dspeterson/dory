@@ -137,25 +137,29 @@ namespace Dory {
       Base::TOpt<TProduceRequest> BuildRequest(std::vector<uint8_t> &dst);
 
       private:
-      struct TTopicData {
+      struct TCompressionInfo {
         /* This is null in the case where no compression is used. */
-        const Compress::TCompressionCodecApi * const CompressionCodec;
+        const Compress::TCompressionCodecApi *CompressionCodec;
 
         /* Minimum total size of uncompressed message bodies required for
            compression to be used. */
-        const size_t MinCompressionSize;
+        size_t MinCompressionSize;
 
-        const Compress::TCompressionType CompressionType;
+        Compress::TCompressionType CompressionType;
+
+        Base::TOpt<int> CompressionLevel;
+
+        explicit TCompressionInfo(const Conf::TCompressionConf::TConf &conf);
+      };  // TCompressionInfo
+
+      struct TTopicData {
+        const TCompressionInfo CompressionInfo;
 
         TAnyPartitionChooser AnyPartitionChooser;
 
-        explicit TTopicData(
-            const Conf::TCompressionConf::TConf &compression_conf)
-            : CompressionCodec(
-                  Compress::GetCompressionCodec(compression_conf.Type)),
-              MinCompressionSize(compression_conf.MinSize),
-              CompressionType(compression_conf.Type) {
-        }
+        explicit TTopicData(const Conf::TCompressionConf::TConf &conf);
+
+        explicit TTopicData(const TCompressionInfo &info);
       };  // TTopicData
 
       void InitTopicDataMap(const Conf::TCompressionConf &compression_conf);
@@ -175,7 +179,7 @@ namespace Dory {
 
       void SerializeToCompressionBuf(const std::list<TMsg::TPtr> &msg_set);
 
-      void WriteOneMsgSet(const TMsgSet &msg_set, const TTopicData &topic_data,
+      void WriteOneMsgSet(const TMsgSet &msg_set, const TCompressionInfo &info,
           std::vector<uint8_t> &dst);
 
       const TConfig &Config;
@@ -202,7 +206,7 @@ namespace Dory {
       const std::unique_ptr<KafkaProto::Produce::TMsgSetWriterApi>
           MsgSetWriter;
 
-      Conf::TCompressionConf::TConf DefaultTopicConf;
+      TCompressionInfo DefaultTopicCompressionInfo;
 
       std::shared_ptr<TMetadata> Metadata;
 

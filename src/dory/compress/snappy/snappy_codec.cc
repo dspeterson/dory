@@ -31,6 +31,7 @@
 #include <dory/compress/snappy/lib_snappy.h>
 #include <server/counter.h>
 
+using namespace Base;
 using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::Compress::Snappy;
@@ -89,22 +90,12 @@ const TSnappyCodec &TSnappyCodec::The() {
   return *Singleton;
 }
 
-size_t TSnappyCodec::ComputeCompressedResultBufSpace(
-    const void * /*uncompressed_data*/, size_t uncompressed_size) const {
+TOpt<int> TSnappyCodec::GetRealCompressionLevel(
+    const TOpt<int> & /*requested_level*/) const noexcept {
   assert(this);
-  return Lib.snappy_max_compressed_length(uncompressed_size);
-}
 
-size_t TSnappyCodec::Compress(const void *input_buf, size_t input_buf_size,
-    void *output_buf, size_t output_buf_size) const {
-  assert(this);
-  CheckSnappyStatus(Lib.snappy_compress(
-      reinterpret_cast<const char *>(input_buf), input_buf_size,
-      reinterpret_cast<char *>(output_buf), &output_buf_size),
-                    "snappy_compress()");
-
-  /* Return true size of compressed output (set by above library call). */
-  return output_buf_size;
+  /* This algorithm does not support compression levels. */
+  return TOpt<int>();
 }
 
 size_t TSnappyCodec::ComputeUncompressedResultBufSpace(
@@ -127,6 +118,28 @@ size_t TSnappyCodec::Uncompress(const void *input_buf, size_t input_buf_size,
                     "snappy_uncompress()");
 
   /* Return true size of uncompressed output (set by above library call). */
+  return output_buf_size;
+}
+
+size_t TSnappyCodec::DoComputeCompressedResultBufSpace(
+    const void * /*uncompressed_data*/, size_t uncompressed_size,
+    const TOpt<int> & /*compression_level*/) const {
+  assert(this);
+  return Lib.snappy_max_compressed_length(uncompressed_size);
+}
+
+size_t TSnappyCodec::DoCompress(const void *input_buf, size_t input_buf_size,
+    void *output_buf, size_t output_buf_size,
+    const TOpt<int> & /*compression_level*/) const {
+  assert(this);
+  CheckSnappyStatus(Lib.snappy_compress(
+      reinterpret_cast<const char *>(input_buf), input_buf_size,
+      reinterpret_cast<char *>(output_buf), &output_buf_size),
+                    "snappy_compress()");
+
+  /* Return true size of compressed output (set by above library call).  Snappy
+     doesn't support compression levels, so we leave the 'level' parameter
+     alone. */
   return output_buf_size;
 }
 

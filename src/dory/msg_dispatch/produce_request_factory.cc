@@ -66,7 +66,7 @@ TProduceRequestFactory::TProduceRequestFactory(const TConfig &config,
       MaxCompressionRatio(compression_conf.GetSizeThresholdPercent() / 100.0f),
       RequestWriter(produce_protocol->CreateProduceRequestWriter()),
       MsgSetWriter(produce_protocol->CreateMsgSetWriter()),
-      DefaultTopicConf(compression_conf.GetDefaultTopicConfig()),
+      DefaultTopicCompressionInfo(compression_conf.GetDefaultTopicConfig()),
       CorrIdCounter(0) {
   InitTopicDataMap(compression_conf);
 }
@@ -75,7 +75,8 @@ void TProduceRequestFactory::Init(
     const TCompressionConf &compression_conf,
     const std::shared_ptr<TMetadata> &md) {
   assert(this);
-  DefaultTopicConf = compression_conf.GetDefaultTopicConfig();
+  DefaultTopicCompressionInfo =
+      TCompressionInfo(compression_conf.GetDefaultTopicConfig());
   Metadata = md;
   CorrIdCounter = 0;
   InitTopicDataMap(compression_conf);
@@ -128,7 +129,8 @@ TOpt<TProduceRequest> TProduceRequestFactory::BuildRequest(
 
     for (const auto &partition_group_elem : partition_group) {
       RequestWriter->OpenMsgSet(partition_group_elem.first);
-      WriteOneMsgSet(partition_group_elem.second, GetTopicData(topic), dst);
+      WriteOneMsgSet(partition_group_elem.second,
+          GetTopicData(topic).CompressionInfo, dst);
       RequestWriter->CloseMsgSet();
       SerializeMsgSet.Increment();
     }
@@ -140,6 +142,43 @@ TOpt<TProduceRequest> TProduceRequestFactory::BuildRequest(
   RequestWriter->CloseRequest();
   SerializeProduceRequest.Increment();
   return TOpt<TProduceRequest>(std::move(request));
+}
+
+static TOpt<int> GetRealCompressionLevel(const TCompressionConf::TConf &conf) {
+  const Compress::TCompressionCodecApi *codec = GetCompressionCodec(conf.Type);
+  TOpt<int> real_level = codec ?
+      codec->GetRealCompressionLevel(conf.Level) : TOpt<int>();
+
+  if (conf.Level.IsKnown()) {
+    if (real_level.IsUnknown()) {
+      syslog(LOG_WARNING, "Ignoring compression level of %d requested for "
+          "compression type that does not support levels: %s", *conf.Level,
+          ToString(conf.Type));
+    } else if (*real_level != *conf.Level) {
+      syslog(LOG_WARNING, "Ignoring invalid compression level of %d requested "
+          "for compression type: %s", *conf.Level, ToString(conf.Type));
+    }
+  }
+
+  return real_level;
+}
+
+TProduceRequestFactory::TCompressionInfo::TCompressionInfo(
+    const TCompressionConf::TConf &conf)
+    : CompressionCodec(GetCompressionCodec(conf.Type)),
+      MinCompressionSize(conf.MinSize),
+      CompressionType(conf.Type),
+      CompressionLevel(GetRealCompressionLevel(conf)) {
+}
+
+TProduceRequestFactory::TTopicData::TTopicData(
+    const TCompressionConf::TConf &conf)
+    : CompressionInfo(conf) {
+}
+
+TProduceRequestFactory::TTopicData::TTopicData(
+    const TCompressionInfo &info)
+    : CompressionInfo(info) {
 }
 
 void TProduceRequestFactory::InitTopicDataMap(
@@ -161,7 +200,7 @@ TProduceRequestFactory::GetTopicData(const std::string &topic) {
 
   if (iter == TopicDataMap.end()) {
     auto ret = TopicDataMap.insert(
-        std::make_pair(topic, TTopicData(DefaultTopicConf)));
+        std::make_pair(topic, TTopicData(DefaultTopicCompressionInfo)));
     iter = ret.first;
   }
 
@@ -267,7 +306,7 @@ size_t TProduceRequestFactory::AddFirstMsg(TAllTopics &result) {
   TMsgSet &msg_set = result[topic][msg_ptr->GetPartition()];
   size_t data_size = msg_ptr->GetKeyAndValue().Size();
 
-  if (topic_data.CompressionCodec) {
+  if (topic_data.CompressionInfo.CompressionCodec) {
     assert(msg_set.DataSize == 0);
     msg_set.DataSize = data_size + SingleMsgOverhead;
   }
@@ -299,7 +338,7 @@ bool TProduceRequestFactory::TryConsumeFrontMsg(
 
   TMsgSet &msg_set = result[topic][msg_ptr->GetPartition()];
 
-  if (topic_data.CompressionCodec) {
+  if (topic_data.CompressionInfo.CompressionCodec) {
     size_t new_data_size = msg_set.DataSize + data_size + SingleMsgOverhead;
 
     if (new_data_size > MessageMaxBytes) {
@@ -434,16 +473,14 @@ void TProduceRequestFactory::SerializeToCompressionBuf(
   MsgSetWriter->CloseMsgSet();
 }
 
-void TProduceRequestFactory::WriteOneMsgSet(
-    const TMsgSet &msg_set, const TTopicData &topic_data,
-    std::vector<uint8_t> &dst) {
+void TProduceRequestFactory::WriteOneMsgSet(const TMsgSet &msg_set,
+    const TCompressionInfo &info, std::vector<uint8_t> &dst) {
   assert(this);
 
-  if (topic_data.CompressionCodec &&
-      (msg_set.DataSize >= topic_data.MinCompressionSize)) {
+  if (info.CompressionCodec && (msg_set.DataSize >= info.MinCompressionSize)) {
     SerializeToCompressionBuf(msg_set.Contents);
-    assert(topic_data.CompressionCodec);
-    const TCompressionCodecApi &codec = *topic_data.CompressionCodec;
+    assert(info.CompressionCodec);
+    const TCompressionCodecApi &codec = *info.CompressionCodec;
     bool msg_opened = false;
 
     try {
@@ -451,15 +488,16 @@ void TProduceRequestFactory::WriteOneMsgSet(
          and encapsulated within a single message whose attributes are set to
          indicate that it contains a compressed message set. */
       size_t max_compressed_size = codec.ComputeCompressedResultBufSpace(
-          &CompressionBuf[0], CompressionBuf.size());
-      RequestWriter->OpenMsg(topic_data.CompressionType, 0,
+          &CompressionBuf[0], CompressionBuf.size(), info.CompressionLevel);
+      RequestWriter->OpenMsg(info.CompressionType, 0,
           max_compressed_size);
       msg_opened = true;
       size_t value_offset = RequestWriter->GetCurrentMsgValueOffset();
       assert(dst.size() >= value_offset);
       assert((dst.size() - value_offset) == max_compressed_size);
       size_t compressed_size = codec.Compress(&CompressionBuf[0],
-          CompressionBuf.size(), &dst[value_offset], max_compressed_size);
+          CompressionBuf.size(), &dst[value_offset], max_compressed_size,
+          info.CompressionLevel);
       /* If we get this far, compression finished without errors. */
 
       float compression_ratio = static_cast<float>(compressed_size) /

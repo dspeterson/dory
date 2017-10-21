@@ -24,6 +24,7 @@
 #include <cstddef>
 
 #include <base/no_copy_semantics.h>
+#include <base/opt.h>
 #include <dory/compress/compression_codec_api.h>
 
 namespace Dory {
@@ -42,12 +43,8 @@ namespace Dory {
 
         virtual ~TSnappyCodec() noexcept { }
 
-        virtual size_t ComputeCompressedResultBufSpace(
-            const void *uncompressed_data,
-            size_t uncompressed_size) const override;
-
-        virtual size_t Compress(const void *input_buf, size_t input_buf_size,
-            void *output_buf, size_t output_buf_size) const override;
+        virtual Base::TOpt<int> GetRealCompressionLevel(
+            const Base::TOpt<int> &requested_level) const noexcept override;
 
         virtual size_t ComputeUncompressedResultBufSpace(
             const void *compressed_data,
@@ -55,6 +52,15 @@ namespace Dory {
 
         virtual size_t Uncompress(const void *input_buf, size_t input_buf_size,
             void *output_buf, size_t output_buf_size) const override;
+
+        protected:
+        virtual size_t DoComputeCompressedResultBufSpace(
+            const void *uncompressed_data, size_t uncompressed_size,
+            const Base::TOpt<int> &compression_level) const override;
+
+        virtual size_t DoCompress(const void *input_buf, size_t input_buf_size,
+            void *output_buf, size_t output_buf_size,
+            const Base::TOpt<int> &compression_level) const override;
 
         private:
         TSnappyCodec();

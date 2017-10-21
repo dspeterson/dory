@@ -253,7 +253,8 @@ void TConf::TBuilder::ProcessSingleCompressionNamedConfig(
         TOpts::ALLOW_K);
   }
 
-  CompressionConfBuilder.AddNamedConfig(name, type, min_size);
+  CompressionConfBuilder.AddNamedConfig(name, type, min_size,
+      TAttrReader::GetOptInt<int>(config_elem, "level"));
 }
 
 void TConf::TBuilder::ProcessCompressionElem(

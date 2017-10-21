@@ -27,6 +27,7 @@
 
 #include <dory/util/misc_util.h>
 
+using namespace Base;
 using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::Conf;
@@ -91,7 +92,7 @@ void TCompressionConf::TBuilder::Reset() {
 }
 
 void TCompressionConf::TBuilder::AddNamedConfig(const std::string &name,
-    TCompressionType type, size_t min_size) {
+    TCompressionType type, size_t min_size, const TOpt<int> &level) {
   assert(this);
 
   if (type == TCompressionType::None) {
@@ -99,7 +100,7 @@ void TCompressionConf::TBuilder::AddNamedConfig(const std::string &name,
   }
 
   auto result =
-      NamedConfigs.insert(std::make_pair(name, TConf(type, min_size)));
+      NamedConfigs.insert(std::make_pair(name, TConf(type, min_size, level)));
 
   if (!result.second) {
     throw TDuplicateNamedConfig(name);
