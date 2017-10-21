@@ -72,7 +72,7 @@ namespace {
 
     std::vector<char> uncompressed_output(
         codec.ComputeUncompressedResultBufSpace(&compressed_output[0],
-        compressed_output.size()));
+            compressed_output.size()));
     result_size = codec.Uncompress(&compressed_output[0],
         compressed_output.size(), &uncompressed_output[0],
         uncompressed_output.size());
