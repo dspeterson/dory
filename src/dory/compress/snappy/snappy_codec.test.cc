@@ -33,7 +33,7 @@ using namespace Dory::Compress::Snappy;
 
 namespace {
 
-  /* The fixture for testing class TMsgRateLimiter. */
+  /* The fixture for testing class TSnappyCodec. */
   class TSnappyCodecTest : public ::testing::Test {
     protected:
     TSnappyCodecTest() {
