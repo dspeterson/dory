@@ -56,11 +56,11 @@ namespace Dory {
         protected:
         virtual size_t DoComputeCompressedResultBufSpace(
             const void *uncompressed_data, size_t uncompressed_size,
-            const Base::TOpt<int> &compression_level) const override;
+            int compression_level) const override;
 
         virtual size_t DoCompress(const void *input_buf, size_t input_buf_size,
             void *output_buf, size_t output_buf_size,
-            const Base::TOpt<int> &compression_level) const override;
+            int compression_level) const override;
 
         private:
         TSnappyCodec();

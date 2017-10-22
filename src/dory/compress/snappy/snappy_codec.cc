@@ -123,23 +123,19 @@ size_t TSnappyCodec::Uncompress(const void *input_buf, size_t input_buf_size,
 
 size_t TSnappyCodec::DoComputeCompressedResultBufSpace(
     const void * /*uncompressed_data*/, size_t uncompressed_size,
-    const TOpt<int> & /*compression_level*/) const {
+    int /*compression_level*/) const {
   assert(this);
   return Lib.snappy_max_compressed_length(uncompressed_size);
 }
 
 size_t TSnappyCodec::DoCompress(const void *input_buf, size_t input_buf_size,
     void *output_buf, size_t output_buf_size,
-    const TOpt<int> & /*compression_level*/) const {
+    int /*compression_level*/) const {
   assert(this);
   CheckSnappyStatus(Lib.snappy_compress(
       reinterpret_cast<const char *>(input_buf), input_buf_size,
       reinterpret_cast<char *>(output_buf), &output_buf_size),
                     "snappy_compress()");
-
-  /* Return true size of compressed output (set by above library call).  Snappy
-     doesn't support compression levels, so we leave the 'level' parameter
-     alone. */
   return output_buf_size;
 }
 

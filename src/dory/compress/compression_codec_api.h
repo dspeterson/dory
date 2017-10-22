@@ -86,7 +86,7 @@ namespace Dory {
           const Base::TOpt<int> &compression_level) const {
         assert(this);
         return DoComputeCompressedResultBufSpace(uncompressed_data,
-            uncompressed_size, GetRealCompressionLevel(compression_level));
+            uncompressed_size, CompressionLevelParam(compression_level));
       }
 
       /* Compress data in 'input_buf' of size 'input_buf_size' bytes.  Place
@@ -101,7 +101,7 @@ namespace Dory {
           const Base::TOpt<int> &compression_level) const {
         assert(this);
         return DoCompress(input_buf, input_buf_size, output_buf,
-            output_buf_size, GetRealCompressionLevel(compression_level));
+            output_buf_size, CompressionLevelParam(compression_level));
       }
 
       /* Return the maximum uncompressed size in bytes of 'compressed_size'
@@ -119,15 +119,29 @@ namespace Dory {
           void *output_buf, size_t output_buf_size) const = 0;
 
       protected:
+      /* Note: If the algorithm supports compression levels, then
+         'compression_level' is guaranteed to be a value that it considers
+         valid (i.e. a result obtained from GetRealCompressionLevel()).
+         Otherwise, 'compression_level' will be 0, which the algorithm ignores.
+       */
       virtual size_t DoComputeCompressedResultBufSpace(
           const void *uncompressed_data, size_t uncompressed_size,
-          const Base::TOpt<int> &compression_level) const = 0;
+          int compression_level) const = 0;
 
+      /* Note: If the algorithm supports compression levels, then
+         'compression_level' is guaranteed to be a value that it considers
+         valid (i.e. a result obtained from GetRealCompressionLevel()).
+         Otherwise, 'compression_level' will be 0, which the algorithm ignores.
+       */
       virtual size_t DoCompress(const void *input_buf, size_t input_buf_size,
           void *output_buf, size_t output_buf_size,
-          const Base::TOpt<int> &compression_level) const = 0;
+          int compression_level) const = 0;
 
       TCompressionCodecApi() = default;
+
+      private:
+      int CompressionLevelParam(
+          const Base::TOpt<int> &requested_level) const noexcept;
     };  // TCompressionCodecApi
 
   }  // Compress
