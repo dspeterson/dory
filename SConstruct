@@ -141,7 +141,7 @@ ext_lib_deps = [
 ]
 
 # Environment.
-prog_libs = {'pthread', 'dl', 'rt'}
+prog_libs = {'pthread', 'dl', 'rt', 'z'}
 env = Environment(CFLAGS=['-Wwrite-strings'],
         CCFLAGS=['-Wall', '-Wextra', '-Werror', '-Wformat=2', '-Winit-self',
                 '-Wunused-parameter', '-Wshadow', '-Wpointer-arith',
