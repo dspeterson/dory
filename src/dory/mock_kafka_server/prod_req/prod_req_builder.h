@@ -121,7 +121,15 @@ namespace Dory {
         void GetCompressedData(const std::vector<TMsg> &msg_vec,
             std::vector<uint8_t> &result);
 
+        void GzipUncompressMsgSet(
+            const std::vector<uint8_t> &compressed_data,
+            std::vector<uint8_t> &uncompressed_data);
+
         void SnappyUncompressMsgSet(
+            const std::vector<uint8_t> &compressed_data,
+            std::vector<uint8_t> &uncompressed_data);
+
+        void Lz4UncompressMsgSet(
             const std::vector<uint8_t> &compressed_data,
             std::vector<uint8_t> &uncompressed_data);
 

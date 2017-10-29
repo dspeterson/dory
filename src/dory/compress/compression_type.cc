@@ -31,8 +31,14 @@ const char *Dory::Compress::ToString(TCompressionType type) noexcept {
     case TCompressionType::None: {
       break;
     }
+    case TCompressionType::Gzip: {
+      return "gzip";
+    }
     case TCompressionType::Snappy: {
       return "snappy";
+    }
+    case TCompressionType::Lz4: {
+      return "lz4";
     }
     NO_DEFAULT_CASE;
   }

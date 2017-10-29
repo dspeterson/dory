@@ -264,7 +264,7 @@ namespace {
       bool large_sendbuf_required = false;
       dory_config.MakeKnown(TDoryServer::CreateConfig(
           args.size() - 1, const_cast<char **>(&args[0]),
-          large_sendbuf_required, true));
+          large_sendbuf_required, true, true));
       const Dory::TConfig &config = dory_config->GetCmdLineConfig();
       InitSyslog(args[0], config.LogLevel, config.LogEcho);
       Dory.reset(new TDoryServer(std::move(*dory_config)));
@@ -1211,7 +1211,16 @@ namespace {
   }
 
   std::string CreateCompressionTestConf(in_port_t broker_port,
-      size_t compression_min_size) {
+      size_t compression_min_size, const char *compression_type,
+      TOpt<int> compression_level) {
+    std::string level_blurb;
+
+    if (compression_level.IsKnown()) {
+      level_blurb = " level=\"";
+      level_blurb += boost::lexical_cast<std::string>(*compression_level);
+      level_blurb += "\"";
+    }
+
     std::ostringstream os;
     os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
        << "<doryConfig>" << std::endl
@@ -1231,7 +1240,8 @@ namespace {
        << "    </batching>" << std::endl
        << "    <compression>" << std::endl
        << "        <namedConfigs>" << std::endl
-       << "            <config name=\"config1\" type=\"snappy\" minSize=\""
+       << "            <config name=\"config1\" type=\"" << compression_type
+       << "\"" << level_blurb << " minSize=\""
        << boost::lexical_cast<std::string>(compression_min_size) << "\" />"
        << std::endl
        << "        </namedConfigs>" << std::endl
@@ -1246,7 +1256,7 @@ namespace {
     return os.str();
   }
 
-  TEST_F(TDoryTest, CompressionTest) {
+  TEST_F(TDoryTest, GzipCompressionTest1) {
     std::unique_ptr<TProduceProtocol>
         produce_protocol(ChooseProduceProto(0));
     std::string topic("scooby_doo");
@@ -1266,7 +1276,308 @@ namespace {
     size_t data_size = msg_body_1.size() +
         produce_protocol->GetSingleMsgOverhead();
     TDoryTestServer server(port, 1024,
-        CreateCompressionTestConf(port, 1 + (10 * data_size)));
+        CreateCompressionTestConf(port, 1 + (10 * data_size), "gzip",
+            TOpt<int>()));
+    server.UseUnixDgSocket();
+    bool started = server.SyncStart();
+    ASSERT_TRUE(started);
+    TDoryServer *dory = server.GetDory();
+    TDoryClientSocket sock;
+    int ret = sock.Bind(server.GetUnixDgSocketName());
+    ASSERT_EQ(ret, DORY_OK);
+    std::vector<std::string> topics;
+    std::vector<std::string> bodies;
+
+    /* These will be batched together as a single message set, but compression
+       will not be used because of the size threshold. */
+    for (size_t i = 0; i < 10; ++i) {
+      topics.push_back(topic);
+      bodies.push_back(msg_body_1);
+    }
+
+    std::vector<uint8_t> dg_buf;
+
+    for (size_t i = 0; i < topics.size(); ++i) {
+      MakeDg(dg_buf, topics[i], bodies[i]);
+      ret = sock.Send(&dg_buf[0], dg_buf.size());
+      ASSERT_EQ(ret, DORY_OK);
+    }
+
+    GetKeyAndValue(*dory, mock_kafka, topic, "", msg_body_1, 1, 10,
+                               TCompressionType::None);
+
+    /* This will push the total size to the threshold and cause compression. */
+    bodies[9].push_back('0');
+
+    for (size_t i = 0; i < topics.size(); ++i) {
+      MakeDg(dg_buf, topics[i], bodies[i]);
+      ret = sock.Send(&dg_buf[0], dg_buf.size());
+      ASSERT_EQ(ret, DORY_OK);
+    }
+
+    GetKeyAndValue(*dory, mock_kafka, topic, "", msg_body_1, 1, 10,
+                   TCompressionType::Gzip);
+
+    TAnomalyTracker::TInfo bad_stuff;
+    dory->GetAnomalyTracker().GetInfo(bad_stuff);
+    ASSERT_EQ(bad_stuff.DiscardTopicMap.size(), 0U);
+    ASSERT_EQ(bad_stuff.DuplicateTopicMap.size(), 0U);
+    ASSERT_EQ(bad_stuff.BadTopics.size(), 0U);
+    ASSERT_EQ(bad_stuff.MalformedMsgCount, 0U);
+    ASSERT_EQ(bad_stuff.UnsupportedVersionMsgCount, 0U);
+
+    server.RequestShutdown();
+    server.Join();
+    ASSERT_EQ(server.GetDoryReturnValue(), EXIT_SUCCESS);
+  }
+
+  TEST_F(TDoryTest, GzipCompressionTest2) {
+    std::unique_ptr<TProduceProtocol>
+        produce_protocol(ChooseProduceProto(0));
+    std::string topic("scooby_doo");
+    std::vector<std::string> kafka_config;
+    CreateKafkaConfig(2, topic.c_str(), 2, kafka_config);
+    TMockKafkaConfig kafka(kafka_config);
+    kafka.StartKafka();
+    Dory::MockKafkaServer::TMainThread &mock_kafka = *kafka.MainThread;
+
+    /* Translate virtual port from the mock Kafka server setup file into a
+       physical port.  See big comment in <dory/mock_kafka_server/port_map.h>
+       for an explanation of what is going on here. */
+    in_port_t port = mock_kafka.VirtualPortToPhys(10000);
+
+    assert(port);
+    std::string msg_body_1("123456789");
+    size_t data_size = msg_body_1.size() +
+        produce_protocol->GetSingleMsgOverhead();
+    TDoryTestServer server(port, 1024,
+        CreateCompressionTestConf(port, 1 + (10 * data_size), "gzip",
+            TOpt<int>(4)));
+    server.UseUnixDgSocket();
+    bool started = server.SyncStart();
+    ASSERT_TRUE(started);
+    TDoryServer *dory = server.GetDory();
+    TDoryClientSocket sock;
+    int ret = sock.Bind(server.GetUnixDgSocketName());
+    ASSERT_EQ(ret, DORY_OK);
+    std::vector<std::string> topics;
+    std::vector<std::string> bodies;
+
+    /* These will be batched together as a single message set, but compression
+       will not be used because of the size threshold. */
+    for (size_t i = 0; i < 10; ++i) {
+      topics.push_back(topic);
+      bodies.push_back(msg_body_1);
+    }
+
+    std::vector<uint8_t> dg_buf;
+
+    for (size_t i = 0; i < topics.size(); ++i) {
+      MakeDg(dg_buf, topics[i], bodies[i]);
+      ret = sock.Send(&dg_buf[0], dg_buf.size());
+      ASSERT_EQ(ret, DORY_OK);
+    }
+
+    GetKeyAndValue(*dory, mock_kafka, topic, "", msg_body_1, 1, 10,
+                               TCompressionType::None);
+
+    /* This will push the total size to the threshold and cause compression. */
+    bodies[9].push_back('0');
+
+    for (size_t i = 0; i < topics.size(); ++i) {
+      MakeDg(dg_buf, topics[i], bodies[i]);
+      ret = sock.Send(&dg_buf[0], dg_buf.size());
+      ASSERT_EQ(ret, DORY_OK);
+    }
+
+    GetKeyAndValue(*dory, mock_kafka, topic, "", msg_body_1, 1, 10,
+                   TCompressionType::Gzip);
+
+    TAnomalyTracker::TInfo bad_stuff;
+    dory->GetAnomalyTracker().GetInfo(bad_stuff);
+    ASSERT_EQ(bad_stuff.DiscardTopicMap.size(), 0U);
+    ASSERT_EQ(bad_stuff.DuplicateTopicMap.size(), 0U);
+    ASSERT_EQ(bad_stuff.BadTopics.size(), 0U);
+    ASSERT_EQ(bad_stuff.MalformedMsgCount, 0U);
+    ASSERT_EQ(bad_stuff.UnsupportedVersionMsgCount, 0U);
+
+    server.RequestShutdown();
+    server.Join();
+    ASSERT_EQ(server.GetDoryReturnValue(), EXIT_SUCCESS);
+  }
+
+  TEST_F(TDoryTest, Lz4CompressionTest1) {
+    std::unique_ptr<TProduceProtocol>
+        produce_protocol(ChooseProduceProto(0));
+    std::string topic("scooby_doo");
+    std::vector<std::string> kafka_config;
+    CreateKafkaConfig(2, topic.c_str(), 2, kafka_config);
+    TMockKafkaConfig kafka(kafka_config);
+    kafka.StartKafka();
+    Dory::MockKafkaServer::TMainThread &mock_kafka = *kafka.MainThread;
+
+    /* Translate virtual port from the mock Kafka server setup file into a
+       physical port.  See big comment in <dory/mock_kafka_server/port_map.h>
+       for an explanation of what is going on here. */
+    in_port_t port = mock_kafka.VirtualPortToPhys(10000);
+
+    assert(port);
+    std::string msg_body_1("123456789");
+    size_t data_size = msg_body_1.size() +
+        produce_protocol->GetSingleMsgOverhead();
+    TDoryTestServer server(port, 1024,
+        CreateCompressionTestConf(port, 1 + (10 * data_size), "lz4",
+            TOpt<int>()));
+    server.UseUnixDgSocket();
+    bool started = server.SyncStart();
+    ASSERT_TRUE(started);
+    TDoryServer *dory = server.GetDory();
+    TDoryClientSocket sock;
+    int ret = sock.Bind(server.GetUnixDgSocketName());
+    ASSERT_EQ(ret, DORY_OK);
+    std::vector<std::string> topics;
+    std::vector<std::string> bodies;
+
+    /* These will be batched together as a single message set, but compression
+       will not be used because of the size threshold. */
+    for (size_t i = 0; i < 10; ++i) {
+      topics.push_back(topic);
+      bodies.push_back(msg_body_1);
+    }
+
+    std::vector<uint8_t> dg_buf;
+
+    for (size_t i = 0; i < topics.size(); ++i) {
+      MakeDg(dg_buf, topics[i], bodies[i]);
+      ret = sock.Send(&dg_buf[0], dg_buf.size());
+      ASSERT_EQ(ret, DORY_OK);
+    }
+
+    GetKeyAndValue(*dory, mock_kafka, topic, "", msg_body_1, 1, 10,
+                               TCompressionType::None);
+
+    /* This will push the total size to the threshold and cause compression. */
+    bodies[9].push_back('0');
+
+    for (size_t i = 0; i < topics.size(); ++i) {
+      MakeDg(dg_buf, topics[i], bodies[i]);
+      ret = sock.Send(&dg_buf[0], dg_buf.size());
+      ASSERT_EQ(ret, DORY_OK);
+    }
+
+    GetKeyAndValue(*dory, mock_kafka, topic, "", msg_body_1, 1, 10,
+                   TCompressionType::Lz4);
+
+    TAnomalyTracker::TInfo bad_stuff;
+    dory->GetAnomalyTracker().GetInfo(bad_stuff);
+    ASSERT_EQ(bad_stuff.DiscardTopicMap.size(), 0U);
+    ASSERT_EQ(bad_stuff.DuplicateTopicMap.size(), 0U);
+    ASSERT_EQ(bad_stuff.BadTopics.size(), 0U);
+    ASSERT_EQ(bad_stuff.MalformedMsgCount, 0U);
+    ASSERT_EQ(bad_stuff.UnsupportedVersionMsgCount, 0U);
+
+    server.RequestShutdown();
+    server.Join();
+    ASSERT_EQ(server.GetDoryReturnValue(), EXIT_SUCCESS);
+  }
+
+  TEST_F(TDoryTest, Lz4CompressionTest2) {
+    std::unique_ptr<TProduceProtocol>
+        produce_protocol(ChooseProduceProto(0));
+    std::string topic("scooby_doo");
+    std::vector<std::string> kafka_config;
+    CreateKafkaConfig(2, topic.c_str(), 2, kafka_config);
+    TMockKafkaConfig kafka(kafka_config);
+    kafka.StartKafka();
+    Dory::MockKafkaServer::TMainThread &mock_kafka = *kafka.MainThread;
+
+    /* Translate virtual port from the mock Kafka server setup file into a
+       physical port.  See big comment in <dory/mock_kafka_server/port_map.h>
+       for an explanation of what is going on here. */
+    in_port_t port = mock_kafka.VirtualPortToPhys(10000);
+
+    assert(port);
+    std::string msg_body_1("123456789");
+    size_t data_size = msg_body_1.size() +
+        produce_protocol->GetSingleMsgOverhead();
+    TDoryTestServer server(port, 1024,
+        CreateCompressionTestConf(port, 1 + (10 * data_size), "lz4",
+            TOpt<int>(3)));
+    server.UseUnixDgSocket();
+    bool started = server.SyncStart();
+    ASSERT_TRUE(started);
+    TDoryServer *dory = server.GetDory();
+    TDoryClientSocket sock;
+    int ret = sock.Bind(server.GetUnixDgSocketName());
+    ASSERT_EQ(ret, DORY_OK);
+    std::vector<std::string> topics;
+    std::vector<std::string> bodies;
+
+    /* These will be batched together as a single message set, but compression
+       will not be used because of the size threshold. */
+    for (size_t i = 0; i < 10; ++i) {
+      topics.push_back(topic);
+      bodies.push_back(msg_body_1);
+    }
+
+    std::vector<uint8_t> dg_buf;
+
+    for (size_t i = 0; i < topics.size(); ++i) {
+      MakeDg(dg_buf, topics[i], bodies[i]);
+      ret = sock.Send(&dg_buf[0], dg_buf.size());
+      ASSERT_EQ(ret, DORY_OK);
+    }
+
+    GetKeyAndValue(*dory, mock_kafka, topic, "", msg_body_1, 1, 10,
+                               TCompressionType::None);
+
+    /* This will push the total size to the threshold and cause compression. */
+    bodies[9].push_back('0');
+
+    for (size_t i = 0; i < topics.size(); ++i) {
+      MakeDg(dg_buf, topics[i], bodies[i]);
+      ret = sock.Send(&dg_buf[0], dg_buf.size());
+      ASSERT_EQ(ret, DORY_OK);
+    }
+
+    GetKeyAndValue(*dory, mock_kafka, topic, "", msg_body_1, 1, 10,
+                   TCompressionType::Lz4);
+
+    TAnomalyTracker::TInfo bad_stuff;
+    dory->GetAnomalyTracker().GetInfo(bad_stuff);
+    ASSERT_EQ(bad_stuff.DiscardTopicMap.size(), 0U);
+    ASSERT_EQ(bad_stuff.DuplicateTopicMap.size(), 0U);
+    ASSERT_EQ(bad_stuff.BadTopics.size(), 0U);
+    ASSERT_EQ(bad_stuff.MalformedMsgCount, 0U);
+    ASSERT_EQ(bad_stuff.UnsupportedVersionMsgCount, 0U);
+
+    server.RequestShutdown();
+    server.Join();
+    ASSERT_EQ(server.GetDoryReturnValue(), EXIT_SUCCESS);
+  }
+
+  TEST_F(TDoryTest, SnappyCompressionTest) {
+    std::unique_ptr<TProduceProtocol>
+        produce_protocol(ChooseProduceProto(0));
+    std::string topic("scooby_doo");
+    std::vector<std::string> kafka_config;
+    CreateKafkaConfig(2, topic.c_str(), 2, kafka_config);
+    TMockKafkaConfig kafka(kafka_config);
+    kafka.StartKafka();
+    Dory::MockKafkaServer::TMainThread &mock_kafka = *kafka.MainThread;
+
+    /* Translate virtual port from the mock Kafka server setup file into a
+       physical port.  See big comment in <dory/mock_kafka_server/port_map.h>
+       for an explanation of what is going on here. */
+    in_port_t port = mock_kafka.VirtualPortToPhys(10000);
+
+    assert(port);
+    std::string msg_body_1("123456789");
+    size_t data_size = msg_body_1.size() +
+        produce_protocol->GetSingleMsgOverhead();
+    TDoryTestServer server(port, 1024,
+        CreateCompressionTestConf(port, 1 + (10 * data_size), "snappy",
+            TOpt<int>()));
     server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);

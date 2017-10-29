@@ -79,7 +79,7 @@ namespace Dory {
       NO_COPY_SEMANTICS(TBuilder);
 
       public:
-      TBuilder();
+      explicit TBuilder(bool enable_lz4);
 
       TConf Build(const char *config_filename);
 
@@ -111,6 +111,8 @@ namespace Dory {
           const xercesc::DOMElement &initial_brokers_elem);
 
       void ProcessRootElem(const xercesc::DOMElement &root_elem);
+
+      bool EnableLz4;
 
       TDomDocHandle XmlDoc;
 

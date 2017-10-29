@@ -22,7 +22,6 @@
 #include <dory/compress/compression_codec_api.h>
 
 #include <dory/compress/get_compression_codec.h>
-#include <dory/compress/snappy/snappy_codec.h>
 
 using namespace Base;
 using namespace Dory;

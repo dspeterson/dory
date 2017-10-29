@@ -24,6 +24,7 @@
 #include <limits>
 
 #include <base/crc.h>
+#include <base/no_default_case.h>
 
 using namespace Base;
 using namespace Dory;
@@ -71,6 +72,32 @@ void TMsgSetWriter::OpenMsgSet(std::vector<uint8_t> &result_buf, bool append) {
   State = TState::InMsgSet;
 }
 
+static int8_t XlateCompressionType(TCompressionType compression_type) {
+  using PRC = TProduceRequestConstants;
+  auto attr = PRC::NO_COMPRESSION_ATTR;
+
+  switch (compression_type) {
+    case TCompressionType::None: {
+      break;
+    }
+    case TCompressionType::Gzip: {
+      attr = PRC::GZIP_COMPRESSION_ATTR;
+      break;
+    }
+    case TCompressionType::Snappy: {
+      attr = PRC::SNAPPY_COMPRESSION_ATTR;
+      break;
+    }
+    case TCompressionType::Lz4: {
+      attr = PRC::LZ4_COMPRESSION_ATTR;
+      break;
+    }
+    NO_DEFAULT_CASE;
+  }
+
+  return static_cast<int8_t>(attr);
+}
+
 void TMsgSetWriter::OpenMsg(TCompressionType compression_type,
     size_t key_size, size_t value_size) {
   assert(this);
@@ -89,8 +116,7 @@ void TMsgSetWriter::OpenMsg(TCompressionType compression_type,
   CurrentMsgCrcOffset = AtOffset;
   AtOffset += PRC::CRC_SIZE;  // skip CRC field
   WriteInt8AtOffset(0);  // magic byte
-  WriteInt8AtOffset((compression_type == TCompressionType::Snappy) ?
-      PRC::SNAPPY_COMPRESSION_ATTR : PRC::NO_COMPRESSION_ATTR);  // attributes
+  WriteInt8AtOffset(XlateCompressionType(compression_type));  // attributes
 
   /* Here, -1 indicates a length of 0. */
   WriteInt32AtOffset(key_size ? key_size : -1);  // key length

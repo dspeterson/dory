@@ -25,10 +25,14 @@
 #include <cassert>
 #include <string>
 
+#include <dory/compress/gzip/gzip_codec.h>
+#include <dory/compress/lz4/lz4_codec.h>
 #include <dory/compress/snappy/snappy_codec.h>
 
 using namespace Dory;
 using namespace Dory::Compress;
+using namespace Dory::Compress::Gzip;
+using namespace Dory::Compress::Lz4;
 using namespace Dory::Compress::Snappy;
 using namespace Dory::KafkaProto;
 using namespace Dory::MockKafkaServer;
@@ -86,11 +90,45 @@ void TProdReqBuilder::GetCompressedData(const std::vector<TMsg> &msg_vec,
   }
 }
 
+void TProdReqBuilder::GzipUncompressMsgSet(
+    const std::vector<uint8_t> &compressed_data,
+    std::vector<uint8_t> &uncompressed_data) {
+  assert(this);
+  const TGzipCodec &codec = TGzipCodec::The();
+
+  try {
+    uncompressed_data.resize(codec.ComputeUncompressedResultBufSpace(
+        &compressed_data[0], compressed_data.size()));
+    size_t size = codec.Uncompress(&compressed_data[0], compressed_data.size(),
+        &uncompressed_data[0], uncompressed_data.size());
+    uncompressed_data.resize(size);
+  } catch (const TCompressionCodecApi::TError &x) {
+    throw TUncompressFailed();
+  }
+}
+
 void TProdReqBuilder::SnappyUncompressMsgSet(
     const std::vector<uint8_t> &compressed_data,
     std::vector<uint8_t> &uncompressed_data) {
   assert(this);
   const TSnappyCodec &codec = TSnappyCodec::The();
+
+  try {
+    uncompressed_data.resize(codec.ComputeUncompressedResultBufSpace(
+        &compressed_data[0], compressed_data.size()));
+    size_t size = codec.Uncompress(&compressed_data[0], compressed_data.size(),
+        &uncompressed_data[0], uncompressed_data.size());
+    uncompressed_data.resize(size);
+  } catch (const TCompressionCodecApi::TError &x) {
+    throw TUncompressFailed();
+  }
+}
+
+void TProdReqBuilder::Lz4UncompressMsgSet(
+    const std::vector<uint8_t> &compressed_data,
+    std::vector<uint8_t> &uncompressed_data) {
+  assert(this);
+  const TLz4Codec &codec = TLz4Codec::The();
 
   try {
     uncompressed_data.resize(codec.ComputeUncompressedResultBufSpace(
@@ -148,11 +186,23 @@ TMsgSet TProdReqBuilder::BuildMsgSet() {
       case TCompressionType::None: {  // no compression
         break;
       }
+      case TCompressionType::Gzip: {  // gzip compression
+        GetCompressedData(msg_vec, compressed_data);
+        GzipUncompressMsgSet(compressed_data, uncompressed_data);
+        return BuildUncompressedMsgSet(partition, uncompressed_data,
+                                       TCompressionType::Gzip);
+      }
       case TCompressionType::Snappy: {  // snappy compression
         GetCompressedData(msg_vec, compressed_data);
         SnappyUncompressMsgSet(compressed_data, uncompressed_data);
         return BuildUncompressedMsgSet(partition, uncompressed_data,
                                        TCompressionType::Snappy);
+      }
+      case TCompressionType::Lz4: {  // lz4 compression
+        GetCompressedData(msg_vec, compressed_data);
+        Lz4UncompressMsgSet(compressed_data, uncompressed_data);
+        return BuildUncompressedMsgSet(partition, uncompressed_data,
+                                       TCompressionType::Lz4);
       }
       default: {
         throw TInvalidAttributes();

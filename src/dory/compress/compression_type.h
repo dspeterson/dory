@@ -27,7 +27,9 @@ namespace Dory {
 
     enum class TCompressionType {
       None,
-      Snappy
+      Gzip,
+      Snappy,
+      Lz4
     };  // TCompressionType
 
     const char *ToString(TCompressionType type) noexcept;

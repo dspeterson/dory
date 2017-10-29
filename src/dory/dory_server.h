@@ -147,7 +147,7 @@ namespace Dory {
 
     static TServerConfig CreateConfig(int argc, char **argv,
         bool &large_sendbuf_required, bool allow_input_bind_ephemeral,
-        size_t pool_block_size = 128);
+        bool enable_lz4, size_t pool_block_size = 128);
 
     static void HandleShutdownSignal(int signum);
 

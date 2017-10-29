@@ -58,8 +58,18 @@ static int DoryMain(int argc, char *argv[]) {
     xml_init.Init();
     TOpt<std::string> opt_err_msg = HandleXmlErrors(
         [&]() -> void {
+          /* TODO: Enable support for LZ4 compression.  To enable LZ4, dory's
+             wire protocol implementation needs to be updated to support asking
+             the brokers what version of Kafka they are running.  LZ4 support
+             will be enabled only for broker versions >= 0.10.0.0.  Enabling
+             LZ4 for earlier versions would require a messy workaround for a
+             bug in Kafka.  See
+             https://cwiki.apache.org/confluence/display/KAFKA/KIP-57+-+Interoperable+LZ4+Framing
+             for details. */
+          bool enable_lz4 = false;
+
           dory_config.MakeKnown(TDoryServer::CreateConfig(argc, argv,
-              large_sendbuf_required, false));
+              large_sendbuf_required, false, enable_lz4));
         }
     );
 

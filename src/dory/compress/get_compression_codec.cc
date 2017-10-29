@@ -22,10 +22,14 @@
 #include <dory/compress/get_compression_codec.h>
 
 #include <base/no_default_case.h>
+#include <dory/compress/gzip/gzip_codec.h>
+#include <dory/compress/lz4/lz4_codec.h>
 #include <dory/compress/snappy/snappy_codec.h>
 
 using namespace Dory;
 using namespace Dory::Compress;
+using namespace Dory::Compress::Gzip;
+using namespace Dory::Compress::Lz4;
 using namespace Dory::Compress::Snappy;
 
 const TCompressionCodecApi *
@@ -33,6 +37,10 @@ Dory::Compress::GetCompressionCodec(TCompressionType type) {
   switch (type) {
     case TCompressionType::None:
       break;
+    case TCompressionType::Gzip:
+      return &TGzipCodec::The();
+    case TCompressionType::Lz4:
+      return &TLz4Codec::The();
     case TCompressionType::Snappy:
       return &TSnappyCodec::The();
     NO_DEFAULT_CASE;

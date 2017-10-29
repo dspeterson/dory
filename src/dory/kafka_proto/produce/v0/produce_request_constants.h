@@ -74,7 +74,9 @@ namespace Dory {
 
           enum {
             NO_COMPRESSION_ATTR = 0,
-            SNAPPY_COMPRESSION_ATTR = 2
+            GZIP_COMPRESSION_ATTR = 1,
+            SNAPPY_COMPRESSION_ATTR = 2,
+            LZ4_COMPRESSION_ATTR = 3
           };
         };  // TProduceRequestConstants
 

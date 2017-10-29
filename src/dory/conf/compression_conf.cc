@@ -41,8 +41,18 @@ bool TCompressionConf::StringToType(const char *s, TCompressionType &result) {
     return true;
   }
 
+  if (!strcasecmp(s, "gzip")) {
+    result = TCompressionType::Gzip;
+    return true;
+  }
+
   if (!strcasecmp(s, "snappy")) {
     result = TCompressionType::Snappy;
+    return true;
+  }
+
+  if (!strcasecmp(s, "lz4")) {
+    result = TCompressionType::Lz4;
     return true;
   }
 

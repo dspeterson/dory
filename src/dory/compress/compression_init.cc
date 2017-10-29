@@ -33,7 +33,9 @@ void Dory::Compress::CompressionInit(TCompressionType type) {
 }
 
 void Dory::Compress::CompressionInit() {
-  /* Force all supported compression libraries to load.  This will throw if
-     there is an error loading a library. */
+  /* Force all supported compression libraries that we access using dlopen()
+     and dlsym() to load.  We dynamically link to zlib at build time
+     (i.e. -lz), and we statically link to the lz4 library, so they don't
+     appear here.  This will throw if there is an error loading a library. */
   TSnappyCodec::The();
 }

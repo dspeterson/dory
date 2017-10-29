@@ -102,6 +102,14 @@ namespace {
         << "minSize=\"1024\" />" << std::endl
         << "            <config name=\"snappy2\" type=\"snappy\" "
         << "minSize=\"2k\" />" << std::endl
+        << "            <config name=\"gzip1\" type=\"gzip\" "
+        << "minSize=\"4096\" />" << std::endl
+        << "            <config name=\"gzip2\" type=\"gzip\" level=\"3\" "
+        << "minSize=\"8192\" />" << std::endl
+        << "            <config name=\"lz4_1\" type=\"lz4\" "
+        << "minSize=\"16384\" />" << std::endl
+        << "            <config name=\"lz4_2\" type=\"lz4\" level=\"5\" "
+        << "minSize=\"32768\" />" << std::endl
         << "        </namedConfigs>" << std::endl
         << std::endl
         << "        <sizeThresholdPercent value=\"75\" />" << std::endl
@@ -112,6 +120,10 @@ namespace {
         << "            <topic name=\"topic1\" config=\"noComp\" />"
         << std::endl
         << "            <topic name=\"topic2\" config=\"snappy2\" />"
+        << "            <topic name=\"topic3\" config=\"gzip1\" />"
+        << "            <topic name=\"topic4\" config=\"gzip2\" />"
+        << "            <topic name=\"topic5\" config=\"lz4_1\" />"
+        << "            <topic name=\"topic6\" config=\"lz4_2\" />"
         << std::endl
         << "        </topicConfigs>" << std::endl
         << "    </compression>" << std::endl
@@ -146,7 +158,7 @@ namespace {
         << "</doryConfig>" << std::endl;
     ofs.close();
     std::string filename(tmp_file.GetName());
-    TConf::TBuilder builder;
+    TConf::TBuilder builder(true);
     TConf conf = builder.Build(filename.c_str());
 
     const TBatchConf &batch_conf = conf.GetBatchConf();
@@ -202,18 +214,49 @@ namespace {
     ASSERT_TRUE(default_topic_compression_conf.Type ==
                 TCompressionType::Snappy);
     ASSERT_EQ(default_topic_compression_conf.MinSize, 1024U);
+    ASSERT_TRUE(default_topic_compression_conf.Level.IsUnknown());
     const TCompressionConf::TTopicMap &compression_topic_configs =
         compression_conf.GetTopicConfigs();
-    ASSERT_EQ(compression_topic_configs.size(), 2U);
+    ASSERT_EQ(compression_topic_configs.size(), 6U);
+
     TCompressionConf::TTopicMap::const_iterator comp_topic_iter =
         compression_topic_configs.find("topic1");
     ASSERT_TRUE(comp_topic_iter != compression_topic_configs.end());
     ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::None);
     ASSERT_TRUE(comp_topic_iter->second.MinSize == 0U);
+    ASSERT_TRUE(comp_topic_iter->second.Level.IsUnknown());
+
     comp_topic_iter = compression_topic_configs.find("topic2");
     ASSERT_TRUE(comp_topic_iter != compression_topic_configs.end());
     ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::Snappy);
     ASSERT_TRUE(comp_topic_iter->second.MinSize == 2048U);
+    ASSERT_TRUE(comp_topic_iter->second.Level.IsUnknown());
+
+    comp_topic_iter = compression_topic_configs.find("topic3");
+    ASSERT_TRUE(comp_topic_iter != compression_topic_configs.end());
+    ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::Gzip);
+    ASSERT_TRUE(comp_topic_iter->second.MinSize == 4096U);
+    ASSERT_TRUE(comp_topic_iter->second.Level.IsUnknown());
+
+    comp_topic_iter = compression_topic_configs.find("topic4");
+    ASSERT_TRUE(comp_topic_iter != compression_topic_configs.end());
+    ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::Gzip);
+    ASSERT_TRUE(comp_topic_iter->second.MinSize == 8192U);
+    ASSERT_TRUE(comp_topic_iter->second.Level.IsKnown());
+    ASSERT_EQ(*comp_topic_iter->second.Level, 3);
+
+    comp_topic_iter = compression_topic_configs.find("topic5");
+    ASSERT_TRUE(comp_topic_iter != compression_topic_configs.end());
+    ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::Lz4);
+    ASSERT_TRUE(comp_topic_iter->second.MinSize == 16384U);
+    ASSERT_TRUE(comp_topic_iter->second.Level.IsUnknown());
+
+    comp_topic_iter = compression_topic_configs.find("topic6");
+    ASSERT_TRUE(comp_topic_iter != compression_topic_configs.end());
+    ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::Lz4);
+    ASSERT_TRUE(comp_topic_iter->second.MinSize == 32768U);
+    ASSERT_TRUE(comp_topic_iter->second.Level.IsKnown());
+    ASSERT_EQ(*comp_topic_iter->second.Level, 5);
 
     const TTopicRateConf &topic_rate_conf = conf.GetTopicRateConf();
     const TTopicRateConf::TConf &default_topic_rate_conf =

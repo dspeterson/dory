@@ -124,8 +124,14 @@ TCompressionType TMsgSetReader::GetCurrentMsgCompressionType() const {
     case PRC::NO_COMPRESSION_ATTR: {
       return TCompressionType::None;
     }
+    case PRC::GZIP_COMPRESSION_ATTR: {
+      return TCompressionType::Gzip;
+    }
     case PRC::SNAPPY_COMPRESSION_ATTR: {
       return TCompressionType::Snappy;
+    }
+    case PRC::LZ4_COMPRESSION_ATTR: {
+      return TCompressionType::Lz4;
     }
     default: {
       break;

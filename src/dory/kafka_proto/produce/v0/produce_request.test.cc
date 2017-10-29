@@ -146,7 +146,49 @@ namespace {
                 const uint8_t *value_begin =
                     reinterpret_cast<const uint8_t *>(values[kk].data());
                 const uint8_t *value_end = value_begin + values[kk].size();
+                writer.AddMsg(TCompressionType::None, key_begin, key_end,
+                    value_begin, value_end);
+              }
+
+              writer.CloseMsgSet();
+              writer.OpenMsgSet(partitions[jj]);
+
+              for (size_t kk = 0; kk < k; ++kk) {
+                const uint8_t *key_begin =
+                    reinterpret_cast<const uint8_t *>(msgs[kk].data());
+                const uint8_t *key_end = key_begin + msgs[kk].size();
+                const uint8_t *value_begin =
+                    reinterpret_cast<const uint8_t *>(values[kk].data());
+                const uint8_t *value_end = value_begin + values[kk].size();
+                writer.AddMsg(TCompressionType::Gzip, key_begin, key_end,
+                    value_begin, value_end);
+              }
+
+              writer.CloseMsgSet();
+              writer.OpenMsgSet(partitions[jj]);
+
+              for (size_t kk = 0; kk < k; ++kk) {
+                const uint8_t *key_begin =
+                    reinterpret_cast<const uint8_t *>(msgs[kk].data());
+                const uint8_t *key_end = key_begin + msgs[kk].size();
+                const uint8_t *value_begin =
+                    reinterpret_cast<const uint8_t *>(values[kk].data());
+                const uint8_t *value_end = value_begin + values[kk].size();
                 writer.AddMsg(TCompressionType::Snappy, key_begin, key_end,
+                    value_begin, value_end);
+              }
+
+              writer.CloseMsgSet();
+              writer.OpenMsgSet(partitions[jj]);
+
+              for (size_t kk = 0; kk < k; ++kk) {
+                const uint8_t *key_begin =
+                    reinterpret_cast<const uint8_t *>(msgs[kk].data());
+                const uint8_t *key_end = key_begin + msgs[kk].size();
+                const uint8_t *value_begin =
+                    reinterpret_cast<const uint8_t *>(values[kk].data());
+                const uint8_t *value_end = value_begin + values[kk].size();
+                writer.AddMsg(TCompressionType::Lz4, key_begin, key_end,
                     value_begin, value_end);
               }
 
@@ -170,7 +212,7 @@ namespace {
             std::string t(reader.GetCurrentTopicNameBegin(),
                 reader.GetCurrentTopicNameEnd());
             ASSERT_EQ(t, topics[ii]);
-            ASSERT_EQ(reader.GetNumMsgSetsInCurrentTopic(), j);
+            ASSERT_EQ(reader.GetNumMsgSetsInCurrentTopic(), 4 * j);
 
             for (size_t jj = 0; jj < j; ++jj) {
               ASSERT_TRUE(reader.NextMsgSetInTopic());
@@ -180,7 +222,61 @@ namespace {
                 ASSERT_TRUE(reader.NextMsgInMsgSet());
                 ASSERT_TRUE(reader.CurrentMsgCrcIsOk());
                 ASSERT_EQ(reader.GetCurrentMsgCompressionType(),
+                    TCompressionType::None);
+                std::string key(reader.GetCurrentMsgKeyBegin(),
+                    reader.GetCurrentMsgKeyEnd());
+                std::string value(reader.GetCurrentMsgValueBegin(),
+                    reader.GetCurrentMsgValueEnd());
+                ASSERT_EQ(key, msgs[kk]);
+                ASSERT_EQ(value, values[kk]);
+              }
+
+              ASSERT_FALSE(reader.NextMsgInMsgSet());
+
+              ASSERT_TRUE(reader.NextMsgSetInTopic());
+              ASSERT_EQ(reader.GetPartitionOfCurrentMsgSet(), partitions[jj]);
+
+              for (size_t kk = 0; kk < k; ++kk) {
+                ASSERT_TRUE(reader.NextMsgInMsgSet());
+                ASSERT_TRUE(reader.CurrentMsgCrcIsOk());
+                ASSERT_EQ(reader.GetCurrentMsgCompressionType(),
+                    TCompressionType::Gzip);
+                std::string key(reader.GetCurrentMsgKeyBegin(),
+                    reader.GetCurrentMsgKeyEnd());
+                std::string value(reader.GetCurrentMsgValueBegin(),
+                    reader.GetCurrentMsgValueEnd());
+                ASSERT_EQ(key, msgs[kk]);
+                ASSERT_EQ(value, values[kk]);
+              }
+
+              ASSERT_FALSE(reader.NextMsgInMsgSet());
+
+              ASSERT_TRUE(reader.NextMsgSetInTopic());
+              ASSERT_EQ(reader.GetPartitionOfCurrentMsgSet(), partitions[jj]);
+
+              for (size_t kk = 0; kk < k; ++kk) {
+                ASSERT_TRUE(reader.NextMsgInMsgSet());
+                ASSERT_TRUE(reader.CurrentMsgCrcIsOk());
+                ASSERT_EQ(reader.GetCurrentMsgCompressionType(),
                     TCompressionType::Snappy);
+                std::string key(reader.GetCurrentMsgKeyBegin(),
+                    reader.GetCurrentMsgKeyEnd());
+                std::string value(reader.GetCurrentMsgValueBegin(),
+                    reader.GetCurrentMsgValueEnd());
+                ASSERT_EQ(key, msgs[kk]);
+                ASSERT_EQ(value, values[kk]);
+              }
+
+              ASSERT_FALSE(reader.NextMsgInMsgSet());
+
+              ASSERT_TRUE(reader.NextMsgSetInTopic());
+              ASSERT_EQ(reader.GetPartitionOfCurrentMsgSet(), partitions[jj]);
+
+              for (size_t kk = 0; kk < k; ++kk) {
+                ASSERT_TRUE(reader.NextMsgInMsgSet());
+                ASSERT_TRUE(reader.CurrentMsgCrcIsOk());
+                ASSERT_EQ(reader.GetCurrentMsgCompressionType(),
+                    TCompressionType::Lz4);
                 std::string key(reader.GetCurrentMsgKeyBegin(),
                     reader.GetCurrentMsgKeyEnd());
                 std::string value(reader.GetCurrentMsgValueBegin(),

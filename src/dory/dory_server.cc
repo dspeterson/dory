@@ -124,7 +124,7 @@ TDoryServer::TSignalHandlerInstaller::TSignalHandlerInstaller()
 
 TDoryServer::TServerConfig
 TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
-    bool allow_input_bind_ephemeral, size_t pool_block_size) {
+    bool allow_input_bind_ephemeral, bool enable_lz4, size_t pool_block_size) {
   std::unique_ptr<TConfig> cfg(
       new TConfig(argc, argv, allow_input_bind_ephemeral));
   large_sendbuf_required = CheckUnixDgSize(*cfg);
@@ -173,7 +173,8 @@ TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
     THROW_ERROR(TUnsupportedProduceApiVersion);
   }
 
-  Conf::TConf conf = Conf::TConf::TBuilder().Build(cfg->ConfigPath.c_str());
+  Conf::TConf conf = Conf::TConf::TBuilder(enable_lz4).Build(
+      cfg->ConfigPath.c_str());
   TGlobalBatchConfig batch_config =
       TBatchConfigBuilder().BuildFromConf(conf.GetBatchConf());
 

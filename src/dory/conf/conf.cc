@@ -44,8 +44,9 @@ using namespace Xml::Config;
 
 using TOpts = TAttrReader::TOpts;
 
-TConf::TBuilder::TBuilder()
-    : XmlDoc(MakeEmptyDomDocumentUniquePtr()) {
+TConf::TBuilder::TBuilder(bool enable_lz4)
+    : EnableLz4(enable_lz4),
+      XmlDoc(MakeEmptyDomDocumentUniquePtr()) {
 }
 
 TConf TConf::TBuilder::Build(const char *config_filename) {
@@ -243,6 +244,11 @@ void TConf::TBuilder::ProcessSingleCompressionNamedConfig(
 
   if (!TCompressionConf::StringToType(type_str, type)) {
     throw TInvalidAttr("Invalid compression type attribute", config_elem,
+        "type", type_str.c_str());
+  }
+
+  if (!EnableLz4 && (type == TCompressionType::Lz4)) {
+    throw TInvalidAttr("LZ4 compression is not yet supported", config_elem,
         "type", type_str.c_str());
   }
 
