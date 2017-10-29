@@ -40,6 +40,7 @@ using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::Compress::Lz4;
 
+SERVER_COUNTER(Lz4CompressSuccess);
 SERVER_COUNTER(Lz4Error);
 
 static size_t CheckLz4Status(size_t status, const char *lz4_function_name) {
@@ -290,5 +291,6 @@ size_t TLz4Codec::DoCompress(const void *input_buf, size_t input_buf_size,
         "TLz4Codec::DoCompress()");
   }
 
+  Lz4CompressSuccess.Increment();
   return compressed_size;
 }

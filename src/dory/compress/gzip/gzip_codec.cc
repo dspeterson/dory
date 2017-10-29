@@ -42,6 +42,7 @@ using namespace Dory::Compress;
 using namespace Dory::Compress::Gzip;
 
 SERVER_COUNTER(ZlibBufError);
+SERVER_COUNTER(ZlibCompressSuccess);
 SERVER_COUNTER(ZlibDataError);
 SERVER_COUNTER(ZlibDecompressOutOfSpace);
 SERVER_COUNTER(ZlibNeedDictError);
@@ -312,5 +313,6 @@ size_t TGzipCodec::DoCompress(const void *input_buf, size_t input_buf_size,
     throw std::logic_error("Buffer overflow during zlib compression");
   }
 
+  ZlibCompressSuccess.Increment();
   return result_size;
 }

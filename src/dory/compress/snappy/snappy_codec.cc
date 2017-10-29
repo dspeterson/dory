@@ -37,6 +37,7 @@ using namespace Dory::Compress;
 using namespace Dory::Compress::Snappy;
 
 SERVER_COUNTER(SnappyBufferTooSmallError);
+SERVER_COUNTER(SnappyCompressSuccess);
 SERVER_COUNTER(SnappyInvalidInputError);
 SERVER_COUNTER(SnappyUnknownError);
 
@@ -136,6 +137,7 @@ size_t TSnappyCodec::DoCompress(const void *input_buf, size_t input_buf_size,
       reinterpret_cast<const char *>(input_buf), input_buf_size,
       reinterpret_cast<char *>(output_buf), &output_buf_size),
                     "snappy_compress()");
+  SnappyCompressSuccess.Increment();
   return output_buf_size;
 }
 
