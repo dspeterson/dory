@@ -233,8 +233,8 @@ namespace {
     TDeflateInitializer(z_stream &strm, int compression_level)
         : Strm(strm) {
       std::memset(&Strm, 0, sizeof(Strm));
-      CheckStatus(deflateInit2(&Strm, compression_level, Z_DEFLATED, 15, 8,
-          Z_DEFAULT_STRATEGY), Strm, "deflateInit2");
+      CheckStatus(deflateInit2(&Strm, compression_level, Z_DEFLATED, 15 + 16,
+          8, Z_DEFAULT_STRATEGY), Strm, "deflateInit2");
     }
 
     ~TDeflateInitializer() noexcept {
