@@ -148,7 +148,8 @@ above-mentioned design section.
                  specify more compression at the cost of reduced speed.  A
                  value of -1 may also be specified, which maps to a default
                  compression level chosen by libz (currently 6, according to a
-                 comment in library header file <zlib.h>).
+                 comment in library header file <zlib.h>).  If the level is
+                 omitted below, a value of -1 is used.
               -->
             <config name="gzip_config" type="gzip" minSize="128" level="3" />
 
