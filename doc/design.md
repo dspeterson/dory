@@ -340,10 +340,10 @@ grouped into additional message sets.
 Kafka supports compression of individual message sets.  To send a compressed
 message set, a producer such as Dory is expected to encapsulate the compressed
 data inside a single message with a header field set to indicate the type of
-compression.  Dory allows compression to be configured on a per-topic basis.
-Although Dory was designed to support multiple compression types, only Snappy
-compression is currently implemented.  Support for new compression types can
-easily be added with minimal changes to Dory's core implementation.
+compression.  Dory allows compression to be configured on a per-topic basis,
+and currently supports Snappy and gzip compression.  For gzip compression, a
+compression level may optionally be specified.  Support for new compression
+types can easily be added with minimal changes to Dory's core implementation.
 
 Dory may be configured to skip compression of message sets whose uncompressed
 sizes are below a certain limit, since compression of small amounts of data may

@@ -18,7 +18,7 @@ handles the details of:
 * Tracking message discards when serious problems occur; Providing web-based
   discard reporting and status monitoring interfaces
 * Batching and compressing messages in a configurable manner for improved
-  performance
+  performance.  Snappy and gzip compression are currently supported.
 * Optional rate limiting of messages on a per-topic basis.  This guards against
   buggy client code overwhelming the Kafka cluster with too many messages.
 
