@@ -131,7 +131,7 @@
                  specifies the maximum amount of compression.  Higher values
                  specify more compression at the cost of reduced speed.  A
                  value of -1 may also be specified, which maps to a default
-                 compression level chosen by libz (currently 6, according to a
+                 compression level chosen by zlib (currently 6, according to a
                  comment in library header file <zlib.h>).  If the level is
                  omitted below, a value of -1 is used.
               -->
