@@ -9,6 +9,7 @@ First use `apt-get` to install packages as follows:
 sudo apt-get update
 sudo apt-get install build-essential
 sudo apt-get install cmake
+sudo apt-get install zlib1g-dev
 sudo apt-get install libasan0
 sudo apt-get install libxerces-c-dev
 sudo apt-get install git

@@ -7,6 +7,7 @@ sudo apt-get install build-essential
 sudo apt-get install scons
 sudo apt-get install cmake
 sudo apt-get install libsnappy-dev
+sudo apt-get install zlib1g-dev
 sudo apt-get install libasan0
 sudo apt-get install libboost-all-dev
 sudo apt-get install libxerces-c-dev
