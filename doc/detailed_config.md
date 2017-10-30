@@ -140,7 +140,24 @@ above-mentioned design section.
               -->
             <config name="snappy_config" type="snappy" minSize="128" />
 
-            <!-- "minSize" is ignored (and optional) if type in "none". -->
+            <!-- In the case of gzip compression, an optional compression level
+                 may be specified.  The compression level can be a value
+                 between 0 and 9, inclusive.  0 specifies no compression,
+                 1 specifies the smallest nonzero amount of compression, and 9
+                 specifies the maximum amount of compression.  Higher values
+                 specify more compression at the cost of reduced speed.  A
+                 value of -1 may also be specified, which maps to a default
+                 compression level chosen by libz (currently 6, according to a
+                 comment in library header file <zlib.h>).
+              -->
+            <config name="gzip_config" type="gzip" minSize="128" level="3" />
+
+            <!-- LZ4 compression is not yet officially supported, but should be
+                 ready in the not too distant future.
+            <config name="lz4_config" type="lz4" minSize="128" level="4" />
+              -->
+
+            <!-- "minSize" is ignored (and optional) if type is "none". -->
             <config name="no_compression" type="none" />
         </namedConfigs>
 
@@ -163,6 +180,7 @@ above-mentioned design section.
 
             <topic name="no_compression_topic_1" config="no_compression" />
             <topic name="no_compression_topic_2" config="no_compression" />
+            <topic name="example_1" config="gzip_config">
               -->
         </topicConfigs>
     </compression>
