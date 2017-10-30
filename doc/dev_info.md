@@ -102,9 +102,10 @@ substantial subset of all targets) with a single command, you can execute the
 instance, `build_all run_tests` will build and run all unit tests.  Type
 `build_all --help` for a full description of the command line options.  As with
 the `build` command, if you are building on CentOS 6, you must use the
-`--import_path` command line option (for instance, `build_all --import_path`).
-Eventually it would be nice to eliminate the `build_all` script and integrate
-its functionality directly into the SCons configuration.
+`--import_path` command line option with `build_all` (for instance,
+`build_all --import_path`).  Eventually it would be nice to eliminate the
+`build_all` script and integrate its functionality directly into the SCons
+configuration.
 
 ### Debug Builds
 
