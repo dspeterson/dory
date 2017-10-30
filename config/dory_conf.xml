@@ -136,6 +136,11 @@
               -->
             <config name="gzip_config" type="gzip" minSize="128" level="3" />
 
+            <!-- LZ4 compression is not yet officially supported, but should be
+                 ready in the not too distant future.
+            <config name="lz4_config" type="lz4" minSize="128" level="4" />
+              -->
+
             <!-- "minSize" is ignored (and optional) if type is "none". -->
             <config name="no_compression" type="none" />
         </namedConfigs>
