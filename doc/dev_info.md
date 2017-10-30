@@ -23,6 +23,13 @@ build msg.o  # compile source file msg.cc
 build conf/conf.o  # compile source file conf/conf.cc
 ```
 
+If you are building on CentOS 6, remember to set your `PATH` and
+`LD_LIBRARY_PATH` environment variables and activate your Python virtualenv
+environment before building, as detailed [here](centos_6_8_env.md).  On CentOS
+6, you must also add the `--import_path` command line option to the `build`
+command (for instance, `build --import_path client/to_dory` or
+`build --import_path msg.o`).
+
 All build results are in the `out` directory (relative to the root of the Git
 repository).  For instance, the built `dory` executable will be
 `out/debug/dory/dory`.  To build a release version of a target, use the
@@ -93,7 +100,9 @@ the dependencies on their own.  If you want to build all targets (or a
 substantial subset of all targets) with a single command, you can execute the
 [build_all](../build_all) script in the root of the Git repository.  For
 instance, `build_all run_tests` will build and run all unit tests.  Type
-`build_all --help` for a full description of the command line options.
+`build_all --help` for a full description of the command line options.  As with
+the `build` command, if you are building on CentOS 6, you must use the
+`--import_path` command line option (for instance, `build_all --import_path`).
 Eventually it would be nice to eliminate the `build_all` script and integrate
 its functionality directly into the SCons configuration.
 
