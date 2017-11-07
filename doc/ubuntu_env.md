@@ -1,4 +1,4 @@
-## Setting Up a Ubuntu Build Environment (16.04 LTS, 15.04 LTS, 14.04.1 LTS, and 13.10)
+## Setting Up a Ubuntu Build Environment (17.04, 16.04 LTS, 15.04, 14.04.1 LTS, and 13.10)
 
 Install software packages as follows:
 
