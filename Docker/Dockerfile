@@ -7,7 +7,7 @@ ENV LC_ALL en_US.UTF-8
 
 RUN yum -y group mark convert
 RUN yum -y groupinstall "Development Tools"
-RUN yum -y install git libasan snappy-devel boost-devel xerces-c-devel rpm-build wget unzip socat
+RUN yum -y install git libasan snappy-devel boost-devel xerces-c-devel rpm-build wget unzip socat zlib-devel
 RUN wget "http://downloads.sourceforge.net/project/scons/scons/2.3.6/scons-2.3.6-1.noarch.rpm?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fscons%2Ffiles%2Fscons%2F2.3.6%2F&ts=1439720375&use_mirror=skylineservers" -O scons.rpm && \
     rpm -i scons.rpm
 
@@ -18,11 +18,6 @@ RUN cd /root && \
     scons -Q --up --release dory && \
     mkdir -p /opt/dory/bin/ && \
     cp /root/dory/out/release/dory/dory /opt/dory/bin/
-
-
-RUN wget http://peak.telecommunity.com/dist/ez_setup.py
-RUN python ez_setup.py
-RUN easy_install pip
 
 RUN mkdir -p /etc/dory
 ADD dory_conf.xml /etc/dory/
