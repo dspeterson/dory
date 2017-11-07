@@ -8,7 +8,7 @@ which may be installed as follows:
 
 ```
 yum groupinstall "Development tools"
-yum install scons cmake snappy-devel boost-devel xerces-c-devel
+yum install scons cmake zlib-devel snappy-devel boost-devel xerces-c-devel
 ```
 
 ### Building and Installing gcc 4.8

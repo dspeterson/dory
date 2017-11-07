@@ -7,6 +7,7 @@ yum groupinstall "Development Tools"
 yum install git
 yum install libasan
 yum install cmake
+yum install zlib-devel
 yum install snappy-devel
 yum install boost-devel
 yum install xerces-c-devel
