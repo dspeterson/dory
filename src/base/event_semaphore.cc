@@ -90,7 +90,7 @@ bool TEventSemaphore::Pop() {
   return true;
 }
 
-void TEventSemaphore::Push(uint64_t count) throw(std::system_error) {
+void TEventSemaphore::Push(uint64_t count) {
   assert(this);
   IfLt0(eventfd_write(Fd, count));
 }

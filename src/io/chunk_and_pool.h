@@ -28,7 +28,6 @@
 #include <stdexcept>
 
 #include <base/no_copy_semantics.h>
-#include <base/no_throw.h>
 
 namespace Io {
 
@@ -138,7 +137,7 @@ namespace Io {
 
     /* Return pointers to the data in this chunk.
        Upon return, start will always be <= limit. */
-    void GetData(const char *&start, const char *&limit) const NO_THROW {
+    void GetData(const char *&start, const char *&limit) const noexcept {
       assert(this);
       assert(&start);
       assert(&limit);

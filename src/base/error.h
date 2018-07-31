@@ -67,14 +67,12 @@ namespace Base {
   class TError : public std::exception {
     public:
 
-    /* Do-nothing destructor, here to satisfy the throw() constraint declared
-       by our base class. */
-    virtual ~TError() throw() {
+    virtual ~TError() noexcept {
     }
 
     /* Returns a human-readable description of what went wrong.  This message
        has the following pattern: (<file>,<line>),<error class>[,<details>] */
-    const char *what() const throw() {
+    const char *what() const noexcept {
       assert(this);
       return WhatPtr;
     }

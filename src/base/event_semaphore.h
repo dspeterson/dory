@@ -53,7 +53,7 @@ namespace Base {
        returns true. */
     bool Pop();
 
-    void Push(uint64_t count = 1) throw(std::system_error);
+    void Push(uint64_t count = 1);
 
     private:
     TFd Fd;
