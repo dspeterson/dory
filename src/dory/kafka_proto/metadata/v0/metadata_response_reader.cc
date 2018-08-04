@@ -320,6 +320,8 @@ bool TMetadataResponseReader::NextPartitionInTopic() {
   assert(PartitionsLeftInTopic);
 
   switch (State) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
     case TState::InPartitionList: {
       /* FALLTHROUGH */
     }
@@ -327,6 +329,7 @@ bool TMetadataResponseReader::NextPartitionInTopic() {
       SkipRemainingReplicas();
       /* FALLTHROUGH */
     }
+#pragma GCC diagnostic pop
     case TState::InCaughtUpReplicaList: {
       SkipRemainingCaughtUpReplicas();
       break;
@@ -570,6 +573,8 @@ void TMetadataResponseReader::ClearStateVariables() {
   assert(this);
 
   switch (State) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
     case TState::Initial: {
       BrokersLeft = 0;
       CurrentBrokerOffset = 0;
@@ -597,6 +602,7 @@ void TMetadataResponseReader::ClearStateVariables() {
       CurrentCaughtUpReplicaOffset = 0;
       /* FALLTHROUGH */
     }
+#pragma GCC diagnostic pop
     case TState::InCaughtUpReplicaList: {
       break;
     }

@@ -40,6 +40,7 @@ void Socket::Db::IfNe0(int error_code) {
     }
     case EAI_SYSTEM: {
       ThrowSystemError(error_code);
+      break;  // not reached
     }
     default: {
       throw TError(error_code);

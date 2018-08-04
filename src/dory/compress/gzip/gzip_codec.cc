@@ -80,34 +80,34 @@ static int CheckStatus(int status, const z_stream &strm,
     case Z_STREAM_ERROR: {
       ZlibStreamError.Increment();
       ThrowZlibError(strm, zlib_function_name, "Z_STREAM_ERROR");
-      /* not reached */
+      break;  // not reached
     }
     case Z_VERSION_ERROR: {
       ZlibVersionError.Increment();
       ThrowZlibError(strm, zlib_function_name, "Z_VERSION_ERROR");
-      /* not reached */
+      break;  // not reached
     }
     case Z_NEED_DICT: {
       ZlibNeedDictError.Increment();
       ThrowZlibError(strm, zlib_function_name, "Z_NEED_DICT");
-      /* not reached */
+      break;  // not reached
     }
     case Z_DATA_ERROR: {
       ZlibDataError.Increment();
       ThrowZlibError(strm, zlib_function_name, "Z_DATA_ERROR");
-      /* not reached */
+      break;  // not reached
     }
     case Z_BUF_ERROR: {
       ZlibBufError.Increment();
       ThrowZlibError(strm, zlib_function_name, "Z_BUF_ERROR");
-      /* not reached */
+      break;  // not reached
     }
     default: {
       ZlibUnknownError.Increment();
       std::string blurb("unknown error ");
       blurb += boost::lexical_cast<std::string>(status);
       ThrowZlibError(strm, zlib_function_name, blurb.c_str());
-      /* not reached */
+      break;  // not reached
     }
   }
 

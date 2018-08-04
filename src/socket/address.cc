@@ -199,6 +199,7 @@ bool TAddress::operator==(const TAddress &that) const {
       }
       case AF_LOCAL: {
         result = !strcmp(Local.sun_path, that.Local.sun_path);
+        break;
       }
       NO_DEFAULT_CASE;
     }
@@ -329,6 +330,7 @@ void TAddress::Write(ostream &strm) const {
     }
     case AF_LOCAL: {
       strm << '@' << Local.sun_path;
+      break;
     }
     NO_DEFAULT_CASE;
   }
