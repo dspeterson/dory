@@ -321,6 +321,7 @@ bool TMetadataResponseReader::NextPartitionInTopic() {
 
   switch (State) {
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
     case TState::InPartitionList: {
       /* FALLTHROUGH */
@@ -574,6 +575,7 @@ void TMetadataResponseReader::ClearStateVariables() {
 
   switch (State) {
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
     case TState::Initial: {
       BrokersLeft = 0;
