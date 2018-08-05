@@ -30,6 +30,7 @@
 
 #include <base/no_copy_semantics.h>
 #include <thread/managed_thread_pool_base.h>
+#include <thread/managed_thread_pool_config.h>
 
 namespace Thread {
 
@@ -130,14 +131,14 @@ namespace Thread {
     /* Construct thread pool with given fatal error handler and configuration.
      */
     TManagedThreadPool(const TFatalErrorHandler &fatal_error_handler,
-        const TConfig &cfg)
+        const TManagedThreadPoolConfig &cfg)
         : TManagedThreadPoolBase(fatal_error_handler, cfg) {
     }
 
     /* Construct thread pool with given fatal error handler and configuration.
      */
     TManagedThreadPool(TFatalErrorHandler &&fatal_error_handler,
-        const TConfig &cfg)
+        const TManagedThreadPoolConfig &cfg)
         : TManagedThreadPoolBase(std::move(fatal_error_handler), cfg) {
     }
 

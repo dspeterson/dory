@@ -32,114 +32,6 @@
 using namespace Base;
 using namespace Thread;
 
-TManagedThreadPoolBase::TConfig::TConfig()
-    : MinPoolSize(0),
-      MaxPoolSize(0),
-      PruneQuantumMs(30000),
-      PruneQuantumCount(10),
-      MaxPruneFraction(500),
-      MinIdleFraction(20) {
-}
-
-TManagedThreadPoolBase::TConfig::TConfig(size_t min_pool_size,
-    size_t max_pool_size, size_t prune_quantum_ms, size_t prune_quantum_count,
-    size_t max_prune_fraction, size_t min_idle_fraction)
-    : MinPoolSize(min_pool_size),
-      MaxPoolSize(max_pool_size),
-      PruneQuantumMs(prune_quantum_ms),
-      PruneQuantumCount(prune_quantum_count),
-      MaxPruneFraction(max_prune_fraction),
-      MinIdleFraction(min_idle_fraction) {
-  if (PruneQuantumMs == 0) {
-    throw std::logic_error("PruneQuantumMs must be > 0");
-  }
-
-  if (PruneQuantumCount == 0) {
-    throw std::logic_error("PruneQuantumCount must be > 0");
-  }
-
-  if (MaxPruneFraction > 1000) {
-    throw std::logic_error("MaxPruneFraction must be <= 1000");
-  }
-
-  if (MinIdleFraction > 1000) {
-    throw std::logic_error("MinIdleFraction must be <= 1000");
-  }
-}
-
-bool TManagedThreadPoolBase::TConfig::operator==(
-    const TConfig &that) const noexcept {
-  assert(this);
-  return (MinPoolSize == that.MinPoolSize) &&
-      (PruneQuantumMs == that.PruneQuantumMs) &&
-      (PruneQuantumCount == that.PruneQuantumCount) &&
-      (MaxPruneFraction == that.MaxPruneFraction) &&
-      (MinIdleFraction == that.MinIdleFraction);
-}
-
-void TManagedThreadPoolBase::TConfig::SetPruneQuantumMs(
-    size_t prune_quantum_ms) {
-  assert(this);
-
-  if (prune_quantum_ms == 0) {
-    throw std::logic_error("PruneQuantumMs must be > 0");
-  }
-
-  PruneQuantumMs = prune_quantum_ms;
-}
-
-void TManagedThreadPoolBase::TConfig::SetPruneQuantumCount(
-    size_t prune_quantum_count) {
-  assert(this);
-
-  if (prune_quantum_count == 0) {
-    throw std::logic_error("PruneQuantumCount must be > 0");
-  }
-
-  PruneQuantumCount = prune_quantum_count;
-}
-
-void TManagedThreadPoolBase::TConfig::SetMaxPruneFraction(
-    size_t max_prune_fraction) {
-  assert(this);
-
-  if (max_prune_fraction > 1000) {
-    throw std::logic_error("MaxPruneFraction must be <= 1000");
-  }
-
-  MaxPruneFraction = max_prune_fraction;
-}
-
-void TManagedThreadPoolBase::TConfig::SetMinIdleFraction(
-    size_t min_idle_fraction) {
-  assert(this);
-
-  if (min_idle_fraction > 1000) {
-    throw std::logic_error("MinIdleFraction must be <= 1000");
-  }
-
-  MinIdleFraction = min_idle_fraction;
-}
-
-TManagedThreadPoolBase::TStats::TStats()
-    : SetConfigCount(0),
-      ReconfigCount(0),
-      PruneOpCount(0),
-      PrunedThreadCount(0),
-      MinPrunedByOp(0),
-      MaxPrunedByOp(0),
-      PoolHitCount(0),
-      PoolMissCount(0),
-      PoolMaxSizeEnforceCount(0),
-      CreateWorkerCount(0),
-      PutBackCount(0),
-      FinishWorkCount(0),
-      QueueErrorCount(0),
-      NotifyErrorCount(0),
-      LiveWorkerCount(0),
-      IdleWorkerCount(0) {
-}
-
 TManagedThreadPoolBase::~TManagedThreadPoolBase() noexcept {
   try {
     if (IsStarted()) {
@@ -153,7 +45,7 @@ TManagedThreadPoolBase::~TManagedThreadPoolBase() noexcept {
   }
 }
 
-void TManagedThreadPoolBase::SetConfig(const TConfig &cfg) {
+void TManagedThreadPoolBase::SetConfig(const TManagedThreadPoolConfig &cfg) {
   assert(this);
   bool notify = false;
 
@@ -204,7 +96,7 @@ void TManagedThreadPoolBase::Start(bool populate) {
 
     /* Reset any remaining state from previous run. */
     old_worker_errors = std::move(WorkerErrorList);
-    Stats = TStats();
+    Stats = TManagedThreadPoolStats();
 
     Stats.CreateWorkerCount += create_count;
     IdleList.AddNew(initial_workers);
@@ -232,8 +124,7 @@ TManagedThreadPoolBase::GetAllPendingErrors() {
   return std::move(result);
 }
 
-TManagedThreadPoolBase::TStats
-TManagedThreadPoolBase::GetStats() const {
+TManagedThreadPoolStats TManagedThreadPoolBase::GetStats() const {
   assert(this);
 
   std::lock_guard<std::mutex> lock(PoolLock);
@@ -632,7 +523,8 @@ void TManagedThreadPoolBase::TWorkerBase::IdleRun() {
 }
 
 TManagedThreadPoolBase::TManagedThreadPoolBase(
-    const TFatalErrorHandler &fatal_error_handler, const TConfig &cfg)
+    const TFatalErrorHandler &fatal_error_handler,
+    const TManagedThreadPoolConfig &cfg)
     : FatalErrorHandler(fatal_error_handler),
       LiveWorkerCount(0),
       PoolIsReady(false),
@@ -642,7 +534,8 @@ TManagedThreadPoolBase::TManagedThreadPoolBase(
 }
 
 TManagedThreadPoolBase::TManagedThreadPoolBase(
-    TFatalErrorHandler &&fatal_error_handler, const TConfig &cfg)
+    TFatalErrorHandler &&fatal_error_handler,
+    const TManagedThreadPoolConfig &cfg)
     : FatalErrorHandler(std::move(fatal_error_handler)),
       LiveWorkerCount(0),
       PoolIsReady(false),
@@ -653,12 +546,13 @@ TManagedThreadPoolBase::TManagedThreadPoolBase(
 
 TManagedThreadPoolBase::TManagedThreadPoolBase(
     const TFatalErrorHandler &fatal_error_handler)
-    : TManagedThreadPoolBase(fatal_error_handler, TConfig()) {
+    : TManagedThreadPoolBase(fatal_error_handler, TManagedThreadPoolConfig()) {
 }
 
 TManagedThreadPoolBase::TManagedThreadPoolBase(
     TFatalErrorHandler &&fatal_error_handler)
-    : TManagedThreadPoolBase(std::move(fatal_error_handler), TConfig()) {
+    : TManagedThreadPoolBase(std::move(fatal_error_handler),
+          TManagedThreadPoolConfig()) {
 }
 
 TManagedThreadPoolBase::TWorkerBase *

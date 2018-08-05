@@ -38,6 +38,8 @@
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
 #include <thread/fd_managed_thread.h>
+#include <thread/managed_thread_pool_config.h>
+#include <thread/managed_thread_pool_stats.h>
 #include <thread/segmented_list.h>
 
 namespace Thread {
@@ -112,196 +114,6 @@ namespace Thread {
             ThrownException(std::current_exception()) {
       }
     };  // TWorkerError
-
-    /* Class for specifying thread pool config parameters. */
-    class TConfig final {
-      public:
-      TConfig();
-
-      /* Config parameters:
-
-             min_pool_size: Prevents pool manager from pruning threads if after
-                 pruning, the pool size (active + idle) would be below this
-                 limit.  Must be >= 0.  Default value is 0.
-
-             max_pool_size: A value > 0 specifies the maximum total # of
-                 threads (not including the manager) that the pool may contain.
-                 A value of 0 specifies no upper bound.  Default value is 0.
-
-             prune_quantum_ms: The prune interval length in milliseconds.  At
-                 the end of each interval, the manager thread wakes up and sees
-                 if there is anything to prune.  Must be > 0.  Default value is
-                 30000.
-
-             prune_quantum_count: The number of intervals in the pool's idle
-                 list.  Each interval corresponds to a time quantum whose
-                 length is 'prune_quantum_ms'.  The manager only prunes threads
-                 in the oldest quantum.  Must be > 0.  See TSegmentedList for
-                 details.  Default value is 10.
-
-             max_prune_fraction: Must be >= 0 and <= 1000.  Prevents the
-                 manager from performing a pruning operation that would destroy
-                 more than this many thousandths of the total pool size (active
-                 + idle), _unless_ the operation prunes only a single thread
-                 and (max_prune_fraction > 0).  For instance, a value of 500
-                 and a pool size of 100 would allow pruning up to 50 threads.
-                 As another example, a value of 500 and a pool size of 1 would
-                 allow the single thread to be pruned even though this would
-                 destroy more than 500 thousandths of the pool size, since
-                 pruning a single thread is always allowed as long as
-                 (max_prune_fraction > 0).  Setting max_prune_fraction to 0
-                 disables pruning.  Default value is 500.
-
-             min_idle_fraction: Must be >= 0 and <= 1000.  Prevents the
-                 manager from performing a pruning operation that would leave
-                 fewer than this many thousandths of the total pool size idle.
-                 For instance, a value of 15 would prevent a pruning operation
-                 that would leave fewer than 1.5 percent of the worker threads
-                 idle.  Default value is 20.
-       */
-      TConfig(size_t min_pool_size, size_t max_pool_size,
-          size_t prune_quantum_ms, size_t prune_quantum_count,
-          size_t max_prune_fraction, size_t min_idle_fraction);
-
-      TConfig(const TConfig &) = default;
-
-      TConfig &operator=(const TConfig &that) = default;
-
-      bool operator==(const TConfig &that) const noexcept;
-
-      bool operator!=(const TConfig &that) const noexcept {
-        assert(this);
-        return !(*this == that);
-      }
-
-      size_t GetMinPoolSize() const noexcept {
-        assert(this);
-        return MinPoolSize;
-      }
-
-      void SetMinPoolSize(size_t min_pool_size) noexcept {
-        assert(this);
-        MinPoolSize = min_pool_size;
-      }
-
-      size_t GetMaxPoolSize() const noexcept {
-        assert(this);
-        return MaxPoolSize;
-      }
-
-      void SetMaxPoolSize(size_t max_pool_size) noexcept {
-        assert(this);
-        MaxPoolSize = max_pool_size;
-      }
-
-      size_t GetPruneQuantumMs() const noexcept {
-        assert(this);
-        return PruneQuantumMs;
-      }
-
-      void SetPruneQuantumMs(size_t prune_quantum_ms);
-
-      size_t GetPruneQuantumCount() const noexcept {
-        assert(this);
-        return PruneQuantumCount;
-      }
-
-      void SetPruneQuantumCount(size_t prune_quantum_count);
-
-      size_t GetMaxPruneFraction() const noexcept {
-        assert(this);
-        return MaxPruneFraction;
-      }
-
-      void SetMaxPruneFraction(size_t max_prune_fraction);
-
-      size_t GetMinIdleFraction() const noexcept {
-        assert(this);
-        return MinIdleFraction;
-      }
-
-      void SetMinIdleFraction(size_t min_idle_fraction);
-
-      private:
-      size_t MinPoolSize;
-
-      size_t MaxPoolSize;
-
-      size_t PruneQuantumMs;
-
-      size_t PruneQuantumCount;
-
-      size_t MaxPruneFraction;
-
-      size_t MinIdleFraction;
-    };  // TConfig
-
-    /* Statistics on thread pool operation. */
-    struct TStats final {
-      /* # of times SetConfig() is called with new config. */
-      size_t SetConfigCount;
-
-      /* # of times manager does reconfig (may be less than # of times
-         SetConfig() is called). */
-      size_t ReconfigCount;
-
-      /* # of prune operations performed by manager.  A single prune operation
-         prunes 0 or more (possibly many) threads. */
-      size_t PruneOpCount;
-
-      /* Total # of threads pruned. */
-      size_t PrunedThreadCount;
-
-      /* Minimum # of threads pruned in a single operation. */
-      size_t MinPrunedByOp;
-
-      /* Maximum # of threads pruned in a single operation. */
-      size_t MaxPrunedByOp;
-
-      /* # of times a worker was successfully allocated from pool. */
-      size_t PoolHitCount;
-
-      /* # of times a new worker was created because the pool had no idle
-         workers.  This will be less than 'CreateWorkerCount' in the case where
-         the pool was populated with an initial set of workers on startup,
-         before handling any requests for workers. */
-      size_t PoolMissCount;
-
-      /* # of times a worker was not obtained from the pool due to the
-         configured size limit. */
-      size_t PoolMaxSizeEnforceCount;
-
-      /* # of times a new worker is created.  This includes pool misses and
-         threads created to initially populate pool. */
-      size_t CreateWorkerCount;
-
-      /* # of times a worker is released without being launched.  Note that
-         the worker will not have an actual thread in the case where the worker
-         was just created due to the idle list being empty.  In this case the
-         worker gets immediately destroyed rather than moving to the idle list.
-         Likewise, If the pool is shutting down, the worker will not be placed
-         on the idle list even if it actually contains an actual thread.  For
-         both of these reasons, this value may be greater than
-         'PrunedThreadCount' once the pool has finished shutting down. */
-      size_t PutBackCount;
-
-      /* # of times a thread finishes work. */
-      size_t FinishWorkCount;
-
-      /* # of times a worker error is queued for receipt by client. */
-      size_t QueueErrorCount;
-
-      /* # of times the client is notified of a queued worker error. */
-      size_t NotifyErrorCount;
-
-      /* # of busy or idle workers. */
-      size_t LiveWorkerCount;
-
-      /* # of idle workers. */
-      size_t IdleWorkerCount;
-
-      TStats();
-    };  // TStats
 
     protected:
     class TWorkerBase;
@@ -438,7 +250,7 @@ namespace Thread {
     virtual ~TManagedThreadPoolBase() noexcept;
 
     /* Return the pool's current configuration. */
-    TConfig GetConfig() const noexcept {
+    TManagedThreadPoolConfig GetConfig() const noexcept {
       assert(this);
 
       std::lock_guard<std::mutex> lock(PoolLock);
@@ -448,7 +260,7 @@ namespace Thread {
     /* Set the thread pool's configuration to 'cfg'.  This may be called either
        before calling Start() or while the thread pool is operating.  In the
        latter case, the pool will dynamically reconfigure. */
-    void SetConfig(const TConfig &cfg);
+    void SetConfig(const TManagedThreadPoolConfig &cfg);
 
     /* Activate the thread pool.  You must call this before allocating threads.
        Once this has been called, the thread pool must be properly shut down
@@ -479,7 +291,7 @@ namespace Thread {
 
     /* Get Pool statistics.  Results are reset when pool Start() method is
        called. */
-    TStats GetStats() const;
+    TManagedThreadPoolStats GetStats() const;
 
     /* Initiate a shutdown of the thread pool.  This must be followed by a call
        to WaitForShutdown(), which finishes the shutdown operation.
@@ -706,22 +518,22 @@ namespace Thread {
     /* Subclasses call this to construct thread pool with given fatal error
        handler and configuration. */
     TManagedThreadPoolBase(const TFatalErrorHandler &fatal_error_handler,
-        const TConfig &cfg);
+        const TManagedThreadPoolConfig &cfg);
 
     /* Subclasses call this to construct thread pool with given fatal error
        handler and configuration. */
     TManagedThreadPoolBase(TFatalErrorHandler &&fatal_error_handler,
-        const TConfig &cfg);
+        const TManagedThreadPoolConfig &cfg);
 
     /* Subclasses call this to construct thread pool with given fatal error
        handler.  Default configuration is used, as specifie by default
-       constructor for TConfig. */
+       constructor for TManagedThreadPoolConfig. */
     explicit TManagedThreadPoolBase(
         const TFatalErrorHandler &fatal_error_handler);
 
     /* Subclasses call this to construct thread pool with given fatal error
        handler.  Default configuration is used, as specifie by default
-       constructor for TConfig. */
+       constructor for TManagedThreadPoolConfig. */
     explicit TManagedThreadPoolBase(TFatalErrorHandler &&fatal_error_handler);
 
     /* Called by thread pool implementation when fatal error occurs.  Handles
@@ -790,7 +602,7 @@ namespace Thread {
 
       /* Manager's private copy of pool configuration.  Updated when
          configuration changes. */
-      TConfig Config;
+      TManagedThreadPoolConfig Config;
     };  // TManager
 
     /* 'ready_worker' is a single item list containing a ready worker.  Add it
@@ -829,7 +641,7 @@ namespace Thread {
 
     /* Thread pool configuration.  Manager thread maintains its own private
        copy of this, and updates its copy whenever config changes. */
-    TConfig Config;
+    TManagedThreadPoolConfig Config;
 
     /* true when pool configuration has changed and manager thread has not yet
        updated its state */
@@ -837,7 +649,7 @@ namespace Thread {
 
     /* Pool stats.  Mutable because GetStats() sets 'LiveWorkerCount' and
        'IdleWorkerCount' in 'Stats' before returning a copy. */
-    mutable TStats Stats;
+    mutable TManagedThreadPoolStats Stats;
 
     /* protects everything above */
     mutable std::mutex PoolLock;

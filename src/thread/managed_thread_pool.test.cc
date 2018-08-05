@@ -37,6 +37,9 @@
 
 #include <gtest/gtest.h>
 
+#include <thread/managed_thread_pool_config.h>
+#include <thread/managed_thread_pool_stats.h>
+
 using namespace Base;
 using namespace Thread;
 
@@ -316,7 +319,7 @@ class TStressTest2WorkFn {
 
 namespace {
 
-  void PrintStats(const TManagedThreadPoolBase::TStats &stats) {
+  void PrintStats(const TManagedThreadPoolStats &stats) {
     std::cout
         << "--- summary pool stats ---------------------------" << std::endl
         << "SetConfigCount: " << stats.SetConfigCount << std::endl
@@ -374,7 +377,7 @@ namespace {
 
     pool.Start();
     ASSERT_TRUE(pool.IsStarted());
-    TManagedThreadPoolBase::TStats stats;
+    TManagedThreadPoolStats stats;
 
     {
       TManagedThreadStdFnPool::TReadyWorker w1 = pool.GetReadyWorker();
@@ -415,14 +418,14 @@ namespace {
   TEST_F(TManagedThreadPoolTest, SimplePoolTest) {
     std::atomic<size_t> counter(0);
     TSimpleWorkFn work_fn(counter);
-    TManagedThreadPoolBase::TConfig config;
+    TManagedThreadPoolConfig config;
     config.SetMaxPruneFraction(0);  // disable pruning
     TManagedThreadStdFnPool pool(TManagedThreadPoolTest::HandleFatalError,
         config);
     ASSERT_FALSE(pool.IsStarted());
     pool.Start();
     ASSERT_TRUE(pool.IsStarted());
-    TManagedThreadPoolBase::TStats stats;
+    TManagedThreadPoolStats stats;
 
     {
       TManagedThreadStdFnPool::TReadyWorker w1 = pool.GetReadyWorker();
@@ -536,7 +539,7 @@ namespace {
   }
 
   TEST_F(TManagedThreadPoolTest, FnPtrTest) {
-    TManagedThreadPoolBase::TConfig config;
+    TManagedThreadPoolConfig config;
     config.SetMaxPruneFraction(0);  // disable pruning
     TManagedThreadFnPtrPool pool(TManagedThreadPoolTest::HandleFatalError,
         config);
@@ -580,7 +583,7 @@ namespace {
     pool.RequestShutdown();
     pool.WaitForShutdown();
 
-    TManagedThreadPoolBase::TStats stats = pool.GetStats();
+    TManagedThreadPoolStats stats = pool.GetStats();
     ASSERT_EQ(stats.PoolHitCount, 1U);
     ASSERT_EQ(stats.PoolMissCount, 1U);
     ASSERT_EQ(stats.PoolMaxSizeEnforceCount, 0U);
@@ -594,14 +597,14 @@ namespace {
   TEST_F(TManagedThreadPoolTest, ExceptionTest) {
     std::atomic<size_t> counter(0);
     TSimpleWorkFn work_fn(counter);
-    TManagedThreadPoolBase::TConfig config;
+    TManagedThreadPoolConfig config;
     config.SetMinPoolSize(2);
     config.SetMaxPruneFraction(0);  // disable pruning
     TManagedThreadStdFnPool pool(TManagedThreadPoolTest::HandleFatalError,
         config);
     const TFd &error_fd = pool.GetErrorPendingFd();
     pool.Start();
-    TManagedThreadPoolBase::TStats stats;
+    TManagedThreadPoolStats stats;
     TManagedThreadStdFnPool::TReadyWorker w1 = pool.GetReadyWorker();
     TManagedThreadStdFnPool::TReadyWorker w2 = pool.GetReadyWorker();
     TManagedThreadStdFnPool::TReadyWorker w3 = pool.GetReadyWorker();
@@ -716,7 +719,7 @@ namespace {
   }
 
   TEST_F(TManagedThreadPoolTest, SizeLimitTest) {
-    TManagedThreadPoolBase::TConfig config;
+    TManagedThreadPoolConfig config;
     config.SetMaxPoolSize(1);
     TManagedThreadStdFnPool pool(TManagedThreadPoolTest::HandleFatalError,
         config);
@@ -731,7 +734,7 @@ namespace {
     pool.RequestShutdown();
     pool.WaitForShutdown();
 
-    TManagedThreadPoolBase::TStats stats = pool.GetStats();
+    TManagedThreadPoolStats stats = pool.GetStats();
     ASSERT_EQ(stats.PoolHitCount, 0U);
     ASSERT_EQ(stats.PoolMissCount, 1U);
     ASSERT_EQ(stats.PoolMaxSizeEnforceCount, 1U);
@@ -766,7 +769,7 @@ namespace {
     const size_t initial_thread_count = 60;
     std::atomic<size_t> counter(0);
     std::atomic<size_t> working_count(initial_thread_count);
-    TManagedThreadPoolBase::TConfig config;
+    TManagedThreadPoolConfig config;
 
     /* Put a hard upper bound on the pool size.  This will reduce our risk of
        running out of memory on a test machine without much memory. */
@@ -799,7 +802,7 @@ namespace {
     /* Hopefully 600 seconds will be long enough for the test to finish, even
        on a slow machine. */
     for (size_t i = 0; (i < 600); ++i) {
-      TManagedThreadPoolBase::TStats stats = pool.GetStats();
+      TManagedThreadPoolStats stats = pool.GetStats();
 
       if ((working_count.load() == 0) && (stats.IdleWorkerCount == 0) &&
           (stats.LiveWorkerCount == 0) &&
@@ -812,7 +815,7 @@ namespace {
       sleep(1);
     }
 
-    TManagedThreadPoolBase::TStats stats = pool.GetStats();
+    TManagedThreadPoolStats stats = pool.GetStats();
     std::cout << "final count: " << counter.load() << std::endl;
     PrintStats(stats);
     errors = pool.GetAllPendingErrors();
@@ -836,7 +839,7 @@ namespace {
     const size_t initial_thread_count = 50;
     std::atomic<size_t> counter(0);
     std::atomic<size_t> working_count(initial_thread_count);
-    TManagedThreadPoolBase::TConfig config;
+    TManagedThreadPoolConfig config;
     config.SetPruneQuantumMs(300);
     config.SetPruneQuantumCount(5);
     TManagedThreadFnObjPool pool(TManagedThreadPoolTest::HandleFatalError,
@@ -865,7 +868,7 @@ namespace {
     /* Hopefully 600 seconds will be long enough for the test to finish, even
        on a slow machine. */
     for (size_t i = 0; (i < 600); ++i) {
-      TManagedThreadPoolBase::TStats stats = pool.GetStats();
+      TManagedThreadPoolStats stats = pool.GetStats();
 
       /* Exercise the code path where we don't wait for the manager to finish
          pruning idle threads before we shut down. */
@@ -880,7 +883,7 @@ namespace {
       sleep(1);
     }
 
-    TManagedThreadPoolBase::TStats stats = pool.GetStats();
+    TManagedThreadPoolStats stats = pool.GetStats();
     PrintStats(stats);
     errors = pool.GetAllPendingErrors();
     CheckForWorkerThreadErrors(errors);
