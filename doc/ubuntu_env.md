@@ -1,4 +1,4 @@
-## Setting Up a Ubuntu Build Environment (17.04, 16.04 LTS, 15.04, 14.04.1 LTS, and 13.10)
+## Setting Up a Ubuntu Build Environment (18.04, 17.04, 16.04 LTS, 15.04, and 14.04.1 LTS)
 
 Install software packages as follows:
 
@@ -9,7 +9,7 @@ sudo apt-get install cmake
 sudo apt-get install libsnappy-dev
 sudo apt-get install zlib1g-dev
 sudo apt-get install libasan0
-sudo apt-get install libboost-all-dev
+sudo apt-get install libboost-dev
 sudo apt-get install libxerces-c-dev
 sudo apt-get install git
 sudo apt-get install g++
