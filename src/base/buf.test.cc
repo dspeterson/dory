@@ -34,16 +34,14 @@ namespace {
   /* The fixture for testing class TBuf. */
   class TBufTest : public ::testing::Test {
     protected:
-    TBufTest() {
+    TBufTest() = default;
+
+    ~TBufTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TBufTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TBufTest
 

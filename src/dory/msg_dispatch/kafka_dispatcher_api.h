@@ -45,7 +45,7 @@ namespace Dory {
       public:
       using TState = TDispatcherState;
 
-      virtual ~TKafkaDispatcherApi() noexcept { }
+      virtual ~TKafkaDispatcherApi() noexcept = default;
 
       virtual void SetProduceProtocol(
           KafkaProto::Produce::TProduceProtocol *protocol) noexcept = 0;

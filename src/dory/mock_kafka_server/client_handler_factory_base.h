@@ -41,7 +41,7 @@ namespace Dory {
       NO_COPY_SEMANTICS(TClientHandlerFactoryBase);
 
       public:
-      virtual ~TClientHandlerFactoryBase() noexcept { }
+      virtual ~TClientHandlerFactoryBase() noexcept = default;
 
       /* Create a TSingleClientHandlerBase of the appropriate subclass type
          depending on what version of Kafka we are simulating. */

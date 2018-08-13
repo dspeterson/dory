@@ -240,7 +240,7 @@ const TKafkaErrorInfo &Dory::KafkaProto::LookupKafkaErrorCode(
         UnknownServerErrorInfo : UndocumentedKafkaErrorInfo;
   }
 
-  size_t table_index = error_code;
-  return (table_index >= KafkaErrorInfoTableSize) ?
-      UndocumentedKafkaErrorInfo : KafkaErrorInfoTable[table_index];
+  return ((error_code < 0) ||
+      (static_cast<size_t>(error_code) >= KafkaErrorInfoTableSize)) ?
+      UndocumentedKafkaErrorInfo : KafkaErrorInfoTable[error_code];
 }

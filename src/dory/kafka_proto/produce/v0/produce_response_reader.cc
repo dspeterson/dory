@@ -93,7 +93,7 @@ int32_t TProduceResponseReader::GetCorrelationId() const {
 
 size_t TProduceResponseReader::GetNumTopics() const {
   assert(this);
-  return NumTopics;
+  return static_cast<size_t>(NumTopics);
 }
 
 bool TProduceResponseReader::FirstTopic() {
@@ -164,7 +164,7 @@ size_t TProduceResponseReader::GetNumPartitionsInCurrentTopic() const {
   assert(NumTopics >= 0);
   assert(CurrentTopicBegin);
   assert(CurrentTopicNameEnd > CurrentTopicBegin);
-  return NumPartitionsInTopic;
+  return static_cast<size_t>(NumPartitionsInTopic);
 }
 
 bool TProduceResponseReader::FirstPartitionInTopic() {
@@ -243,7 +243,7 @@ int64_t TProduceResponseReader::GetCurrentPartitionOffset() const {
   return ReadInt64FromHeader(pos + PRC::PARTITION_SIZE + PRC::ERROR_CODE_SIZE);
 }
 
-const uint8_t *TProduceResponseReader::GetPartitionStart(size_t index) const {
+const uint8_t *TProduceResponseReader::GetPartitionStart(int32_t index) const {
   assert(this);
   assert(NumTopics >= 0);
   assert(CurrentTopicBegin);

@@ -160,15 +160,15 @@ static size_t DoUncompress(const void *compressed_data, size_t compressed_size,
   );
   strm.next_in =
       reinterpret_cast<Bytef *>(const_cast<void *>(compressed_data));
-  strm.avail_in = compressed_size;
+  strm.avail_in = static_cast<uInt>(compressed_size);
   gz_header hdr;
   CheckStatus(inflateGetHeader(&strm, &hdr), strm, "inflateGetHeader");
-  uint8_t *out_pos = reinterpret_cast<uint8_t *>(output_buf);
+  auto *out_pos = reinterpret_cast<uint8_t *>(output_buf);
   size_t size = output_buf_size;
 
   for (; ; ) {
     strm.next_out = out_pos;
-    strm.avail_out = size;
+    strm.avail_out = static_cast<uInt>(size);
 
     if (CheckStatus(inflate(&strm, Z_NO_FLUSH), strm, "inflate") ==
         Z_STREAM_END) {
@@ -191,7 +191,7 @@ static size_t DoUncompress(const void *compressed_data, size_t compressed_size,
     }
   }
 
-  size_t result_size = static_cast<size_t>(strm.total_out);
+  auto result_size = static_cast<size_t>(strm.total_out);
 
   if (result_size != strm.total_out) {
     /* Our result size is so large that downcasting it to size_t (on a platform
@@ -244,7 +244,7 @@ namespace {
     size_t ComputeCompressedResultBufSpace(size_t uncompressed_size) {
       assert(this);
       uLong max_size = deflateBound(&Strm, uncompressed_size);
-      size_t result = static_cast<size_t>(max_size);
+      auto result = static_cast<size_t>(max_size);
 
       if (result != max_size) {
         ZlibOverflowComputingCompressBufSize.Increment();
@@ -286,9 +286,9 @@ size_t TGzipCodec::DoCompress(const void *input_buf, size_t input_buf_size,
   }
 
   strm.next_in = reinterpret_cast<Bytef *>(const_cast<void *>(input_buf));
-  strm.avail_in = input_buf_size;
+  strm.avail_in = static_cast<uInt>(input_buf_size);
   strm.next_out = reinterpret_cast<Bytef *>(output_buf);
-  strm.avail_out = min_result_size;
+  strm.avail_out = static_cast<uInt>(min_result_size);
 
   if (CheckStatus(deflate(&strm, Z_FINISH), strm, "deflate") != Z_STREAM_END) {
     /* According to the zlib documentation, this should never happen, given our
@@ -298,7 +298,7 @@ size_t TGzipCodec::DoCompress(const void *input_buf, size_t input_buf_size,
         "Should have reached end of zlib stream after compress");
   }
 
-  size_t result_size = static_cast<size_t>(strm.total_out);
+  auto result_size = static_cast<size_t>(strm.total_out);
 
   if (result_size != strm.total_out) {
     /* Our result size is so large that downcasting it to size_t (on a platform

@@ -34,16 +34,14 @@ namespace {
   /* The fixture for testing class TRandomExpBackoff. */
   class TRandomExpBackoffTest : public ::testing::Test {
     protected:
-    TRandomExpBackoffTest() {
+    TRandomExpBackoffTest() = default;
+
+    ~TRandomExpBackoffTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TRandomExpBackoffTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TRandomExpBackoffTest
 

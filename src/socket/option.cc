@@ -28,9 +28,6 @@
 using namespace std;
 using namespace Socket;
 
-TAnyOption::~TAnyOption() {
-}
-
 const TAnyOption *Socket::AllOptions[] = {
   &AcceptConn,
   &Broadcast,

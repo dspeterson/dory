@@ -206,7 +206,7 @@ namespace Socket {
       assert(&val);
       linger temp;
       temp.l_onoff = val;
-      temp.l_linger = (temp.l_onoff ? val->count() : 0);
+      temp.l_linger = static_cast<int>(temp.l_onoff ? val->count() : 0);
       Socket::SetSockOpt(sock, code, temp);
     }
   };  // Conv<TLinger>
@@ -272,7 +272,7 @@ namespace Socket {
     static void GetSockOpt(int sock, int code, TVal &val) {
       assert(&val);
       char temp[MaxSize];
-      socklen_t size = MaxSize;
+      auto size = static_cast<socklen_t>(MaxSize);
       Base::IfLt0(getsockopt(sock, SOL_SOCKET, code, temp, &size));
       val.assign(temp, size);
     }
@@ -280,7 +280,8 @@ namespace Socket {
     /* See forward declaration of generic Conv<>. */
     static void SetSockOpt(int sock, int code, const TVal &val) {
       assert(&val);
-      Base::IfLt0(setsockopt(sock, SOL_SOCKET, code, val.c_str(), val.size()));
+      Base::IfLt0(setsockopt(sock, SOL_SOCKET, code, val.c_str(),
+          static_cast<socklen_t>(val.size())));
     }
   };  // Conv<TLinger>
 
@@ -398,7 +399,7 @@ namespace Socket {
   class TAnyOption {
     public:
     /* Do-little. */
-    virtual ~TAnyOption();
+    virtual ~TAnyOption() = default;
 
     /* The code number used by getsockopt() and setsockopt() when referring to
        this option. */
@@ -457,7 +458,7 @@ namespace Socket {
     }
 
     /* See base class. */
-    virtual void Dump(std::ostream &strm, int sock) const override final {
+    void Dump(std::ostream &strm, int sock) const final {
       assert(this);
       assert(&strm);
       strm << TAnyOption::GetName() << ": ";

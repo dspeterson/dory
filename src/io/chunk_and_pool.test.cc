@@ -33,16 +33,14 @@ namespace {
   /* The fixture for testing chunk and pool stuff. */
   class TChunkAndPoolTest : public ::testing::Test {
     protected:
-    TChunkAndPoolTest() {
+    TChunkAndPoolTest() = default;
+
+    ~TChunkAndPoolTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TChunkAndPoolTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TChunkAndPoolTest
 

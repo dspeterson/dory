@@ -64,8 +64,7 @@ namespace Server {
               std::move(fatal_error_handler)) {
     }
 
-    virtual ~TUnixStreamServer() noexcept {
-    }
+    ~TUnixStreamServer() noexcept override = default;
 
     const std::string &GetPath() const noexcept {
       assert(this);
@@ -90,9 +89,9 @@ namespace Server {
     }
 
     protected:
-    virtual void InitListeningSocket(Base::TFd &sock) override;
+    void InitListeningSocket(Base::TFd &sock) override;
 
-    virtual void CloseListeningSocket(Base::TFd &sock) override;
+    void CloseListeningSocket(Base::TFd &sock) override;
 
     private:
     void UnlinkPath();

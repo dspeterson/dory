@@ -44,7 +44,7 @@ namespace Log {
 
     /* Destructor invokes LogWriter for log entry, if not already invoked at
        time of destruction. */
-    virtual ~TLogEntry() noexcept;
+    ~TLogEntry() noexcept override;
 
     /* Return a pair of pointers, where the first pointer indicates the start
        of the log entry, and the second pointer points one byte past the last
@@ -61,7 +61,7 @@ namespace Log {
     std::pair<const char *, const char *>
     GetWithTrailingNewline() noexcept override;
 
-    virtual int GetLevel() const noexcept;
+    int GetLevel() const noexcept override;
 
     void SetLevel(int level) noexcept;
 

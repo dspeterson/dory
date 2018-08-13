@@ -40,9 +40,9 @@ namespace Thread {
     public:
     TGate() = default;
 
-    virtual ~TGate() noexcept { }
+    ~TGate() noexcept override = default;
 
-    virtual void Put(std::list<TMsgType> &&put_list) {
+    void Put(std::list<TMsgType> &&put_list) override {
       assert(this);
 
       if (!put_list.empty()) {
@@ -60,7 +60,7 @@ namespace Thread {
       }
     }
 
-    virtual void Put(TMsgType &&put_item) override {
+    void Put(TMsgType &&put_item) override {
       assert(this);
       bool was_empty = false;
 
@@ -75,13 +75,13 @@ namespace Thread {
       }
     }
 
-    virtual std::list<TMsgType> Get() override {
+    std::list<TMsgType> Get() override {
       assert(this);
       Sem.Pop();
       return NonblockingGet();
     }
 
-    virtual std::list<TMsgType> NonblockingGet() override {
+    std::list<TMsgType> NonblockingGet() override {
       assert(this);
       std::list<TMsgType> result;
 
@@ -93,7 +93,7 @@ namespace Thread {
       return std::move(result);
     }
 
-    virtual const Base::TFd &GetMsgAvailableFd() const override {
+    const Base::TFd &GetMsgAvailableFd() const override {
       assert(this);
       return Sem.GetFd();
     }

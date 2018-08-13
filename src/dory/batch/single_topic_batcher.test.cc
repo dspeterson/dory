@@ -43,16 +43,14 @@ namespace {
   /* The fixture for testing class TSingleTopicBatcher. */
   class TSingleTopicBatcherTest : public ::testing::Test {
     protected:
-    TSingleTopicBatcherTest() {
+    TSingleTopicBatcherTest() = default;
+
+    ~TSingleTopicBatcherTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TSingleTopicBatcherTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TSingleTopicBatcherTest
 

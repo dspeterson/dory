@@ -33,7 +33,7 @@ size_t Base::TFileReader::GetSize() {
 
   try {
     Stream.seekg(0, std::ios::end);
-    size = Stream.tellg();
+    size = static_cast<size_t>(Stream.tellg());
     Stream.seekg(0, std::ios::beg);
   } catch (const std::ios_base::failure &) {
     ThrowFileReadError();
@@ -54,7 +54,7 @@ size_t Base::TFileReader::ReadIntoBuf(void *buf, size_t buf_size) {
     }
   }
 
-  size_t read_size = Stream.gcount();
+  auto read_size = static_cast<size_t>(Stream.gcount());
   assert(read_size <= buf_size);
   return read_size;
 }

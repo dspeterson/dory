@@ -25,7 +25,7 @@ using namespace Dory;
 using namespace Dory::MockKafkaServer;
 
 TCmd::TType TCmd::ToType(uint8_t type) {
-  TCmd::TType result = static_cast<TCmd::TType>(type);
+  auto result = static_cast<TCmd::TType>(type);
 
   switch (result) {
     case TType::SEND_PRODUCE_RESPONSE_ERROR:

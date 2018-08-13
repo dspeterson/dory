@@ -45,7 +45,7 @@ static TOpt<uint64_t> ReadUnsigned64BitSizeField(const uint8_t *field_loc) {
 }
 
 static TOpt<uint64_t> ReadSigned8BitSizeField(const uint8_t *field_loc) {
-  int8_t size = static_cast<int8_t>(*field_loc);
+  auto size = static_cast<int8_t>(*field_loc);
   return (size < 0) ?
       TOpt<uint64_t>() : TOpt<uint64_t>(static_cast<uint64_t>(size));
 }
@@ -181,6 +181,9 @@ TStreamMsgWithSizeReaderBase::ChooseSizeFieldReadFn(size_t size_field_size,
     case 8: {
       return size_field_is_signed ?
           ReadSigned64BitSizeField : ReadUnsigned64BitSizeField;
+    }
+    default: {
+      break;
     }
   }
 

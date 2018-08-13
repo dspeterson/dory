@@ -77,17 +77,16 @@ namespace Thread {
 
       /* Any thread contained by donor is moved into the wrapper being
          constructed, leaving the donor empty. */
-      TReadyWorker(TReadyWorker &&) = default;
+      TReadyWorker(TReadyWorker &&) noexcept = default;
 
       /* Releases the thread (i.e. puts it back in the pool if appropriate) if
          base class Launch() method has not been called. */
-      virtual ~TReadyWorker() noexcept {
-      }
+      ~TReadyWorker() noexcept override = default;
 
       /* Move any thread contained by donor into the assignment target, leaving
          the donor empty.  Release any thread prevoiusly contained by
          assignment target. */
-      TReadyWorker &operator=(TReadyWorker &&) = default;
+      TReadyWorker &operator=(TReadyWorker &&) noexcept = default;
 
       /* Swap internal state with 'that'. */
       void Swap(TReadyWorker &that) noexcept {
@@ -157,8 +156,7 @@ namespace Thread {
     /* After calling Start(), pool should not be destroyed until it has been
        properly shut down (see RequestShutdown(), GetShutdownWaitFd(), and
        WaitForShutdown()). */
-    virtual ~TManagedThreadPool() noexcept {
-    }
+    ~TManagedThreadPool() noexcept override = default;
 
     /* Allocate a worker from the pool and return a wrapper object containing
        it.  If the pool idle list is empty prior to successful allocation, a
@@ -173,13 +171,10 @@ namespace Thread {
       return TReadyWorker(static_cast<TWorker *>(GetAvailableWorker()));
     }
 
-    private:
-    class TWorker;
-
     protected:
     /* Our base class calls this when it needs to create a new thread to add to
        the pool. */
-    virtual TWorkerBase *CreateWorker(bool start) override {
+    TWorkerBase *CreateWorker(bool start) override {
       assert(this);
       return new TWorker(*this, start);
     }
@@ -200,8 +195,7 @@ namespace Thread {
             WorkFn(nullptr) {
       }
 
-      virtual ~TWorker() noexcept {
-      }
+      ~TWorker() noexcept override = default;
 
       /* Return function pointer or object that worker calls to perform work.
        */
@@ -212,12 +206,12 @@ namespace Thread {
 
       protected:
       /* Perform work by calling the client-defined callable object. */
-      virtual void DoWork() override {
+      void DoWork() override {
         assert(this);
         WorkFn();
       }
 
-      virtual void DoClearClientState() override {
+      void DoClearClientState() override {
         assert(this);
 
         /* Depending on the type of TWorkCallable, this may invoke an

@@ -57,7 +57,7 @@ namespace Dory {
          */
         static const TLibSnappy *The();
 
-        virtual ~TLibSnappy() noexcept { }
+        ~TLibSnappy() noexcept override = default;
 
         snappy_status snappy_compress(const char *input, size_t input_length,
             char *compressed, size_t *compressed_length) const {

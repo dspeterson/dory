@@ -41,16 +41,14 @@ namespace {
   /* The fixture for testing Dory's config file implementation. */
   class TConfTest : public ::testing::Test {
     protected:
-    TConfTest() {
+    TConfTest() = default;
+
+    ~TConfTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TConfTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
 
     TXmlTestInitializer Initializer;  // initializes Xerces XML library

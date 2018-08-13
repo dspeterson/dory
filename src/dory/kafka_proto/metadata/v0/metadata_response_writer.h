@@ -132,7 +132,8 @@ namespace Dory {
 
           /* This is just to save typing effort.  It's easier to type Loc(i)
              than &(*Result)[i]. */
-          uint8_t *Loc(size_t i) {
+          template <typename T>
+          uint8_t *Loc(T i) {
             assert(this);
             assert(Result);
             return &(*Result)[i];

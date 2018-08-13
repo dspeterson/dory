@@ -30,7 +30,6 @@ using namespace Dory::MsgDispatch;
 using namespace Dory::TestUtil;
 
 TMockKafkaDispatcher::TMockKafkaDispatcher(const TConfig &/*config*/,
-    const TWireProtocol &/*kafka_protocol*/,
     TMsgStateTracker &/*msg_state_tracker*/,
     TAnomalyTracker &/*anomaly_trackeri*/,
     const TBatchConfig &/*batch_config*/,
@@ -77,7 +76,28 @@ void TMockKafkaDispatcher::Start(
 
 }
 
-void TMockKafkaDispatcher::Dispatch(
+void TMockKafkaDispatcher::Dispatch(TMsg::TPtr &&/*msg*/,
+    size_t /*broker_index*/) {
+  assert(this);
+
+
+
+
+
+
+}
+
+void TMockKafkaDispatcher::DispatchNow(TMsg::TPtr &&/*msg*/,
+    size_t /*broker_index*/) {
+  assert(this);
+
+
+
+
+
+}
+
+void TMockKafkaDispatcher::DispatchNow(
     std::list<std::list<TMsg::TPtr>> &&/*batch*/, size_t /*broker_index*/) {
   assert(this);
 

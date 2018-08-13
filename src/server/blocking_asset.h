@@ -37,7 +37,7 @@ namespace Server {
     public:
     /* Constructs a new, unlocked asset. */
     TBlockingAsset() {
-      Base::TOsError::IfNe0(HERE, pthread_rwlock_init(&RwLock, 0));
+      Base::TOsError::IfNe0(HERE, pthread_rwlock_init(&RwLock, nullptr));
     }
 
     /* Destroys the target.

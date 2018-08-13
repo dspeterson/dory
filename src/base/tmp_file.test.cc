@@ -34,16 +34,14 @@ namespace {
   /* The fixture for testing class TTmpFile. */
   class TTmpFileTest : public ::testing::Test {
     protected:
-    TTmpFileTest() {
+    TTmpFileTest() = default;
+
+    ~TTmpFileTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TTmpFileTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TTmpFileTest
 

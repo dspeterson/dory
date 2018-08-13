@@ -34,10 +34,10 @@ namespace Log {
     /* Throws std::system_error on error opening file. */
     explicit TFileLogWriter(const char *path);
 
-    virtual ~TFileLogWriter() noexcept = default;
+    ~TFileLogWriter() noexcept override = default;
 
     /* Write 'entry' to file.  A trailing newline will be appended. */
-    virtual void WriteEntry(TLogEntryAccessApi &entry);
+    void WriteEntry(TLogEntryAccessApi &entry) override;
 
     private:
     Base::TFd Fd;

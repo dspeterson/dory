@@ -38,10 +38,10 @@ namespace Io {
 
     protected:
     /* Do-little. */
-    TOutputConsumer() {}
+    TOutputConsumer() = default;
 
     /* Do-little. */
-    virtual ~TOutputConsumer();
+    virtual ~TOutputConsumer() = default;
   };  // TOutputConsumer
 
 }  // Io

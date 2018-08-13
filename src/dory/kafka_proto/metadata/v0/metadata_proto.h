@@ -44,22 +44,21 @@ namespace Dory {
           public:
           TMetadataProto() = default;
 
-          virtual ~TMetadataProto() noexcept { }
+          ~TMetadataProto() noexcept override = default;
 
           /* Request metadata for all topics. */
-          virtual void WriteAllTopicsMetadataRequest(
-              std::vector<uint8_t> &result,
+          void WriteAllTopicsMetadataRequest(std::vector<uint8_t> &result,
               int32_t correlation_id) const override;
 
-          virtual void WriteSingleTopicMetadataRequest(
+          void WriteSingleTopicMetadataRequest(
               std::vector<uint8_t> &result, const char *topic,
               int32_t correlation_id) const override;
 
-          virtual TMetadata *BuildMetadataFromResponse(
+          TMetadata *BuildMetadataFromResponse(
               const void *response_buf,
               size_t response_buf_size) const override;
 
-          virtual bool TopicAutocreateWasSuccessful(const char *topic,
+          bool TopicAutocreateWasSuccessful(const char *topic,
               const void *response_buf,
               size_t response_buf_size) const override;
         };  // TMetadataProto

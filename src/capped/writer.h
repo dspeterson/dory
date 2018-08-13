@@ -41,7 +41,7 @@ namespace Capped {
     using TBlock = TPool::TBlock;
 
     /* A newly created writer has no data. */
-    TWriter(TPool *pool) noexcept;
+    explicit TWriter(TPool *pool) noexcept;
 
     /* Any pending blob will be canceled automatically. */
     ~TWriter() noexcept;

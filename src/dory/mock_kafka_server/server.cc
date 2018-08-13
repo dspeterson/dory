@@ -163,7 +163,8 @@ void TServer::ShutDownWorkers() {
 bool TServer::InitCmdPort() {
   assert(this);
   in_port_t kafka_port_begin = Ss.Setup.BasePort;
-  in_port_t kafka_port_end = kafka_port_begin + Ss.Setup.Ports.size();
+  auto kafka_port_end =
+      static_cast<in_port_t>(kafka_port_begin + Ss.Setup.Ports.size());
 
   if ((Ss.Config.CmdPort >= kafka_port_begin) &&
       (Ss.Config.CmdPort < kafka_port_end)) {
@@ -219,7 +220,7 @@ void TServer::InitKafkaPorts() {
   for (size_t i = 0; i < Ss.Setup.Ports.size(); ++i) {
     /* See big comment in <dory/mock_kafka_server/port_map.h> for an
        explanation of what is going on here. */
-    in_port_t virtual_port = Ss.Setup.BasePort + i;
+    auto virtual_port = static_cast<in_port_t>(Ss.Setup.BasePort + i);
     TAddress server_address(TAddress::IPv4Any,
         UseEphemeralPorts ? static_cast<in_port_t>(0) : virtual_port);
 

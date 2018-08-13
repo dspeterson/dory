@@ -293,8 +293,8 @@ const uint8_t *TAnomalyTracker::EnforceMaxPrefixLen(const void *msg_begin,
     const void *msg_end) {
   assert(this);
   assert(msg_end >= msg_begin);
-  const uint8_t *begin = reinterpret_cast<const uint8_t *>(msg_begin);
-  const uint8_t *end = reinterpret_cast<const uint8_t *>(msg_end);
+  const auto *begin = reinterpret_cast<const uint8_t *>(msg_begin);
+  const auto *end = reinterpret_cast<const uint8_t *>(msg_end);
   size_t msg_size = end - begin;
   return begin + std::min(msg_size, MaxMsgPrefixLen);
 }

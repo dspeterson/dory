@@ -101,7 +101,7 @@ TDomParserWithLineInfo::TUserDataHandler::The() noexcept {
 void TDomParserWithLineInfo::TUserDataHandler::handle(
     DOMOperationType operation, const XMLCh *const /*key*/, void *data,
     const DOMNode * /*src*/, DOMNode * /*dst*/) {
-  TXmlInputLineInfo *line_info = static_cast<TXmlInputLineInfo *>(data);
+  auto *line_info = static_cast<TXmlInputLineInfo *>(data);
 
   switch (operation) {
     case NODE_CLONED:

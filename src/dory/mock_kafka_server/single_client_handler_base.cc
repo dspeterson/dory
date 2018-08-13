@@ -190,7 +190,7 @@ TSingleClientHandlerBase::GetRequest() {
   }
 
   size_t old_size = InputBuf.size();
-  InputBuf.resize(4 + size_field);
+  InputBuf.resize(4 + static_cast<size_t>(size_field));
   assert(InputBuf.size() >= old_size);
 
   switch (TryReadExactlyOrShutdown(ClientSocket, &InputBuf[old_size],
@@ -556,7 +556,7 @@ bool TSingleClientHandlerBase::PrepareProduceResponse(const TProdReq &prod_req,
   if (total_delay) {
     Out << "delay " << total_delay << " ms: corr " << corr_id << std::endl;
 
-    if (GetShutdownRequestFd().IsReadable(total_delay)) {
+    if (GetShutdownRequestFd().IsReadable(static_cast<int>(total_delay))) {
       return false;
     }
   }
@@ -681,7 +681,7 @@ bool TSingleClientHandlerBase::HandleMetadataRequest() {
     }
   }
 
-  if (delay && GetShutdownRequestFd().IsReadable(delay)) {
+  if (delay && GetShutdownRequestFd().IsReadable(static_cast<int>(delay))) {
     Out << "Got shutdown request while handling metadata request" << std::endl;
     return false;
   }
@@ -752,7 +752,7 @@ void TSingleClientHandlerBase::DoRun() {
             << " milliseconds before reading next request." << std::endl;
       }
 
-      if (shutdown_request_fd.IsReadable(port.ReadDelay)) {
+      if (shutdown_request_fd.IsReadable(static_cast<int>(port.ReadDelay))) {
         break;
       }
     }

@@ -23,6 +23,7 @@
 
 #include <list>
 
+#include <base/fd.h>
 #include <base/no_copy_semantics.h>
 
 namespace Thread {
@@ -34,7 +35,7 @@ namespace Thread {
     public:
     TGateGetApi() = default;
 
-    virtual ~TGateGetApi() noexcept { }
+    virtual ~TGateGetApi() noexcept = default;
 
     virtual std::list<TMsgType> Get() = 0;
 

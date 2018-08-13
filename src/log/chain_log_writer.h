@@ -41,10 +41,10 @@ namespace Log {
 
     TChainLogWriter();
 
-    virtual ~TChainLogWriter() noexcept = default;
+    ~TChainLogWriter() noexcept override = default;
 
     /* Write 'entry'. */
-    virtual void WriteEntry(TLogEntryAccessApi &entry);
+    void WriteEntry(TLogEntryAccessApi &entry) override;
 
     /* Get a reference to the current chain, which is immutable.  To make
        changes, you must create a new chain (possibly based on a copy of the

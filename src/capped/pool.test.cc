@@ -61,7 +61,7 @@ namespace {
   
   /* Try to construct a new point on the heap and return success/failure.
      Either way, don't bother to keep the point around. */
-  static bool TryNewPoint() {
+  bool TryNewPoint() {
     bool success;
 
     try {
@@ -77,16 +77,14 @@ namespace {
   /* The fixture for testing class TPool. */
   class TPoolTest : public ::testing::Test {
     protected:
-    TPoolTest() {
+    TPoolTest() = default;
+
+    ~TPoolTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TPoolTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TPoolTest
 

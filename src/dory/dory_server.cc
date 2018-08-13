@@ -240,7 +240,7 @@ TDoryServer::TDoryServer(TServerConfig &&config)
       RouterThread(*Config, Conf, AnomalyTracker, MsgStateTracker,
           config.BatchConfig, DebugSetup, Dispatcher),
       MetadataTimestamp(RouterThread.GetMetadataTimestamp()),
-      ShutdownRequested(ATOMIC_FLAG_INIT) {
+      ShutdownRequested(false) {
   if (!Config->ReceiveStreamSocketName.empty() ||
       Config->InputPort.IsKnown()) {
     /* Create thread pool if UNIX stream or TCP input is enabled. */

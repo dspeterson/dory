@@ -49,7 +49,7 @@ class TStressTest2WorkFn;
 
 using TManagedThreadFnObjPool = TManagedThreadPool<TStressTest2WorkFn>;
 
-typedef void (*TThreadFnPtr)(void);
+typedef void (*TThreadFnPtr)();
 
 using TManagedThreadFnPtrPool = TManagedThreadPool<TThreadFnPtr>;
 
@@ -350,22 +350,18 @@ namespace {
       std::exit(EXIT_FAILURE);
     }
 
-    TManagedThreadPoolTest() {
+    TManagedThreadPoolTest() = default;
+
+    ~TManagedThreadPoolTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TManagedThreadPoolTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TManagedThreadPoolTest
 
   TEST_F(TManagedThreadPoolTest, ReadyWorkerTest) {
-    std::atomic<size_t> counter(0);
-    TSimpleWorkFn work_fn(counter);
     TManagedThreadStdFnPool pool(TManagedThreadPoolTest::HandleFatalError);
     ASSERT_FALSE(pool.IsStarted());
     pool.Start();

@@ -48,7 +48,7 @@ namespace {
     TBatchConfigBuilder builder;
     TBatchConfig config;
     builder.SetDefaultTopic(&config);
-    return std::move(builder.Build().GetPerTopicConfig());
+    return builder.Build().GetPerTopicConfig();
   }
 
   std::shared_ptr<TPerTopicBatcher::TConfig> MakeTopicBatchConfig() {
@@ -74,22 +74,20 @@ namespace {
     config.MsgCount = 3;
     config.ByteCount = 0;
     builder.SetDefaultTopic(&config);
-    return std::move(builder.Build().GetPerTopicConfig());
+    return builder.Build().GetPerTopicConfig();
   }
 
   /* The fixture for testing class TPerTopicBatcher. */
   class TPerTopicBatcherTest : public ::testing::Test {
     protected:
-    TPerTopicBatcherTest() {
+    TPerTopicBatcherTest() = default;
+
+    ~TPerTopicBatcherTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TPerTopicBatcherTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TPerTopicBatcherTest
 

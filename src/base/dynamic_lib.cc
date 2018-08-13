@@ -23,30 +23,30 @@
 
 using namespace Base;
 
-std::string TDynamicLib::TLibLoadError::CreateMsg(const char *filename) {
-  assert(filename);
+std::string TDynamicLib::TLibLoadError::CreateMsg(const char *libname) {
+  assert(libname);
   std::string msg("Failed to load library [");
-  msg += filename;
+  msg += libname;
   msg += "]";
   return std::move(msg);
 }
 
-std::string TDynamicLib::TSymLoadError::CreateMsg(const char *filename,
+std::string TDynamicLib::TSymLoadError::CreateMsg(const char *libname,
     const char *symname) {
-  assert(filename);
+  assert(libname);
   assert(symname);
   std::string msg("Failed to load symbol [");
   msg += symname;
   msg += "] for library [";
-  msg += filename;
+  msg += libname;
   msg += "]";
   return std::move(msg);
 }
 
-TDynamicLib::TDynamicLib(const char *filename, int flags)
-    : LibName(filename),
-      Handle(dlopen(filename, flags)) {
+TDynamicLib::TDynamicLib(const char *libname, int flags)
+    : LibName(libname),
+      Handle(dlopen(libname, flags)) {
   if (Handle == nullptr) {
-    throw TLibLoadError(filename);
+    throw TLibLoadError(libname);
   }
 }

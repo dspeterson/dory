@@ -41,9 +41,9 @@ namespace {
         : WrittenCount(0) {
     }
 
-    virtual ~TTestLogWriter() noexcept = default;
+    ~TTestLogWriter() noexcept override = default;
 
-    virtual void WriteEntry(TLogEntryAccessApi &entry) {
+    void WriteEntry(TLogEntryAccessApi &entry) override {
       assert(this);
       Entry = entry.GetWithoutTrailingNewline().first;
       EntryWithNewline = entry.GetWithTrailingNewline().first;
@@ -76,16 +76,14 @@ namespace {
   /* The fixture for testing class TIndent. */
   class TLogEntryTest : public ::testing::Test {
     protected:
-    TLogEntryTest() {
+    TLogEntryTest() = default;
+
+    ~TLogEntryTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TLogEntryTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TLogEntryTest
 

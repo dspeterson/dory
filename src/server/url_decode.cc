@@ -33,10 +33,10 @@ using namespace Server;
 
 // TODO: This to hex conversion I feel could be heavily optimized.
 static inline unsigned char HexToNum(const char *c_in, const char *start) {
-  unsigned char c = tolower(*c_in);
+  auto c = static_cast<unsigned char>(tolower(*c_in));
 
   if(!isxdigit(c)) {
-    throw TUrlDecodeError(c_in - start,
+    throw TUrlDecodeError(static_cast<unsigned int>(c_in - start),
         "Expected a hex digit but found something else.");
   }
 
@@ -86,7 +86,8 @@ void Server::UrlDecode(const TPiece<const char> &in, std::string &out) {
       ++read_csr;
 
       if(read_csr + 2 > in.GetLimit()) {
-        throw TUrlDecodeError(read_csr - in.GetStart(),
+        throw TUrlDecodeError(
+            static_cast<unsigned int>(read_csr - in.GetStart()),
             "Expected two hex digits, but found end of stream");
       }
 

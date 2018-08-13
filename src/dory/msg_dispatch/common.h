@@ -43,7 +43,7 @@ namespace Dory {
           : std::runtime_error("TShutdownOnDestroy") {
       }
 
-      virtual ~TShutdownOnDestroy() noexcept { }
+      ~TShutdownOnDestroy() noexcept override = default;
     };  // TShutdownOnDestroy
 
     struct TMsgSet {

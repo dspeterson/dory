@@ -61,41 +61,41 @@ namespace Dory {
 
           TProduceResponseReader();
 
-          virtual ~TProduceResponseReader() noexcept { }
+          ~TProduceResponseReader() noexcept override = default;
 
-          virtual void Clear() noexcept override;
+          void Clear() noexcept override;
 
-          virtual void SetResponse(const void *response,
+          void SetResponse(const void *response,
               size_t response_size) override;
 
-          virtual int32_t GetCorrelationId() const override;
+          int32_t GetCorrelationId() const override;
 
-          virtual size_t GetNumTopics() const override;
+          size_t GetNumTopics() const override;
 
-          virtual bool FirstTopic() override;
+          bool FirstTopic() override;
 
-          virtual bool NextTopic() override;
+          bool NextTopic() override;
 
-          virtual const char *GetCurrentTopicNameBegin() const override;
+          const char *GetCurrentTopicNameBegin() const override;
 
-          virtual const char *GetCurrentTopicNameEnd() const override;
+          const char *GetCurrentTopicNameEnd() const override;
 
-          virtual size_t GetNumPartitionsInCurrentTopic() const override;
+          size_t GetNumPartitionsInCurrentTopic() const override;
 
-          virtual bool FirstPartitionInTopic() override;
+          bool FirstPartitionInTopic() override;
 
-          virtual bool NextPartitionInTopic() override;
+          bool NextPartitionInTopic() override;
 
-          virtual int32_t GetCurrentPartitionNumber() const override;
+          int32_t GetCurrentPartitionNumber() const override;
 
-          virtual int16_t GetCurrentPartitionErrorCode() const override;
+          int16_t GetCurrentPartitionErrorCode() const override;
 
-          virtual int64_t GetCurrentPartitionOffset() const override;
+          int64_t GetCurrentPartitionOffset() const override;
 
           private:
           using PRC = TProduceResponseConstants;
 
-          const uint8_t *GetPartitionStart(size_t index) const;
+          const uint8_t *GetPartitionStart(int32_t index) const;
 
           void InitCurrentTopic();
 

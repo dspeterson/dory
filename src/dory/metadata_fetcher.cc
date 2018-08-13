@@ -252,7 +252,8 @@ bool TMetadataFetcher::ReadResponse(int timeout_ms) {
   uint64_t elapsed = 0;
 
   for (; ; ) {
-    int time_left = (timeout_ms < 0) ? -1 : (timeout_ms - elapsed);
+    int time_left = (timeout_ms < 0) ?
+        -1 : (timeout_ms - static_cast<int>(elapsed));
 
     /* Don't check for EINTR, since this thread has signals masked. */
     if (IfLt0(poll(poll_array, poll_array.Size(), time_left)) == 0) {

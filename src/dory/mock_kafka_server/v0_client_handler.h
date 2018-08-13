@@ -58,23 +58,22 @@ namespace Dory {
                                      std::move(client_socket)) {
       }
 
-      virtual ~TV0ClientHandler() noexcept;
+      ~TV0ClientHandler() noexcept override;
 
       protected:
-      virtual Dory::KafkaProto::Produce::TProduceRequestReaderApi &
+      Dory::KafkaProto::Produce::TProduceRequestReaderApi &
       GetProduceRequestReader() override;
 
-      virtual Dory::KafkaProto::Produce::TMsgSetReaderApi &
-          GetMsgSetReader() override;
+      Dory::KafkaProto::Produce::TMsgSetReaderApi &GetMsgSetReader() override;
 
-      virtual Dory::KafkaProto::Produce::TProduceResponseWriterApi &
+      Dory::KafkaProto::Produce::TProduceResponseWriterApi &
       GetProduceResponseWriter() override;
 
-      virtual bool ValidateMetadataRequestHeader() override;
+      bool ValidateMetadataRequestHeader() override;
 
-      virtual bool ValidateMetadataRequest(TMetadataRequest &request) override;
+      bool ValidateMetadataRequest(TMetadataRequest &request) override;
 
-      virtual TSendMetadataResult
+      TSendMetadataResult
       SendMetadataResponse(const TMetadataRequest &request, int16_t error,
           const std::string &error_topic, size_t delay) override;
 

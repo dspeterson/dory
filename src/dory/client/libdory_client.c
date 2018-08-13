@@ -117,13 +117,7 @@ static int init_client_addr(struct sockaddr_un *client_addr) {
   memset(client_addr, 0, sizeof(*client_addr));
   static const char client_path_template[] = "/tmp/dory_client.XXXXXX";
   char client_path[sizeof(client_path_template)];
-
-  /* Unfortunately the preprocessor doesn't understand sizeof(), so this can't
-     be converted to a purely compile-time test. */
-  if (sizeof(client_addr->sun_path) < sizeof(client_path)) {
-    return DORY_CLIENT_SOCK_PATH_TOO_LONG;
-  }
-
+  assert(sizeof(client_path) <= sizeof(client_addr->sun_path));
   int tmp_fd = -1;
 
   /* Create temporary filename that client will bind() its socket to.  This is

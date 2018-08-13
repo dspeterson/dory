@@ -34,16 +34,14 @@ namespace {
   /* The fixture for testing class TGate. */
   class TGateTest : public ::testing::Test {
     protected:
-    TGateTest() {
+    TGateTest() = default;
+
+    ~TGateTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TGateTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TGateTest
 
@@ -58,16 +56,16 @@ namespace {
     ASSERT_TRUE(list_1.empty());
     ASSERT_FALSE(fd.IsReadable());
 
-    list_1.push_back("msg1");
-    list_1.push_back("msg2");
+    list_1.emplace_back("msg1");
+    list_1.emplace_back("msg2");
     std::list<std::string> list_2(list_1);
     g.Put(std::move(list_1));
     ASSERT_TRUE(list_1.empty());
     ASSERT_TRUE(fd.IsReadable());
-    list_1.push_back("msg3");
-    list_1.push_back("msg4");
-    list_2.push_back("msg3");
-    list_2.push_back("msg4");
+    list_1.emplace_back("msg3");
+    list_1.emplace_back("msg4");
+    list_2.emplace_back("msg3");
+    list_2.emplace_back("msg4");
     g.Put(std::move(list_1));
     ASSERT_TRUE(list_1.empty());
     ASSERT_TRUE(fd.IsReadable());
@@ -76,8 +74,8 @@ namespace {
     ASSERT_FALSE(fd.IsReadable());
 
     list_1.clear();
-    list_1.push_back("msg5");
-    list_1.push_back("msg6");
+    list_1.emplace_back("msg5");
+    list_1.emplace_back("msg6");
     list_2 = list_1;
     g.Put(std::move(list_1));
     ASSERT_TRUE(list_1.empty());

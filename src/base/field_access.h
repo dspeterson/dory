@@ -40,7 +40,7 @@ static inline uint16_t ReadUint16FromHeader(const void *src) {
 }
 
 static inline int16_t ReadInt16FromHeader(const void *src) {
-  return ntohs(*((const int16_t *) src));
+  return ntohs(*((const uint16_t *) src));
 }
 
 static inline uint32_t ReadUint32FromHeader(const void *src) {
@@ -48,7 +48,7 @@ static inline uint32_t ReadUint32FromHeader(const void *src) {
 }
 
 static inline int32_t ReadInt32FromHeader(const void *src) {
-  return ntohl(*((const int32_t *) src));
+  return ntohl(*((const uint32_t *) src));
 }
 
 static inline uint64_t ReadUint64FromHeader(const void *src) {
@@ -64,7 +64,7 @@ static inline void WriteUint16ToHeader(void *dst, uint16_t value) {
 }
 
 static inline void WriteInt16ToHeader(void *dst, int16_t value) {
-  *((int16_t *) dst) = htons(value);
+  *((int16_t *) dst) = htons((uint16_t) value);
 }
 
 static inline void WriteUint32ToHeader(void *dst, uint32_t value) {
@@ -72,7 +72,7 @@ static inline void WriteUint32ToHeader(void *dst, uint32_t value) {
 }
 
 static inline void WriteInt32ToHeader(void *dst, int32_t value) {
-  *((int32_t *) dst) = htonl(value);
+  *((int32_t *) dst) = htonl((uint32_t) value);
 }
 
 static inline void WriteUint64ToHeader(void *dst, uint64_t value) {

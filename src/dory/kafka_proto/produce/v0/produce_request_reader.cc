@@ -137,7 +137,7 @@ int32_t TProduceRequestReader::GetReplicationTimeout() const {
 
 size_t TProduceRequestReader::GetNumTopics() const {
   assert(this);
-  return NumTopics;
+  return static_cast<size_t>(NumTopics);
 }
 
 bool TProduceRequestReader::FirstTopic() {
@@ -215,7 +215,7 @@ const char *TProduceRequestReader::GetCurrentTopicNameEnd() const {
 size_t TProduceRequestReader::GetNumMsgSetsInCurrentTopic() const {
   assert(this);
   assert((CurrentTopicNameEnd > Begin) && (CurrentTopicNameEnd < End));
-  return NumPartitionsInTopic;
+  return static_cast<size_t>(NumPartitionsInTopic);
 }
 
 bool TProduceRequestReader::FirstMsgSetInTopic() {
@@ -397,5 +397,6 @@ void TProduceRequestReader::InitCurrentPartition() {
     THROW_ERROR(TRequestTruncated);
   }
 
-  MsgSetReader.SetMsgSet(PartitionMsgSetBegin, msg_set_size);
+  MsgSetReader.SetMsgSet(PartitionMsgSetBegin,
+      static_cast<size_t>(msg_set_size));
 }

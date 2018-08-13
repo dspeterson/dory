@@ -82,16 +82,15 @@ namespace {
         : TTestReader(-1) {
     }
 
-    virtual ~TTestReader() {
-    }
+    ~TTestReader() override = default;
 
-    virtual size_t GetNextReadSize() override;
+    size_t GetNextReadSize() override;
 
-    virtual TGetMsgResult GetNextMsg() noexcept override;
+    TGetMsgResult GetNextMsg() noexcept override;
 
-    virtual void HandleReset() noexcept override;
+    void HandleReset() noexcept override;
 
-    virtual void BeforeConsumeReadyMsg() noexcept override;
+    void BeforeConsumeReadyMsg() noexcept override;
 
     void TakeStateSnapshot(TStateSnapshot &snapshot);
 
@@ -259,16 +258,14 @@ namespace {
   /* The fixture for testing class TStreamMsgReader. */
   class TStreamMsgReaderTest : public ::testing::Test {
     protected:
-    TStreamMsgReaderTest() {
+    TStreamMsgReaderTest() = default;
+
+    ~TStreamMsgReaderTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TStreamMsgReaderTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TStreamMsgReaderTest
 

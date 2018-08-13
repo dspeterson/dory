@@ -58,26 +58,27 @@ namespace Xml {
       return LineInfoKey.get();
     }
 
-    virtual ~TDomParserWithLineInfo();
+    ~TDomParserWithLineInfo() override;
 
     /* Called when parser encounters start of document. */
-    virtual void startDocument();
+    void startDocument() override;
 
     /* Called when parser encounters XML element. */
-    virtual void startElement(const xercesc::XMLElementDecl &elemDecl,
+    void startElement(const xercesc::XMLElementDecl &elemDecl,
         const unsigned int urlId, const XMLCh *const elemPrefix,
         const xercesc::RefVectorOf<xercesc::XMLAttr> &attrList,
-        const XMLSize_t attrCount, const bool isEmpty, const bool isRoot);
+        const XMLSize_t attrCount, const bool isEmpty,
+        const bool isRoot) override;
 
     /* Called when parser encounters character data in XML document. */
-    virtual void docCharacters(const XMLCh *const chars,
-        const XMLSize_t length, const bool cdataSection);
+    void docCharacters(const XMLCh *const chars,
+        const XMLSize_t length, const bool cdataSection) override;
 
     /* Called when parser encounters comment in XML document. */
-    virtual void docComment(const XMLCh *const comment);
+    void docComment(const XMLCh *const comment) override;
 
     /* Called when parser encounters processing instruction in XML document. */
-    virtual void docPI(const XMLCh *const target, const XMLCh *const data);
+    void docPI(const XMLCh *const target, const XMLCh *const data) override;
 
     private:
     class TUserDataHandler final : public xercesc::DOMUserDataHandler {
@@ -90,10 +91,9 @@ namespace Xml {
       /* Singleton accessor. */
       static TUserDataHandler &The() noexcept;
 
-      virtual void handle(
-          xercesc::DOMUserDataHandler::DOMOperationType operation,
+      void handle(xercesc::DOMUserDataHandler::DOMOperationType operation,
           const XMLCh *const key, void *data, const xercesc::DOMNode *src,
-          xercesc::DOMNode *dst);
+          xercesc::DOMNode *dst) override;
     };  // TUserDataHandler
 
     void SetUserData();

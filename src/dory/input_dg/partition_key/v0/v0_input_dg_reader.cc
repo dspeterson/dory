@@ -132,6 +132,7 @@ TMsg::TPtr TV0InputDgReader::BuildMsg() {
 
   const uint8_t *value_begin = pos;
   return TryCreatePartitionKeyMsg(partition_key, ts, topic_begin, topic_end,
-      key_begin, key_sz, value_begin, value_sz, Pool, AnomalyTracker,
-      MsgStateTracker, NoLogDiscard);
+      key_begin, static_cast<size_t>(key_sz), value_begin,
+      static_cast<size_t>(value_sz), Pool, AnomalyTracker, MsgStateTracker,
+      NoLogDiscard);
 }

@@ -122,7 +122,7 @@ namespace Base {
 
       TVal digit_val;
       TVal cur_val = 0;
-      const char *err_msg=0;
+      const char *err_msg = nullptr;
 
       while (TryReadDigit(digit_val)) {
         // Check for overflow/underflow

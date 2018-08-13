@@ -40,13 +40,13 @@ namespace Dory {
           : TerminateHandler(std::move(terminate_handler)) {
       }
 
-      virtual ~TThreadTerminateHandler() noexcept {
+      ~TThreadTerminateHandler() noexcept override {
         Unregister();
       }
 
-      virtual void OnEvent(int fd, short flags) override;
+      void OnEvent(int fd, short flags) override;
 
-      virtual void OnShutdown() override;
+      void OnShutdown() override;
 
       void RegisterWithDispatcher(Fiber::TDispatcher &dispatcher, int fd,
           short flags) {

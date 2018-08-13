@@ -47,7 +47,7 @@ TMsg::TPtr Dory::InputDg::BuildMsgFromDg(const void *dg, size_t dg_size,
     const TConfig &config, Capped::TPool &pool,
     TAnomalyTracker &anomaly_tracker, TMsgStateTracker &msg_state_tracker) {
   assert(dg);
-  const uint8_t *dg_bytes = reinterpret_cast<const uint8_t *>(dg);
+  const auto *dg_bytes = reinterpret_cast<const uint8_t *>(dg);
   size_t fixed_part_size = INPUT_DG_SZ_FIELD_SIZE +
       INPUT_DG_API_KEY_FIELD_SIZE + INPUT_DG_API_VERSION_FIELD_SIZE;
 

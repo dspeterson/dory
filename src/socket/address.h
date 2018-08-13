@@ -298,7 +298,7 @@ namespace Socket {
     Base::IfLt0(result = recvfrom(socket, buffer, max_size, flags, address,
                                   &len));
     address.Verify();
-    return result;
+    return static_cast<size_t>(result);
   }
 
   /* A version of sendto() using TAddress. */
@@ -308,7 +308,7 @@ namespace Socket {
     ssize_t result;
     Base::IfLt0(result = sendto(socket, buffer, max_size, flags, address,
                                 address.GetLen()));
-    return result;
+    return static_cast<size_t>(result);
   }
 
   /* A async version of accept() using TAddress.
@@ -366,7 +366,7 @@ namespace Socket {
     }
 
     address.Verify();
-    size = result;
+    size = static_cast<size_t>(result);
     return true;
   }
 
@@ -388,7 +388,7 @@ namespace Socket {
       Base::ThrowSystemError(errno);
     }
 
-    size = result;
+    size = static_cast<size_t>(result);
     return true;
   }
 

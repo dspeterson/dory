@@ -46,16 +46,14 @@ namespace {
   /* The fixture for testing class TCombinedTopicsBatcher. */
   class TCombinedTopicsBatcherTest : public ::testing::Test {
     protected:
-    TCombinedTopicsBatcherTest() {
+    TCombinedTopicsBatcherTest() = default;
+
+    ~TCombinedTopicsBatcherTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TCombinedTopicsBatcherTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TCombinedTopicsBatcherTest
 

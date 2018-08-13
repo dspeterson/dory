@@ -28,7 +28,7 @@ namespace Base {
   class TSyntaxError : public TFinalError<TSyntaxError> {
   public:
     TSyntaxError(const TCodeLocation &code_location,
-        const char *description = 0) {
+        const char *description = nullptr) {
       PostCtor(code_location, description);
     }
 

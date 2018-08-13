@@ -459,16 +459,14 @@ namespace {
   /* Fixture for end to end Dory unit test. */
   class TDoryTest : public ::testing::Test {
     protected:
-    TDoryTest() {
+    TDoryTest() = default;
+
+    ~TDoryTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TDoryTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
 
     TXmlTestInitializer Initializer;  // initializes Xerces XML library

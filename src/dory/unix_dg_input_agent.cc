@@ -153,8 +153,8 @@ TMsg::TPtr TUnixDgInputAgent::ReadOneMsg() {
   assert(this);
   char * const msg_begin = reinterpret_cast<char *>(&InputBuf[0]);
   ssize_t result = IfLt0(recv(InputSocket, msg_begin, InputBuf.size(), 0));
-  return InputDg::BuildMsgFromDg(msg_begin, result, Config, Pool,
-      AnomalyTracker, MsgStateTracker);
+  return InputDg::BuildMsgFromDg(msg_begin, static_cast<size_t>(result),
+      Config, Pool, AnomalyTracker, MsgStateTracker);
 }
 
 void TUnixDgInputAgent::ForwardMessages() {

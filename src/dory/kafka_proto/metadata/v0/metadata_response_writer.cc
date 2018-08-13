@@ -33,7 +33,7 @@ using namespace Dory::KafkaProto::Metadata::V0;
 
 TMetadataResponseWriter::TMetadataResponseWriter()
     : State(TState::Initial),
-      Result(0),
+      Result(nullptr),
       BrokerCount(0),
       BrokerOffset(0),
       TopicCountOffset(0),
@@ -105,7 +105,7 @@ void TMetadataResponseWriter::OpenTopicList() {
   GrowResult(THdr::TOPIC_COUNT_SIZE);
   TopicCountOffset = BrokerOffset;
   TopicCount = 0;
-  TopicOffset = Size();
+  TopicOffset = static_cast<int32_t>(Size());
   assert(TopicOffset == static_cast<int32_t>(TopicCountOffset +
       THdr::TOPIC_COUNT_SIZE));
 }
@@ -124,8 +124,9 @@ void TMetadataResponseWriter::OpenTopic(int16_t topic_error_code,
       topic_error_code);
   SetStr(TopicOffset + THdr::REL_TOPIC_NAME_LENGTH_OFFSET, topic_name_begin,
       topic_name_end);
-  PartitionCountOffset = TopicOffset + THdr::TOPIC_ERROR_CODE_SIZE +
-      THdr::TOPIC_NAME_LENGTH_SIZE + topic_name_size;
+  PartitionCountOffset = static_cast<int32_t>(TopicOffset +
+      THdr::TOPIC_ERROR_CODE_SIZE + THdr::TOPIC_NAME_LENGTH_SIZE +
+      topic_name_size);
   assert(Size() == (PartitionCountOffset + THdr::PARTITION_COUNT_SIZE));
 }
 
@@ -134,7 +135,7 @@ void TMetadataResponseWriter::OpenPartitionList() {
   assert(State == TState::InTopic);
   State = TState::InPartitionList;
   PartitionCount = 0;
-  PartitionOffset = Size();
+  PartitionOffset = static_cast<int32_t>(Size());
 }
 
 void TMetadataResponseWriter::OpenPartition(int16_t partition_error_code,
@@ -145,7 +146,8 @@ void TMetadataResponseWriter::OpenPartition(int16_t partition_error_code,
   size_t replica_count_delta = THdr::PARTITION_ERROR_CODE_SIZE +
       THdr::PARTITION_ID_SIZE + THdr::LEADER_NODE_ID_SIZE;
   GrowResult(replica_count_delta + THdr::REPLICA_COUNT_SIZE);
-  ReplicaCountOffset = PartitionOffset + replica_count_delta;
+  ReplicaCountOffset = static_cast<int32_t>(PartitionOffset +
+      replica_count_delta);
   WriteInt16ToHeader(
       Loc(PartitionOffset + THdr::REL_PARTITION_ERROR_CODE_OFFSET),
       partition_error_code);
@@ -175,7 +177,7 @@ void TMetadataResponseWriter::CloseReplicaList() {
   assert(this);
   assert(State == TState::InReplicaList);
   State = TState::InPartition;
-  CaughtUpReplicaCountOffset = Size();
+  CaughtUpReplicaCountOffset = static_cast<int32_t>(Size());
   WriteInt32ToHeader(Loc(ReplicaCountOffset), ReplicaCount);
   GrowResult(THdr::CAUGHT_UP_REPLICA_COUNT_SIZE);
 }
@@ -208,7 +210,7 @@ void TMetadataResponseWriter::ClosePartition() {
   assert(State == TState::InPartition);
   State = TState::InPartitionList;
   ++PartitionCount;
-  PartitionOffset = Size();
+  PartitionOffset = static_cast<int32_t>(Size());
 }
 
 void TMetadataResponseWriter::ClosePartitionList() {
@@ -223,7 +225,7 @@ void TMetadataResponseWriter::CloseTopic() {
   assert(State == TState::InTopic);
   State = TState::InTopicList;
   ++TopicCount;
-  TopicOffset = Size();
+  TopicOffset = static_cast<int32_t>(Size());
 }
 
 void TMetadataResponseWriter::CloseTopicList() {
@@ -238,7 +240,8 @@ void TMetadataResponseWriter::CloseResponse() {
   assert(State == TState::InResponse);
   State = TState::Initial;
   assert(Size() >= REQUEST_OR_RESPONSE_SIZE_SIZE);
-  int32_t size_field_value = Size() - REQUEST_OR_RESPONSE_SIZE_SIZE;
+  auto size_field_value =
+      static_cast<int32_t>(Size() - REQUEST_OR_RESPONSE_SIZE_SIZE);
   WriteInt32ToHeader(Loc(THdr::RESPONSE_SIZE_OFFSET), size_field_value);
   Result = nullptr;
   ClearBookkeepingInfo();
@@ -278,7 +281,7 @@ void TMetadataResponseWriter::SetStr(size_t size_field_offset,
 
   size_t size = str_end - str_begin;
   assert(size <= static_cast<size_t>(std::numeric_limits<int16_t>::max()));
-  WriteInt16ToHeader(Loc(size_field_offset), size);
+  WriteInt16ToHeader(Loc(size_field_offset), static_cast<int16_t>(size));
 
   if (size) {
     std::memcpy(Loc(size_field_offset + THdr::STRING_SIZE_FIELD_SIZE),

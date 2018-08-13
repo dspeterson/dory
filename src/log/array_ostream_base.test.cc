@@ -55,16 +55,14 @@ namespace {
   /* The fixture for testing class TIndent. */
   class TArrayOstreamBaseTest : public ::testing::Test {
     protected:
-    TArrayOstreamBaseTest() {
+    TArrayOstreamBaseTest() = default;
+
+    ~TArrayOstreamBaseTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TArrayOstreamBaseTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TArrayOstreamBaseTest
 

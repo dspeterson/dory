@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include <cstddef>
+
 #include <time.h>
 
 #include <base/no_copy_semantics.h>

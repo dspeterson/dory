@@ -73,7 +73,7 @@ namespace Dory {
 
       explicit TPerTopicBatcher(const std::shared_ptr<TConfig> &config);
 
-      TPerTopicBatcher(std::shared_ptr<TConfig> &&config);
+      explicit TPerTopicBatcher(std::shared_ptr<TConfig> &&config);
 
       /* TODO: Eliminate need for clients to call this method. */
       bool IsEnabled() const {
@@ -128,12 +128,12 @@ namespace Dory {
               Topic(std::move(topic)) {
         }
 
-        TBatchExpiryRecord(TBatchExpiryRecord &&that)
+        TBatchExpiryRecord(TBatchExpiryRecord &&that) noexcept
             : Expiry(that.Expiry),
               Topic(std::move(that.Topic)) {
         }
 
-        TBatchExpiryRecord &operator=(TBatchExpiryRecord &&that) {
+        TBatchExpiryRecord &operator=(TBatchExpiryRecord &&that) noexcept {
           assert(this);
 
           if (this != &that) {

@@ -53,16 +53,14 @@ namespace {
   /* The fixture for testing XML config file parsing utilities. */
   class TXmlConfigUtilTest : public ::testing::Test {
     protected:
-    TXmlConfigUtilTest() {
+    TXmlConfigUtilTest() = default;
+
+    ~TXmlConfigUtilTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TXmlConfigUtilTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
 
     TXmlTestInitializer Initializer;  // initializes Xerces XML library

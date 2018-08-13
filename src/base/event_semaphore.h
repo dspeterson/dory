@@ -34,7 +34,7 @@ namespace Base {
     NO_COPY_SEMANTICS(TEventSemaphore);
 
     public:
-    TEventSemaphore(uint64_t initial_count = 0, bool nonblocking = false);
+    explicit TEventSemaphore(int initial_count = 0, bool nonblocking = false);
 
     const TFd &GetFd() const noexcept {
       assert(this);
@@ -44,7 +44,7 @@ namespace Base {
     /* Reinitialize the semaphore with the given initial count.  Calling this
        method is guaranteed to preserve the semaphore's integer file descriptor
        number. */
-    void Reset(uint64_t initial_count = 0);
+    void Reset(int initial_count = 0);
 
     /* If the nonblocking option was passed to the constructor, this returns
        true if the pop was successful, or false if the pop failed because the
@@ -53,7 +53,7 @@ namespace Base {
        returns true. */
     bool Pop();
 
-    void Push(uint64_t count = 1);
+    void Push(int count = 1);
 
     private:
     TFd Fd;

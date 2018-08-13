@@ -22,7 +22,7 @@
 #include <base/piece.h>
 
 unsigned char *Base::BuildCStr(const TPiece<const unsigned char> &piece) {
-  unsigned char *out_str = new unsigned char[piece.GetSize() + 1];
+  auto *out_str = new unsigned char[piece.GetSize() + 1];
   memcpy(out_str, piece.GetStart(), piece.GetSize());
   out_str[piece.GetSize()] = 0;
   return out_str;

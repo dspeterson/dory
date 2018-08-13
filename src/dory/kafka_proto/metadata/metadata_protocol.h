@@ -51,13 +51,13 @@ namespace Dory {
           }
 
           public:
-          virtual ~TBadMetadataResponse() noexcept { }
+          ~TBadMetadataResponse() noexcept override = default;
         };  // TBadMetadataResponse
 
         DEFINE_ERROR(TPartitionHasUnknownBroker, TBadMetadataResponse,
             "Partition in metadata respose references unknown broker");
 
-        virtual ~TMetadataProtocol() noexcept { }
+        virtual ~TMetadataProtocol() noexcept = default;
 
         /* Write an all topics metadata request to 'result'.  Resize 'result'
            to the size of the written request. */

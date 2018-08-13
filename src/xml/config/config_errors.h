@@ -49,14 +49,12 @@ namespace Xml {
       public:
       virtual size_t GetLine() const noexcept = 0;
 
-      virtual ~TErrorLineInfo() {
-      }
+      virtual ~TErrorLineInfo() = default;
     };  // TErrorLineInfo
 
     class TErrorLineOnlyInfo : public TErrorLineInfo {
       public:
-      virtual ~TErrorLineOnlyInfo() {
-      }
+      ~TErrorLineOnlyInfo() override = default;
     };  // TErrorLineOnlyInfo
 
     class TErrorLineAndColumnInfo : public TErrorLineInfo {
@@ -69,7 +67,7 @@ namespace Xml {
       public:
       explicit TXmlException(const xercesc::XMLException &x);
 
-      virtual size_t GetLine() const noexcept;
+      size_t GetLine() const noexcept override;
 
       private:
       size_t Line;
@@ -80,9 +78,9 @@ namespace Xml {
       public:
       explicit TSaxParseException(const xercesc::SAXParseException &x);
 
-      virtual size_t GetLine() const noexcept;
+      size_t GetLine() const noexcept override;
 
-      virtual size_t GetColumn() const noexcept;
+      size_t GetColumn() const noexcept override;
 
       private:
       size_t Line;
@@ -134,12 +132,12 @@ namespace Xml {
     class TContentError : public TXmlConfigError,
         public TErrorLineAndColumnInfo {
       public:
-      size_t GetLine() const noexcept {
+      size_t GetLine() const noexcept override {
         assert(this);
         return Line;
       }
 
-      size_t GetColumn() const noexcept {
+      size_t GetColumn() const noexcept override {
         assert(this);
         return Column;
       }

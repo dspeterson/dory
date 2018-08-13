@@ -381,7 +381,7 @@ void TConf::TBuilder::ProcessInitialBrokersElem(
     TOpt<in_port_t> opt_port = TAttrReader::GetOptInt<in_port_t>(elem, "port");
     in_port_t port = opt_port.IsKnown() ?
         *opt_port : in_port_t(DEFAULT_BROKER_PORT);
-    broker_vec.push_back(TBroker(std::move(host), port));
+    broker_vec.emplace_back(std::move(host), port);
   }
 
   if (broker_vec.empty()) {

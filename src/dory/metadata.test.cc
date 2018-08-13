@@ -46,16 +46,14 @@ namespace {
   /* The fixture for testing class TMetadata. */
   class TMetadataTest : public ::testing::Test {
     protected:
-    TMetadataTest() {
+    TMetadataTest() = default;
+
+    ~TMetadataTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TMetadataTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TMetadataTest
 
@@ -233,14 +231,15 @@ namespace {
     int index = FindBrokerIndex(brokers, 3);
     ASSERT_GE(index, 0);
     size_t num_choices = 100;
-    const int32_t *choices = md->FindPartitionChoices("topic1", index,
-        num_choices);
+    const int32_t *choices = md->FindPartitionChoices("topic1",
+        static_cast<size_t>(index), num_choices);
     ASSERT_TRUE(choices == nullptr);
     ASSERT_EQ(num_choices, 0U);
     index = FindBrokerIndex(brokers, 5);
     ASSERT_GE(index, 0);
     num_choices = 100;
-    choices = md->FindPartitionChoices("topic1", index, num_choices);
+    choices = md->FindPartitionChoices("topic1", static_cast<size_t>(index),
+        num_choices);
     ASSERT_TRUE(choices != nullptr);
     ASSERT_EQ(num_choices, 2U);
     std::unordered_set<int32_t> choice_set;
@@ -254,7 +253,8 @@ namespace {
     index = FindBrokerIndex(brokers, 2);
     ASSERT_GE(index, 0);
     num_choices = 100;
-    choices = md->FindPartitionChoices("topic1", index, num_choices);
+    choices = md->FindPartitionChoices("topic1", static_cast<size_t>(index),
+        num_choices);
     ASSERT_TRUE(choices != nullptr);
     ASSERT_EQ(num_choices, 1U);
     choice_set.clear();
@@ -269,13 +269,14 @@ namespace {
     index = FindBrokerIndex(brokers, 3);
     ASSERT_GE(index, 0);
     num_choices = 100;
-    choices = md->FindPartitionChoices("topic2", index, num_choices);
+    choices = md->FindPartitionChoices("topic2", static_cast<size_t>(index),
+        num_choices);
     ASSERT_TRUE(choices == nullptr);
     ASSERT_EQ(num_choices, 0U);
     index = FindBrokerIndex(brokers, 3);
     ASSERT_GE(index, 0);
     num_choices = 100;
-    choices = md->FindPartitionChoices("topic3", index, num_choices);
+    choices = md->FindPartitionChoices("topic3", static_cast<size_t>(index), num_choices);
     ASSERT_TRUE(choices != nullptr);
     ASSERT_EQ(num_choices, 2U);
     choice_set.clear();
@@ -291,7 +292,8 @@ namespace {
     index = FindBrokerIndex(brokers, 5);
     ASSERT_GE(index, 0);
     num_choices = 100;
-    choices = md->FindPartitionChoices("topic3", index, num_choices);
+    choices = md->FindPartitionChoices("topic3", static_cast<size_t>(index),
+        num_choices);
     ASSERT_TRUE(choices != nullptr);
     ASSERT_EQ(num_choices, 1U);
     choice_set.clear();

@@ -232,7 +232,7 @@ namespace Dory {
        for unit tests). */
     TAnomalyTracker(TDiscardFileLogger &discard_file_logger,
         size_t report_interval, size_t max_msg_prefix_len,
-        TClockFn clock_fn = &Base::GetEpochSeconds)
+        const TClockFn &clock_fn = &Base::GetEpochSeconds)
         : DiscardFileLogger(discard_file_logger),
           ReportInterval(report_interval),
           ClockFn(clock_fn),

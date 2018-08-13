@@ -34,7 +34,7 @@ namespace Thread {
     public:
     TGatePutApi() = default;
 
-    virtual ~TGatePutApi() noexcept { }
+    virtual ~TGatePutApi() noexcept = default;
 
     virtual void Put(std::list<TMsgType> &&put_list) = 0;
 

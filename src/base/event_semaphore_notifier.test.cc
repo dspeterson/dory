@@ -35,16 +35,14 @@ namespace {
   /* The fixture for testing class TEventSemaphoreNotifier. */
   class TEventSemaphoreNotifierTest : public ::testing::Test {
     protected:
-    TEventSemaphoreNotifierTest() {
+    TEventSemaphoreNotifierTest() = default;
+
+    ~TEventSemaphoreNotifierTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TEventSemaphoreNotifierTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TEventSemaphoreNotifierTest
 

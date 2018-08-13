@@ -42,14 +42,14 @@ namespace Dory {
       /* Exception base class for errors reported by compression codec. */
       class TError : public std::runtime_error {
         public:
-        virtual ~TError() noexcept { }
+        ~TError() noexcept override = default;
 
         explicit TError(const char *what_arg)
             : std::runtime_error(what_arg) {
         }
       };  // TError
 
-      virtual ~TCompressionCodecApi() noexcept { }
+      virtual ~TCompressionCodecApi() noexcept = default;
 
       /* Parameter 'requested_level' is a compression level requested by the
          user, which is empty in the case where no level is requested.  Return

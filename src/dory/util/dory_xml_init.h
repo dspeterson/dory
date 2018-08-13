@@ -36,11 +36,12 @@ namespace Dory {
       }
 
       protected:
-      virtual bool HandleInitError(const xercesc::XMLException &x);
+      bool HandleInitError(const xercesc::XMLException &x) override;
 
-      virtual void HandleCleanupError(const xercesc::XMLException &x) noexcept;
+      void HandleCleanupError(
+          const xercesc::XMLException &x) noexcept override;
 
-      virtual void HandleUnknownErrorOnCleanup() noexcept;
+      void HandleUnknownErrorOnCleanup() noexcept override;
     };  // TDoryXmlInit
 
   }  // Util

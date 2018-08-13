@@ -32,14 +32,14 @@ namespace Dory {
 
     class TConfError : public std::runtime_error {
       public:
-      virtual const char *what() const noexcept {
+      const char *what() const noexcept override {
         assert(this);
         return Msg.c_str();
       }
 
       protected:
       explicit TConfError(std::string &&msg)
-          : std::runtime_error(msg.c_str()),
+          : std::runtime_error(msg),
             Msg(std::move(msg)) {
       }
 

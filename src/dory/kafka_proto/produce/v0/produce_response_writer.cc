@@ -76,12 +76,13 @@ void TProduceResponseWriter::OpenTopic(const char *topic_begin,
   assert((topic_end - topic_begin) <=
       static_cast<ptrdiff_t>(std::numeric_limits<int16_t>::max()));
   std::vector<uint8_t> &out = *OutBuf;
-  int16_t topic_len = topic_end - topic_begin;
+  auto topic_len = static_cast<int16_t>(topic_end - topic_begin);
   out.resize(out.size() + TOPIC_NAME_LENGTH_SIZE + topic_len +
       PARTITION_COUNT_SIZE);
-  WriteInt16ToHeader(&out[CurrentTopicOffset], topic_len ? topic_len : -1);
+  WriteInt16ToHeader(&out[CurrentTopicOffset],
+      topic_len ? topic_len : int16_t(-1));
   std::memcpy(&out[CurrentTopicOffset + TOPIC_NAME_LENGTH_SIZE], topic_begin,
-      topic_len);
+      static_cast<size_t>(topic_len));
   PartitionCountOffset = CurrentTopicOffset + TOPIC_NAME_LENGTH_SIZE +
       topic_len;
   CurrentPartitionOffset = PartitionCountOffset + PARTITION_COUNT_SIZE;
@@ -120,7 +121,8 @@ void TProduceResponseWriter::CloseTopic() {
   assert(CurrentPartitionOffset >=
       PartitionCountOffset + PARTITION_COUNT_SIZE);
   std::vector<uint8_t> &out = *OutBuf;
-  WriteInt32ToHeader(&out[PartitionCountOffset], CurrentPartitionIndex);
+  WriteInt32ToHeader(&out[PartitionCountOffset],
+      static_cast<int32_t>(CurrentPartitionIndex));
   CurrentTopicOffset = CurrentPartitionOffset;
   ++CurrentTopicIndex;
   PartitionCountOffset = 0;
@@ -137,9 +139,10 @@ void TProduceResponseWriter::CloseResponse() {
       CORRELATION_ID_SIZE + TOPIC_COUNT_SIZE);
   std::vector<uint8_t> &out = *OutBuf;
   WriteInt32ToHeader(&out[REQUEST_OR_RESPONSE_SIZE_SIZE + CORRELATION_ID_SIZE],
-      CurrentTopicIndex);
+      static_cast<int32_t>(CurrentTopicIndex));
   assert(out.size() > REQUEST_OR_RESPONSE_SIZE_SIZE);
-  WriteInt32ToHeader(&out[0], out.size() - REQUEST_OR_RESPONSE_SIZE_SIZE);
+  WriteInt32ToHeader(&out[0],
+      static_cast<int32_t>(out.size() - REQUEST_OR_RESPONSE_SIZE_SIZE));
   TopicStarted = false;
   CurrentTopicOffset = 0;
   CurrentTopicIndex = 0;

@@ -60,8 +60,7 @@ namespace Server {
         in_port_t port, TConnectionHandlerApi *connection_handler,
         TFatalErrorHandler &&fatal_error_handler);
 
-    virtual ~TTcpIpv6Server() noexcept {
-    }
+    ~TTcpIpv6Server() noexcept override = default;
 
     const struct in6_addr &GetBindAddr() const noexcept {
       assert(this);
@@ -89,7 +88,7 @@ namespace Server {
     in_port_t GetBindPort() const;
 
     protected:
-    virtual void InitListeningSocket(Base::TFd &sock) override;
+    void InitListeningSocket(Base::TFd &sock) override;
 
     private:
     const struct in6_addr BindAddr;

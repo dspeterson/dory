@@ -38,9 +38,6 @@ enum {
   /* Client socket is already opened. */
   DORY_CLIENT_SOCK_IS_OPENED = -4,
 
-  /* Pathname of Dory client socket is too long. */
-  DORY_CLIENT_SOCK_PATH_TOO_LONG = -5,
-
   /* Pathname of Dory server socket is too long. */
   DORY_SERVER_SOCK_PATH_TOO_LONG = -6
 };

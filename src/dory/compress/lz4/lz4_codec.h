@@ -44,24 +44,22 @@ namespace Dory {
         public:
         static const TLz4Codec &The();  // singleton accessor
 
-        virtual ~TLz4Codec() noexcept { }
+        ~TLz4Codec() noexcept override = default;
 
-        virtual Base::TOpt<int> GetRealCompressionLevel(
+        Base::TOpt<int> GetRealCompressionLevel(
             const Base::TOpt<int> &requested_level) const noexcept override;
 
-        virtual size_t ComputeUncompressedResultBufSpace(
-            const void *compressed_data,
+        size_t ComputeUncompressedResultBufSpace(const void *compressed_data,
             size_t compressed_size) const override;
 
-        virtual size_t Uncompress(const void *input_buf, size_t input_buf_size,
+        size_t Uncompress(const void *input_buf, size_t input_buf_size,
             void *output_buf, size_t output_buf_size) const override;
 
         protected:
-        virtual size_t DoComputeCompressedResultBufSpace(
-            const void *uncompressed_data, size_t uncompressed_size,
-            int compression_level) const override;
+        size_t DoComputeCompressedResultBufSpace(const void *uncompressed_data,
+            size_t uncompressed_size, int compression_level) const override;
 
-        virtual size_t DoCompress(const void *input_buf, size_t input_buf_size,
+        size_t DoCompress(const void *input_buf, size_t input_buf_size,
             void *output_buf, size_t output_buf_size,
             int compression_level) const override;
 

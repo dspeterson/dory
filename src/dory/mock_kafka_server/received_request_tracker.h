@@ -93,7 +93,7 @@ namespace Dory {
         TMetadataRequestInfo &operator=(const TMetadataRequestInfo &) =
             default;
 
-        TMetadataRequestInfo(TMetadataRequestInfo &&that)
+        TMetadataRequestInfo(TMetadataRequestInfo &&that) noexcept
             : Topic(std::move(that.Topic)),
               ReturnedErrorCode(that.ReturnedErrorCode) {
           that.ReturnedErrorCode = 0;
@@ -113,7 +113,7 @@ namespace Dory {
 
         TRequestInfo &operator=(const TRequestInfo &) = default;
 
-        TRequestInfo(TRequestInfo &&that)
+        TRequestInfo(TRequestInfo &&that) noexcept
             : ProduceRequestInfo(std::move(that.ProduceRequestInfo)),
               MetadataRequestInfo(std::move(that.MetadataRequestInfo)) {
         }

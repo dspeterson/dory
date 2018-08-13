@@ -36,16 +36,14 @@ namespace {
   /* The fixture for testing class TTransceiver. */
   class TTransceiverTest : public ::testing::Test {
     protected:
-    TTransceiverTest() {
+    TTransceiverTest() = default;
+
+    ~TTransceiverTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TTransceiverTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TTransceiverTest
 

@@ -411,9 +411,7 @@ TProduceProto::ProcessAck(int16_t ack_value) const {
 
 TProduceProtocol::TConstants TProduceProto::ComputeConstants() {
   using PRC = TProduceRequestConstants;
-  TConstants constants;
-  constants.SingleMsgOverhead = PRC::MSG_OFFSET_SIZE + PRC::MSG_SIZE_SIZE +
+  return {PRC::MSG_OFFSET_SIZE + PRC::MSG_SIZE_SIZE +
       PRC::CRC_SIZE + PRC::MAGIC_BYTE_SIZE + PRC::ATTRIBUTES_SIZE +
-      PRC::KEY_LEN_SIZE + PRC::VALUE_LEN_SIZE;
-  return constants;
+      PRC::KEY_LEN_SIZE + PRC::VALUE_LEN_SIZE};
 }

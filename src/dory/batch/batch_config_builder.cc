@@ -181,7 +181,7 @@ TGlobalBatchConfig TBatchConfigBuilder::BuildFromConf(const TBatchConf &conf) {
   SetDefaultTopic(cp);
   const TBatchConf::TTopicMap &m = conf.GetTopicConfigs();
 
-  for (const std::pair<std::string, TBatchConf::TTopicConf> &item : m) {
+  for (const std::pair<const std::string, TBatchConf::TTopicConf> &item : m) {
     cp = nullptr;
 
     switch (item.second.Action) {

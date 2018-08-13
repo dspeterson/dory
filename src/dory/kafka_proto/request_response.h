@@ -33,7 +33,7 @@ namespace Dory {
        response. */
     const size_t REQUEST_OR_RESPONSE_SIZE_SIZE = 4;
 
-    /* Paramater 'data_begin' points to a buffer containing a partial or
+    /* Parameter 'data_begin' points to a buffer containing a partial or
        complete request or response.  It is assumed that the buffer contains at
        least the first REQUEST_OR_RESPONSE_SIZE_SIZE bytes of the request or
        response.  Return the size in bytes of the entire request or response.

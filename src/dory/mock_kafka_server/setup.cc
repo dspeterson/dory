@@ -190,7 +190,8 @@ void TSetup::GetPortLines(std::istream &in) {
   assert(this);
   assert(!Result.Ports.empty());
   in_port_t min_port = Result.BasePort;
-  in_port_t max_port = min_port + (Result.Ports.size() - 1);
+  in_port_t max_port = min_port +
+      static_cast<in_port_t>((Result.Ports.size() - 1));
 
   for (; !CurrentLineTokens.empty() && (CurrentLineTokens[0] == "port");
        NextInterestingLine(in)) {

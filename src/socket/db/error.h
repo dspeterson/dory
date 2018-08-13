@@ -31,7 +31,7 @@ namespace Socket {
     class TError : public std::runtime_error {
       public:
       /* Construct an error for the given code. */
-      TError(int error_code);
+     explicit TError(int error_code);
     };  // TError
 
     /* Throw an error if the given code is non-zero.

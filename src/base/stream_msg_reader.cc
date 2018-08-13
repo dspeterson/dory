@@ -77,7 +77,7 @@ TStreamMsgReader::TState TStreamMsgReader::Read() {
     EndOfInput = true;
   }
 
-  Buf.MarkSpaceConsumed(ret);
+  Buf.MarkSpaceConsumed(static_cast<size_t>(ret));
   return TryAdvanceToNextMsg();
 }
 

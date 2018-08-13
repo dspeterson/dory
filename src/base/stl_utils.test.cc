@@ -34,16 +34,14 @@ namespace {
   /* The fixture for testing STL utilities. */
   class TStlUtilsTest : public ::testing::Test {
     protected:
-    TStlUtilsTest() {
+    TStlUtilsTest() = default;
+
+    ~TStlUtilsTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TStlUtilsTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TStlUtilsTest
 

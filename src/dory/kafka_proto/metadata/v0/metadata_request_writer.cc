@@ -79,17 +79,16 @@ void TMetadataRequestWriter::WriteHeader(void *header_buf, size_t topic_size,
   assert(header_buf);
   assert(topic_size <=
          static_cast<size_t>(std::numeric_limits<int16_t>::max()));
-  uint8_t *buf = reinterpret_cast<uint8_t *>(header_buf);
+  auto *buf = reinterpret_cast<uint8_t *>(header_buf);
 
   /* A value of 0 for topic_size indicates an all topics request, which has a
      shorter header due to the absence of the topic name length field (since
      there are no topic names). */
-  int32_t size_field = topic_size ?
-      (static_cast<int32_t>(topic_size) + NUM_SINGLE_TOPIC_HEADER_BYTES -
-       THdr::REQUEST_SIZE_SIZE) :
+  size_t size_field = topic_size ?
+      (topic_size + NUM_SINGLE_TOPIC_HEADER_BYTES - THdr::REQUEST_SIZE_SIZE) :
       (NUM_ALL_TOPICS_HEADER_BYTES - THdr::REQUEST_SIZE_SIZE);
 
-  WriteInt32ToHeader(buf, size_field);
+  WriteInt32ToHeader(buf, static_cast<int32_t>(size_field));
   WriteInt16ToHeader(buf + THdr::API_KEY_OFFSET, THdr::API_KEY);
   WriteInt16ToHeader(buf + THdr::API_VERSION_OFFSET, THdr::API_VERSION);
   WriteInt32ToHeader(buf + THdr::CORRELATION_ID_OFFSET, correlation_id);

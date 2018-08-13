@@ -32,16 +32,14 @@ namespace {
   /* The fixture for testing class TTime. */
   class TTimeTest : public ::testing::Test {
     protected:
-    TTimeTest() {
+    TTimeTest() = default;
+
+    ~TTimeTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TTimeTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TTimeTest
 

@@ -37,6 +37,6 @@ void TCodeLocation::Write(ostream &strm) const {
   strm << '[' << GetFile() << ", " << LineNumber << ']';
 }
 
-const char *TCodeLocation::SrcRoot = SRC_ROOT;
+const char *TCodeLocation::SrcRoot = "src";
 
 size_t TCodeLocation::SrcRootLen = strlen(SrcRoot);

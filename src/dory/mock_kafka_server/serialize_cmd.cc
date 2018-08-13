@@ -67,19 +67,19 @@ void Dory::MockKafkaServer::SerializeCmd(
     const TCmd &cmd, std::vector<uint8_t> &buf) {
   size_t size = 13 + cmd.Str.size() + cmd.ClientAddr.size();
   buf.resize(size);
-  WriteUint16ToHeader(&buf[0], size);
+  WriteUint16ToHeader(&buf[0], static_cast<uint16_t>(size));
   buf[2] = static_cast<uint8_t>(cmd.Type);
   WriteInt32ToHeader(&buf[3], cmd.Param1);
   WriteInt32ToHeader(&buf[7], cmd.Param2);
-  uint8_t length_byte = cmd.Str.size();
+  auto length_byte = static_cast<uint8_t>(cmd.Str.size());
   assert(static_cast<size_t>(length_byte) == cmd.Str.size());
   buf[11] = length_byte;
   std::memcpy(&buf[12], cmd.Str.data(), cmd.Str.size());
   size_t index = 12 + cmd.Str.size();
-  length_byte = cmd.ClientAddr.size();
+  length_byte = static_cast<uint8_t>(cmd.ClientAddr.size());
   buf[index] = length_byte;
 
-  if (cmd.ClientAddr.size()) {
+  if (!cmd.ClientAddr.empty()) {
     std::memcpy(&buf[index + 1], cmd.ClientAddr.data(), cmd.ClientAddr.size());
   }
 }

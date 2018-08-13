@@ -45,10 +45,10 @@ namespace Dory {
             Ss(ss) {
       }
 
-      virtual ~TCmdWorker() noexcept;
+      ~TCmdWorker() noexcept override;
 
       protected:
-      virtual void Run() override;
+      void Run() override;
 
       private:
       bool GetCmd();

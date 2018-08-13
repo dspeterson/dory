@@ -32,16 +32,14 @@ namespace {
   /* The fixture for testing class TPauseButton. */
   class TPauseButtonTest : public ::testing::Test {
     protected:
-    TPauseButtonTest() {
+    TPauseButtonTest() = default;
+
+    ~TPauseButtonTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TPauseButtonTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TPauseButtonTest
 

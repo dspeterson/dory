@@ -38,25 +38,23 @@ using namespace Base;
 
 namespace {
 
-  static const char *ExpectedData = "Mofo the Psychic Gorilla";
-  static const size_t ExpectedSize = strlen(ExpectedData);
+  const char *ExpectedData = "Mofo the Psychic Gorilla";
+  const size_t ExpectedSize = strlen(ExpectedData);
   
-  static const size_t MaxActualSize = 1024;
-  static char ActualData[MaxActualSize];
+  const size_t MaxActualSize = 1024;
+  char ActualData[MaxActualSize];
 
   /* The fixture for testing I/O utils. */
   class TIoUtilsTest : public ::testing::Test {
     protected:
-    TIoUtilsTest() {
+    TIoUtilsTest() = default;
+
+    ~TIoUtilsTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TIoUtilsTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TIoUtilsTest
 
@@ -71,7 +69,7 @@ namespace {
     bool timed_out = false;
 
     try {
-      actual_size = ReadAtMost(readable, ActualData, MaxActualSize, 1000);
+      ReadAtMost(readable, ActualData, MaxActualSize, 1000);
     } catch (const system_error &x) {
       if (x.code().value() == ETIMEDOUT) {
         timed_out = true;
@@ -87,11 +85,11 @@ namespace {
     struct sigaction action;
     Zero(action);
     action.sa_handler = [](int) {};
-    sigaction(SIGPIPE, &action, 0);
+    sigaction(SIGPIPE, &action, nullptr);
     TFd readable, writeable;
     TFd::Pipe(readable, writeable);
     readable.Reset();
-    size_t actual_size = WriteAtMost(writeable, 0, 0);
+    size_t actual_size = WriteAtMost(writeable, nullptr, 0);
     ASSERT_FALSE(actual_size);
     bool caught_broken_pipe = false;
 

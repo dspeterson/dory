@@ -67,57 +67,56 @@ namespace Dory {
 
           TProduceRequestReader();
 
-          virtual ~TProduceRequestReader() noexcept { }
+          ~TProduceRequestReader() noexcept override = default;
 
-          virtual void Clear() override;
+          void Clear() override;
 
-          virtual void SetRequest(const void *request,
-              size_t request_size) override;
+          void SetRequest(const void *request, size_t request_size) override;
 
-          virtual int32_t GetCorrelationId() const override;
+          int32_t GetCorrelationId() const override;
 
-          virtual const char *GetClientIdBegin() const override;
+          const char *GetClientIdBegin() const override;
 
-          virtual const char *GetClientIdEnd() const override;
+          const char *GetClientIdEnd() const override;
 
-          virtual int16_t GetRequiredAcks() const override;
+          int16_t GetRequiredAcks() const override;
 
-          virtual int32_t GetReplicationTimeout() const override;
+          int32_t GetReplicationTimeout() const override;
 
-          virtual size_t GetNumTopics() const override;
+          size_t GetNumTopics() const override;
 
-          virtual bool FirstTopic() override;
+          bool FirstTopic() override;
 
-          virtual bool NextTopic() override;
+          bool NextTopic() override;
 
-          virtual const char *GetCurrentTopicNameBegin() const override;
+          const char *GetCurrentTopicNameBegin() const override;
 
-          virtual const char *GetCurrentTopicNameEnd() const override;
+          const char *GetCurrentTopicNameEnd() const override;
 
-          virtual size_t GetNumMsgSetsInCurrentTopic() const override;
+          size_t GetNumMsgSetsInCurrentTopic() const override;
 
-          virtual bool FirstMsgSetInTopic() override;
+          bool FirstMsgSetInTopic() override;
 
-          virtual bool NextMsgSetInTopic() override;
+          bool NextMsgSetInTopic() override;
 
-          virtual int32_t GetPartitionOfCurrentMsgSet() const override;
+          int32_t GetPartitionOfCurrentMsgSet() const override;
 
-          virtual bool FirstMsgInMsgSet() override;
+          bool FirstMsgInMsgSet() override;
 
-          virtual bool NextMsgInMsgSet() override;
+          bool NextMsgInMsgSet() override;
 
-          virtual bool CurrentMsgCrcIsOk() const override;
+          bool CurrentMsgCrcIsOk() const override;
 
-          virtual Compress::TCompressionType
+          Compress::TCompressionType
           GetCurrentMsgCompressionType() const override;
 
-          virtual const uint8_t *GetCurrentMsgKeyBegin() const override;
+          const uint8_t *GetCurrentMsgKeyBegin() const override;
 
-          virtual const uint8_t *GetCurrentMsgKeyEnd() const override;
+          const uint8_t *GetCurrentMsgKeyEnd() const override;
 
-          virtual const uint8_t *GetCurrentMsgValueBegin() const override;
+          const uint8_t *GetCurrentMsgValueBegin() const override;
 
-          virtual const uint8_t *GetCurrentMsgValueEnd() const override;
+          const uint8_t *GetCurrentMsgValueEnd() const override;
 
           private:
           using PRC = TProduceRequestConstants;

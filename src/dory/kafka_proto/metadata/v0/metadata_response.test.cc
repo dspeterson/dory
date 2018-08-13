@@ -40,16 +40,14 @@ namespace {
      TMetadataResponseWriter. */
   class TMetadataResponseTest : public ::testing::Test {
     protected:
-    TMetadataResponseTest() {
+    TMetadataResponseTest() = default;
+
+    ~TMetadataResponseTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TMetadataResponseTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TMetadataResponseTest
 
@@ -61,7 +59,9 @@ namespace {
     writer.OpenResponse(response_buf, 12345);
     writer.OpenBrokerList();
 
-    for (size_t broker = 0; broker < broker_count; ++broker) {
+    for (int32_t broker = 0;
+        broker < static_cast<int32_t>(broker_count);
+        ++broker) {
       const std::string& broker_name = broker_names[broker];
       writer.AddBroker(broker, broker_name.data(),
           broker_name.data() + broker_name.size(), broker + 50);
@@ -72,17 +72,18 @@ namespace {
 
     for (size_t topic = 0; topic < topic_count; ++topic) {
       const std::string& topic_name = topic_names[topic];
-      writer.OpenTopic(topic + 100, topic_name.data(),
+      writer.OpenTopic(static_cast<int16_t>(topic + 100), topic_name.data(),
           topic_name.data() + topic_name.size());
       writer.OpenPartitionList();
 
       for (size_t partition = 0; partition < partition_count; ++partition) {
-        writer.OpenPartition(partition + 150, partition + 200,
-            partition + 250);
+        writer.OpenPartition(static_cast<int16_t>(partition + 150),
+            static_cast<int16_t>(partition + 200),
+            static_cast<int16_t>(partition + 250));
         writer.OpenReplicaList();
 
         for (size_t replica = 0; replica < replica_count; ++replica) {
-          writer.AddReplica(replica + 300);
+          writer.AddReplica(static_cast<int32_t>(replica + 300));
         }
 
         writer.CloseReplicaList();
@@ -91,7 +92,7 @@ namespace {
         for (size_t caught_up_replica = 0;
             caught_up_replica < caught_up_replica_count;
             ++caught_up_replica) {
-          writer.AddCaughtUpReplica(caught_up_replica + 350);
+          writer.AddCaughtUpReplica(static_cast<int32_t>(caught_up_replica + 350));
         }
 
         writer.CloseCaughtUpReplicaList();

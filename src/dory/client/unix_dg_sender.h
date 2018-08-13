@@ -45,15 +45,14 @@ namespace Dory {
           : TUnixDgSender(path.c_str()) {
       }
 
-      virtual ~TUnixDgSender() noexcept {
-      }
+      ~TUnixDgSender() noexcept override = default;
 
       protected:
-      virtual void DoPrepareToSend();
+      void DoPrepareToSend() override;
 
-      virtual void DoSend(const uint8_t *msg, size_t msg_size);
+      void DoSend(const uint8_t *msg, size_t msg_size) override;
 
-      virtual void DoReset();
+      void DoReset() override;
 
       private:
       std::string Path;

@@ -37,13 +37,13 @@ namespace Dory {
       NO_COPY_SEMANTICS(TConnectHandlerBase);
 
       public:
-      virtual ~TConnectHandlerBase() noexcept {
+      ~TConnectHandlerBase() noexcept override {
         Unregister();
       }
 
-      virtual void OnEvent(int fd, short flags) = 0;
+      void OnEvent(int fd, short flags) override = 0;
 
-      virtual void OnShutdown() override;
+      void OnShutdown() override;
 
       void RegisterWithDispatcher(Fiber::TDispatcher &dispatcher, int fd,
           short flags) {

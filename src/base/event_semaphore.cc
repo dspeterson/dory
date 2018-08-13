@@ -32,14 +32,14 @@
 
 using namespace Base;
 
-TEventSemaphore::TEventSemaphore(uint64_t initial_count, bool nonblocking)
+TEventSemaphore::TEventSemaphore(int initial_count, bool nonblocking)
     : Fd(IfLt0(eventfd(initial_count, EFD_SEMAPHORE))) {
   if (nonblocking) {
     SetNonBlocking(Fd);
   }
 }
 
-void TEventSemaphore::Reset(uint64_t initial_count) {
+void TEventSemaphore::Reset(int initial_count) {
   assert(this);
   int flags = IfLt0(fcntl(Fd, F_GETFL, 0));
   TFd new_fd = IfLt0(eventfd(initial_count, EFD_SEMAPHORE));
@@ -90,7 +90,7 @@ bool TEventSemaphore::Pop() {
   return true;
 }
 
-void TEventSemaphore::Push(uint64_t count) {
+void TEventSemaphore::Push(int count) {
   assert(this);
-  IfLt0(eventfd_write(Fd, count));
+  IfLt0(eventfd_write(Fd, static_cast<eventfd_t>(count)));
 }

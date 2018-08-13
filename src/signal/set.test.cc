@@ -30,16 +30,14 @@ namespace {
   /* The fixture for testing signal sets. */
   class TSetTest : public ::testing::Test {
     protected:
-    TSetTest() {
+    TSetTest() = default;
+
+    ~TSetTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TSetTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TSetTest
 

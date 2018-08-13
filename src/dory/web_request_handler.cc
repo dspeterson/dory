@@ -500,9 +500,10 @@ void TWebRequestHandler::WriteDiscardReportPlain(std::ostream &os,
     }
 
     /* Message may contain binary data so we base64 encode it. */
-    const unsigned char *msg_bytes =
+    const auto *msg_bytes =
         reinterpret_cast<const unsigned char *>(msg.data());
-    std::string encoded_msg = base64_encode(msg_bytes, msg.size());
+    std::string encoded_msg = base64_encode(msg_bytes,
+        static_cast<unsigned int>(msg.size()));
     os << "    recent malformed msg: " << encoded_msg.size() << "["
         << encoded_msg << "]" << std::endl;
   }
@@ -516,9 +517,10 @@ void TWebRequestHandler::WriteDiscardReportPlain(std::ostream &os,
     }
 
     /* Message may contain binary data so we base64 encode it. */
-    const unsigned char *msg_bytes =
+    const auto *msg_bytes =
         reinterpret_cast<const unsigned char *>(msg.data());
-    std::string encoded_msg = base64_encode(msg_bytes, msg.size());
+    std::string encoded_msg = base64_encode(msg_bytes,
+        static_cast<unsigned int>(msg.size()));
     os << "    recent UNIX stream unclean disconnect msg: "
         << encoded_msg.size() << "[" << encoded_msg << "]" << std::endl;
   }
@@ -532,16 +534,17 @@ void TWebRequestHandler::WriteDiscardReportPlain(std::ostream &os,
     }
 
     /* Message may contain binary data so we base64 encode it. */
-    const unsigned char *msg_bytes =
+    const auto *msg_bytes =
         reinterpret_cast<const unsigned char *>(msg.data());
-    std::string encoded_msg = base64_encode(msg_bytes, msg.size());
+    std::string encoded_msg = base64_encode(msg_bytes,
+        static_cast<unsigned int>(msg.size()));
     os << "    recent TCP unclean disconnect msg: "
         << encoded_msg.size() << "[" << encoded_msg << "]" << std::endl;
   }
 
   first_time = true;
 
-  for (const std::pair<int, size_t> &item : info.UnsupportedVersionMsgs) {
+  for (const auto &item : info.UnsupportedVersionMsgs) {
     if (first_time) {
       os << std::endl;
       first_time = false;
@@ -572,9 +575,10 @@ void TWebRequestHandler::WriteDiscardReportPlain(std::ostream &os,
     }
 
     /* Message may contain binary data so we base64 encode it. */
-    const unsigned char *msg_bytes =
+    const auto *msg_bytes =
         reinterpret_cast<const unsigned char *>(msg.data());
-    std::string encoded_msg = base64_encode(msg_bytes, msg.size());
+    std::string encoded_msg = base64_encode(msg_bytes,
+        static_cast<unsigned int>(msg.size()));
     os << "    recent too long msg: " << encoded_msg.size() << "["
         << encoded_msg << "]" << std::endl;
   }
@@ -652,9 +656,10 @@ void TWebRequestHandler::WriteDiscardReportJson(std::ostream &os,
       }
 
       /* Message may contain binary data so we base64 encode it. */
-      const unsigned char *msg_bytes =
+      const auto *msg_bytes =
           reinterpret_cast<const unsigned char *>(msg.data());
-      os << ind1 << "\"" << base64_encode(msg_bytes, msg.size()) << "\"";
+      os << ind1 << "\"" << base64_encode(msg_bytes,
+          static_cast<unsigned int>(msg.size())) << "\"";
       first_time = false;
     }
 
@@ -676,9 +681,10 @@ void TWebRequestHandler::WriteDiscardReportJson(std::ostream &os,
       }
 
       /* Message may contain binary data so we base64 encode it. */
-      const unsigned char *msg_bytes =
+      const auto *msg_bytes =
           reinterpret_cast<const unsigned char *>(msg.data());
-      os << ind1 << "\"" << base64_encode(msg_bytes, msg.size()) << "\"";
+      os << ind1 << "\"" << base64_encode(msg_bytes,
+          static_cast<unsigned int>(msg.size())) << "\"";
       first_time = false;
     }
 
@@ -700,9 +706,10 @@ void TWebRequestHandler::WriteDiscardReportJson(std::ostream &os,
       }
 
       /* Message may contain binary data so we base64 encode it. */
-      const unsigned char *msg_bytes =
+      const auto *msg_bytes =
           reinterpret_cast<const unsigned char *>(msg.data());
-      os << ind1 << "\"" << base64_encode(msg_bytes, msg.size()) << "\"";
+      os << ind1 << "\"" << base64_encode(msg_bytes,
+          static_cast<unsigned int>(msg.size())) << "\"";
       first_time = false;
     }
 
@@ -718,7 +725,7 @@ void TWebRequestHandler::WriteDiscardReportJson(std::ostream &os,
     TIndent ind1(ind0);
     bool first_time = true;
 
-    for (const std::pair<int, size_t> &item : info.UnsupportedVersionMsgs) {
+    for (const auto &item : info.UnsupportedVersionMsgs) {
       if (!first_time) {
         os << "," << std::endl;
       }
@@ -774,9 +781,10 @@ void TWebRequestHandler::WriteDiscardReportJson(std::ostream &os,
       }
 
       /* Message may contain binary data so we base64 encode it. */
-      const unsigned char *msg_bytes =
+      const auto *msg_bytes =
           reinterpret_cast<const unsigned char *>(msg.data());
-      os << ind1 << "\"" << base64_encode(msg_bytes, msg.size()) << "\"";
+      os << ind1 << "\"" << base64_encode(msg_bytes,
+          static_cast<unsigned int>(msg.size())) << "\"";
       first_time = false;
     }
 

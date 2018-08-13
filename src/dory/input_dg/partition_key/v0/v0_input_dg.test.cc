@@ -76,24 +76,22 @@ namespace {
     Args.push_back("--receive_socket_name");
     Args.push_back("dummy_value");
     Args.push_back(nullptr);
-    Cfg.reset(new Dory::TConfig(Args.size() - 1, const_cast<char **>(&Args[0]),
-        true));
+    Cfg.reset(new Dory::TConfig(static_cast<int>(Args.size() - 1),
+        const_cast<char **>(&Args[0]), true));
   }
 
   /* The fixture for testing reading/writing of v0 PartitionKey input
      datagrams. */
   class TV0InputDgTest : public ::testing::Test {
     protected:
-    TV0InputDgTest() {
+    TV0InputDgTest() = default;
+
+    ~TV0InputDgTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TV0InputDgTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TV0InputDgTest
 

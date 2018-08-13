@@ -116,7 +116,7 @@ TAddress::TAddress(istream &&strm) {
             throw 0; // TODO
           }
 
-          *csr++ = c;
+          *csr++ = static_cast<char>(c);
           strm.ignore();
         } else {
           throw 0; // TODO
@@ -133,7 +133,7 @@ TAddress::TAddress(istream &&strm) {
             throw 0; // TODO
           }
 
-          *csr++ = c;
+          *csr++ = static_cast<char>(c);
           strm.ignore();
         } else {
           break;
@@ -219,8 +219,9 @@ void TAddress::GetName(
   assert(this);
   assert(node_buf || !node_buf_size);
   assert(serv_buf || !serv_buf_size);
-  Db::IfNe0(getnameinfo(&Generic, GetLen(), node_buf, node_buf_size, serv_buf,
-                        serv_buf_size, flags));
+  Db::IfNe0(getnameinfo(&Generic, GetLen(), node_buf,
+      static_cast<socklen_t>(node_buf_size), serv_buf,
+      static_cast<socklen_t>(serv_buf_size), flags));
 }
 
 in_port_t TAddress::GetPort() const {

@@ -54,7 +54,7 @@ namespace Dory {
           DiscardAndPause
         };
 
-        virtual ~TProduceProtocol() noexcept { }
+        virtual ~TProduceProtocol() noexcept = default;
 
         /* Return the number of bytes in a message set containing a single
            empty message (i.e. empty key and value). */

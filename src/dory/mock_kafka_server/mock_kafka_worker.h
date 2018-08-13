@@ -35,14 +35,14 @@ namespace Dory {
       NO_COPY_SEMANTICS(TMockKafkaWorker);
 
       public:
-      virtual ~TMockKafkaWorker() noexcept { }
+      ~TMockKafkaWorker() noexcept override = default;
 
       protected:
       explicit TMockKafkaWorker(Base::TFd &&client_socket)
           : ClientSocket(std::move(client_socket)) {  /* connected FD */
       }
 
-      virtual void Run() = 0;
+      void Run() override = 0;
 
       enum class TIoResult {
         Success,

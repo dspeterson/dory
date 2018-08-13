@@ -48,31 +48,31 @@ namespace Dory {
           public:
           TMsgSetWriter();
 
-          virtual ~TMsgSetWriter() noexcept { }
+          ~TMsgSetWriter() noexcept override = default;
 
-          virtual void Reset() override;
+          void Reset() override;
 
-          virtual void OpenMsgSet(std::vector<uint8_t> &result_buf,
+          void OpenMsgSet(std::vector<uint8_t> &result_buf,
               bool append) override;
 
-          virtual void OpenMsg(Compress::TCompressionType compression_type,
+          void OpenMsg(Compress::TCompressionType compression_type,
               size_t key_size, size_t value_size) override;
 
-          virtual size_t GetCurrentMsgKeyOffset() const override;
+          size_t GetCurrentMsgKeyOffset() const override;
 
-          virtual size_t GetCurrentMsgValueOffset() const override;
+          size_t GetCurrentMsgValueOffset() const override;
 
-          virtual void AdjustValueSize(size_t new_size);
+          void AdjustValueSize(size_t new_size) override;
 
-          virtual void RollbackOpenMsg() override;
+          void RollbackOpenMsg() override;
 
-          virtual void CloseMsg() override;
+          void CloseMsg() override;
 
-          virtual void AddMsg(Compress::TCompressionType compression_type,
+          void AddMsg(Compress::TCompressionType compression_type,
               const uint8_t *key_begin, const uint8_t *key_end,
               const uint8_t *value_begin, const uint8_t *value_end) override;
 
-          virtual size_t CloseMsgSet() override;
+          size_t CloseMsgSet() override;
 
           private:
           using PRC = TProduceRequestConstants;
@@ -97,7 +97,7 @@ namespace Dory {
             assert(this);
             assert(Buf);
             assert(Buf->size() > offset);
-            (*Buf)[offset] = value;
+            (*Buf)[offset] = static_cast<uint8_t>(value);
           }
 
           void WriteInt8AtOffset(int8_t value) {

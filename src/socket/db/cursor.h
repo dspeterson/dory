@@ -49,7 +49,7 @@ namespace Socket {
       operator bool() const {
         assert(this);
         TryFreshen();
-        return Csr != 0;
+        return Csr != nullptr;
       }
 
       /* The current address. */
@@ -70,7 +70,7 @@ namespace Socket {
       TCursor &operator++() {
         assert(this);
         Freshen();
-        Csr = 0;
+        Csr = nullptr;
         return *this;
       }
 
@@ -80,7 +80,7 @@ namespace Socket {
       /* Go back to the first address, if any. */
       TCursor &Rewind() {
         assert(this);
-        Csr = 0;
+        Csr = nullptr;
         Next = First;
         return *this;
       }

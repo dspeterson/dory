@@ -40,7 +40,7 @@ namespace Dory {
         public:
         class TBadMsgSet : public std::runtime_error {
           public:
-          virtual ~TBadMsgSet() noexcept { }
+          ~TBadMsgSet() noexcept override = default;
 
           protected:
           explicit TBadMsgSet(const char *msg)
@@ -48,7 +48,7 @@ namespace Dory {
           }
         };  // TBadMsgSet
 
-        virtual ~TMsgSetReaderApi() noexcept { }
+        virtual ~TMsgSetReaderApi() noexcept = default;
 
         virtual void Clear() = 0;
 

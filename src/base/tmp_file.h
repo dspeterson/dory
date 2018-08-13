@@ -33,8 +33,8 @@ namespace Base {
     NO_COPY_SEMANTICS(TTmpFile);
 
     public:
-    TTmpFile(const char *name_template = "/tmp/dory_tmp.XXXXXX",
-             bool delete_on_destroy = false);
+    explicit TTmpFile(const char *name_template = "/tmp/dory_tmp.XXXXXX",
+        bool delete_on_destroy = false);
 
     ~TTmpFile();
 

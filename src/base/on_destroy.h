@@ -33,7 +33,7 @@ namespace Base {
     NO_COPY_SEMANTICS(TOnDestroy);
 
     public:
-    TOnDestroy(const std::function<void() noexcept> &action)
+    explicit TOnDestroy(const std::function<void() noexcept> &action)
         : Action(action),
           Active(true) {
     }

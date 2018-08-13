@@ -94,16 +94,14 @@ namespace {
   /* The fixture for testing class TOpt. */
   class TOptTest : public ::testing::Test {
     protected:
-    TOptTest() {
+    TOptTest() = default;
+
+    ~TOptTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TOptTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TOptTest
   

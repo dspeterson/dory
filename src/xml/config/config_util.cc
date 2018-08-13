@@ -113,7 +113,7 @@ Xml::Config::GetSubsectionElements(const DOMElement &parent,
       child = child->getNextSibling()) {
     switch (child->getNodeType()) {
       case DOMNode::ELEMENT_NODE: {
-        const DOMElement *elem = static_cast<const DOMElement *>(child);
+        const auto *elem = dynamic_cast<const DOMElement *>(child);
         std::string name(TranscodeToString(elem->getTagName()));
 
         if (subsection_map.count(name)) {
@@ -130,7 +130,7 @@ Xml::Config::GetSubsectionElements(const DOMElement &parent,
       }
       case DOMNode::TEXT_NODE:
       case DOMNode::CDATA_SECTION_NODE: {
-        const DOMText *text = static_cast<const DOMText *>(child);
+        const auto *text = dynamic_cast<const DOMText *>(child);
 
         if (!IsAllWhitespace(*text)) {
           throw TUnexpectedText(*text);
@@ -164,7 +164,7 @@ Xml::Config::GetItemListElements(const DOMElement &parent,
       child = child->getNextSibling()) {
     switch (child->getNodeType()) {
       case DOMNode::ELEMENT_NODE: {
-        const DOMElement *elem = static_cast<const DOMElement *>(child);
+        const auto *elem = dynamic_cast<const DOMElement *>(child);
         std::string name(TranscodeToString(elem->getTagName()));
 
         if (name != item_name) {
@@ -176,7 +176,7 @@ Xml::Config::GetItemListElements(const DOMElement &parent,
       }
       case DOMNode::TEXT_NODE:
       case DOMNode::CDATA_SECTION_NODE: {
-        const DOMText *text = static_cast<const DOMText *>(child);
+        const auto *text = dynamic_cast<const DOMText *>(child);
 
         if (!IsAllWhitespace(*text)) {
           throw TUnexpectedText(*text);
@@ -200,7 +200,7 @@ void Xml::Config::RequireNoChildElement(const DOMElement &elem) {
       child;
       child = child->getNextSibling()) {
     if (child->getNodeType() == DOMNode::ELEMENT_NODE) {
-      throw TUnknownElement(*static_cast<const DOMElement *>(child));
+      throw TUnknownElement(*dynamic_cast<const DOMElement *>(child));
     }
   }
 }
@@ -212,7 +212,7 @@ void Xml::Config::RequireNoGrandchildElement(const DOMElement &elem) {
       child;
       child = child->getNextSibling()) {
     if (child->getNodeType() == DOMNode::ELEMENT_NODE) {
-      RequireNoChildElement(*static_cast<const DOMElement *>(child));
+      RequireNoChildElement(*dynamic_cast<const DOMElement *>(child));
     }
   }
 }
@@ -232,7 +232,7 @@ void Xml::Config::RequireAllChildElementLeaves(const DOMElement &elem) {
       child;
       child = child->getNextSibling()) {
     if (child->getNodeType() == DOMNode::ELEMENT_NODE) {
-      RequireLeaf(*static_cast<const DOMElement *>(child));
+      RequireLeaf(*dynamic_cast<const DOMElement *>(child));
     }
   }
 }

@@ -36,16 +36,14 @@ namespace {
   /* The fixture for testing class TNamedUnixSocket. */
   class TNamedUnixSocketTest : public ::testing::Test {
     protected:
-    TNamedUnixSocketTest() {
+    TNamedUnixSocketTest() = default;
+
+    ~TNamedUnixSocketTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TNamedUnixSocketTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TNamedUnixSocketTest
 

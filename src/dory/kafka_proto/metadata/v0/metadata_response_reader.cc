@@ -89,7 +89,7 @@ size_t TMetadataResponseReader::GetBrokerCount() const {
     THROW_ERROR(TNegativeBrokerCount);
   }
 
-  return count;
+  return static_cast<size_t>(count);
 }
 
 bool TMetadataResponseReader::FirstBroker() {
@@ -204,7 +204,7 @@ size_t TMetadataResponseReader::GetTopicCount() const {
     THROW_ERROR(TNegativeTopicCount);
   }
 
-  return count;
+  return static_cast<size_t>(count);
 }
 
 bool TMetadataResponseReader::FirstTopic() {
@@ -291,7 +291,7 @@ size_t TMetadataResponseReader::GetCurrentTopicPartitionCount() const {
     THROW_ERROR(TNegativePartitionCount);
   }
 
-  return count;
+  return static_cast<size_t>(count);
 }
 
 bool TMetadataResponseReader::FirstPartitionInTopic() {
@@ -417,7 +417,7 @@ size_t TMetadataResponseReader::GetCurrentPartitionReplicaCount() const {
     THROW_ERROR(TNegativePartitionReplicaCount);
   }
 
-  return count;
+  return static_cast<size_t>(count);
 }
 
 bool TMetadataResponseReader::FirstReplicaInPartition() {
@@ -501,7 +501,7 @@ TMetadataResponseReader::GetCurrentPartitionCaughtUpReplicaCount() const {
     THROW_ERROR(TNegativePartitionCaughtUpReplicaCount);
   }
 
-  return count;
+  return static_cast<size_t>(count);
 }
 
 bool TMetadataResponseReader::FirstCaughtUpReplicaInPartition() {
@@ -629,8 +629,8 @@ bool TMetadataResponseReader::InitBroker() {
     THROW_ERROR(TIncompleteMetadataResponse);
   }
 
-  CurrentBrokerHostLength = ReadInt16FromHeader(
-      Buf + CurrentBrokerOffset + THdr::REL_BROKER_HOST_LENGTH_OFFSET);
+  CurrentBrokerHostLength = static_cast<size_t>(ReadInt16FromHeader(
+      Buf + CurrentBrokerOffset + THdr::REL_BROKER_HOST_LENGTH_OFFSET));
 
   if (CurrentBrokerHostLength < 1) {
     MetadataResponseBadBrokerHostLen.Increment();
@@ -662,8 +662,9 @@ bool TMetadataResponseReader::InitTopic() {
     THROW_ERROR(TIncompleteMetadataResponse);
   }
 
-  CurrentTopicNameLength = ReadInt16FromHeader(Buf + CurrentTopicOffset +
-      THdr::REL_TOPIC_NAME_LENGTH_OFFSET);
+  CurrentTopicNameLength = static_cast<size_t>(
+      ReadInt16FromHeader(Buf + CurrentTopicOffset +
+          THdr::REL_TOPIC_NAME_LENGTH_OFFSET));
 
   if (CurrentTopicNameLength < 1) {
     MetadataResponseBadTopicNameLen.Increment();

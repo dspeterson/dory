@@ -41,16 +41,14 @@ namespace {
      TProduceRequestWriter. */
   class TProduceRequestTest : public ::testing::Test {
     protected:
-    TProduceRequestTest() {
+    TProduceRequestTest() = default;
+
+    ~TProduceRequestTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TProduceRequestTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TProduceRequestTest
 
@@ -76,17 +74,17 @@ namespace {
 
   TEST_F(TProduceRequestTest, ProduceRequestTest2) {
     std::vector<std::string> topics;
-    topics.push_back("Scooby Doo");
-    topics.push_back("The Flintstones");
-    topics.push_back("The Ramones");
+    topics.emplace_back("Scooby Doo");
+    topics.emplace_back("The Flintstones");
+    topics.emplace_back("The Ramones");
     std::vector<int32_t> partitions;
     partitions.push_back(5);
     partitions.push_back(10);
     partitions.push_back(15);
     std::vector<std::string> msgs;
-    msgs.push_back("Scooby dooby doo");
-    msgs.push_back("Yabba dabba doo");
-    msgs.push_back("Gabba gabba hey");
+    msgs.emplace_back("Scooby dooby doo");
+    msgs.emplace_back("Yabba dabba doo");
+    msgs.emplace_back("Gabba gabba hey");
     std::vector<std::string> values(msgs);
 
     for (size_t i = 0; i < values.size(); ++i) {
@@ -140,10 +138,10 @@ namespace {
               writer.OpenMsgSet(partitions[jj]);
 
               for (size_t kk = 0; kk < k; ++kk) {
-                const uint8_t *key_begin =
+                const auto *key_begin =
                     reinterpret_cast<const uint8_t *>(msgs[kk].data());
                 const uint8_t *key_end = key_begin + msgs[kk].size();
-                const uint8_t *value_begin =
+                const auto *value_begin =
                     reinterpret_cast<const uint8_t *>(values[kk].data());
                 const uint8_t *value_end = value_begin + values[kk].size();
                 writer.AddMsg(TCompressionType::None, key_begin, key_end,
@@ -154,10 +152,10 @@ namespace {
               writer.OpenMsgSet(partitions[jj]);
 
               for (size_t kk = 0; kk < k; ++kk) {
-                const uint8_t *key_begin =
+                const auto *key_begin =
                     reinterpret_cast<const uint8_t *>(msgs[kk].data());
                 const uint8_t *key_end = key_begin + msgs[kk].size();
-                const uint8_t *value_begin =
+                const auto *value_begin =
                     reinterpret_cast<const uint8_t *>(values[kk].data());
                 const uint8_t *value_end = value_begin + values[kk].size();
                 writer.AddMsg(TCompressionType::Gzip, key_begin, key_end,
@@ -168,10 +166,10 @@ namespace {
               writer.OpenMsgSet(partitions[jj]);
 
               for (size_t kk = 0; kk < k; ++kk) {
-                const uint8_t *key_begin =
+                const auto *key_begin =
                     reinterpret_cast<const uint8_t *>(msgs[kk].data());
                 const uint8_t *key_end = key_begin + msgs[kk].size();
-                const uint8_t *value_begin =
+                const auto *value_begin =
                     reinterpret_cast<const uint8_t *>(values[kk].data());
                 const uint8_t *value_end = value_begin + values[kk].size();
                 writer.AddMsg(TCompressionType::Snappy, key_begin, key_end,
@@ -182,10 +180,10 @@ namespace {
               writer.OpenMsgSet(partitions[jj]);
 
               for (size_t kk = 0; kk < k; ++kk) {
-                const uint8_t *key_begin =
+                const auto *key_begin =
                     reinterpret_cast<const uint8_t *>(msgs[kk].data());
                 const uint8_t *key_end = key_begin + msgs[kk].size();
-                const uint8_t *value_begin =
+                const auto *value_begin =
                     reinterpret_cast<const uint8_t *>(values[kk].data());
                 const uint8_t *value_end = value_begin + values[kk].size();
                 writer.AddMsg(TCompressionType::Lz4, key_begin, key_end,

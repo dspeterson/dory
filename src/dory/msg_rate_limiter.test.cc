@@ -33,16 +33,14 @@ namespace {
   /* The fixture for testing class TMsgRateLimiter. */
   class TMsgRateLimiterTest : public ::testing::Test {
     protected:
-    TMsgRateLimiterTest() {
+    TMsgRateLimiterTest() = default;
+
+    ~TMsgRateLimiterTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TMsgRateLimiterTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TMsgRateLimiterTest
 

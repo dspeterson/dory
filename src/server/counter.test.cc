@@ -44,9 +44,9 @@ namespace {
   SERVER_COUNTER(Connections);
   SERVER_COUNTER(Requests);
   
-  static const size_t BufSize = 1024;
+  const size_t BufSize = 1024;
   
-  static void ServerMain(int die, int sock, bool &success) {
+  void ServerMain(int die, int sock, bool &success) {
     try {
       success = true;
       TFd ep(epoll_create1(0));
@@ -122,16 +122,14 @@ namespace {
   /* The fixture for testing counters. */
   class TCounterTest : public ::testing::Test {
     protected:
-    TCounterTest() {
+    TCounterTest() = default;
+
+    ~TCounterTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TCounterTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TCounterTest
 

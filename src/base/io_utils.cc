@@ -36,7 +36,7 @@
 using namespace std;
 
 size_t Base::ReadAtMost(int fd, void *buf, size_t max_size) {
-  return IfLt0(read(fd, buf, max_size));
+  return static_cast<size_t>(IfLt0(read(fd, buf, max_size)));
 }
 
 size_t Base::ReadAtMost(int fd, void *buf, size_t max_size, int timeout_ms) {
@@ -58,8 +58,8 @@ size_t Base::ReadAtMost(int fd, void *buf, size_t max_size, int timeout_ms) {
 size_t Base::WriteAtMost(int fd, const void *buf, size_t max_size) {
   struct stat stat;
   IfLt0(fstat(fd, &stat));
-  return IfLt0(S_ISSOCK(stat.st_mode) ?
-      send(fd, buf, max_size, MSG_NOSIGNAL) : write(fd, buf, max_size));
+  return static_cast<size_t>(IfLt0(S_ISSOCK(stat.st_mode) ?
+      send(fd, buf, max_size, MSG_NOSIGNAL) : write(fd, buf, max_size)));
 }
 
 size_t Base::WriteAtMost(int fd, const void *buf, size_t max_size,

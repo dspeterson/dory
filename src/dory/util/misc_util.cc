@@ -138,8 +138,8 @@ static bool RunUnixDgSocketTest(std::vector<uint8_t> &buf,
     return false;
   }
 
-  for (size_t i = 0; i < buf.size(); ++i) {
-    if (buf[i] != 0xff) {
+  for (uint8_t value : buf) {
+    if (value != 0xff) {
       return false;
     }
   }
@@ -168,7 +168,7 @@ TUnixDgSizeTestResult Dory::Util::TestUnixDgSize(size_t size) {
     return TUnixDgSizeTestResult::Pass;
   }
 
-  int opt = size;
+  auto opt = static_cast<int>(size);
   int ret = setsockopt(fd_pair[0], SOL_SOCKET, SO_SNDBUF, &opt, sizeof(opt));
 
   if (ret < 0) {

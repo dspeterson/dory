@@ -54,10 +54,10 @@ namespace Dory {
       NO_COPY_SEMANTICS(TSingleClientHandlerBase);
 
       public:
-      virtual ~TSingleClientHandlerBase() noexcept { }
+      ~TSingleClientHandlerBase() noexcept override = default;
 
       protected:
-      virtual void Run() override;
+      void Run() override;
 
       enum class TGetRequestResult {
         GotRequest,

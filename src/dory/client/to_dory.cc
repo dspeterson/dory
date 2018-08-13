@@ -211,6 +211,8 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
 TConfig::TConfig(int argc, char *argv[])
     : PartitionKey(0),
       UsePartitionKey(false),
+      ValueSpecified(false),
+      Stdin(false),
       Count(1),
       Interval(0),
       Seq(false),
@@ -239,7 +241,7 @@ std::string GetValueFromStdin() {
       break;
     }
 
-    result.insert(result.size(), buf, nbytes);
+    result.insert(result.size(), buf, static_cast<size_t>(nbytes));
   }
 
   return std::move(result);
@@ -311,7 +313,7 @@ bool CreateDg(std::vector<uint8_t> &buf, const TConfig &cfg,
     /* To make the message malformed, we change the size field to an incorrect
        value. */
     assert(buf.size() >= sizeof(int32_t));
-    WriteInt32ToHeader(&buf[0], buf.size() - 1);
+    WriteInt32ToHeader(&buf[0], static_cast<int32_t>(buf.size() - 1));
   }
 
   return true;

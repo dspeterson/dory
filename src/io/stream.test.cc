@@ -51,8 +51,7 @@ namespace {
     NO_COPY_SEMANTICS(TMyStream);
 
     public:
-    TMyStream() {
-    }
+    TMyStream() = default;
   };  // TMyStream
   
   typedef TFormatter<TMyFormat> TMyFormatter;
@@ -60,16 +59,14 @@ namespace {
   /* The fixture for testing class TStream. */
   class TStreamTest : public ::testing::Test {
     protected:
-    TStreamTest() {
+    TStreamTest() = default;
+
+    ~TStreamTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TStreamTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TStreamTest
   

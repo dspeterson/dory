@@ -99,8 +99,8 @@ namespace Io {
         Start = const_cast<char *>(str);
         Limit = Start + strlen(Start);
       } else {
-        Start = 0;
-        Limit = 0;
+        Start = nullptr;
+        Limit = nullptr;
       }
 
       Cursor = Limit;

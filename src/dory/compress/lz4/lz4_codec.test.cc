@@ -36,16 +36,14 @@ namespace {
   /* The fixture for testing class TLz4Codec. */
   class TLz4CodecTest : public ::testing::Test {
     protected:
-    TLz4CodecTest() {
+    TLz4CodecTest() = default;
+
+    ~TLz4CodecTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TLz4CodecTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TLz4CodecTest
 

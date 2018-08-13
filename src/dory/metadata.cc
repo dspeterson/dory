@@ -191,7 +191,7 @@ void TMetadata::TBuilder::CloseTopic() {
       });
 
   std::vector<TPartition>::const_iterator iter1 = t.OkPartitions.begin();
-  std::vector<TPartition>::const_iterator iter2 = iter1;
+  auto iter2 = iter1;
 
   for (; ; ) {
     while ((iter2 != t.OkPartitions.end()) &&
@@ -218,7 +218,8 @@ void TMetadata::TBuilder::CloseTopic() {
     Brokers[broker_index].MarkInService();
     t.PartitionChoiceMap.insert(
         std::make_pair(broker_index,
-            TPartitionChoices(TopicBrokerVec.size(), iter2 - iter1)));
+            TPartitionChoices(TopicBrokerVec.size(),
+                static_cast<size_t>(iter2 - iter1))));
 
     do {
       TopicBrokerVec.push_back(iter1->GetId());
@@ -342,11 +343,8 @@ bool TMetadata::operator==(const TMetadata &that) const {
   assert(TopicNameToIndex.size() == Topics.size());
   assert(that.TopicNameToIndex.size() == that.Topics.size());
 
-  if (!CompareBrokers(that) || !CompareTopics(that)) {
-    return false;
-  }
 
-  return true;
+  return CompareBrokers(that) && CompareTopics(that);
 }
 
 int TMetadata::FindTopicIndex(const std::string &topic) const {
@@ -368,7 +366,7 @@ int TMetadata::FindTopicIndex(const std::string &topic) const {
     return -1;
   }
 
-  return topic_index;
+  return static_cast<int>(topic_index);
 }
 
 const int32_t *TMetadata::FindPartitionChoices(const std::string &topic,
@@ -630,12 +628,8 @@ bool TMetadata::SanityCheckOneTopic(const TTopic &t,
     return false;
   }
 
-  if (!SanityCheckBrokerPartitionMap(t, broker_partition_map,
-      topic_broker_vec_access)) {
-    return false;
-  }
-
-  return true;
+  return SanityCheckBrokerPartitionMap(t, broker_partition_map,
+      topic_broker_vec_access);
 }
 
 bool TMetadata::SanityCheckTopics(
@@ -667,8 +661,8 @@ bool TMetadata::SanityCheckTopics(
     }
   }
 
-  for (size_t i = 0; i < topic_broker_vec_access.size(); ++i) {
-    if (topic_broker_vec_access[i] != 1) {
+  for (size_t value : topic_broker_vec_access) {
+    if (value != 1) {
       syslog(LOG_ERR, "Bug!!! TopicBrokerVec item access count is wrong");
       return false;
     }

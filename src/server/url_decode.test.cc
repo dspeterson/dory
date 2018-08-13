@@ -32,16 +32,14 @@ namespace {
   /* The fixture for testing URL decoding. */
   class TUrlDecodeTest : public ::testing::Test {
     protected:
-    TUrlDecodeTest() {
+    TUrlDecodeTest() = default;
+
+    ~TUrlDecodeTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TUrlDecodeTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TUrlDecodeTest
 

@@ -30,16 +30,14 @@ namespace {
   /* The fixture for testing class TPos. */
   class TPosTest : public ::testing::Test {
     protected:
-    TPosTest() {
+    TPosTest() = default;
+
+    ~TPosTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TPosTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TPosTest
 

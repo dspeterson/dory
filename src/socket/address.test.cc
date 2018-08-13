@@ -33,16 +33,14 @@ namespace {
   /* The fixture for testing class TAddress. */
   class TAddressTest : public ::testing::Test {
     protected:
-    TAddressTest() {
+    TAddressTest() = default;
+
+    ~TAddressTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TAddressTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TAddressTest
 

@@ -168,7 +168,7 @@ static void CheckWriteBufferOverflow(size_t bytes_written, size_t capacity,
     /* There is a bug in the compression library that caused data to be written
        past the end of our buffer.  Terminate immediately, since memory has
        been trashed. */
-    throw std::logic_error(msg.c_str());
+    throw std::logic_error(msg);
   }
 }
 
@@ -185,8 +185,8 @@ size_t TLz4Codec::Uncompress(const void *input_buf, size_t input_buf_size,
       }
   );
 
-  const uint8_t *in_buf = reinterpret_cast<const uint8_t *>(input_buf);
-  uint8_t *out_buf = reinterpret_cast<uint8_t *>(output_buf);
+  const auto *in_buf = reinterpret_cast<const uint8_t *>(input_buf);
+  auto *out_buf = reinterpret_cast<uint8_t *>(output_buf);
   LZ4F_frameInfo_t frame_info;
   size_t src_size = input_buf_size;
   CheckLz4Status(LZ4F_getFrameInfo(dctx, &frame_info, in_buf, &src_size),
@@ -246,7 +246,7 @@ size_t TLz4Codec::DoCompress(const void *input_buf, size_t input_buf_size,
     void *output_buf, size_t output_buf_size, int compression_level) const {
   assert(this);
   assert((compression_level >= MIN_LEVEL) && (compression_level <= MAX_LEVEL));
-  uint8_t *out_buf = reinterpret_cast<uint8_t *>(output_buf);
+  auto *out_buf = reinterpret_cast<uint8_t *>(output_buf);
   LZ4F_compressionContext_t cctx = nullptr;
   CheckLz4Status(LZ4F_createCompressionContext(&cctx, LZ4F_VERSION),
       "LZ4F_createCompressionContext");

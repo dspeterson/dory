@@ -40,9 +40,9 @@ namespace Dory {
           : TConnectHandlerBase(ss) {
       }
 
-      virtual ~TCmdHandler() noexcept { }
+      ~TCmdHandler() noexcept override = default;
 
-      virtual void OnEvent(int fd, short flags) override;
+      void OnEvent(int fd, short flags) override;
     };  // TCmdHandler
 
   }  // MockKafkaServer

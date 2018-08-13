@@ -173,7 +173,7 @@ void TMsgStateTracker::GetStats(std::vector<TTopicStatsItem> &result,
     const TTopicStats &stats = item.second.TopicStats;
 
     if (stats.BatchingCount || stats.SendWaitCount || stats.AckWaitCount) {
-      result.push_back(std::make_pair(item.first, stats));
+      result.emplace_back(std::make_pair(item.first, stats));
     }
   }
 

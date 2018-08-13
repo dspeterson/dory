@@ -48,8 +48,7 @@ namespace Server {
         TConnectionHandlerApi *connection_handler,
         TFatalErrorHandler &&fatal_error_handler);
 
-    virtual ~TTcpIpv4Server() noexcept {
-    }
+    ~TTcpIpv4Server() noexcept override = default;
 
     in_addr_t GetBindAddr() const noexcept {
       assert(this);
@@ -72,7 +71,7 @@ namespace Server {
     in_port_t GetBindPort() const;
 
     protected:
-    virtual void InitListeningSocket(Base::TFd &sock) override;
+    void InitListeningSocket(Base::TFd &sock) override;
 
     private:
     const in_addr_t BindAddr;

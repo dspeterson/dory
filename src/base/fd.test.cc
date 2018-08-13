@@ -36,26 +36,24 @@ namespace {
   /* The fixture for testing class TFd. */
   class TFdTest : public ::testing::Test {
     protected:
-    TFdTest() {
+    TFdTest() = default;
+
+    ~TFdTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TFdTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TFdTest
 
-  static const char *ExpectedData = "hello";
-  static const size_t ExpectedSize = strlen(ExpectedData);
+  const char *ExpectedData = "hello";
+  const size_t ExpectedSize = strlen(ExpectedData);
   
-  static const size_t MaxActualSize = 1024;
-  static char ActualData[MaxActualSize];
+  const size_t MaxActualSize = 1024;
+  char ActualData[MaxActualSize];
   
-  static void Transact(const TFd &readable, const TFd &writeable) {
+  void Transact(const TFd &readable, const TFd &writeable) {
     WriteExactly(writeable, ExpectedData, ExpectedSize);
     Zero(ActualData);
     size_t actual_size = ReadAtMost(readable, ActualData, MaxActualSize);
@@ -63,7 +61,7 @@ namespace {
     ASSERT_FALSE(strcmp(ActualData, ExpectedData));
   }
   
-  static void CheckClose(const TFd &readable, TFd &writeable) {
+  void CheckClose(const TFd &readable, TFd &writeable) {
     writeable.Reset();
     size_t actual_size = ReadAtMost(readable, ActualData, MaxActualSize);
     ASSERT_FALSE(actual_size);

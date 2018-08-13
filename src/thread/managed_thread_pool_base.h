@@ -569,7 +569,7 @@ namespace Thread {
       public:
       explicit TManager(TManagedThreadPoolBase &my_pool);
 
-      virtual ~TManager() noexcept;
+      ~TManager() noexcept override;
 
       /* Long-running worker threads are expected to monitor the file
          descriptor returned by this method, and stop working when it becomes
@@ -578,7 +578,7 @@ namespace Thread {
 
       protected:
       /* Main loop for manager thread. */
-      virtual void Run() override;
+      void Run() override;
 
       private:
       /* Handle a change in the pool configuration. */

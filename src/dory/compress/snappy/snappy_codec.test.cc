@@ -36,16 +36,14 @@ namespace {
   /* The fixture for testing class TSnappyCodec. */
   class TSnappyCodecTest : public ::testing::Test {
     protected:
-    TSnappyCodecTest() {
+    TSnappyCodecTest() = default;
+
+    ~TSnappyCodecTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TSnappyCodecTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TSnappyCodecTest
 

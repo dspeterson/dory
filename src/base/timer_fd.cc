@@ -34,8 +34,8 @@ TTimerFd::TTimerFd(size_t milliseconds)
   itimerspec its;
   Zero(its);
   //seconds = max(seconds, static_cast<uint32_t>(1));
-  uint32_t seconds = milliseconds / 1000UL;
-  int64_t nanoseconds = (milliseconds % 1000UL) * 1000000L;
+  size_t seconds = milliseconds / 1000UL;
+  size_t nanoseconds = (milliseconds % 1000UL) * 1000000L;
   its.it_interval.tv_sec = seconds;
   its.it_interval.tv_nsec = nanoseconds;
   its.it_value.tv_sec = seconds;

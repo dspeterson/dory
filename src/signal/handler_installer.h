@@ -37,7 +37,7 @@ namespace Signal {
 
     public:
     /* Set the mask to the given set. */
-    THandlerInstaller(int sig, void (*handler)(int) = DoNothing)
+    explicit THandlerInstaller(int sig, void (*handler)(int) = DoNothing)
         : SignalNumber(sig) {
       struct sigaction new_act;
       Base::Zero(new_act);

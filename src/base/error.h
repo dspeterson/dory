@@ -67,12 +67,11 @@ namespace Base {
   class TError : public std::exception {
     public:
 
-    virtual ~TError() noexcept {
-    }
+    ~TError() noexcept override = default;
 
     /* Returns a human-readable description of what went wrong.  This message
        has the following pattern: (<file>,<line>),<error class>[,<details>] */
-    const char *what() const noexcept {
+    const char *what() const noexcept override {
       assert(this);
       return WhatPtr;
     }
@@ -105,7 +104,8 @@ namespace Base {
     /* Caches the location as which the exception was thrown and composes the
        'what' message.  Call this function in the constructor of your final
        class.  No-throw. */
-    void PostCtor(const TCodeLocation &code_location, const char *details = 0);
+    void PostCtor(const TCodeLocation &code_location,
+        const char *details = nullptr);
     void PostCtor(const TCodeLocation &code_location,
         const char *details_start, const char *details_end);
 
@@ -130,18 +130,18 @@ namespace Base {
   class TFinalError : public virtual TError {
     public:
 
-    TError *Dupe() const {
-      const TFinal *final = dynamic_cast<const TFinal *>(this);
+    TError *Dupe() const override {
+      const auto *final = dynamic_cast<const TFinal *>(this);
       assert(final);
       return new TFinal(*final);
     }
 
-    virtual const std::type_info &GetTypeInfo() const {
+    const std::type_info &GetTypeInfo() const override {
       return typeid(TFinal);
     }
 
     protected:
-    TFinalError() {}
+    TFinalError() = default;
   };  // TFinalError
 
   /* This lives here instead of <base/demangle.h> because that would cause a

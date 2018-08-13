@@ -135,8 +135,7 @@ namespace {
     }
   };  // TDoryConfig
 
-  static inline size_t
-  ComputeBlockCount(size_t max_buffer_kb, size_t block_size) {
+  inline size_t ComputeBlockCount(size_t max_buffer_kb, size_t block_size) {
     return std::max<size_t>(1, (1024 * max_buffer_kb) / block_size);
   }
 
@@ -156,8 +155,8 @@ namespace {
     Args.push_back("--receive_stream_socket_name");
     Args.push_back(UnixSocketName);
     Args.push_back(nullptr);
-    Cfg.reset(
-        new TConfig(Args.size() - 1, const_cast<char **>(&Args[0]), true));
+    Cfg.reset(new TConfig(static_cast<int>(Args.size() - 1),
+        const_cast<char **>(&Args[0]), true));
     OutputQueue.reset(new TGate<TMsg::TPtr>);
     StreamClientWorkerPool.reset(new TWorkerPool(
         [](const char *msg) {
@@ -174,7 +173,7 @@ namespace {
         }));
   }
 
-  static void MakeDg(std::vector<uint8_t> &dg, const std::string &topic,
+  void MakeDg(std::vector<uint8_t> &dg, const std::string &topic,
       const std::string &body) {
     size_t dg_size = 0;
     int ret = dory_find_any_partition_msg_size(topic.size(), 0,
@@ -189,16 +188,14 @@ namespace {
   /* The fixture for testing class TStreamClientHandler. */
   class TStreamClientHandlerTest : public ::testing::Test {
     protected:
-    TStreamClientHandlerTest() {
+    TStreamClientHandlerTest() = default;
+
+    ~TStreamClientHandlerTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TStreamClientHandlerTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TStreamClientHandlerTest
 
@@ -228,14 +225,14 @@ namespace {
 
     std::vector<std::string> topics;
     std::vector<std::string> bodies;
-    topics.push_back("topic1");
-    bodies.push_back("Scooby");
-    topics.push_back("topic2");
-    bodies.push_back("Shaggy");
-    topics.push_back("topic3");
-    bodies.push_back("Velma");
-    topics.push_back("topic4");
-    bodies.push_back("Daphne");
+    topics.emplace_back("topic1");
+    bodies.emplace_back("Scooby");
+    topics.emplace_back("topic2");
+    bodies.emplace_back("Shaggy");
+    topics.emplace_back("topic3");
+    bodies.emplace_back("Velma");
+    topics.emplace_back("topic4");
+    bodies.emplace_back("Daphne");
     std::vector<uint8_t> dg_buf;
 
     for (size_t i = 0; i < topics.size(); ++i) {
@@ -265,9 +262,7 @@ namespace {
     ASSERT_EQ(msg_list.size(), 4U);
     size_t i = 0;
 
-    for (std::list<TMsg::TPtr>::iterator iter = msg_list.begin();
-         iter != msg_list.end();
-         ++i, ++iter) {
+    for (auto iter = msg_list.begin(); iter != msg_list.end(); ++i, ++iter) {
       TMsg::TPtr &msg_ptr = *iter;
 
       /* Prevent spurious assertion failure in msg dtor. */
@@ -314,18 +309,18 @@ namespace {
 
     std::vector<std::string> topics;
     std::vector<std::string> bodies;
-    topics.push_back("topic1");
-    bodies.push_back("Scooby");
-    topics.push_back("topic2");
-    bodies.push_back("Shaggy");
-    topics.push_back("topic3");
-    bodies.push_back("Velma");
-    topics.push_back("topic4");
-    bodies.push_back("Daphne");
+    topics.emplace_back("topic1");
+    bodies.emplace_back("Scooby");
+    topics.emplace_back("topic2");
+    bodies.emplace_back("Shaggy");
+    topics.emplace_back("topic3");
+    bodies.emplace_back("Velma");
+    topics.emplace_back("topic4");
+    bodies.emplace_back("Daphne");
 
     /* Fred gets discarded due to the buffer space cap. */
-    topics.push_back("topic5");
-    bodies.push_back("Fred");
+    topics.emplace_back("topic5");
+    bodies.emplace_back("Fred");
 
     std::vector<uint8_t> dg_buf;
 
@@ -367,9 +362,7 @@ namespace {
     ASSERT_EQ(msg_list.size(), 4U);
     size_t i = 0;
 
-    for (std::list<TMsg::TPtr>::iterator iter = msg_list.begin();
-         iter != msg_list.end();
-         ++i, ++iter) {
+    for (auto iter = msg_list.begin(); iter != msg_list.end(); ++i, ++iter) {
       TMsg::TPtr &msg_ptr = *iter;
 
       /* Prevent spurious assertion failure in msg dtor. */
@@ -426,7 +419,7 @@ namespace {
 
     /* Overwrite the size field with an incorrect value. */
     ASSERT_GE(dg_buf.size(), sizeof(int32_t));
-    WriteInt32ToHeader(&dg_buf[0], dg_buf.size() - 1);
+    WriteInt32ToHeader(&dg_buf[0], static_cast<int32_t>(dg_buf.size() - 1));
 
     try {
       sender.Send(&dg_buf[0], dg_buf.size());

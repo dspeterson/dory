@@ -57,7 +57,7 @@ namespace Dory {
           DebugSetup(debug_setup) {
     }
 
-    virtual ~TWebInterface() noexcept {
+    ~TWebInterface() noexcept override {
       assert(this);
       StopHttpServer();
     }
@@ -81,7 +81,7 @@ namespace Dory {
     }
 
     protected:
-    virtual void *OnEvent(mg_event event, mg_connection *conn,
+    void *OnEvent(mg_event event, mg_connection *conn,
         const mg_request_info *request_info) override;
 
     private:

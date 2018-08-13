@@ -58,7 +58,7 @@ namespace Base {
 
     /* Construct buffer, populating it with 'items', whose contents are moved
        into the container. */
-    TBuf(TStorage &&items) noexcept
+    explicit TBuf(TStorage &&items) noexcept
         : Storage(std::move(items)),
           ItemOffset(0),
           ItemCount(Storage.size()) {
@@ -78,7 +78,7 @@ namespace Base {
     TBuf &operator=(const TBuf &) = default;
 
     /* Move assignment operator leaves 'that' empty. */
-    TBuf &operator=(TBuf &&that) {
+    TBuf &operator=(TBuf &&that) noexcept {
       assert(this);
 
       if (&that != this) {

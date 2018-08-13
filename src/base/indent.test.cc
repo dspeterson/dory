@@ -32,16 +32,14 @@ namespace {
   /* The fixture for testing class TIndent. */
   class TIndentTest : public ::testing::Test {
     protected:
-    TIndentTest() {
+    TIndentTest() = default;
+
+    ~TIndentTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TIndentTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TIndentTest
 

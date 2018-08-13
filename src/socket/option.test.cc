@@ -38,16 +38,14 @@ namespace {
   class TSocketOptionTest : public ::testing::Test {
     protected:
 
-    TSocketOptionTest() {
+    TSocketOptionTest() = default;
+
+    ~TSocketOptionTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TSocketOptionTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TSocketOptionTest
 

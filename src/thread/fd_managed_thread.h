@@ -109,8 +109,7 @@ namespace Thread {
     }
 
     protected:
-    TFdManagedThread() {
-    }
+    TFdManagedThread() = default;
 
     /* The thread immediately calls this method once it starts executing.
        Subclasses must provide an implementation to define thread-specific

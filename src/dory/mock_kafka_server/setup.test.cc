@@ -24,7 +24,6 @@
 #include <fstream>
 #include <iostream>
 
-#include <base/ofdstream.h>
 #include <base/tmp_file.h>
 
 #include <gtest/gtest.h>
@@ -38,16 +37,14 @@ namespace {
   // The fixture for testing class TSetup.
   class TSetupTest : public ::testing::Test {
     protected:
-    TSetupTest() {
+    TSetupTest() = default;
+
+    ~TSetupTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TSetupTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TSetupTest
 

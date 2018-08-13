@@ -103,7 +103,7 @@ void input_dg_p_key_v0_write_msg(void *result_buf, int64_t timestamp,
   topic_finish = topic_start + topic_size;
   key_finish = key_start + key_size;
   value_finish = value_start + value_size;
-  WriteInt32ToHeader(pos, msg_size);
+  WriteInt32ToHeader(pos, (int32_t) msg_size);
   pos += INPUT_DG_SZ_FIELD_SIZE;
 
   WriteInt16ToHeader(pos, 257);
@@ -115,13 +115,13 @@ void input_dg_p_key_v0_write_msg(void *result_buf, int64_t timestamp,
   pos += INPUT_DG_P_KEY_V0_FLAGS_FIELD_SIZE;
   WriteInt32ToHeader(pos, partition_key);
   pos += INPUT_DG_P_KEY_V0_PARTITION_KEY_FIELD_SIZE;
-  WriteInt16ToHeader(pos, topic_size);
+  WriteInt16ToHeader(pos, (int16_t) topic_size);
   pos += INPUT_DG_P_KEY_V0_TOPIC_SZ_FIELD_SIZE;
   memcpy(pos, topic_start, topic_size);
   pos += topic_size;
   WriteInt64ToHeader(pos, timestamp);
   pos += INPUT_DG_P_KEY_V0_TS_FIELD_SIZE;
-  WriteInt32ToHeader(pos, key_size);
+  WriteInt32ToHeader(pos, (int32_t) key_size);
   pos += INPUT_DG_P_KEY_V0_KEY_SZ_FIELD_SIZE;
 
   if (key_start) {
@@ -129,7 +129,7 @@ void input_dg_p_key_v0_write_msg(void *result_buf, int64_t timestamp,
   }
 
   pos += key_size;
-  WriteInt32ToHeader(pos, value_size);
+  WriteInt32ToHeader(pos, (int32_t) value_size);
   pos += INPUT_DG_P_KEY_V0_VALUE_SZ_FIELD_SIZE;
 
   if (value_start) {

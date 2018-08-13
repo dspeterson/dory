@@ -46,7 +46,7 @@ TMockKafkaWorker::TryReadExactlyOrShutdown(int fd, void *buf,
   shutdown_request_event.fd = GetShutdownRequestFd();
   shutdown_request_event.events = POLLIN;
 
-  uint8_t *pos = reinterpret_cast<uint8_t *>(buf);
+  auto *pos = reinterpret_cast<uint8_t *>(buf);
   size_t bytes_left = size;
 
   while (bytes_left) {
@@ -113,7 +113,7 @@ TMockKafkaWorker::TryWriteExactlyOrShutdown(int fd, const void *buf,
   shutdown_request_event.fd = GetShutdownRequestFd();
   shutdown_request_event.events = POLLIN;
 
-  const uint8_t *pos = reinterpret_cast<const uint8_t *>(buf);
+  const auto *pos = reinterpret_cast<const uint8_t *>(buf);
   size_t bytes_left = size;
 
   while (bytes_left) {

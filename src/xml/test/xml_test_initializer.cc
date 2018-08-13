@@ -37,7 +37,7 @@ bool TXmlTestInitializer::HandleInitError(const XMLException &x) {
   std::cerr << "Xerces XML library initialization error: "
       << TranscodeToString(x.getMessage()) << std::endl;
   std::exit(1);
-  return true;
+  return true;  // keep compiler happy
 }
 
 void TXmlTestInitializer::HandleCleanupError(const XMLException &x) noexcept {

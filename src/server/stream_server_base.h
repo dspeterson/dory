@@ -56,8 +56,7 @@ namespace Server {
       NO_COPY_SEMANTICS(TConnectionHandlerApi);
 
       public:
-      virtual ~TConnectionHandlerApi() noexcept {
-      }
+      virtual ~TConnectionHandlerApi() noexcept = default;
 
       /* Each time a new client connection is received, this method is called.
          Parameters:
@@ -87,7 +86,7 @@ namespace Server {
       TConnectionHandlerApi() = default;
     };  // TConnectionHandlerApi
 
-    virtual ~TStreamServerBase() noexcept;
+    ~TStreamServerBase() noexcept override;
 
     void Bind();
 
@@ -141,7 +140,7 @@ namespace Server {
        associated with a UNIX domain socket. */
     virtual void CloseListeningSocket(Base::TFd &sock);
 
-    virtual void Run() override;
+    void Run() override;
 
     const Base::TFd &GetListeningSocket() const noexcept {
       assert(this);

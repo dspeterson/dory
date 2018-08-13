@@ -33,7 +33,7 @@ void TCmdBucket::Put(const TCmd &cmd) {
   DEBUG_LOG("append cmd to queue");
 
   std::lock_guard<std::mutex> lock(Mutex);
-  CmdQueue.push_back(std::make_pair(++SequenceNumCounter, cmd));
+  CmdQueue.emplace_back(std::make_pair(++SequenceNumCounter, cmd));
 }
 
 bool TCmdBucket::CopyOut(size_t &sequence_num, TCmd &out_cmd) const {

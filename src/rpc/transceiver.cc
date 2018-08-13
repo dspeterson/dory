@@ -148,5 +148,5 @@ size_t TTransceiver::GetActualIoSize(ssize_t io_result) {
   }
 
   /* A positive value is ok to return as-is. */
-  return io_result;
+  return static_cast<size_t>(io_result);
 }

@@ -48,7 +48,7 @@ namespace Dory {
             : public KafkaProto::Produce::TProduceRequestReaderApi::
                   TBadProduceRequest {
           public:
-          virtual ~TBuildError() noexcept { }
+          ~TBuildError() noexcept override = default;
 
           protected:
           explicit TBuildError(const char *msg)
@@ -58,7 +58,7 @@ namespace Dory {
 
         class TInvalidAttributes : public TBuildError {
           public:
-          virtual ~TInvalidAttributes() noexcept { }
+          ~TInvalidAttributes() noexcept override = default;
 
           TInvalidAttributes()
               : TBuildError(
@@ -68,7 +68,7 @@ namespace Dory {
 
         class TCompressedMsgInvalidAttributes : public TBuildError {
           public:
-          virtual ~TCompressedMsgInvalidAttributes() noexcept { }
+          ~TCompressedMsgInvalidAttributes() noexcept override = default;
 
           TCompressedMsgInvalidAttributes()
               : TBuildError(
@@ -78,7 +78,7 @@ namespace Dory {
 
         class TCompressedMsgSetNotAlone : public TBuildError {
           public:
-          virtual ~TCompressedMsgSetNotAlone() noexcept { }
+          ~TCompressedMsgSetNotAlone() noexcept override = default;
 
           TCompressedMsgSetNotAlone()
               : TBuildError(
@@ -89,7 +89,7 @@ namespace Dory {
 
         class TCompressedMsgSetMustHaveEmptyKey : public TBuildError {
           public:
-          virtual ~TCompressedMsgSetMustHaveEmptyKey() noexcept { }
+          ~TCompressedMsgSetMustHaveEmptyKey() noexcept override = default;
 
           TCompressedMsgSetMustHaveEmptyKey()
               : TBuildError(
@@ -99,7 +99,7 @@ namespace Dory {
 
         class TUncompressFailed : public TBuildError {
           public:
-          virtual ~TUncompressFailed() noexcept { }
+          ~TUncompressFailed() noexcept override = default;
 
           TUncompressFailed()
               : TBuildError("Failed to uncompress message set") {

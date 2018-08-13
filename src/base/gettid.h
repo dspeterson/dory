@@ -30,7 +30,7 @@ namespace Base {
   /* Linux system call wrapper returns the ID of the calling thread.
      Why isn't this in /usr/include? */
   inline pid_t Gettid() noexcept {
-    return syscall(SYS_gettid);
+    return static_cast<pid_t>(syscall(SYS_gettid));
   }
 
 }

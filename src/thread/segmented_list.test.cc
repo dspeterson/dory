@@ -30,16 +30,14 @@ namespace {
   /* The fixture for testing class TSegmentedList. */
   class TSegmentedListTest : public ::testing::Test {
     protected:
-    TSegmentedListTest() {
+    TSegmentedListTest() = default;
+
+    ~TSegmentedListTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TSegmentedListTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
 
     std::list<std::list<int>> EmptyResult() {
@@ -392,7 +390,7 @@ namespace {
     ASSERT_TRUE(slist.SanityCheck());
     ASSERT_EQ(items, std::list<int>({17, 16, 15}));
     expected.clear();
-    expected.push_back(std::list<int>());
+    expected.emplace_back();
     // should be (())
     ASSERT_EQ(slist.CopyOutSegments(), expected);
     ASSERT_EQ(slist.SegmentCount(), 1U);
@@ -430,7 +428,7 @@ namespace {
     slist.ResetSegments();
     ASSERT_TRUE(slist.SanityCheck());
     expected.clear();
-    expected.push_back(std::list<int>());
+    expected.emplace_back();
     // should be (())
     ASSERT_EQ(slist.CopyOutSegments(), expected);
     ASSERT_EQ(slist.SegmentCount(), 1U);

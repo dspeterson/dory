@@ -56,29 +56,28 @@ namespace Dory {
 
           TMsgSetReader();
 
-          virtual ~TMsgSetReader() noexcept { }
+          ~TMsgSetReader() noexcept override = default;
 
-          virtual void Clear() override;
+          void Clear() override;
 
-          virtual void SetMsgSet(const void *msg_set,
-              size_t msg_set_size) override;
+          void SetMsgSet(const void *msg_set, size_t msg_set_size) override;
 
-          virtual bool FirstMsg() override;
+          bool FirstMsg() override;
 
-          virtual bool NextMsg() override;
+          bool NextMsg() override;
 
-          virtual bool CurrentMsgCrcIsOk() const override;
+          bool CurrentMsgCrcIsOk() const override;
 
-          virtual Compress::TCompressionType
-              GetCurrentMsgCompressionType() const override;
+          Compress::TCompressionType
+          GetCurrentMsgCompressionType() const override;
 
-          virtual const uint8_t *GetCurrentMsgKeyBegin() const override;
+          const uint8_t *GetCurrentMsgKeyBegin() const override;
 
-          virtual const uint8_t *GetCurrentMsgKeyEnd() const override;
+          const uint8_t *GetCurrentMsgKeyEnd() const override;
 
-          virtual const uint8_t *GetCurrentMsgValueBegin() const override;
+          const uint8_t *GetCurrentMsgValueBegin() const override;
 
-          virtual const uint8_t *GetCurrentMsgValueEnd() const override;
+          const uint8_t *GetCurrentMsgValueEnd() const override;
 
           private:
           using PRC = TProduceRequestConstants;

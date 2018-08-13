@@ -64,7 +64,7 @@ TTmpFile::TTmpFile(const char *name_template, bool delete_on_destroy)
   /* Compute # of remaining chars after "XXXXXX". */
   size_t suffix_len = len - i - 6;
 
-  Fd = IfLt0(mkstemps(&Name[0], suffix_len));
+  Fd = IfLt0(mkstemps(&Name[0], static_cast<int>(suffix_len)));
 }
 
 TTmpFile::~TTmpFile() {

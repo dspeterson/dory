@@ -402,8 +402,8 @@ bool TConnector::TrySendProduceRequest() {
   assert(this);
 
   try {
-    SendBuf.MarkDataConsumed(IfLt0(
-        send(Sock, SendBuf.Data(), SendBuf.DataSize(), MSG_NOSIGNAL)));
+    SendBuf.MarkDataConsumed(static_cast<size_t>(IfLt0(
+        send(Sock, SendBuf.Data(), SendBuf.DataSize(), MSG_NOSIGNAL))));
   } catch (const std::system_error &x) {
     if (LostTcpConnection(x)) {
       syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting "
@@ -704,7 +704,7 @@ bool TConnector::PrepareForPoll(uint64_t now, int &poll_timeout) {
 
   if (need_batch_timeout) {
     poll_timeout = AdjustTimeoutByDeadline(poll_timeout, now,
-        *OptNextBatchExpiry, "batch");
+        static_cast<uint64_t>(*OptNextBatchExpiry), "batch");
   }
 
   struct pollfd &sock_item = MainLoopPollArray[TMainLoopPollItem::SockIo];

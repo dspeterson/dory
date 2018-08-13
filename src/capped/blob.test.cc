@@ -35,11 +35,11 @@ using namespace Capped;
 namespace {
 
   /* Sample data. */
-  static const char *Str = "Mofo the Psychic Gorilla";
-  static const size_t StrSize = strlen(Str);
+  const char *Str = "Mofo the Psychic Gorilla";
+  const size_t StrSize = strlen(Str);
   
   /* Convert a blob to a std string. */
-  static string ToString(const TBlob &blob) {
+  string ToString(const TBlob &blob) {
     ostringstream strm;
     blob.ForEachBlock<ostream &>(
         [](const void *data, size_t size, ostream &os) -> bool {
@@ -54,16 +54,14 @@ namespace {
   /* The fixture for testing class TBlob. */
   class TBlobTest : public ::testing::Test {
     protected:
-    TBlobTest() {
+    TBlobTest() = default;
+
+    ~TBlobTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TBlobTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TBlobTest
 

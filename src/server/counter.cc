@@ -63,6 +63,6 @@ void TCounter::Sample() {
 
 TBlockingAsset TCounter::Asset;
 
-TCounter *TCounter::FirstCounter = 0;
+TCounter *TCounter::FirstCounter = nullptr;
 
 time_t TCounter::SampleTime = time(0), TCounter::ResetTime = SampleTime;

@@ -30,16 +30,14 @@ namespace {
   /* The fixture for testing errors. */
   class TErrorTest : public ::testing::Test {
     protected:
-    TErrorTest() {
+    TErrorTest() = default;
+
+    ~TErrorTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TErrorTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TErrorTest
 

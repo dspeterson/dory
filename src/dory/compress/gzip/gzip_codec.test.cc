@@ -36,16 +36,14 @@ namespace {
   /* The fixture for testing class TGzipCodec. */
   class TGzipCodecTest : public ::testing::Test {
     protected:
-    TGzipCodecTest() {
+    TGzipCodecTest() = default;
+
+    ~TGzipCodecTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TGzipCodecTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TGzipCodecTest
 

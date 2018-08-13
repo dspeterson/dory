@@ -37,16 +37,14 @@ namespace {
      TProduceResponseWriter. */
   class TProduceResponseTest : public ::testing::Test {
     protected:
-    TProduceResponseTest() {
+    TProduceResponseTest() = default;
+
+    ~TProduceResponseTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TProduceResponseTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TProduceResponseTest
 

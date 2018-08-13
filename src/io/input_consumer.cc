@@ -123,8 +123,8 @@ void TInputConsumer::TryRefresh() {
       chunk->GetData(Cursor, Limit);
       assert(Cursor < Limit);
     } else {
-      Cursor = 0;
-      Limit = 0;
+      Cursor = nullptr;
+      Limit = nullptr;
     }
   }
 }

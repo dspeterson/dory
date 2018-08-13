@@ -50,9 +50,9 @@ namespace Dory {
             Server(config, true, true) {
       }
 
-      virtual ~TMainThread() noexcept;
+      ~TMainThread() noexcept override;
 
-      virtual void RequestShutdown() override;
+      void RequestShutdown() override;
 
       /* Return a file descriptor that becomes readable when the server has
        finished its initialization and is open for business. */
@@ -102,7 +102,7 @@ namespace Dory {
       }
 
       protected:
-      virtual void Run() override;
+      void Run() override;
 
       private:
       /* Indicates whether the mock Kafka server terminated normally or with an

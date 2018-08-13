@@ -60,43 +60,43 @@ namespace Dory {
           const Batch::TGlobalBatchConfig &batch_config,
           const Debug::TDebugSetup &debug_setup);
 
-      virtual ~TKafkaDispatcher() noexcept { }
+      ~TKafkaDispatcher() noexcept override = default;
 
       void SetProduceProtocol(
           KafkaProto::Produce::TProduceProtocol *protocol) noexcept override;
 
-      virtual TState GetState() const override;
+      TState GetState() const override;
 
-      virtual size_t GetBrokerCount() const override;
+      size_t GetBrokerCount() const override;
 
-      virtual void Start(const std::shared_ptr<TMetadata> &md) override;
+      void Start(const std::shared_ptr<TMetadata> &md) override;
 
-      virtual void Dispatch(TMsg::TPtr &&msg, size_t broker_index) override;
+      void Dispatch(TMsg::TPtr &&msg, size_t broker_index) override;
 
-      virtual void DispatchNow(TMsg::TPtr &&msg, size_t broker_index) override;
+      void DispatchNow(TMsg::TPtr &&msg, size_t broker_index) override;
 
-      virtual void DispatchNow(std::list<std::list<TMsg::TPtr>> &&batch,
+      void DispatchNow(std::list<std::list<TMsg::TPtr>> &&batch,
                                size_t broker_index) override;
 
-      virtual void StartSlowShutdown(uint64_t start_time) override;
+      void StartSlowShutdown(uint64_t start_time) override;
 
-      virtual void StartFastShutdown() override;
+      void StartFastShutdown() override;
 
-      virtual const Base::TFd &GetPauseFd() const override;
+      const Base::TFd &GetPauseFd() const override;
 
-      virtual const Base::TFd &GetShutdownWaitFd() const override;
+      const Base::TFd &GetShutdownWaitFd() const override;
 
-      virtual void JoinAll() override;
+      void JoinAll() override;
 
-      virtual bool ShutdownWasOk() const override;
+      bool ShutdownWasOk() const override;
 
-      virtual std::list<std::list<TMsg::TPtr>>
+      std::list<std::list<TMsg::TPtr>>
       GetNoAckQueueAfterShutdown(size_t broker_index) override;
 
-      virtual std::list<std::list<TMsg::TPtr>>
+      std::list<std::list<TMsg::TPtr>>
       GetSendWaitQueueAfterShutdown(size_t broker_index) override;
 
-      virtual size_t GetAckCount() const override;
+      size_t GetAckCount() const override;
 
       private:
       TDispatcherSharedState Ds;

@@ -47,8 +47,8 @@ TMockKafkaConfig::TMockKafkaConfig(const std::vector<std::string> &config_file)
   Args.push_back("--setup_file");
   Args.push_back(SetupFile.GetName());
   Args.push_back(nullptr);
-  Cfg.reset(new Dory::MockKafkaServer::TConfig(Args.size() - 1,
-                                      const_cast<char **>(&Args[0])));
+  Cfg.reset(new Dory::MockKafkaServer::TConfig(
+      static_cast<int>(Args.size() - 1), const_cast<char **>(&Args[0])));
   MainThread.reset(new Dory::MockKafkaServer::TMainThread(*Cfg));
 }
 

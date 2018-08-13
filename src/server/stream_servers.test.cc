@@ -78,7 +78,7 @@ namespace {
     private:
     static std::vector<uint8_t> CopySockaddr(const struct sockaddr *addr,
         socklen_t addr_len) {
-      const uint8_t *begin = reinterpret_cast<const uint8_t *>(addr);
+      const auto *begin = reinterpret_cast<const uint8_t *>(addr);
       return std::vector<uint8_t>(begin, begin + addr_len);
     }
 
@@ -136,7 +136,7 @@ namespace {
         : Workers(workers) {
     }
 
-    virtual ~TTestServerConnectionHandler() noexcept {
+    ~TTestServerConnectionHandler() noexcept override {
       for (auto &w : Workers) {
         try {
           w.Join();
@@ -145,7 +145,7 @@ namespace {
       }
     }
 
-    virtual void HandleConnection(TFd &&sock, const struct sockaddr *addr,
+    void HandleConnection(TFd &&sock, const struct sockaddr *addr,
         socklen_t addr_len) override {
       assert(this);
       Workers.emplace_back(std::move(sock), addr, addr_len);
@@ -158,16 +158,14 @@ namespace {
   /* The fixture for testing class TFdManagedThread. */
   class TStreamServerTest : public ::testing::Test {
     protected:
-    TStreamServerTest() {
+    TStreamServerTest() = default;
+
+    ~TStreamServerTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TStreamServerTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TStreamServerTest
 

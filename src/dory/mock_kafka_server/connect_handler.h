@@ -49,9 +49,9 @@ namespace Dory {
             PortMap(port_map) {
       }
 
-      virtual ~TConnectHandler() noexcept { }
+      ~TConnectHandler() noexcept override = default;
 
-      virtual void OnEvent(int fd, short flags) override;
+      void OnEvent(int fd, short flags) override;
 
       private:
       TClientHandlerFactoryBase &ClientHandlerFactory;

@@ -47,16 +47,14 @@ namespace {
   /* The fixture for testing class TDomParserWithLineInfo. */
   class TXmlParserTest : public ::testing::Test {
     protected:
-    TXmlParserTest() {
+    TXmlParserTest() = default;
+
+    ~TXmlParserTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TXmlParserTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
 
     TXmlTestInitializer Initializer;  // initializes Xerces XML library
@@ -138,7 +136,7 @@ namespace {
     ASSERT_TRUE(attr_map != nullptr);
     XMLSize_t len = attr_map->getLength();
     ASSERT_EQ(len, 1U);
-    DOMAttr *attr = static_cast<DOMAttr *>(attr_map->item(0));
+    auto *attr = static_cast<DOMAttr *>(attr_map->item(0));
     ASSERT_TRUE(attr != nullptr);
     ASSERT_EQ(TranscodeToString(attr->getName()), "value");
     ASSERT_EQ(TranscodeToString(attr->getValue()), "blah");

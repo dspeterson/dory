@@ -30,10 +30,10 @@ namespace Log {
     NO_COPY_SEMANTICS(TSyslogLogWriter);
 
     public:
-    virtual ~TSyslogLogWriter() noexcept = default;
+    ~TSyslogLogWriter() noexcept override = default;
 
     /* Write 'entry'. */
-    virtual void WriteEntry(TLogEntryAccessApi &entry);
+    void WriteEntry(TLogEntryAccessApi &entry) override;
   };  // TSyslogLogWriter
 
 }  // Log

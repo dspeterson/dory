@@ -47,25 +47,20 @@ namespace Dory {
               : TProduceProtocol(ComputeConstants()) {
           }
 
-          virtual ~TProduceProto() noexcept { }
+          ~TProduceProto() noexcept override = default;
 
-          virtual TProduceRequestWriterApi *
+          TProduceRequestWriterApi *
           CreateProduceRequestWriter() const override;
 
-          virtual TMsgSetWriterApi *CreateMsgSetWriter() const override;
+          TMsgSetWriterApi *CreateMsgSetWriter() const override;
 
-          virtual TProduceResponseReaderApi *
+          TProduceResponseReaderApi *
           CreateProduceResponseReader() const override;
 
-          virtual TAckResultAction ProcessAck(
-              int16_t ack_value) const override;
+          TAckResultAction ProcessAck(int16_t ack_value) const override;
 
           private:
           static TConstants ComputeConstants();
-
-          int16_t RequiredAcks;
-
-          int32_t ReplicationTimeout;
         };  // TProduceProto
 
       }  // V0

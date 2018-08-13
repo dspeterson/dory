@@ -27,11 +27,11 @@
 using namespace Base;
 
 //NOTE: This can throw a TDemangleError
-TDemangle::TDemangle(const std::type_info &t) : Buf(0) {
+TDemangle::TDemangle(const std::type_info &t) : Buf(nullptr) {
   DoDemangle(t.name());
 }
 
-TDemangle::TDemangle(const char *mangled) : Buf(0) {
+TDemangle::TDemangle(const char *mangled) : Buf(nullptr) {
   DoDemangle(mangled);
 }
 

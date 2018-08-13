@@ -37,16 +37,14 @@ namespace {
   /* The fixture for testing class TFdManagedThread. */
   class TFdManagedThreadTest : public ::testing::Test {
     protected:
-    TFdManagedThreadTest() {
+    TFdManagedThreadTest() = default;
+
+    ~TFdManagedThreadTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TFdManagedThreadTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TFdManagedThreadTest
 
@@ -56,11 +54,11 @@ namespace {
         : Flag(flag) {
     }
 
-    virtual ~TTestWorker1() noexcept {
+    ~TTestWorker1() noexcept override {
       ShutdownOnDestroy();
     }
 
-    virtual void Run() override;
+    void Run() override;
 
     private:
     bool &Flag;
@@ -76,11 +74,11 @@ namespace {
         : Flag(flag) {
     }
 
-    virtual ~TTestWorker2() noexcept {
+    ~TTestWorker2() noexcept override {
       ShutdownOnDestroy();
     }
 
-    virtual void Run() override;
+    void Run() override;
 
     private:
     bool &Flag;
@@ -103,11 +101,11 @@ namespace {
           ThrowStdException(throw_std_exception) {
     }
 
-    virtual ~TTestWorker3() noexcept {
+    ~TTestWorker3() noexcept override {
       ShutdownOnDestroy();
     }
 
-    virtual void Run() override;
+    void Run() override;
 
     private:
     bool &Flag;

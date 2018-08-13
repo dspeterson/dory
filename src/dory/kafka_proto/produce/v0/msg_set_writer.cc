@@ -118,8 +118,8 @@ void TMsgSetWriter::OpenMsg(TCompressionType compression_type,
   WriteInt8AtOffset(0);  // magic byte
   WriteInt8AtOffset(XlateCompressionType(compression_type));  // attributes
 
-  /* Here, -1 indicates a length of 0. */
-  WriteInt32AtOffset(key_size ? key_size : -1);  // key length
+  /* Write key length.  Here, -1 indicates a length of 0. */
+  WriteInt32AtOffset(static_cast<int32_t>(key_size ? key_size : -1));
 
   CurrentMsgKeyOffset = AtOffset;  // key goes here
   AtOffset += key_size;  // skip space for key
@@ -184,11 +184,12 @@ void TMsgSetWriter::CloseMsg() {
       CurrentMsgValueSize;
   assert(Buf->size() >= CurrentMsgValueOffset);
   assert((Buf->size() - CurrentMsgValueOffset) == CurrentMsgValueSize);
-  WriteInt32(CurrentMsgSetItemOffset + PRC::MSG_OFFSET_SIZE, msg_size);
+  WriteInt32(CurrentMsgSetItemOffset + PRC::MSG_OFFSET_SIZE,
+      static_cast<int32_t>(msg_size));
 
-  /* Here, -1 indicates a length of 0. */
+  /* Write value length.  Here, -1 indicates a length of 0. */
   WriteInt32(CurrentMsgKeyOffset + CurrentMsgKeySize,
-      CurrentMsgValueSize ? CurrentMsgValueSize : -1);  // value length
+      static_cast<int32_t>(CurrentMsgValueSize ? CurrentMsgValueSize : -1));
 
   AtOffset += CurrentMsgValueSize;  // skip past value
   MsgSetSize += ComputeMsgSetItemSize(msg_size);

@@ -124,16 +124,14 @@ namespace {
   /* The fixture for testing class TAnomalyTracker. */
   class TAnomalyTrackerTest : public ::testing::Test {
     protected:
-    TAnomalyTrackerTest() {
+    TAnomalyTrackerTest() = default;
+
+    ~TAnomalyTrackerTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TAnomalyTrackerTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TAnomalyTrackerTest
 

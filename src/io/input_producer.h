@@ -39,11 +39,10 @@ namespace Io {
 
     protected:
     /* Do-little. */
-    TInputProducer() {
-    }
+    TInputProducer() = default;
 
     /* Do-little. */
-    virtual ~TInputProducer();
+    virtual ~TInputProducer() = default;
   };  // TInputProducer
 
 }  // Io

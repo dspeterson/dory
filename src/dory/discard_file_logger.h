@@ -202,7 +202,7 @@ namespace Dory {
       TArchiveCleaner(uint64_t max_archive_size, const char *log_dir,
                       const char *log_filename);
 
-      virtual ~TArchiveCleaner() noexcept;
+      ~TArchiveCleaner() noexcept override;
 
       /* Awaken thread.  It will then scan the log directory and delete old
          logfiles as necessary. */
@@ -213,7 +213,7 @@ namespace Dory {
 
       protected:
 
-      virtual void Run() override;
+      void Run() override;
 
       private:
 

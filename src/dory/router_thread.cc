@@ -272,7 +272,7 @@ bool TRouterThread::AutocreateTopic(TMsg::TPtr &msg) {
     ConnectSuccessOnTopicAutocreate.Increment();
 
     switch (MetadataFetcher->TopicAutocreate(topic.c_str(),
-        Config.KafkaSocketTimeout * 1000)) {
+        static_cast<int>(Config.KafkaSocketTimeout * 1000))) {
       case TMetadataFetcher::TTopicAutocreateResult::Success: {
         syslog(LOG_NOTICE, "Automatic creation of topic [%s] was successful: "
                "updating metadata", topic.c_str());
@@ -1123,7 +1123,7 @@ int TRouterThread::ComputeMainLoopPollTimeout() {
     return -1;  // infinite timeout
   }
 
-  uint64_t expiry = *OptNextBatchExpiry;
+  auto expiry = static_cast<uint64_t>(*OptNextBatchExpiry);
   uint64_t now = GetEpochMilliseconds();
 
   if (expiry <= now) {
@@ -1141,7 +1141,7 @@ int TRouterThread::ComputeMainLoopPollTimeout() {
     return 0;
   }
 
-  return delta;
+  return static_cast<int>(delta);
 }
 
 void TRouterThread::InitMainLoopPollArray() {
@@ -1425,7 +1425,7 @@ void TRouterThread::UpdateKnownBrokers(const TMetadata &md) {
   const std::vector<TMetadata::TBroker> &new_brokers = md.GetBrokers();
 
   for (const TMetadata::TBroker &b : new_brokers) {
-    broker_vec.push_back(TKafkaBroker(b.GetHostname(), b.GetPort()));
+    broker_vec.emplace_back(b.GetHostname(), b.GetPort());
   }
 
   KnownBrokers = std::move(broker_vec);
@@ -1454,7 +1454,8 @@ std::shared_ptr<TMetadata> TRouterThread::TryGetMetadata() {
 
     ConnectSuccessOnTryGetMetadata.Increment();
     result = std::move(
-        MetadataFetcher->Fetch(Config.KafkaSocketTimeout * 1000));
+        MetadataFetcher->Fetch(
+            static_cast<int>(Config.KafkaSocketTimeout) * 1000));
 
     if (result) {
       break;  // success
@@ -1514,7 +1515,7 @@ std::shared_ptr<TMetadata> TRouterThread::GetInitialMetadata() {
            "waiting %lu milliseconds before retry",
            static_cast<unsigned long>(delay));
 
-    if (shutdown_request_fd.IsReadable(delay)) {
+    if (shutdown_request_fd.IsReadable(static_cast<int>(delay))) {
       break;  // got shutdown signal
     }
 
@@ -1547,7 +1548,7 @@ std::shared_ptr<TMetadata> TRouterThread::GetMetadataBeforeSlowShutdown() {
            "%lu milliseconds before retry (1)",
            static_cast<unsigned long>(delay));
 
-    if (shutdown_request_fd.IsReadable(delay)) {
+    if (shutdown_request_fd.IsReadable(static_cast<int>(delay))) {
       /* We got a shutdown request while waiting to retry.  We will keep
          trying, but must stop once the deadline has expired. */
       StartShutdown();

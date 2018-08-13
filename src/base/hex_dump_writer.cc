@@ -129,7 +129,7 @@ static void AppendHexByteToString(std::string &dst, uint8_t byte) {
 void THexDumpWriter::Write(const void *mem, size_t bytes,
         uint64_t start_addr) const {
   assert(this);
-  const uint8_t *p = static_cast<const uint8_t *>(mem);
+  auto *p = static_cast<const uint8_t *>(mem);
   size_t index = 0;
   size_t bytes_left = bytes;
   std::string line;

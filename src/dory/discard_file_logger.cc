@@ -64,14 +64,14 @@ static std::string ComposeLogEntry(TMsg::TTimestamp timestamp,
 
   if (key_size) {
     encoded_key = base64_encode(reinterpret_cast<const unsigned char *>(key),
-                                key_size);
+        static_cast<unsigned int>(key_size));
   }
 
   std::string encoded_msg;
 
   if (msg_size) {
     encoded_msg = base64_encode(reinterpret_cast<const unsigned char *>(msg),
-                                msg_size);
+        static_cast<unsigned int>(msg_size));
   }
 
   std::ostringstream os;
@@ -437,7 +437,10 @@ struct TOldLogFileInfo {
   /* Epoch milliseconds value obtained from filename. */
   uint64_t EpochMilliseconds;
 
-  TOldLogFileInfo() = default;
+  TOldLogFileInfo()
+      : Size(0),
+        EpochMilliseconds(0) {
+  }
 
   TOldLogFileInfo(std::string &&absolute_path, uint64_t size,
       uint64_t epoch_ms)
@@ -448,7 +451,7 @@ struct TOldLogFileInfo {
 
   TOldLogFileInfo(const TOldLogFileInfo &) = default;
 
-  TOldLogFileInfo(TOldLogFileInfo &&that)
+  TOldLogFileInfo(TOldLogFileInfo &&that) noexcept
       : AbsolutePath(std::move(that.AbsolutePath)),
         Size(that.Size),
         EpochMilliseconds(that.EpochMilliseconds) {
@@ -456,7 +459,7 @@ struct TOldLogFileInfo {
 
   TOldLogFileInfo& operator=(const TOldLogFileInfo &) = default;
 
-  TOldLogFileInfo& operator=(TOldLogFileInfo &&that) {
+  TOldLogFileInfo& operator=(TOldLogFileInfo &&that) noexcept {
     assert(this);
 
     if (this != &that) {
@@ -563,8 +566,7 @@ GetOldLogFileSizes(const char *log_dir, const char *log_filename) {
 
     /* We found a file whose name conforms to our old logfile naming scheme, so
        append it to the result vector. */
-    result.push_back(TOldLogFileInfo(std::move(file_path), stat_buf.st_size,
-                                     epoch_ms));
+    result.emplace_back(std::move(file_path), stat_buf.st_size, epoch_ms);
   }
 
   return std::move(result);
@@ -601,9 +603,7 @@ bool TDiscardFileLogger::TArchiveCleaner::HandleCleanRequest() {
 
   /* Delete old logfiles, from oldest to newest, until total size limit is no
      longer violated. */
-  for (size_t i = 0; i < old_log_files.size(); ++i) {
-    const TOldLogFileInfo &info = old_log_files[i];
-
+  for (const TOldLogFileInfo &info : old_log_files) {
     if (unlink(info.AbsolutePath.c_str()) && (errno != ENOENT)) {
       char buf[256];
       Strerror(errno, buf, sizeof(buf));
@@ -716,8 +716,8 @@ void TDiscardFileLogger::ParseLogPath(const char *log_path,
 const uint8_t *TDiscardFileLogger::EnforceMaxPrefixLen(const void *msg_begin,
     const void *msg_end) {
   assert(this);
-  const uint8_t *p1 = reinterpret_cast<const uint8_t *>(msg_begin);
-  const uint8_t *p2 = reinterpret_cast<const uint8_t *>(msg_end);
+  const auto *p1 = reinterpret_cast<const uint8_t *>(msg_begin);
+  const auto *p2 = reinterpret_cast<const uint8_t *>(msg_end);
   assert(p2 >= p1);
   size_t msg_size = p2 - p1;
   return p1 + std::min(msg_size, MaxMsgPrefixLen);

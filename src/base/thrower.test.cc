@@ -68,16 +68,14 @@ namespace {
   /* The fixture for testing exception throwing stuff. */
   class TThrowerTest : public ::testing::Test {
     protected:
-    TThrowerTest() {
+    TThrowerTest() = default;
+
+    ~TThrowerTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TThrowerTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TThrowerTest
   

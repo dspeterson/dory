@@ -137,10 +137,10 @@ namespace Io {
     TInputConsumer(const std::shared_ptr<TInputProducer> &input_producer)
         : InputProducer(input_producer),
           ChunkIdx(0),
-          Cursor(0),
-          Limit(0),
+          Cursor(nullptr),
+          Limit(nullptr),
           NoMoreChunks(false),
-          NewestMark(0) {
+          NewestMark(nullptr) {
       assert(input_producer);
     }
 

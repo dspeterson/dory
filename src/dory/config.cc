@@ -58,7 +58,7 @@ static void ProcessModeArg(const std::string &mode_string,
 
     char *pos = nullptr;
     long n = std::strtol(s.c_str(), &pos, 0);
-    mode_t mode = static_cast<mode_t>(n);
+    auto mode = static_cast<mode_t>(n);
 
     if ((*pos != '\0') || (n < 0) || (n == LONG_MAX) ||
         (static_cast<long>(mode) != n)) {

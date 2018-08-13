@@ -113,10 +113,12 @@ TV0ClientHandler::SendMetadataResponse(const TMetadataRequest &request,
     /* Translate port from virtual to physical before writing port to metadata
        response.  See big comment in <dory/mock_kafka_server/port_map.h> for
        an explanation of what is going on here. */
-    in_port_t phys_port = PortMap->VirtualPortToPhys(Setup.BasePort + node_id);
+    in_port_t phys_port = PortMap->VirtualPortToPhys(Setup.BasePort +
+        static_cast<in_port_t>(node_id));
     assert(phys_port);
 
-    writer.AddBroker(node_id, host_name, host_name_end, phys_port);
+    writer.AddBroker(static_cast<int32_t>(node_id), host_name, host_name_end,
+        phys_port);
   }
 
   writer.CloseBrokerList();
@@ -221,12 +223,13 @@ void TV0ClientHandler::WriteSingleTopic(TMetadataResponseWriter &writer,
   assert(node_id < node_count);
 
   for (size_t i = 0; i < pvec.size(); ++i) {
-    writer.OpenPartition(0, i, node_id);
+    writer.OpenPartition(0, static_cast<int32_t>(i),
+        static_cast<int32_t>(node_id));
     writer.OpenReplicaList();
-    writer.AddReplica(node_id);
+    writer.AddReplica(static_cast<int32_t>(node_id));
     writer.CloseReplicaList();
     writer.OpenCaughtUpReplicaList();
-    writer.AddCaughtUpReplica(node_id);
+    writer.AddCaughtUpReplica(static_cast<int32_t>(node_id));
     writer.CloseCaughtUpReplicaList();
     writer.ClosePartition();
     node_id = (node_id + 1) % node_count;

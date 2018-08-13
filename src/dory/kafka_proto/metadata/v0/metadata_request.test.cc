@@ -42,16 +42,14 @@ namespace {
      TMetadataRequestWriter. */
   class TMetadataRequestTest : public ::testing::Test {
     protected:
-    TMetadataRequestTest() {
+    TMetadataRequestTest() = default;
+
+    ~TMetadataRequestTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TMetadataRequestTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TMetadataRequestTest
 
@@ -105,7 +103,7 @@ namespace {
   }
 
   TEST_F(TMetadataRequestTest, AllTopicsTest) {
-    struct iovec iov;
+    struct iovec iov{nullptr, 0};
     std::vector<uint8_t> header_buf(
         TMetadataRequestWriter::NumAllTopicsHeaderBytes() + 1);
     std::fill(&header_buf[0], &header_buf[0] + header_buf.size(), 'x');

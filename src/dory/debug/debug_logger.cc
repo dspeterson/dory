@@ -103,7 +103,8 @@ void TDebugLogger::LogMsg(const TMsg &msg) {
 
   if (!RawData.empty()) {
     /* Base64 encode key in case it contains binary data. */
-    Encoded = base64_encode(&RawData[0], RawData.size());
+    Encoded = base64_encode(&RawData[0],
+        static_cast<unsigned int>(RawData.size()));
   }
 
   LogEntry = "ts: ";
@@ -123,7 +124,8 @@ void TDebugLogger::LogMsg(const TMsg &msg) {
 
   if (!RawData.empty()) {
     /* Base64 encode value in case it contains binary data. */
-    Encoded = base64_encode(&RawData[0], RawData.size());
+    Encoded = base64_encode(&RawData[0],
+        static_cast<unsigned int>(RawData.size()));
   }
 
   LogEntry += boost::lexical_cast<std::string>(Encoded.size());

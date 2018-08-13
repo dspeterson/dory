@@ -84,16 +84,14 @@ namespace {
      datagrams. */
   class TV0InputDgTest : public ::testing::Test {
     protected:
-    TV0InputDgTest() {
+    TV0InputDgTest() = default;
+
+    ~TV0InputDgTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TV0InputDgTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TV0InputDgTest
 

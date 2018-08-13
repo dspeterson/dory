@@ -30,16 +30,14 @@ namespace {
   /* The fixture for testing class TEventSemaphoreNotifier. */
   class TOnDestroyTest : public ::testing::Test {
     protected:
-    TOnDestroyTest() {
+    TOnDestroyTest() = default;
+
+    ~TOnDestroyTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TOnDestroyTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TOnDestroyTest
 

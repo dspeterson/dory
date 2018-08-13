@@ -32,16 +32,14 @@ namespace {
 
   class TConvertTest : public ::testing::Test {
     protected:
-    TConvertTest() {
+    TConvertTest() = default;
+
+    ~TConvertTest() override = default;
+
+    void SetUp() override {
     }
 
-    virtual ~TConvertTest() {
-    }
-
-    virtual void SetUp() {
-    }
-
-    virtual void TearDown() {
+    void TearDown() override {
     }
   };  // TConvertTest
 

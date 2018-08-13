@@ -96,7 +96,7 @@ void TError::PostCtor(const TCodeLocation &code_location,
 }
 
 TDemangleError::TDemangleError(const TCodeLocation &code_location, int ret) {
-  const char *details = 0;
+  const char *details = nullptr;
 
   switch (ret) {
     case 0:

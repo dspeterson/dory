@@ -75,8 +75,8 @@ void TProduceRequestWriter::OpenRequest(std::vector<uint8_t> &result_buf,
   WriteInt16AtOffset(0);  // API version
   WriteInt32AtOffset(corr_id);  // correlation ID
 
-  /* Here, -1 indicates a length of 0. */
-  WriteInt16AtOffset(client_id_len ? client_id_len : -1);  // client ID length
+  /* Write client ID length.  Here, -1 indicates a length of 0. */
+  WriteInt16AtOffset(static_cast<int16_t>(client_id_len ? client_id_len : -1));
 
   WriteDataAtOffset(client_id_begin, client_id_len);  // client ID
   WriteInt16AtOffset(required_acks);  // required ACKs
@@ -106,7 +106,8 @@ void TProduceRequestWriter::OpenTopic(const char *topic_name_begin,
   }
 
   /* Here, -1 indicates a length of 0. */
-  WriteInt16AtOffset(topic_name_len ? topic_name_len : -1);
+  WriteInt16AtOffset(
+      static_cast<int16_t>(topic_name_len ? topic_name_len : -1));
 
   WriteDataAtOffset(topic_name_begin, topic_name_len);
   CurrentTopicPartitionCountOffset = AtOffset;
@@ -193,7 +194,8 @@ void TProduceRequestWriter::CloseMsgSet() {
   size_t msg_set_size = MsgSetWriter.CloseMsgSet();
   assert((AtOffset + msg_set_size) == Buf->size());
   AtOffset = Buf->size();
-  WriteInt32(CurrentPartitionOffset + PRC::PARTITION_SIZE, msg_set_size);
+  WriteInt32(CurrentPartitionOffset + PRC::PARTITION_SIZE,
+      static_cast<int32_t>(msg_set_size));
   ++PartitionCount;
   State = TState::InTopic;
 }
@@ -202,7 +204,8 @@ void TProduceRequestWriter::CloseTopic() {
   assert(this);
   assert(State == TState::InTopic);
   assert(Buf);
-  WriteInt32(CurrentTopicPartitionCountOffset, PartitionCount);
+  WriteInt32(CurrentTopicPartitionCountOffset,
+      static_cast<int32_t>(PartitionCount));
   ++TopicCount;
   State = TState::InRequest;
 }
@@ -211,7 +214,7 @@ void TProduceRequestWriter::CloseRequest() {
   assert(this);
   assert(State == TState::InRequest);
   assert(Buf);
-  WriteInt32(TopicCountOffset, TopicCount);
+  WriteInt32(TopicCountOffset, static_cast<int32_t>(TopicCount));
   size_t total_request_size = Buf->size();
   assert(total_request_size > REQUEST_OR_RESPONSE_SIZE_SIZE);
 
@@ -220,7 +223,7 @@ void TProduceRequestWriter::CloseRequest() {
   size_t request_size_field_value = total_request_size - 4;
   assert(request_size_field_value <= std::numeric_limits<int32_t>::max());
 
-  WriteInt32(0, request_size_field_value);
+  WriteInt32(0, static_cast<int32_t>(request_size_field_value));
   Buf = nullptr;
   State = TState::Idle;
 }

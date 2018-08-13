@@ -42,20 +42,20 @@ namespace Dory {
           public:
           TProduceResponseWriter();
 
-          virtual void Reset() override;
+          void Reset() override;
 
-          virtual void OpenResponse(std::vector<uint8_t> &out,
+          void OpenResponse(std::vector<uint8_t> &out,
               int32_t correlation_id) override;
 
-          virtual void OpenTopic(const char *topic_begin,
+          void OpenTopic(const char *topic_begin,
               const char *topic_end) override;
 
-          virtual void AddPartition(int32_t partition, int16_t error_code,
+          void AddPartition(int32_t partition, int16_t error_code,
               int64_t offset) override;
 
-          virtual void CloseTopic() override;
+          void CloseTopic() override;
 
-          virtual void CloseResponse() override;
+          void CloseResponse() override;
 
           private:
           static const size_t CORRELATION_ID_SIZE = 4;

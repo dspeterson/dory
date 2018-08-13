@@ -42,10 +42,10 @@ namespace Dory {
         Thread::TGatePutApi<TMsg::TPtr> &output_queue,
         TWorkerPool &worker_pool) noexcept;
 
-    virtual void HandleConnection(Base::TFd &&sock,
+    void HandleConnection(Base::TFd &&sock,
         const struct sockaddr *addr, socklen_t addr_len) override;
 
-    virtual void HandleNonfatalAcceptError(int errno_value) override;
+    void HandleNonfatalAcceptError(int errno_value) override;
 
     private:
     /* true indicates that we are handling a local TCP connection.  false
