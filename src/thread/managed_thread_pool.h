@@ -43,8 +43,8 @@ namespace Thread {
                  TWorkCallable(nullptr)
 
          2.  It must be possible to assign nullptr to it.  For instance, if
-             TWorkCallable is a class then an assigment operator method such as
-             this would satisfy the requirement:
+             TWorkCallable is a class then an assignment operator method such
+             as this would satisfy the requirement:
 
                  TWorkCallable &TWorkCallable::operator=(nullptr_t);
 
