@@ -121,7 +121,7 @@ TManagedThreadPoolBase::GetAllPendingErrors() {
     ErrorPendingSem.Pop();
   }
 
-  return std::move(result);
+  return result;
 }
 
 TManagedThreadPoolStats TManagedThreadPoolBase::GetStats() const {

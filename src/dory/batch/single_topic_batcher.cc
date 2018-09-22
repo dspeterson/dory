@@ -30,9 +30,10 @@ std::list<TMsg::TPtr>
 TSingleTopicBatcher::DoAddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
   assert(this);
   assert(msg);
+  std::list<TMsg::TPtr> result;
 
   if (!BatchingIsEnabled()) {
-    return std::list<TMsg::TPtr>();
+    return result;
   }
 
   switch (CoreState.ProcessNewMsg(now, msg)) {
@@ -40,9 +41,9 @@ TSingleTopicBatcher::DoAddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
       break;
     }
     case TBatcherCore::TAction::ReturnBatchAndTakeMsg: {
-      std::list<TMsg::TPtr> result = std::move(MsgList);
+      result = std::move(MsgList);
       MsgList.push_back(std::move(msg));
-      return std::move(result);
+      return result;
     }
     case TBatcherCore::TAction::TakeMsgAndReturnBatch: {
       MsgList.push_back(std::move(msg));
@@ -50,10 +51,11 @@ TSingleTopicBatcher::DoAddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
     }
     case TBatcherCore::TAction::TakeMsgAndLeaveBatch: {
       MsgList.push_back(std::move(msg));
-      return std::list<TMsg::TPtr>();
+      return result;
     }
     NO_DEFAULT_CASE;
   }
 
-  return std::move(MsgList);
+  result = std::move(MsgList);
+  return result;
 }

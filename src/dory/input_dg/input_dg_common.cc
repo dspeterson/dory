@@ -108,7 +108,7 @@ TMsg::TPtr Dory::InputDg::TryCreateAnyPartitionMsg(int64_t timestamp,
         anomaly_tracker, no_log_discard);
   }
 
-  return std::move(msg);
+  return msg;
 }
 
 TMsg::TPtr Dory::InputDg::TryCreatePartitionKeyMsg(int32_t partition_key,
@@ -137,5 +137,5 @@ TMsg::TPtr Dory::InputDg::TryCreatePartitionKeyMsg(int32_t partition_key,
         anomaly_tracker, no_log_discard);
   }
 
-  return std::move(msg);
+  return msg;
 }

@@ -35,7 +35,7 @@ std::string TTopicRateConf::TBuilder::TDuplicateNamedConfig::CreateMsg(
                   "config: [");
   msg += config_name;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 std::string TTopicRateConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
@@ -44,7 +44,7 @@ std::string TTopicRateConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
                   "references unknown named config: [");
   msg += config_name;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 std::string TTopicRateConf::TBuilder::TDuplicateTopicConfig::CreateMsg(
@@ -53,7 +53,7 @@ std::string TTopicRateConf::TBuilder::TDuplicateTopicConfig::CreateMsg(
                   "specification for topic [");
   msg += topic;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 std::string TTopicRateConf::TBuilder::TZeroRateLimitInterval::CreateMsg(
@@ -62,7 +62,7 @@ std::string TTopicRateConf::TBuilder::TZeroRateLimitInterval::CreateMsg(
                   "topic [");
   msg += topic;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 std::string TTopicRateConf::TBuilder::TUnknownTopicConfig::CreateMsg(
@@ -72,7 +72,7 @@ std::string TTopicRateConf::TBuilder::TUnknownTopicConfig::CreateMsg(
   msg += "] references unknown named config: [";
   msg += config_name;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 void TTopicRateConf::TBuilder::Reset() {
@@ -154,5 +154,5 @@ TTopicRateConf TTopicRateConf::TBuilder::Build() {
   GotDefaultTopic = false;
   TTopicRateConf result = std::move(BuildResult);
   BuildResult = TTopicRateConf();
-  return std::move(result);
+  return result;
 }

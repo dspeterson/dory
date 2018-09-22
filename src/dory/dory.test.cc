@@ -1641,7 +1641,7 @@ namespace {
     result += seq_str;
     result.push_back(' ');
     result += msg_body_base;
-    return std::move(result);
+    return result;
   }
 
   std::vector<std::string> CreateStressTestMsgBodyVec(
@@ -1652,7 +1652,7 @@ namespace {
       result.push_back(CreateStressTestMsgBody(msg_body_base, i, pad));
     }
 
-    return std::move(result);
+    return result;
   }
 
   class TMsgBlaster : public TFdManagedThread {

@@ -28,7 +28,7 @@ static std::string MakeOpenErrorMsg(const char *filename) {
   std::string msg("Error opening file: [");
   msg += filename;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 TFileOpenError::TFileOpenError(const char *filename)
@@ -39,7 +39,7 @@ static std::string MakeReadErrorMsg(const char *filename) {
   std::string msg("Error reading from file: [");
   msg += filename;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 TFileReadError::TFileReadError(const char *filename)
@@ -50,7 +50,7 @@ static std::string MakeWriteErrorMsg(const char *filename) {
   std::string msg("Error writing to file: [");
   msg += filename;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 TFileWriteError::TFileWriteError(const char *filename)

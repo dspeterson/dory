@@ -64,7 +64,7 @@ std::string TCompressionConf::TBuilder::TDuplicateNamedConfig::CreateMsg(
   std::string msg("Compression config contains duplicate named config: [");
   msg += config_name;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 std::string TCompressionConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
@@ -73,7 +73,7 @@ std::string TCompressionConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
                   "unknown named config: [");
   msg += config_name;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 std::string TCompressionConf::TBuilder::TDuplicateTopicConfig::CreateMsg(
@@ -82,7 +82,7 @@ std::string TCompressionConf::TBuilder::TDuplicateTopicConfig::CreateMsg(
                   "topic [");
   msg += topic;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 std::string TCompressionConf::TBuilder::TUnknownTopicConfig::CreateMsg(
@@ -92,7 +92,7 @@ std::string TCompressionConf::TBuilder::TUnknownTopicConfig::CreateMsg(
   msg += "] references unknown named config: [";
   msg += config_name;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 void TCompressionConf::TBuilder::Reset() {
@@ -180,5 +180,5 @@ TCompressionConf TCompressionConf::TBuilder::Build() {
   GotDefaultTopic = false;
   TCompressionConf result = std::move(BuildResult);
   BuildResult = TCompressionConf();
-  return std::move(result);
+  return result;
 }

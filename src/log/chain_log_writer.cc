@@ -76,7 +76,7 @@ TChainLogWriter::TItemPtr TChainLogWriter::PopFront() {
     SetChain(std::shared_ptr<const TItemList>(new_item_list.release()));
   }
 
-  return std::move(result);
+  return result;
 }
 
 TChainLogWriter::TItemPtr TChainLogWriter::PopBack() {
@@ -90,5 +90,5 @@ TChainLogWriter::TItemPtr TChainLogWriter::PopBack() {
     SetChain(std::shared_ptr<const TItemList>(new_item_list.release()));
   }
 
-  return std::move(result);
+  return result;
 }

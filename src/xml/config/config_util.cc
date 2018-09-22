@@ -150,7 +150,7 @@ Xml::Config::GetSubsectionElements(const DOMElement &parent,
     }
   }
 
-  return std::move(result);
+  return result;
 }
 
 std::vector<const DOMElement *>
@@ -190,7 +190,7 @@ Xml::Config::GetItemListElements(const DOMElement &parent,
     }
   }
 
-  return std::move(result);
+  return result;
 }
 
 void Xml::Config::RequireNoChildElement(const DOMElement &elem) {
@@ -255,7 +255,7 @@ TOpt<std::string> TAttrReader::GetOptString(const DOMElement &elem,
     result.MakeKnown(std::move(value));
   }
 
-  return std::move(result);
+  return result;
 }
 
 std::string TAttrReader::GetString(const DOMElement &elem,
@@ -279,7 +279,7 @@ std::string TAttrReader::GetString(const DOMElement &elem,
     throw TMissingAttrValue(elem, attr_name);
   }
 
-  return std::move(result);
+  return result;
 }
 
 static bool StringToBool(const std::string &s, const char *true_value,

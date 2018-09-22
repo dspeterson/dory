@@ -53,7 +53,7 @@ std::string TBatchConf::TBuilder::TDuplicateNamedConfig::CreateMsg(
   std::string msg("Batching config contains duplicate named config: [");
   msg += config_name;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 std::string TBatchConf::TBuilder::TUnknownCombinedTopicsConfig::CreateMsg(
@@ -62,7 +62,7 @@ std::string TBatchConf::TBuilder::TUnknownCombinedTopicsConfig::CreateMsg(
                   "unknown named config: [");
   msg += config_name;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 std::string TBatchConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
@@ -71,7 +71,7 @@ std::string TBatchConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
                   "unknown named config: [");
   msg += config_name;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 std::string TBatchConf::TBuilder::TDuplicateTopicConfig::CreateMsg(
@@ -80,7 +80,7 @@ std::string TBatchConf::TBuilder::TDuplicateTopicConfig::CreateMsg(
                   "topic [");
   msg += topic;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 std::string TBatchConf::TBuilder::TUnknownTopicConfig::CreateMsg(
@@ -90,7 +90,7 @@ std::string TBatchConf::TBuilder::TUnknownTopicConfig::CreateMsg(
   msg += "] references unknown named config: [";
   msg += config_name;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 void TBatchConf::TBuilder::Reset() {
@@ -234,5 +234,5 @@ TBatchConf TBatchConf::TBuilder::Build() {
   GotDefaultTopic = false;
   TBatchConf result = std::move(BuildResult);
   BuildResult = TBatchConf();
-  return std::move(result);
+  return result;
 }

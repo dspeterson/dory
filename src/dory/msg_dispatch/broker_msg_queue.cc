@@ -306,7 +306,7 @@ TBrokerMsgQueue::CheckPerTopicBatcher(TMsg::TTimestamp now,
   }
 
   MsgStateTracker.MsgEnterSendWait(ready_batches);
-  return std::move(ready_batches);
+  return ready_batches;
 }
 
 std::list<std::list<TMsg::TPtr>>
@@ -329,7 +329,7 @@ TBrokerMsgQueue::CheckCombinedTopicsBatcher(TMsg::TTimestamp now,
   }
 
   MsgStateTracker.MsgEnterSendWait(ready_batches);
-  return std::move(ready_batches);
+  return ready_batches;
 }
 
 void TBrokerMsgQueue::CheckBothBatchers(TMsg::TTimestamp now,

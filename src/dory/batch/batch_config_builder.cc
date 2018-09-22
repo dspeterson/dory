@@ -144,7 +144,7 @@ TGlobalBatchConfig TBatchConfigBuilder::Build() {
           exclude_topic_filter),
       ProduceRequestDataLimit, MessageMaxBytes);
   Clear();
-  return std::move(build_result);
+  return build_result;
 }
 
 static TBatchConfig ToBatchConfig(const TBatchConf::TBatchValues &values) {

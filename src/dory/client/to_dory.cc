@@ -244,7 +244,7 @@ std::string GetValueFromStdin() {
     result.insert(result.size(), buf, static_cast<size_t>(nbytes));
   }
 
-  return std::move(result);
+  return result;
 }
 
 bool CreateDg(std::vector<uint8_t> &buf, const TConfig &cfg,

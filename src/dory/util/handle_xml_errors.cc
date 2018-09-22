@@ -137,5 +137,5 @@ TOpt<std::string> Dory::Util::HandleXmlErrors(
     opt_msg.MakeKnown(std::move(msg));
   }
 
-  return std::move(opt_msg);
+  return opt_msg;
 }

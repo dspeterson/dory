@@ -994,7 +994,7 @@ std::list<std::list<TMsg::TPtr>> TRouterThread::EmptyDispatcher() {
     broker_lists.resize(nonempty_count);
   }
 
-  return std::move(result);
+  return result;
 }
 
 bool TRouterThread::RespondToPause() {
@@ -1486,7 +1486,7 @@ std::shared_ptr<TMetadata> TRouterThread::TryGetMetadata() {
     GetMetadataFail.Increment();
   }
 
-  return std::move(result);
+  return result;
 }
 
 void TRouterThread::InitMetadataRefreshTimer() {
@@ -1522,7 +1522,7 @@ std::shared_ptr<TMetadata> TRouterThread::GetInitialMetadata() {
     retry_rate_limiter.OnAction();
   }
 
-  return std::move(result);
+  return result;
 }
 
 std::shared_ptr<TMetadata> TRouterThread::GetMetadataBeforeSlowShutdown() {
@@ -1558,7 +1558,7 @@ std::shared_ptr<TMetadata> TRouterThread::GetMetadataBeforeSlowShutdown() {
     retry_rate_limiter.OnAction();
   }
 
-  return std::move(result);
+  return result;
 }
 
 std::shared_ptr<TMetadata> TRouterThread::GetMetadataDuringSlowShutdown() {
@@ -1569,7 +1569,7 @@ std::shared_ptr<TMetadata> TRouterThread::GetMetadataDuringSlowShutdown() {
   uint64_t now = GetEpochMilliseconds();
 
   if (now >= finish_time) {
-    return std::move(result);  // deadline expired
+    return result;  // deadline expired
   }
 
   TDoryRateLimiter retry_rate_limiter(Config.PauseRateLimitInitial,
@@ -1603,7 +1603,7 @@ std::shared_ptr<TMetadata> TRouterThread::GetMetadataDuringSlowShutdown() {
     retry_rate_limiter.OnAction();
   }
 
-  return std::move(result);
+  return result;
 }
 
 std::shared_ptr<TMetadata> TRouterThread::GetMetadata() {
@@ -1614,7 +1614,7 @@ std::shared_ptr<TMetadata> TRouterThread::GetMetadata() {
     result = std::move(GetMetadataBeforeSlowShutdown());
 
     if (result) {
-      return std::move(result);
+      return result;
     }
 
     /* We got a shutdown request while trying to get metadata.  Keep trying,
@@ -1623,7 +1623,8 @@ std::shared_ptr<TMetadata> TRouterThread::GetMetadata() {
 
   /* From here onward we handle the case where a slow shutdown is in progress.
    */
-  return std::move(GetMetadataDuringSlowShutdown());
+  result = std::move(GetMetadataDuringSlowShutdown());
+  return result;
 }
 
 void TRouterThread::UpdateBatchStateForNewMetadata(const TMetadata &old_md,

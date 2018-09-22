@@ -421,7 +421,7 @@ TAllTopics TProduceRequestFactory::BuildRequestContents() {
   }
 
   SanityCheckRequestContents(result);
-  return std::move(result);
+  return result;
 }
 
 void TProduceRequestFactory::SerializeUncompressedMsgSet(

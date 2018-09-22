@@ -69,7 +69,7 @@ namespace Dory {
         assert(this);
         std::list<TMsg::TPtr> result = DoAddMsg(std::move(msg), now);
         assert(MsgList.size() == CoreState.GetMsgCount());
-        return std::move(result);
+        return result;
       }
 
       Base::TOpt<TMsg::TTimestamp> GetNextCompleteTime() const {

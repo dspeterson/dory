@@ -178,7 +178,7 @@ namespace Thread {
         }
       }
 
-      return std::move(result);
+      return result;
     }
 
     /* Remove and return all items from last segment.  Returned list will be
@@ -220,7 +220,7 @@ namespace Thread {
         RemoveLastSegFromNonemptySegList();
       }
 
-      return std::move(result);
+      return result;
     }
 
     /* Remove and return all items from all segments, but don't change the
@@ -245,7 +245,7 @@ namespace Thread {
       TotalItems = 0;
       FirstNonempty = nullptr;
       LastNonempty = nullptr;
-      return std::move(result);
+      return result;
     }
 
     /* Remove and return all items from all segments, and reset the segment
@@ -264,7 +264,7 @@ namespace Thread {
       seg.NextNonempty = nullptr;
       FirstNonempty = nullptr;
       LastNonempty = nullptr;
-      return std::move(result);
+      return result;
     }
 
     /* Add a new empty segment, which becomes the first segment. */
@@ -377,7 +377,7 @@ namespace Thread {
       }
 
       assert(item_count == TotalItems);
-      return std::move(result);
+      return result;
     }
 
     /* for testing */
@@ -539,7 +539,7 @@ namespace Thread {
         std::list<T> result;
         result.splice(result.end(), Items, start_pos, Items.end());
         NumItems -= n;
-        return std::move(result);
+        return result;
       }
 
       /* Remove all items and append them to 'dst'. */

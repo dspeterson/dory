@@ -61,7 +61,7 @@ std::list<TMsg::TPtr> TTopicMap::Get(const std::string &topic) {
     TopicHash.erase(iter);
   }
 
-  return std::move(result);
+  return result;
 }
 
 std::list<std::list<TMsg::TPtr>> TTopicMap::Get() {
@@ -75,7 +75,7 @@ std::list<std::list<TMsg::TPtr>> TTopicMap::Get() {
   }
 
   TopicHash.clear();
-  return std::move(result);
+  return result;
 }
 
 std::list<TMsg::TPtr> &TTopicMap::PutCommon(const std::string &topic) {

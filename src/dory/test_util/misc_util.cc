@@ -42,7 +42,7 @@ TMsg::TPtr TTestMsgCreator::NewMsg(const std::string &topic,
     SetProcessed(msg);
   }
 
-  return std::move(msg);
+  return msg;
 }
 
 bool Dory::TestUtil::KeyEquals(const TMsg::TPtr &msg, const char *key) {

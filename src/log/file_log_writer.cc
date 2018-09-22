@@ -36,7 +36,7 @@ static TFd OpenLogPath(const char *path) {
   TFd fd = open(path, O_CREAT | O_APPEND | O_WRONLY,
       S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
   IfLt0(fd);
-  return std::move(fd);
+  return fd;
 }
 
 TFileLogWriter::TFileLogWriter(const char *path)

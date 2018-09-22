@@ -90,7 +90,7 @@ namespace Base {
       assert(this);
       std::vector<T> result;
       ReadIntoBuf(result);
-      return std::move(result);
+      return result;
     }
 
     private:

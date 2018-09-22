@@ -92,7 +92,7 @@ static std::string MakeInvalidBoolAttrMsg(const char *true_value,
   msg += "\" or \"";
   msg += false_value;
   msg += "\"";
-  return std::move(msg);
+  return msg;
 }
 
 TInvalidBoolAttr::TInvalidBoolAttr(const xercesc::DOMElement &location,

@@ -57,7 +57,7 @@ namespace Dory {
       std::string MakeWhatArg(const std::string &msg) {
         std::string what_arg("Error: ");
         what_arg += msg;
-        return std::move(what_arg);
+        return what_arg;
       }
 
       std::string MakeWhatArg(const std::string &msg,
@@ -66,7 +66,7 @@ namespace Dory {
         what_arg += msg;
         what_arg += " for arg ";
         what_arg += arg_id;
-        return std::move(what_arg);
+        return what_arg;
       }
 
       std::string Msg;

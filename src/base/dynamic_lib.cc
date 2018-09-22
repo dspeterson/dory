@@ -28,7 +28,7 @@ std::string TDynamicLib::TLibLoadError::CreateMsg(const char *libname) {
   std::string msg("Failed to load library [");
   msg += libname;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 std::string TDynamicLib::TSymLoadError::CreateMsg(const char *libname,
@@ -40,7 +40,7 @@ std::string TDynamicLib::TSymLoadError::CreateMsg(const char *libname,
   msg += "] for library [";
   msg += libname;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 TDynamicLib::TDynamicLib(const char *libname, int flags)

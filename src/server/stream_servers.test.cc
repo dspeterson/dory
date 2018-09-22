@@ -178,7 +178,7 @@ namespace {
     servaddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     IfLt0(connect(fd, reinterpret_cast<struct sockaddr *>(&servaddr),
         sizeof(servaddr)));
-    return std::move(fd);
+    return fd;
   }
 
   TFd Ipv6ConnectToLocalPort(in_port_t port) {
@@ -191,7 +191,7 @@ namespace {
     servaddr.sin6_addr/*.s6_addr*/ = in6addr_loopback;
     IfLt0(connect(fd, reinterpret_cast<struct sockaddr *>(&servaddr),
         sizeof(servaddr)));
-    return std::move(fd);
+    return fd;
   }
 
   TFd UnixStreamConnect(const char *path) {
@@ -203,7 +203,7 @@ namespace {
     std::strncpy(servaddr.sun_path, path, sizeof(servaddr.sun_path));
     IfLt0(connect(fd, reinterpret_cast<struct sockaddr *>(&servaddr),
         sizeof(servaddr)));
-    return std::move(fd);
+    return fd;
   }
 
   TEST_F(TStreamServerTest, TcpIpv4Test) {

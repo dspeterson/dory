@@ -569,7 +569,7 @@ GetOldLogFileSizes(const char *log_dir, const char *log_filename) {
     result.emplace_back(std::move(file_path), stat_buf.st_size, epoch_ms);
   }
 
-  return std::move(result);
+  return result;
 }
 
 bool TDiscardFileLogger::TArchiveCleaner::HandleCleanRequest() {
@@ -744,7 +744,7 @@ TFd TDiscardFileLogger::OpenLogPath(const char *log_path) {
     DisableLogging();
   }
 
-  return std::move(fd);
+  return fd;
 }
 
 void TDiscardFileLogger::DisableLogging() {

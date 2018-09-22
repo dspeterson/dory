@@ -30,5 +30,5 @@ std::string TPathTooLong::MakeWhatArg(const char *path) {
   std::string result("Path too long: [");
   result += path;
   result += "]";
-  return std::move(result);
+  return result;
 }

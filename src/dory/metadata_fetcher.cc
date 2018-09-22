@@ -62,7 +62,7 @@ static std::vector<uint8_t>
 CreateMetadataRequest(const TMetadataProtocol &metadata_protocol) {
   std::vector<uint8_t> result;
   metadata_protocol.WriteAllTopicsMetadataRequest(result, 0);
-  return std::move(result);
+  return result;
 }
 
 TMetadataFetcher::TMetadataFetcher(const TMetadataProtocol *metadata_protocol)
@@ -111,7 +111,7 @@ std::unique_ptr<TMetadata> TMetadataFetcher::Fetch(int timeout_ms) {
   std::unique_ptr<TMetadata> result;
 
   if (!SendRequest(MetadataRequest, timeout_ms) || !ReadResponse(timeout_ms)) {
-    return std::move(result);
+    return result;
   }
 
   assert(StreamReader.GetState() == TStreamMsgReader::TState::MsgReady);
@@ -121,7 +121,7 @@ std::unique_ptr<TMetadata> TMetadataFetcher::Fetch(int timeout_ms) {
   if (response_size == 0) {
     BadMetadataResponse.Increment();
     syslog(LOG_ERR, "Got empty metadata response while getting metadata");
-    return std::move(result);
+    return result;
   }
 
   const uint8_t *response_begin = StreamReader.GetReadyMsg();
@@ -134,7 +134,7 @@ std::unique_ptr<TMetadata> TMetadataFetcher::Fetch(int timeout_ms) {
   } catch (const TMetadataProtocol::TBadMetadataResponse &x) {
     BadMetadataResponse.Increment();
     syslog(LOG_ERR, "Failed to parse metadata response: %s", x.what());
-    return std::move(result);
+    return result;
   }
 
   bool bad_metadata = false;
@@ -160,7 +160,7 @@ std::unique_ptr<TMetadata> TMetadataFetcher::Fetch(int timeout_ms) {
     result.reset();
   }
 
-  return std::move(result);
+  return result;
 }
 
 TMetadataFetcher::TTopicAutocreateResult

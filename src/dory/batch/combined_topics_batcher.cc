@@ -83,7 +83,7 @@ TCombinedTopicsBatcher::AddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
     case TBatcherCore::TAction::ReturnBatchAndTakeMsg: {
       std::list<std::list<TMsg::TPtr>> result = TopicMap.Get();
       TopicMap.Put(std::move(msg));
-      return std::move(result);
+      return result;
     }
     case TBatcherCore::TAction::TakeMsgAndReturnBatch: {
       TopicMap.Put(std::move(msg));
@@ -104,5 +104,5 @@ TCombinedTopicsBatcher::TakeBatch() {
   assert(this);
   std::list<std::list<TMsg::TPtr>> result = TopicMap.Get();
   CoreState.ClearState();
-  return std::move(result);
+  return result;
 }

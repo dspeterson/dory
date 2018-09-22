@@ -90,7 +90,7 @@ namespace Thread {
         result.splice(result.end(), MsgList);
       }
 
-      return std::move(result);
+      return result;
     }
 
     const Base::TFd &GetMsgAvailableFd() const override {

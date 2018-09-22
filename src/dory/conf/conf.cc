@@ -72,7 +72,7 @@ TConf TConf::TBuilder::Build(const char *config_filename) {
   ProcessRootElem(*root);
   TConf result = std::move(BuildResult);
   Reset();
-  return std::move(result);
+  return result;
 }
 
 void TConf::TBuilder::Reset() {

@@ -128,7 +128,7 @@ TPerTopicBatcher::AddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
     batch_list.splice(batch_list.end(), std::move(complete_topic_batches));
   }
 
-  return std::move(batch_list);
+  return batch_list;
 }
 
 std::list<std::list<TMsg::TPtr>>
@@ -164,7 +164,7 @@ TPerTopicBatcher::GetCompleteBatches(TMsg::TTimestamp now) {
     ExpiryTracker.erase(curr);
   }
 
-  return std::move(result);
+  return result;
 }
 
 TOpt<TMsg::TTimestamp> TPerTopicBatcher::GetNextCompleteTime() const {
@@ -194,7 +194,7 @@ std::list<std::list<TMsg::TPtr>> TPerTopicBatcher::GetAllBatches() {
   }
 
   ExpiryTracker.clear();
-  return std::move(result);
+  return result;
 }
 
 std::list<TMsg::TPtr> TPerTopicBatcher::DeleteTopic(const std::string &topic) {
@@ -216,7 +216,7 @@ std::list<TMsg::TPtr> TPerTopicBatcher::DeleteTopic(const std::string &topic) {
   }
 
   BatchMap.erase(iter);
-  return std::move(batch);
+  return batch;
 }
 
 bool TPerTopicBatcher::SanityCheck() const {

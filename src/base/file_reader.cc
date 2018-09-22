@@ -76,7 +76,7 @@ std::string Base::TFileReader::ReadIntoString() {
   assert(this);
   std::string contents;
   ReadIntoString(contents);
-  return std::move(contents);
+  return contents;
 }
 
 void Base::TFileReader::ThrowFileOpenError() const {

@@ -53,7 +53,7 @@ TProdReq TProdReqBuilder::BuildProdReq(const void *request,
 
   RequestReader.Clear();
   MsgSetReader.Clear();
-  return std::move(prod_req);
+  return prod_req;
 }
 
 TTopicGroup TProdReqBuilder::BuildTopicGroup() {
@@ -66,7 +66,7 @@ TTopicGroup TProdReqBuilder::BuildTopicGroup() {
     topic_group.AddMsgSet(BuildMsgSet());
   }
 
-  return std::move(topic_group);
+  return topic_group;
 }
 
 void TProdReqBuilder::GetCompressedData(const std::vector<TMsg> &msg_vec,
@@ -166,7 +166,7 @@ TMsgSet TProdReqBuilder::BuildUncompressedMsgSet(int32_t partition,
   }
 
   msg_set.SetCompressionType(compression_type);
-  return std::move(msg_set);
+  return msg_set;
 }
 
 TMsgSet TProdReqBuilder::BuildMsgSet() {
@@ -215,5 +215,5 @@ TMsgSet TProdReqBuilder::BuildMsgSet() {
         RequestReader.GetCurrentMsgValueEnd()));
   }
 
-  return std::move(msg_set);
+  return msg_set;
 }

@@ -109,7 +109,7 @@ namespace {
       /* Avoid assertion failure in TMsg destructor. */
       SetProcessed(msg);
 
-      return std::move(msg);
+      return msg;
     }
   };  // TAnomalyTrackerConfig
 

@@ -54,7 +54,7 @@ namespace Dory {
       TMsg::TPtr msg = TMsg::CreateAnyPartitionMsg(timestamp, topic_begin,
           topic_end, key, key_size, value, value_size, body_truncated, pool);
       msg_state_tracker.MsgEnterNew();
-      return std::move(msg);
+      return msg;
     }
 
     static TMsg::TPtr CreatePartitionKeyMsg(int32_t partition_key,
@@ -66,7 +66,7 @@ namespace Dory {
           topic_begin, topic_end, key, key_size, value, value_size,
           body_truncated, pool);
       msg_state_tracker.MsgEnterNew();
-      return std::move(msg);
+      return msg;
     }
   };  // TMsgCreator
 
