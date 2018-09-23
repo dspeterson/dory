@@ -27,7 +27,7 @@ namespace Log {
 
   class TLogEntryAccessApi {
     public:
-    virtual ~TLogEntryAccessApi() noexcept = default;
+    virtual ~TLogEntryAccessApi() = default;
 
     /* Return a pair of pointers, where the first pointer indicates the start
        of the log entry, and the second pointer points one byte past the last

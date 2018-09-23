@@ -49,7 +49,7 @@ namespace Dory {
           public:
           TProduceRequestWriter();
 
-          ~TProduceRequestWriter() noexcept override = default;
+          ~TProduceRequestWriter() override = default;
 
           void Reset() override;
 

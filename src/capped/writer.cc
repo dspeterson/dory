@@ -32,7 +32,7 @@ TWriter::TWriter(TPool *pool) noexcept
   Init();
 }
 
-TWriter::~TWriter() noexcept {
+TWriter::~TWriter() {
   assert(this);
   CancelBlob();
 }

@@ -153,7 +153,7 @@ namespace Dory {
 
     explicit TDoryServer(TServerConfig &&config);
 
-    ~TDoryServer() noexcept;
+    ~TDoryServer();
 
     /* Must not be called until _after_ InitConfig() has been called. */
     size_t GetPoolBlockSize() const {

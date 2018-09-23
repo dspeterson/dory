@@ -237,7 +237,7 @@ namespace {
           8, Z_DEFAULT_STRATEGY), Strm, "deflateInit2");
     }
 
-    ~TDeflateInitializer() noexcept {
+    ~TDeflateInitializer() {
       deflateEnd(&Strm);
     }
 

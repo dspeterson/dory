@@ -50,7 +50,7 @@ using namespace Dory::KafkaProto::Produce;
 using namespace Dory::KafkaProto::Produce::V0;
 using namespace Dory::MockKafkaServer;
 
-TV0ClientHandler::~TV0ClientHandler() noexcept {
+TV0ClientHandler::~TV0ClientHandler() {
   /* This will shut down the thread if something unexpected happens. */
   ShutdownOnDestroy();
 }

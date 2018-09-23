@@ -43,7 +43,7 @@ namespace Base {
     /* This class supports subclassing so that a subclass can pass its own
        error handler in the constructor.  The alternative of creating a wrapper
        class that provides the error handler is a bit more verbose. */
-    virtual ~TEventSemaphoreNotifier() noexcept {
+    virtual ~TEventSemaphoreNotifier() {
       Notify();
     }
 

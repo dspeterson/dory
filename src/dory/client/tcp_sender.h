@@ -42,7 +42,7 @@ namespace Dory {
           : Port(port) {
       }
 
-      ~TTcpSender() noexcept override = default;
+      ~TTcpSender() override = default;
 
       protected:
       void DoPrepareToSend() override;

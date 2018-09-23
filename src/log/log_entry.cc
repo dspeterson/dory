@@ -44,7 +44,7 @@ TLogEntry::TLogEntry(TLogWriterApi &log_writer, int level)
       Written(false) {
 }
 
-TLogEntry::~TLogEntry() noexcept {
+TLogEntry::~TLogEntry() {
   try {
     Write();
   } catch (...) {

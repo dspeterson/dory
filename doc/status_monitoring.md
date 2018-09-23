@@ -70,7 +70,7 @@ places in the code where the counters are incremented.  For example, counters
 for class `TMsg`, which represents a single message:
 
 ```C++
-TMsg::~TMsg() noexcept {
+TMsg::~TMsg() {
   assert(this);
   MsgDestroy.Increment();
 

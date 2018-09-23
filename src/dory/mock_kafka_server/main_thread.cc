@@ -33,7 +33,7 @@ using namespace Base;
 using namespace Dory;
 using namespace Dory::MockKafkaServer;
 
-TMainThread::~TMainThread() noexcept {
+TMainThread::~TMainThread() {
   /* This will shut down the thread if something unexpected happens. */
   ShutdownOnDestroy();
 }

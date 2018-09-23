@@ -86,7 +86,7 @@ struct TRouterThreadConfig {
 
   TRouterThreadConfig(in_port_t broker_port, size_t msg_buffer_max_kb);
 
-  ~TRouterThreadConfig() noexcept {
+  ~TRouterThreadConfig() {
     StopRouterThread();
   }
 

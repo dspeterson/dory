@@ -102,7 +102,7 @@ TDiscardFileLogger::TDiscardFileLogger()
       MaxArchiveSize(0) {
 }
 
-TDiscardFileLogger::~TDiscardFileLogger() noexcept {
+TDiscardFileLogger::~TDiscardFileLogger() {
   assert(this);
 
   try {
@@ -401,7 +401,7 @@ TDiscardFileLogger::TArchiveCleaner::TArchiveCleaner(uint64_t max_archive_size,
       LogFilename(log_filename) {
 }
 
-TDiscardFileLogger::TArchiveCleaner::~TArchiveCleaner() noexcept {
+TDiscardFileLogger::TArchiveCleaner::~TArchiveCleaner() {
   /* This will shut down the thread if something unexpected happens. */
   ShutdownOnDestroy();
 }

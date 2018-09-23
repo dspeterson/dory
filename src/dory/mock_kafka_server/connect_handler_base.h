@@ -37,7 +37,7 @@ namespace Dory {
       NO_COPY_SEMANTICS(TConnectHandlerBase);
 
       public:
-      ~TConnectHandlerBase() noexcept override {
+      ~TConnectHandlerBase() override {
         Unregister();
       }
 

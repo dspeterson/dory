@@ -85,7 +85,7 @@ int TServer::Run() {
         : Server(server) {
     }
 
-    ~t_shutdown() noexcept {
+    ~t_shutdown() {
       Server.ShutDownWorkers();
     }
 

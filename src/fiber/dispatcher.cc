@@ -34,7 +34,7 @@ using namespace Base;
 using namespace Fiber;
 using namespace Signal;
 
-TDispatcher::THandler::~THandler() noexcept {
+TDispatcher::THandler::~THandler() {
   assert(this);
 
   /* If this fails, you probably forgot to call Unregister() in your

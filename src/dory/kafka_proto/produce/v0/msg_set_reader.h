@@ -56,7 +56,7 @@ namespace Dory {
 
           TMsgSetReader();
 
-          ~TMsgSetReader() noexcept override = default;
+          ~TMsgSetReader() override = default;
 
           void Clear() override;
 

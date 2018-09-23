@@ -121,7 +121,7 @@ namespace Base {
       return OptDataInvalidReason;
     }
 
-    ~TStreamMsgWithSizeReaderBase() noexcept override = default;
+    ~TStreamMsgWithSizeReaderBase() override = default;
 
     protected:
     size_t GetNextReadSize() override;

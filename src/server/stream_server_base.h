@@ -56,7 +56,7 @@ namespace Server {
       NO_COPY_SEMANTICS(TConnectionHandlerApi);
 
       public:
-      virtual ~TConnectionHandlerApi() noexcept = default;
+      virtual ~TConnectionHandlerApi() = default;
 
       /* Each time a new client connection is received, this method is called.
          Parameters:
@@ -86,7 +86,7 @@ namespace Server {
       TConnectionHandlerApi() = default;
     };  // TConnectionHandlerApi
 
-    ~TStreamServerBase() noexcept override;
+    ~TStreamServerBase() override;
 
     void Bind();
 

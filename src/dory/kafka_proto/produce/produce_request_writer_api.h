@@ -38,7 +38,7 @@ namespace Dory {
         NO_COPY_SEMANTICS(TProduceRequestWriterApi);
 
         public:
-        virtual ~TProduceRequestWriterApi() noexcept = default;
+        virtual ~TProduceRequestWriterApi() = default;
 
         virtual void Reset() = 0;
 

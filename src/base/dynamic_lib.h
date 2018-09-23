@@ -76,7 +76,7 @@ namespace Base {
       static std::string CreateMsg(const char *libname, const char *symname);
     };  // TSymLoadError
 
-    virtual ~TDynamicLib() noexcept {
+    virtual ~TDynamicLib() {
       int ret = dlclose(Handle);
       assert(ret == 0);
     }

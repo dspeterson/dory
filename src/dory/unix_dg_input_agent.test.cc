@@ -93,7 +93,7 @@ namespace {
 
     explicit TDoryConfig(size_t pool_block_size);
 
-    ~TDoryConfig() noexcept {
+    ~TDoryConfig() {
       StopDory();
     }
 

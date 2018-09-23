@@ -38,7 +38,7 @@ namespace Dory {
         NO_COPY_SEMANTICS(TMsgSetWriterApi);
 
         public:
-        virtual ~TMsgSetWriterApi() noexcept = default;
+        virtual ~TMsgSetWriterApi() = default;
 
         virtual void Reset() = 0;
 

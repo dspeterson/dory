@@ -32,7 +32,7 @@
 using namespace Base;
 using namespace Thread;
 
-TManagedThreadPoolBase::~TManagedThreadPoolBase() noexcept {
+TManagedThreadPoolBase::~TManagedThreadPoolBase() {
   try {
     if (IsStarted()) {
       /* This handles the case where a fatal exception is causing unexpected
@@ -207,7 +207,7 @@ void TManagedThreadPoolBase::TWorkerBase::PutBack(
   }
 }
 
-TManagedThreadPoolBase::TWorkerBase::~TWorkerBase() noexcept {
+TManagedThreadPoolBase::TWorkerBase::~TWorkerBase() {
   if (WorkerThread.joinable()) {
     /* should happen only on fatal error */
     WorkerThread.join();
@@ -617,7 +617,7 @@ TManagedThreadPoolBase::TManager::TManager(TManagedThreadPoolBase &my_pool)
     : MyPool(my_pool) {
 }
 
-TManagedThreadPoolBase::TManager::~TManager() noexcept {
+TManagedThreadPoolBase::TManager::~TManager() {
   ShutdownOnDestroy();
 }
 

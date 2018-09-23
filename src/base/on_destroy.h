@@ -38,7 +38,7 @@ namespace Base {
           Active(true) {
     }
 
-    ~TOnDestroy() noexcept {
+    ~TOnDestroy() {
       if (Active) {
         Action();
       }

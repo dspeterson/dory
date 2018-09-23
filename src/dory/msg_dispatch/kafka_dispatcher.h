@@ -60,7 +60,7 @@ namespace Dory {
           const Batch::TGlobalBatchConfig &batch_config,
           const Debug::TDebugSetup &debug_setup);
 
-      ~TKafkaDispatcher() noexcept override = default;
+      ~TKafkaDispatcher() override = default;
 
       void SetProduceProtocol(
           KafkaProto::Produce::TProduceProtocol *protocol) noexcept override;

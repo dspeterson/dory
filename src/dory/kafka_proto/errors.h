@@ -34,7 +34,7 @@ namespace Dory {
           : std::runtime_error("Invalid Kafka wire protocol message size") {
       }
 
-      ~TBadRequestOrResponseSize() noexcept override = default;
+      ~TBadRequestOrResponseSize() override = default;
     };  // TBadRequestOrResponseSize
 
   }  // KafkaProto

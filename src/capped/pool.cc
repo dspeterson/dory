@@ -43,7 +43,7 @@ TPool::TPool(size_t block_size, size_t block_count, TSync sync_policy)
   }
 }
 
-TPool::~TPool() noexcept {
+TPool::~TPool() {
   assert(this);
   delete [] Storage;
 }

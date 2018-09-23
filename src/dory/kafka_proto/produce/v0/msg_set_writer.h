@@ -48,7 +48,7 @@ namespace Dory {
           public:
           TMsgSetWriter();
 
-          ~TMsgSetWriter() noexcept override = default;
+          ~TMsgSetWriter() override = default;
 
           void Reset() override;
 

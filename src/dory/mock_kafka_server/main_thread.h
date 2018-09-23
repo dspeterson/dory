@@ -50,7 +50,7 @@ namespace Dory {
             Server(config, true, true) {
       }
 
-      ~TMainThread() noexcept override;
+      ~TMainThread() override;
 
       void RequestShutdown() override;
 

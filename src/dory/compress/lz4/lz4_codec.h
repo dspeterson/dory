@@ -44,7 +44,7 @@ namespace Dory {
         public:
         static const TLz4Codec &The();  // singleton accessor
 
-        ~TLz4Codec() noexcept override = default;
+        ~TLz4Codec() override = default;
 
         Base::TOpt<int> GetRealCompressionLevel(
             const Base::TOpt<int> &requested_level) const noexcept override;

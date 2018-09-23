@@ -116,7 +116,7 @@ TRouterThread::TRouterThread(const TConfig &config, const TConf &conf,
       DebugLogger(debug_setup, TDebugSetup::TLogId::MSG_RECEIVE) {
 }
 
-TRouterThread::~TRouterThread() noexcept {
+TRouterThread::~TRouterThread() {
   /* This will shut down the thread if something unexpected happens.  Setting
      the 'Destroying' flag tells the thread to shut down immediately when it
      gets the shutdown request. */

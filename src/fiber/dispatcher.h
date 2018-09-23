@@ -71,7 +71,7 @@ namespace Fiber{
 
       /* Make sure you call Unregister() in the destructor of your most-derived
          class. */
-      virtual ~THandler() noexcept;
+      virtual ~THandler();
 
       /* The dispatcher with which we are registered, or null if we're not
          registered with a dispatcher. */

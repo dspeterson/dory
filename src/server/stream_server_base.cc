@@ -41,7 +41,7 @@ void TStreamServerBase::TConnectionHandlerApi::HandleNonfatalAcceptError(
   /* Base class version is no-op.  Subclasses can override. */
 }
 
-TStreamServerBase::~TStreamServerBase() noexcept {
+TStreamServerBase::~TStreamServerBase() {
   assert(this);
   ShutdownOnDestroy();
 

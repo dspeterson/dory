@@ -41,7 +41,7 @@ namespace {
         : WrittenCount(0) {
     }
 
-    ~TTestLogWriter() noexcept override = default;
+    ~TTestLogWriter() override = default;
 
     void WriteEntry(TLogEntryAccessApi &entry) override {
       assert(this);

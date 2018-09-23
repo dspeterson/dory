@@ -49,7 +49,7 @@ namespace Dory {
             PortMap(port_map) {
       }
 
-      ~TConnectHandler() noexcept override = default;
+      ~TConnectHandler() override = default;
 
       void OnEvent(int fd, short flags) override;
 

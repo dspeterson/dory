@@ -40,7 +40,7 @@ namespace Dory {
         public:
         class TBadProduceRequest : public std::runtime_error {
           public:
-          ~TBadProduceRequest() noexcept override = default;
+          ~TBadProduceRequest() override = default;
 
           protected:
           explicit TBadProduceRequest(const char *msg)
@@ -48,7 +48,7 @@ namespace Dory {
           }
         };  // TBadProduceRequest
 
-        virtual ~TProduceRequestReaderApi() noexcept = default;
+        virtual ~TProduceRequestReaderApi() = default;
 
         virtual void Clear() = 0;
 

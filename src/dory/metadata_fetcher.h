@@ -50,7 +50,7 @@ namespace Dory {
           : Fetcher(fetcher) {
       }
 
-      ~TDisconnecter() noexcept {
+      ~TDisconnecter() {
         Fetcher.Disconnect();
       }
 

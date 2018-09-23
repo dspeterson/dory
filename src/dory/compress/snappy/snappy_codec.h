@@ -41,7 +41,7 @@ namespace Dory {
         public:
         static const TSnappyCodec &The();  // singleton accessor
 
-        ~TSnappyCodec() noexcept override = default;
+        ~TSnappyCodec() override = default;
 
         Base::TOpt<int> GetRealCompressionLevel(
             const Base::TOpt<int> &requested_level) const noexcept override;

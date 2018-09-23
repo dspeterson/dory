@@ -36,7 +36,7 @@ namespace Xml {
 
     public:
     /* The destructor handles library deinitialization. */
-    virtual ~TXmlInitializer() noexcept;
+    virtual ~TXmlInitializer();
 
     /* Call this method to manually initialize Xerces (necessary only if the
        constructor was told _not_ to call this method).  On success, return

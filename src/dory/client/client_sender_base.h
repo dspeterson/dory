@@ -35,7 +35,7 @@ namespace Dory {
       NO_COPY_SEMANTICS(TClientSenderBase);
 
       public:
-      virtual ~TClientSenderBase() noexcept = default;
+      virtual ~TClientSenderBase() = default;
 
       void PrepareToSend() {
         assert(this);

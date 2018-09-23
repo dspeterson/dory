@@ -52,7 +52,7 @@ namespace Capped {
     TBlob(const TBlob &) = delete;
 
     /* Return our blocks to the pool, if we have any. */
-    ~TBlob() noexcept {
+    ~TBlob() {
       assert(this);
 
       if (Pool) {

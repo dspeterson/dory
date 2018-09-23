@@ -40,7 +40,7 @@ namespace Dory {
           : TConnectHandlerBase(ss) {
       }
 
-      ~TCmdHandler() noexcept override = default;
+      ~TCmdHandler() override = default;
 
       void OnEvent(int fd, short flags) override;
     };  // TCmdHandler

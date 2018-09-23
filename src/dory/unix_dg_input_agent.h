@@ -74,7 +74,7 @@ namespace Dory {
         TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
         Thread::TGatePutApi<TMsg::TPtr> &output_queue);
 
-    ~TUnixDgInputAgent() noexcept override;
+    ~TUnixDgInputAgent() override;
 
     /* Start agent and wait for it to open input socket.  Return true on
        success or false on failure. */

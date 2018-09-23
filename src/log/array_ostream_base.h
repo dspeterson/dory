@@ -41,7 +41,7 @@ namespace Log {
     public:
     static const size_t BUF_SIZE = BufSize;
 
-    ~TArrayOstreamBase() noexcept override = default;
+    ~TArrayOstreamBase() override = default;
 
     /* Return number of bytes written to stream. */
     size_t Size() const noexcept {

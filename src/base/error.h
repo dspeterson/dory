@@ -67,7 +67,7 @@ namespace Base {
   class TError : public std::exception {
     public:
 
-    ~TError() noexcept override = default;
+    ~TError() override = default;
 
     /* Returns a human-readable description of what went wrong.  This message
        has the following pattern: (<file>,<line>),<error class>[,<details>] */

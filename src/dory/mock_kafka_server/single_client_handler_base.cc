@@ -570,7 +570,7 @@ bool TSingleClientHandlerBase::HandleProduceRequest() {
   struct reader_t final {
     explicit reader_t(TProduceRequestReaderApi &reader) : Reader(reader) { }
 
-    ~reader_t() noexcept { Reader.Clear(); }  // not strictly necessary
+    ~reader_t() { Reader.Clear(); }  // not strictly necessary
 
     TProduceRequestReaderApi &Reader;
   } r(GetProduceRequestReader());

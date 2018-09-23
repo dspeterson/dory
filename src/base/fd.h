@@ -88,7 +88,7 @@ namespace Base {
 
     /* Close the file descriptor we own, if any.  If the descriptor is in the
        stdio range (0-2), then don't close it. */
-    ~TFd() noexcept {
+    ~TFd() {
       assert(this);
 
       if (OsHandle >= 3) {

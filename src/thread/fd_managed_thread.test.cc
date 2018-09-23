@@ -54,7 +54,7 @@ namespace {
         : Flag(flag) {
     }
 
-    ~TTestWorker1() noexcept override {
+    ~TTestWorker1() override {
       ShutdownOnDestroy();
     }
 
@@ -74,7 +74,7 @@ namespace {
         : Flag(flag) {
     }
 
-    ~TTestWorker2() noexcept override {
+    ~TTestWorker2() override {
       ShutdownOnDestroy();
     }
 
@@ -101,7 +101,7 @@ namespace {
           ThrowStdException(throw_std_exception) {
     }
 
-    ~TTestWorker3() noexcept override {
+    ~TTestWorker3() override {
       ShutdownOnDestroy();
     }
 

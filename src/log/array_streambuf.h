@@ -48,7 +48,7 @@ namespace Log {
       setp(Buf, Buf + BufSize - ReserveBytes);
     }
 
-    ~TArrayStreambuf() noexcept override = default;
+    ~TArrayStreambuf() override = default;
 
     /* Number of bytes to reserve at end of buffer. */
     size_t ReserveBytes;

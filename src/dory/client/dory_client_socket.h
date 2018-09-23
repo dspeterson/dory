@@ -46,7 +46,7 @@ namespace Dory {
         dory_client_socket_init(&Sock);
       }
 
-      virtual ~TDoryClientSocket() noexcept {
+      virtual ~TDoryClientSocket() {
         Close();
       }
 

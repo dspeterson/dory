@@ -61,7 +61,7 @@ namespace Base {
       AtEnd
     };  // TState
 
-    virtual ~TStreamMsgReader() noexcept = default;
+    virtual ~TStreamMsgReader() = default;
 
     /* When in state TState::ReadNeeded, client code calls this to read more
        data.  This is guaranteed not to block if prior to the call, the client

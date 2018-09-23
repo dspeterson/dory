@@ -74,7 +74,7 @@ namespace Dory {
         const Debug::TDebugSetup &debug_setup,
         MsgDispatch::TKafkaDispatcherApi &dispatcher);
 
-    ~TRouterThread() noexcept override;
+    ~TRouterThread() override;
 
     /* Return a file descriptor that becomes readable when the router thread
        has finished its initialization and is open for business.
@@ -125,7 +125,7 @@ namespace Dory {
           : std::runtime_error("TShutdownOnDestroy") {
       }
 
-      ~TShutdownOnDestroy() noexcept override = default;
+      ~TShutdownOnDestroy() override = default;
     };  // TShutdownOnDestroy
 
     using TKafkaBroker = Util::THostAndPort;

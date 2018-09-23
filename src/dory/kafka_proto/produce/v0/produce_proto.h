@@ -47,7 +47,7 @@ namespace Dory {
               : TProduceProtocol(ComputeConstants()) {
           }
 
-          ~TProduceProto() noexcept override = default;
+          ~TProduceProto() override = default;
 
           TProduceRequestWriterApi *
           CreateProduceRequestWriter() const override;

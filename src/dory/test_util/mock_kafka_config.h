@@ -58,7 +58,7 @@ namespace Dory {
 
       explicit TMockKafkaConfig(const std::vector<std::string> &config_file);
 
-      ~TMockKafkaConfig() noexcept {
+      ~TMockKafkaConfig() {
         StopKafka();
       }
 

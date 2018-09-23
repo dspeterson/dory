@@ -39,7 +39,7 @@ namespace Dory {
         public:
         static const TGzipCodec &The();  // singleton accessor
 
-        ~TGzipCodec() noexcept override = default;
+        ~TGzipCodec() override = default;
 
         Base::TOpt<int> GetRealCompressionLevel(
             const Base::TOpt<int> &requested_level) const noexcept override;

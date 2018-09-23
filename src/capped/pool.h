@@ -93,7 +93,7 @@ namespace Capped {
 
     /* Free all storage.  Make sure no one is using our storage before this
        happens. */
-    ~TPool() noexcept;
+    ~TPool();
 
     /* Allocate a block of storage, or throw TMemoryCapReached if we're out. */
     void *Alloc();

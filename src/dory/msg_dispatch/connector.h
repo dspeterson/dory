@@ -62,7 +62,7 @@ namespace Dory {
       public:
       TConnector(size_t my_broker_index, TDispatcherSharedState &ds);
 
-      ~TConnector() noexcept override;
+      ~TConnector() override;
 
       /* This must be called before starting the thread. */
       void SetMetadata(const std::shared_ptr<TMetadata> &md);

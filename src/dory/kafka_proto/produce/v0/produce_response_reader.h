@@ -61,7 +61,7 @@ namespace Dory {
 
           TProduceResponseReader();
 
-          ~TProduceResponseReader() noexcept override = default;
+          ~TProduceResponseReader() override = default;
 
           void Clear() noexcept override;
 

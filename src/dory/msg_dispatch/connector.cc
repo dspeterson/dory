@@ -103,7 +103,7 @@ TConnector::TConnector(size_t my_broker_index, TDispatcherSharedState &ds)
       REQUEST_OR_RESPONSE_SIZE_SIZE, "Wrong size field size for StreamReader");
 }
 
-TConnector::~TConnector() noexcept {
+TConnector::~TConnector() {
   /* This will shut down the thread if something unexpected happens.  Setting
      the 'Destroying' flag tells the thread to shut down immediately when it
      gets the shutdown request. */

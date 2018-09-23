@@ -58,7 +58,7 @@ namespace Dory {
                                      std::move(client_socket)) {
       }
 
-      ~TV0ClientHandler() noexcept override;
+      ~TV0ClientHandler() override;
 
       protected:
       Dory::KafkaProto::Produce::TProduceRequestReaderApi &

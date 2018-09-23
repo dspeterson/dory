@@ -131,7 +131,7 @@ namespace Thread {
       public:
       /* Destructor releases all acquired resources, which includes returning
          worker to idle list when appropriate. */
-      virtual ~TReadyWorkerBase() noexcept {
+      virtual ~TReadyWorkerBase() {
         PutBack();
       }
 
@@ -247,7 +247,7 @@ namespace Thread {
     /* After calling Start(), pool should not be destroyed until it has been
        properly shut down (see RequestShutdown(), GetShutdownWaitFd(), and
        WaitForShutdown()). */
-    virtual ~TManagedThreadPoolBase() noexcept;
+    virtual ~TManagedThreadPoolBase();
 
     /* Return the pool's current configuration. */
     TManagedThreadPoolConfig GetConfig() const noexcept {
@@ -360,7 +360,7 @@ namespace Thread {
          list, it goes back to the idle list.  Otherwise it gets destroyed. */
       static void PutBack(TWorkerBase *worker) noexcept;
 
-      virtual ~TWorkerBase() noexcept;
+      virtual ~TWorkerBase();
 
       /* Return true if this object contains an actual thread, or false
          otherwise. */
@@ -569,7 +569,7 @@ namespace Thread {
       public:
       explicit TManager(TManagedThreadPoolBase &my_pool);
 
-      ~TManager() noexcept override;
+      ~TManager() override;
 
       /* Long-running worker threads are expected to monitor the file
          descriptor returned by this method, and stop working when it becomes

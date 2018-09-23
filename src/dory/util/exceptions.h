@@ -35,7 +35,7 @@ namespace Dory {
           : TFileOpenError(filename.c_str()) {
       }
 
-      ~TFileOpenError() noexcept override = default;
+      ~TFileOpenError() override = default;
     };  // TFileOpenError
 
     class TFileReadError : public std::runtime_error {
@@ -46,7 +46,7 @@ namespace Dory {
           : TFileReadError(filename.c_str()) {
       }
 
-      ~TFileReadError() noexcept override = default;
+      ~TFileReadError() override = default;
     };  // TFileReadError
 
     class TFileWriteError : public std::runtime_error {
@@ -57,7 +57,7 @@ namespace Dory {
           : TFileWriteError(filename.c_str()) {
       }
 
-      ~TFileWriteError() noexcept override = default;
+      ~TFileWriteError() override = default;
     };  // TFileWriteError
 
   }  // Util

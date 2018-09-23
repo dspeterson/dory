@@ -34,7 +34,7 @@ namespace Log {
     /* Throws std::system_error on error opening file. */
     explicit TFileLogWriter(const char *path);
 
-    ~TFileLogWriter() noexcept override = default;
+    ~TFileLogWriter() override = default;
 
     /* Write 'entry' to file.  A trailing newline will be appended. */
     void WriteEntry(TLogEntryAccessApi &entry) override;

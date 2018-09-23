@@ -45,7 +45,7 @@ namespace Dory {
           : TUnixDgSender(path.c_str()) {
       }
 
-      ~TUnixDgSender() noexcept override = default;
+      ~TUnixDgSender() override = default;
 
       protected:
       void DoPrepareToSend() override;

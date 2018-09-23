@@ -35,7 +35,7 @@ namespace Thread {
     public:
     TGateGetApi() = default;
 
-    virtual ~TGateGetApi() noexcept = default;
+    virtual ~TGateGetApi() = default;
 
     virtual std::list<TMsgType> Get() = 0;
 

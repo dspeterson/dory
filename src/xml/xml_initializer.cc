@@ -27,7 +27,7 @@ using namespace xercesc;
 
 using namespace Xml;
 
-TXmlInitializer::~TXmlInitializer() noexcept {
+TXmlInitializer::~TXmlInitializer() {
   Cleanup();
 }
 

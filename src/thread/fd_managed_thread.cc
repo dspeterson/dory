@@ -24,7 +24,7 @@
 using namespace Base;
 using namespace Thread;
 
-TFdManagedThread::~TFdManagedThread() noexcept {
+TFdManagedThread::~TFdManagedThread() {
   assert(this);
 
   /* This should have already been called by a subclass destructor.  Calling it

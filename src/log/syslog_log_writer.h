@@ -30,7 +30,7 @@ namespace Log {
     NO_COPY_SEMANTICS(TSyslogLogWriter);
 
     public:
-    ~TSyslogLogWriter() noexcept override = default;
+    ~TSyslogLogWriter() override = default;
 
     /* Write 'entry'. */
     void WriteEntry(TLogEntryAccessApi &entry) override;

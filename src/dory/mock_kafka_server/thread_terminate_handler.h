@@ -40,7 +40,7 @@ namespace Dory {
           : TerminateHandler(std::move(terminate_handler)) {
       }
 
-      ~TThreadTerminateHandler() noexcept override {
+      ~TThreadTerminateHandler() override {
         Unregister();
       }
 

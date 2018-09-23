@@ -33,7 +33,7 @@ namespace Log {
     public:
     TStdoutStderrLogWriter() = default;
 
-    ~TStdoutStderrLogWriter() noexcept override = default;
+    ~TStdoutStderrLogWriter() override = default;
 
     /* Write 'entry' to stdout or stderr, depending on the log level (severity
        of at least LOG_ERR goes to stderr).  A trailing newline will be

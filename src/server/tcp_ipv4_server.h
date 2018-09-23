@@ -48,7 +48,7 @@ namespace Server {
         TConnectionHandlerApi *connection_handler,
         TFatalErrorHandler &&fatal_error_handler);
 
-    ~TTcpIpv4Server() noexcept override = default;
+    ~TTcpIpv4Server() override = default;
 
     in_addr_t GetBindAddr() const noexcept {
       assert(this);

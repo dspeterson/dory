@@ -111,7 +111,7 @@ namespace {
           DoryReturnValue(EXIT_FAILURE) {
     }
 
-    virtual ~TDoryTestServer() noexcept;
+    virtual ~TDoryTestServer();
 
     void UseUnixDgSocket() {
       assert(this);
@@ -214,7 +214,7 @@ namespace {
     std::unique_ptr<TDoryServer> Dory;
   };  // TDoryTestServer
 
-  TDoryTestServer::~TDoryTestServer() noexcept {
+  TDoryTestServer::~TDoryTestServer() {
     /* This will shut down the thread if something unexpected happens. */
     ShutdownOnDestroy();
   }
@@ -1666,7 +1666,7 @@ namespace {
           MsgVec(msg_vec) {
     }
 
-    virtual ~TMsgBlaster() noexcept {
+    virtual ~TMsgBlaster() {
     }
 
     virtual void Run() override;

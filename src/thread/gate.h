@@ -40,7 +40,7 @@ namespace Thread {
     public:
     TGate() = default;
 
-    ~TGate() noexcept override = default;
+    ~TGate() override = default;
 
     void Put(std::list<TMsgType> &&put_list) override {
       assert(this);

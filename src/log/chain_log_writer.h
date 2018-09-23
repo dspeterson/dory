@@ -41,7 +41,7 @@ namespace Log {
 
     TChainLogWriter();
 
-    ~TChainLogWriter() noexcept override = default;
+    ~TChainLogWriter() override = default;
 
     /* Write 'entry'. */
     void WriteEntry(TLogEntryAccessApi &entry) override;

@@ -102,7 +102,7 @@ namespace {
       }
   
       /* Unregister from the dispatcher before we go.  This is mandatory. */
-      virtual ~TWorker() noexcept {
+      virtual ~TWorker() {
         assert(this);
         Unregister();
       }
@@ -217,7 +217,7 @@ namespace {
       }
   
       /* Unregister from the dispatcher before we go.  This is mandatory. */
-      virtual ~TAcceptor() noexcept {
+      virtual ~TAcceptor() {
         assert(this);
         Unregister();
       }

@@ -66,7 +66,7 @@ TMsg::TPtr TMsg::CreatePartitionKeyMsg(int32_t partition_key,
       pool));
 }
 
-TMsg::~TMsg() noexcept {
+TMsg::~TMsg() {
   assert(this);
   MsgDestroy.Increment();
 

@@ -69,7 +69,7 @@ namespace Dory {
             DebugLogger(debug_logger) {
       }
 
-      ~TProduceResponseProcessor() noexcept {
+      ~TProduceResponseProcessor() {
         /* Not strictly necessary, but it's nice not to leave potentially
            dangling pointers inside the reader. */
         ResponseReader.Clear();

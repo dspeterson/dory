@@ -45,7 +45,7 @@ namespace Dory {
             Ss(ss) {
       }
 
-      ~TCmdWorker() noexcept override;
+      ~TCmdWorker() override;
 
       protected:
       void Run() override;

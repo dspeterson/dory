@@ -35,7 +35,7 @@ namespace Dory {
       NO_COPY_SEMANTICS(TMockKafkaWorker);
 
       public:
-      ~TMockKafkaWorker() noexcept override = default;
+      ~TMockKafkaWorker() override = default;
 
       protected:
       explicit TMockKafkaWorker(Base::TFd &&client_socket)

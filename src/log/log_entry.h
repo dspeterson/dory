@@ -44,7 +44,7 @@ namespace Log {
 
     /* Destructor invokes LogWriter for log entry, if not already invoked at
        time of destruction. */
-    ~TLogEntry() noexcept override;
+    ~TLogEntry() override;
 
     /* Return a pair of pointers, where the first pointer indicates the start
        of the log entry, and the second pointer points one byte past the last

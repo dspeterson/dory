@@ -42,7 +42,7 @@ namespace Dory {
         public:
         TFileFormatError(size_t line_num, const char *msg);
 
-        ~TFileFormatError() noexcept override = default;
+        ~TFileFormatError() override = default;
 
         size_t GetLineNum() const {
           return LineNum;

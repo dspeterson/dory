@@ -65,7 +65,7 @@ namespace {
               }) {
     }
 
-    ~TConnectionWorker() noexcept {
+    ~TConnectionWorker() {
       try {
         Worker.join();
       } catch (...) {
@@ -138,7 +138,7 @@ namespace {
         : Workers(workers) {
     }
 
-    ~TTestServerConnectionHandler() noexcept override {
+    ~TTestServerConnectionHandler() override {
       for (auto &w : Workers) {
         try {
           w.Join();

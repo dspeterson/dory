@@ -70,7 +70,7 @@ namespace Dory {
 
     TDiscardFileLogger();
 
-    ~TDiscardFileLogger() noexcept;
+    ~TDiscardFileLogger();
 
     /* Must be called only during server startup _before_ any log entries can
        be written, since this initializes the internal state of the singleton
@@ -202,7 +202,7 @@ namespace Dory {
       TArchiveCleaner(uint64_t max_archive_size, const char *log_dir,
                       const char *log_filename);
 
-      ~TArchiveCleaner() noexcept override;
+      ~TArchiveCleaner() override;
 
       /* Awaken thread.  It will then scan the log directory and delete old
          logfiles as necessary. */

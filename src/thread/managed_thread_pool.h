@@ -81,7 +81,7 @@ namespace Thread {
 
       /* Releases the thread (i.e. puts it back in the pool if appropriate) if
          base class Launch() method has not been called. */
-      ~TReadyWorker() noexcept override = default;
+      ~TReadyWorker() override = default;
 
       /* Move any thread contained by donor into the assignment target, leaving
          the donor empty.  Release any thread prevoiusly contained by
@@ -156,7 +156,7 @@ namespace Thread {
     /* After calling Start(), pool should not be destroyed until it has been
        properly shut down (see RequestShutdown(), GetShutdownWaitFd(), and
        WaitForShutdown()). */
-    ~TManagedThreadPool() noexcept override = default;
+    ~TManagedThreadPool() override = default;
 
     /* Allocate a worker from the pool and return a wrapper object containing
        it.  If the pool idle list is empty prior to successful allocation, a
@@ -195,7 +195,7 @@ namespace Thread {
             WorkFn(nullptr) {
       }
 
-      ~TWorker() noexcept override = default;
+      ~TWorker() override = default;
 
       /* Return function pointer or object that worker calls to perform work.
        */

@@ -54,7 +54,7 @@ namespace Dory {
       NO_COPY_SEMANTICS(TSingleClientHandlerBase);
 
       public:
-      ~TSingleClientHandlerBase() noexcept override = default;
+      ~TSingleClientHandlerBase() override = default;
 
       protected:
       void Run() override;

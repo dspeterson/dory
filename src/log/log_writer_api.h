@@ -44,7 +44,7 @@ namespace Log {
       }
     };  // TLogWriteError
 
-    virtual ~TLogWriterApi() noexcept = default;
+    virtual ~TLogWriterApi() = default;
 
     /* Write 'entry'.  Throws TLogWriteError on error writing to log. */
     virtual void WriteEntry(TLogEntryAccessApi &entry) = 0;

@@ -65,7 +65,7 @@ namespace Thread {
     /* The destructor will terminate the thread if necessary.  However, in most
        cases it is probably better to shut down the thread manually before
        destructor invocation. */
-    virtual ~TFdManagedThread() noexcept;
+    virtual ~TFdManagedThread();
 
     /* Launch the worker thread and return immediately while the thread runs.
        Once the thread has finished running and Join() has been called, this

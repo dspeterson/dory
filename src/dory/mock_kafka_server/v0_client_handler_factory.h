@@ -41,7 +41,7 @@ namespace Dory {
           : TClientHandlerFactoryBase(config, setup) {
       }
 
-      ~TV0ClientHandlerFactory() noexcept override = default;
+      ~TV0ClientHandlerFactory() override = default;
 
       TSingleClientHandlerBase *CreateClientHandler(
           const std::shared_ptr<TPortMap> &port_map, size_t port_offset,

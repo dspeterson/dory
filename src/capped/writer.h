@@ -44,7 +44,7 @@ namespace Capped {
     explicit TWriter(TPool *pool) noexcept;
 
     /* Any pending blob will be canceled automatically. */
-    ~TWriter() noexcept;
+    ~TWriter();
 
     /* Drop any data we've written so far and return to the default-constructed
        state. */

@@ -275,7 +275,7 @@ TDoryServer::TDoryServer(TServerConfig &&config)
   MyServerListItem = ServerList.begin();
 }
 
-TDoryServer::~TDoryServer() noexcept {
+TDoryServer::~TDoryServer() {
   assert(this);
   std::lock_guard<std::mutex> lock(ServerListMutex);
   assert(*MyServerListItem == this);

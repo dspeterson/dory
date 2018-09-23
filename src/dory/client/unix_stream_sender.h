@@ -45,7 +45,7 @@ namespace Dory {
           : TUnixStreamSender(path.c_str()) {
       }
 
-      ~TUnixStreamSender() noexcept override = default;
+      ~TUnixStreamSender() override = default;
 
       protected:
       void DoPrepareToSend() override;

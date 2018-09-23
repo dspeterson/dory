@@ -34,7 +34,7 @@ using namespace Base;
 using namespace Dory;
 using namespace Dory::MockKafkaServer;
 
-TCmdWorker::~TCmdWorker() noexcept {
+TCmdWorker::~TCmdWorker() {
   /* This will shut down the thread if something unexpected happens. */
   ShutdownOnDestroy();
 }

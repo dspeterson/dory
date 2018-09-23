@@ -56,7 +56,7 @@ void TConnectHandlerBase::RunThread(TMockKafkaWorker *w) {
           Active(true) {
     }
 
-    ~t_cleanup() noexcept {
+    ~t_cleanup() {
       if (Active) {
         StateMap.erase(Key);
       }

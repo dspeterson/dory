@@ -32,7 +32,7 @@ namespace Log {
     public:
     TFileLogWriterBase() = default;
 
-    ~TFileLogWriterBase() noexcept override = default;
+    ~TFileLogWriterBase() override = default;
 
     protected:
     /* Write 'entry' to file descriptor 'fd'.  A trailing newline will be

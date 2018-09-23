@@ -58,7 +58,7 @@ namespace Dory {
           bool batch_topic_filter_exclude, size_t produce_request_data_limit,
           const Debug::TDebugSetup &debug_setup);
 
-      ~TMockKafkaDispatcher() noexcept override = default;
+      ~TMockKafkaDispatcher() override = default;
 
       void SetProduceProtocol(
           KafkaProto::Produce::TProduceProtocol *protocol) noexcept override;

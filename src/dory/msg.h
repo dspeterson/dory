@@ -165,7 +165,7 @@ namespace Dory {
       State = state;
     }
 
-    ~TMsg() noexcept;
+    ~TMsg();
 
     private:
     /* Create a message with the given topic and body.  'topic_begin' points to

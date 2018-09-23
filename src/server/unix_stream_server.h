@@ -64,7 +64,7 @@ namespace Server {
               std::move(fatal_error_handler)) {
     }
 
-    ~TUnixStreamServer() noexcept override = default;
+    ~TUnixStreamServer() override = default;
 
     const std::string &GetPath() const noexcept {
       assert(this);

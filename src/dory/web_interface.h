@@ -57,7 +57,7 @@ namespace Dory {
           DebugSetup(debug_setup) {
     }
 
-    ~TWebInterface() noexcept override {
+    ~TWebInterface() override {
       assert(this);
       StopHttpServer();
     }

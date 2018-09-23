@@ -44,7 +44,7 @@ namespace Dory {
           public:
           TMetadataProto() = default;
 
-          ~TMetadataProto() noexcept override = default;
+          ~TMetadataProto() override = default;
 
           /* Request metadata for all topics. */
           void WriteAllTopicsMetadataRequest(std::vector<uint8_t> &result,
