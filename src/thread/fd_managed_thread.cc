@@ -21,8 +21,6 @@
 
 #include <thread/fd_managed_thread.h>
 
-#include <functional>
-
 using namespace Base;
 using namespace Thread;
 
@@ -47,7 +45,10 @@ void TFdManagedThread::Start() {
   assert(!ThrownByThread);
 
   /* Start the thread running. */
-  Thread = std::thread(std::bind(&TFdManagedThread::RunAndTerminate, this));
+  Thread = std::thread(
+      [this]() {
+        RunAndTerminate();
+      });
 }
 
 bool TFdManagedThread::IsStarted() const noexcept {

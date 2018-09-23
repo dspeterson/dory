@@ -229,7 +229,10 @@ void TManagedThreadPoolBase::TWorkerBase::Activate() {
        the thread, and start it running in the busy state.  At this point its
        TWorkerBase object (whose Activate() method we are now executing) has
        already been added to the busy list. */
-    WorkerThread = std::thread(std::bind(&TWorkerBase::BusyRun, this));
+    WorkerThread = std::thread(
+        [this]() {
+          BusyRun();
+        });
   }
 
   assert(WorkerThread.joinable());
@@ -271,7 +274,10 @@ TManagedThreadPoolBase::TWorkerBase::TWorkerBase(
   WakeupWait.lock();
 
   if (start) {
-    WorkerThread = std::thread(std::bind(&TWorkerBase::IdleRun, this));
+    WorkerThread = std::thread(
+        [this]() {
+          IdleRun();
+        });
   }
 }
 

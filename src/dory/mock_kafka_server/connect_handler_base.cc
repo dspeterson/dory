@@ -77,9 +77,10 @@ void TConnectHandlerBase::RunThread(TMockKafkaWorker *w) {
   std::unique_ptr<TMockKafkaWorker> worker(w);
   int shutdown_wait_fd = worker->GetShutdownWaitFd();
   std::unique_ptr<TThreadTerminateHandler> terminate_handler(
-      new TThreadTerminateHandler(std::move(
-          std::bind(&TConnectHandlerBase::DeleteThreadState, this,
-                    shutdown_wait_fd))));
+      new TThreadTerminateHandler(
+          [this, shutdown_wait_fd]() {
+            DeleteThreadState(shutdown_wait_fd);
+          }));
   auto ret = Ss.PerConnectionMap.insert(
       std::make_pair(shutdown_wait_fd, TSharedState::TPerConnectionState()));
   assert(ret.second);

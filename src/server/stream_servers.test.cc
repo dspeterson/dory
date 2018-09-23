@@ -31,7 +31,6 @@
 #include <cstdint>
 #include <cstring>
 #include <exception>
-#include <functional>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -60,7 +59,10 @@ namespace {
         : Sockaddr(CopySockaddr(addr, addr_len)),
           AddrLen(addr_len),
           Sock(std::move(sock)),
-          Worker(std::bind(&TConnectionWorker::Run, this)) {
+          Worker(
+              [this]() {
+                Run();
+              }) {
     }
 
     ~TConnectionWorker() noexcept {
