@@ -74,8 +74,7 @@ namespace {
 
   TEST_F(TCombinedTopicsBatcherTest, Test2) {
     TTestMsgCreator mc;  // create this first since it contains buffer pool
-    std::shared_ptr<std::unordered_set<std::string>>
-        filter(new std::unordered_set<std::string>);
+    auto filter = std::make_shared<std::unordered_set<std::string>>();
     TCombinedTopicsBatcher::TConfig
         config(TBatchConfig(20, 3, 25), filter, true);
     TCombinedTopicsBatcher batcher(config);
@@ -265,8 +264,7 @@ namespace {
 
   TEST_F(TCombinedTopicsBatcherTest, Test3) {
     TTestMsgCreator mc;  // create this first since it contains buffer pool
-    std::shared_ptr<std::unordered_set<std::string>>
-        filter(new std::unordered_set<std::string>);
+    auto filter = std::make_shared<std::unordered_set<std::string>>();
     TCombinedTopicsBatcher::TConfig
         config(TBatchConfig(10, 3, 8), filter, true);
     TCombinedTopicsBatcher batcher(config);
@@ -336,8 +334,7 @@ namespace {
 
   TEST_F(TCombinedTopicsBatcherTest, Test4) {
     TTestMsgCreator mc;  // create this first since it contains buffer pool
-    std::shared_ptr<std::unordered_set<std::string>>
-        filter(new std::unordered_set<std::string>);
+    auto filter = std::make_shared<std::unordered_set<std::string>>();
 
     /* Configure a size limit of 2 bytes, with no time or message count limits.
        Then batch two empty messages.  The size of an empty message is counted

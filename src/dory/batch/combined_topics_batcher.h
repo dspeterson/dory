@@ -50,7 +50,7 @@ namespace Dory {
       class TConfig final {
         public:
         TConfig()
-            : TopicFilter(new TTopicFilter),
+            : TopicFilter(std::make_shared<TTopicFilter>()),
               ExcludeTopicFilter(false) {
         }
 

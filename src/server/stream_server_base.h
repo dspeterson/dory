@@ -124,11 +124,13 @@ namespace Server {
                message and terminate program immediately.
      */
     TStreamServerBase(int backlog, struct sockaddr *addr,
-        socklen_t addr_space, TConnectionHandlerApi *connection_handler,
+        socklen_t addr_space,
+        std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
         const TFatalErrorHandler &fatal_error_handler);
 
     TStreamServerBase(int backlog, struct sockaddr *addr,
-        socklen_t addr_space, TConnectionHandlerApi *connection_handler,
+        socklen_t addr_space,
+        std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
         TFatalErrorHandler &&fatal_error_handler);
 
     /* On entry, 'sock' is empty.  Derived class calles socket() and bind() in

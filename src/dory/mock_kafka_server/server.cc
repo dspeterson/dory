@@ -193,8 +193,8 @@ void TServer::InitKafkaPorts() {
   assert(this);
 
   if (!ClientHandlerFactory) {
-    ClientHandlerFactory.reset(
-        TClientHandlerFactoryBase::CreateFactory(Ss.Config, Ss.Setup));
+    ClientHandlerFactory = TClientHandlerFactoryBase::CreateFactory(Ss.Config,
+        Ss.Setup);
 
     if (!ClientHandlerFactory) {
       /* FIXME: clean up protocol version logic */

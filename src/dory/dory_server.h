@@ -25,6 +25,7 @@
 #include <cassert>
 #include <exception>
 #include <list>
+#include <memory>
 #include <mutex>
 #include <stdexcept>
 
@@ -50,6 +51,7 @@
 #include <dory/router_thread.h>
 #include <dory/stream_client_handler.h>
 #include <dory/stream_client_work_fn.h>
+#include <server/stream_server_base.h>
 #include <server/tcp_ipv4_server.h>
 #include <server/unix_stream_server.h>
 #include <signal/handler_installer.h>
@@ -212,7 +214,8 @@ namespace Dory {
        connections. */
     using TWorkerPool = TStreamClientHandler::TWorkerPool;
 
-    TStreamClientHandler *CreateStreamClientHandler(bool is_tcp);
+    std::unique_ptr<Server::TStreamServerBase::TConnectionHandlerApi>
+    CreateStreamClientHandler(bool is_tcp);
 
     /* Return true on success or false on error starting one of the input
        agents. */

@@ -27,6 +27,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <stdexcept>
 #include <vector>
 
@@ -70,8 +71,8 @@ namespace Dory {
 
         /* Throws a subclass of std::runtime_error on bad metadata response.
            Caller assumes responsibility for deleting returned object. */
-        virtual TMetadata *BuildMetadataFromResponse(const void *response_buf,
-            size_t response_buf_size) const = 0;
+        virtual std::unique_ptr<TMetadata> BuildMetadataFromResponse(
+            const void *response_buf, size_t response_buf_size) const = 0;
 
         virtual bool TopicAutocreateWasSuccessful(const char *topic,
             const void *response_buf, size_t response_buf_size) const = 0;

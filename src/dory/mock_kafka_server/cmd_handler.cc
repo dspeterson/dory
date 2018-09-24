@@ -38,5 +38,6 @@ void TCmdHandler::OnEvent(int fd, short /*flags*/) {
   assert(this);
   TAddress client_address;
   TFd client_socket(IfLt0(Accept(fd, client_address)));
-  RunThread(new TCmdWorker(Ss, std::move(client_socket)));
+  RunThread(std::unique_ptr<TMockKafkaWorker>(
+      new TCmdWorker(Ss, std::move(client_socket))));
 }

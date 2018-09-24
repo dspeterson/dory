@@ -403,7 +403,7 @@ void TWebRequestHandler::HandleQueueStatsRequestJson(std::ostream &os,
 void TWebRequestHandler::HandleGetDebugTopicsRequest(std::ostream &os,
     const Debug::TDebugSetup &debug_setup) {
   assert(this);
-  TDebugSetup::TSettings::TPtr settings = debug_setup.GetSettings();
+  std::shared_ptr<TDebugSetup::TSettings> settings = debug_setup.GetSettings();
   assert(settings);
   const std::unordered_set<std::string> *topics = settings->GetDebugTopics();
 

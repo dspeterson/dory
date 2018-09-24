@@ -50,7 +50,7 @@ namespace Dory {
       static const size_t NUM_LOG_FILES = 3;
 
       static size_t ToIndex(TLogId id) {
-        size_t index = static_cast<size_t>(id);
+        auto index = static_cast<size_t>(id);
         assert(index < NUM_LOG_FILES);
         return index;
       }
@@ -59,8 +59,6 @@ namespace Dory {
         NO_COPY_SEMANTICS(TSettings);
 
         public:
-
-        using TPtr = std::shared_ptr<TSettings>;
 
         static bool EnableIsSpecified(
             const std::unordered_set<std::string> *topics) {
@@ -107,16 +105,14 @@ namespace Dory {
            "all topics".  Otherwise, the contents of *debug_topics will be
            moved into the created TSettings object (leaving *debug_topics
            empty).  "No topics" is specified by providing an empty set. */
-        static TPtr Create(size_t version,
-                           std::unordered_set<std::string> *debug_topics,
-                           const char *msg_receive_log_path,
-                           const char *msg_send_log_path,
-                           const char *msg_got_ack_log_path, size_t byte_limit,
-                           bool truncate_files) {
-          return TPtr(new TSettings(version, debug_topics,
-                                    msg_receive_log_path, msg_send_log_path,
-                                    msg_got_ack_log_path, byte_limit,
-                                    truncate_files));
+        static std::shared_ptr<TSettings> Create(size_t version,
+            std::unordered_set<std::string> *debug_topics,
+            const char *msg_receive_log_path, const char *msg_send_log_path,
+            const char *msg_got_ack_log_path, size_t byte_limit,
+            bool truncate_files) {
+          return std::shared_ptr<TSettings>(new TSettings(version,
+              debug_topics, msg_receive_log_path, msg_send_log_path,
+              msg_got_ack_log_path, byte_limit, truncate_files));
         }
 
         Base::TFd &GetLogFd(TLogId log_id) {
@@ -154,7 +150,7 @@ namespace Dory {
       static const size_t MAX_LIMIT = std::numeric_limits<size_t>::max();
 
       TDebugSetup(const char *debug_dir, size_t kill_switch_limit_seconds,
-                  size_t kill_switch_limit_bytes)
+          size_t kill_switch_limit_bytes)
           : DebugDir(debug_dir),
             KillSwitchLimitSeconds(kill_switch_limit_seconds),
             KillSwitchLimitBytes(kill_switch_limit_bytes),
@@ -185,7 +181,7 @@ namespace Dory {
         return SettingsVersion != my_version;
       }
 
-      TSettings::TPtr GetSettings() const {
+      std::shared_ptr<TSettings> GetSettings() const {
         assert(this);
         std::lock_guard<std::mutex> lock(Mutex);
         assert(Settings);
@@ -217,21 +213,21 @@ namespace Dory {
 
       void CreateDebugDir();
 
-      void DeleteOldDebugFiles(const TSettings::TPtr &old_settings);
+      void DeleteOldDebugFiles(const std::shared_ptr<TSettings> &old_settings);
 
       void DeleteOldDebugFiles() {
-        TSettings::TPtr no_settings;
+        std::shared_ptr<TSettings> no_settings;
         DeleteOldDebugFiles(no_settings);
       }
 
-      TSettings::TPtr CreateInitialSettings() {
+      std::shared_ptr<TSettings> CreateInitialSettings() {
         DeleteOldDebugFiles();
         std::unordered_set<std::string> no_topics;
         return TSettings::Create(0, &no_topics,
-                                 GetLogPath(TLogId::MSG_RECEIVE).c_str(),
-                                 GetLogPath(TLogId::MSG_SEND).c_str(),
-                                 GetLogPath(TLogId::MSG_GOT_ACK).c_str(),
-                                 KillSwitchLimitBytes, true);
+            GetLogPath(TLogId::MSG_RECEIVE).c_str(),
+            GetLogPath(TLogId::MSG_SEND).c_str(),
+            GetLogPath(TLogId::MSG_GOT_ACK).c_str(),
+            KillSwitchLimitBytes, true);
       }
 
       /* If 'debug_topics' is null, the created TSettings object will specify
@@ -249,10 +245,10 @@ namespace Dory {
         }
 
         Settings = TSettings::Create(Settings->GetVersion() + 1, debug_topics,
-                                     GetLogPath(TLogId::MSG_RECEIVE).c_str(),
-                                     GetLogPath(TLogId::MSG_SEND).c_str(),
-                                     GetLogPath(TLogId::MSG_GOT_ACK).c_str(),
-                                     KillSwitchLimitBytes, delete_old_data);
+            GetLogPath(TLogId::MSG_RECEIVE).c_str(),
+            GetLogPath(TLogId::MSG_SEND).c_str(),
+            GetLogPath(TLogId::MSG_GOT_ACK).c_str(),
+            KillSwitchLimitBytes, delete_old_data);
         SettingsVersion = Settings->GetVersion();
       }
 
@@ -266,7 +262,7 @@ namespace Dory {
 
       mutable std::mutex Mutex;
 
-      TSettings::TPtr Settings;
+      std::shared_ptr<TSettings> Settings;
 
       size_t SettingsVersion;
     };  // TDebugSetup

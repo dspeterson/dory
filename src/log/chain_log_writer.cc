@@ -26,7 +26,7 @@
 using namespace Log;
 
 TChainLogWriter::TChainLogWriter()
-    : Chain(new TItemList) {
+    : Chain(std::make_shared<TItemList>()) {
 }
 
 void TChainLogWriter::WriteEntry(TLogEntryAccessApi &entry) {

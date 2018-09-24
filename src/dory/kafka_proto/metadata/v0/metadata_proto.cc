@@ -67,8 +67,8 @@ static inline bool CanSendToPartition(int16_t error_code) {
       (error_code == TKafkaErrorCode::ReplicaNotAvailable);
 }
 
-TMetadata *TMetadataProto::BuildMetadataFromResponse(const void *response_buf,
-    size_t response_buf_size) const {
+std::unique_ptr<TMetadata> TMetadataProto::BuildMetadataFromResponse(
+    const void *response_buf, size_t response_buf_size) const {
   assert(this);
   TMetadata::TBuilder builder;
   TMetadataResponseReader reader(response_buf, response_buf_size);

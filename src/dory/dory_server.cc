@@ -68,6 +68,7 @@ using namespace Dory::Conf;
 using namespace Dory::KafkaProto::Metadata;
 using namespace Dory::KafkaProto::Produce;
 using namespace Dory::Util;
+using namespace Server;
 using namespace Signal;
 using namespace Socket;
 using namespace Thread;
@@ -255,8 +256,8 @@ TDoryServer::TDoryServer(TServerConfig &&config)
   if (!Config->ReceiveStreamSocketName.empty()) {
     assert(StreamClientWorkerPool.IsKnown());
     UnixStreamInputAgent.MakeKnown(STREAM_BACKLOG,
-        Config->ReceiveStreamSocketName, CreateStreamClientHandler(false),
-        UnixStreamServerFatalErrorHandler);
+        Config->ReceiveStreamSocketName.c_str(),
+        CreateStreamClientHandler(false), UnixStreamServerFatalErrorHandler);
 
     if (Config->ReceiveStreamSocketMode.IsKnown()) {
       UnixStreamInputAgent->SetMode(*Config->ReceiveStreamSocketMode);
@@ -368,10 +369,13 @@ void TDoryServer::RequestShutdown() {
   }
 }
 
-TStreamClientHandler *TDoryServer::CreateStreamClientHandler(bool is_tcp) {
+std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>
+    TDoryServer::CreateStreamClientHandler(bool is_tcp) {
   assert(this);
-  return new TStreamClientHandler(is_tcp, *Config, Pool, MsgStateTracker,
-      AnomalyTracker, RouterThread.GetMsgChannel(), *StreamClientWorkerPool);
+  return std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>(
+      new TStreamClientHandler(is_tcp, *Config, Pool, MsgStateTracker,
+          AnomalyTracker, RouterThread.GetMsgChannel(),
+          *StreamClientWorkerPool));
 }
 
 bool TDoryServer::StartMsgHandlingThreads() {
@@ -626,7 +630,7 @@ void TDoryServer::DiscardFinalMsgs(std::list<TMsg::TPtr> &msg_list) {
     } else {
       assert(false);
       syslog(LOG_ERR, "Main thread got empty TMsg::TPtr during shutdown");
-      Server::BacktraceToLog();
+      BacktraceToLog();
     }
   }
 }

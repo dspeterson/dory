@@ -23,6 +23,7 @@
 
 #include <cassert>
 #include <cstdint>
+#include <memory>
 
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -41,23 +42,25 @@ namespace Server {
     /* Note: 'bind_addr' will typically be 'in6addr_any'. */
     TTcpIpv6Server(int backlog, const struct in6_addr &bind_addr,
         in_port_t port, uint32_t scope_id,
-        TConnectionHandlerApi *connection_handler,
+        std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
         const TFatalErrorHandler &fatal_error_handler);
 
     /* Note: 'bind_addr' will typically be 'in6addr_any'. */
     TTcpIpv6Server(int backlog, const struct in6_addr &bind_addr,
-        in_port_t port, TConnectionHandlerApi *connection_handler,
+        in_port_t port,
+        std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
         const TFatalErrorHandler &fatal_error_handler);
 
     /* Note: 'bind_addr' will typically be 'in6addr_any'. */
     TTcpIpv6Server(int backlog, const struct in6_addr &bind_addr,
         in_port_t port, uint32_t scope_id,
-        TConnectionHandlerApi *connection_handler,
+        std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
         TFatalErrorHandler &&fatal_error_handler);
 
     /* Note: 'bind_addr' will typically be 'in6addr_any'. */
     TTcpIpv6Server(int backlog, const struct in6_addr &bind_addr,
-        in_port_t port, TConnectionHandlerApi *connection_handler,
+        in_port_t port,
+        std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
         TFatalErrorHandler &&fatal_error_handler);
 
     ~TTcpIpv6Server() override = default;

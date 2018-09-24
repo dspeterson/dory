@@ -204,7 +204,8 @@ static void SettingsFtruncate(const TDebugSetup::TSettings &settings) {
   }
 }
 
-void TDebugSetup::DeleteOldDebugFiles(const TSettings::TPtr &old_settings) {
+void TDebugSetup::DeleteOldDebugFiles(
+    const std::shared_ptr<TSettings> &old_settings) {
   assert(this);
 
   /* Unlink the old files.  When we create new files to replace them, any

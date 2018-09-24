@@ -26,6 +26,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -253,7 +254,7 @@ namespace Dory {
 
       void CloseTopic();
 
-      TMetadata *Build();
+      std::unique_ptr<TMetadata> Build();
 
       void Reset() {
         assert(this);

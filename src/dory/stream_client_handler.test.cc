@@ -105,10 +105,12 @@ namespace {
       StopDory();
     }
 
-    TStreamClientHandler *CreateStreamClientHandler() {
+    std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>
+        CreateStreamClientHandler() {
       assert(this);
-      return new TStreamClientHandler(false, *Cfg, Pool, MsgStateTracker,
-          AnomalyTracker, *OutputQueue, *StreamClientWorkerPool);
+      return std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>(
+          new TStreamClientHandler(false, *Cfg, Pool, MsgStateTracker,
+              AnomalyTracker, *OutputQueue, *StreamClientWorkerPool));
     }
 
     void StartDory() {
@@ -165,7 +167,7 @@ namespace {
           ASSERT_TRUE(false);
         }));
     UnixStreamServer.reset(new TUnixStreamServer(16,
-        Cfg->ReceiveStreamSocketName, CreateStreamClientHandler(),
+        Cfg->ReceiveStreamSocketName.c_str(), CreateStreamClientHandler(),
         [](const char *msg) {
           std::cerr << "UNIX stream server fatal error: " << msg
               << std::endl;

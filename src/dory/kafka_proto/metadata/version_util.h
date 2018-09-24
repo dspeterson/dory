@@ -23,6 +23,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 #include <vector>
 
 #include <dory/kafka_proto/metadata/metadata_protocol.h>
@@ -33,7 +34,8 @@ namespace Dory {
 
     namespace Metadata {
 
-      TMetadataProtocol *ChooseMetadataProto(size_t api_version);
+      std::unique_ptr<TMetadataProtocol>
+      ChooseMetadataProto(size_t api_version);
 
       /* Return a vector of all metadata API versions that Dory supports.  The
          result will be sorted in ascending order. */

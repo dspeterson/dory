@@ -30,13 +30,15 @@ using namespace Dory;
 using namespace Dory::KafkaProto;
 using namespace Dory::KafkaProto::Metadata;
 
-TMetadataProtocol *Dory::KafkaProto::Metadata::ChooseMetadataProto(
+std::unique_ptr<TMetadataProtocol> Dory::KafkaProto::Metadata::ChooseMetadataProto(
     size_t api_version) {
+  std::unique_ptr<TMetadataProtocol> result;
+
   if (api_version == 0) {
-    return new Dory::KafkaProto::Metadata::V0::TMetadataProto;
+    result.reset(new Dory::KafkaProto::Metadata::V0::TMetadataProto);
   }
 
-  return nullptr;  // unsupported API version
+  return result;  // empty result indicates unsupported API version
 }
 
 const std::vector<size_t> &

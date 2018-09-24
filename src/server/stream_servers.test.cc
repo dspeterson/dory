@@ -31,6 +31,7 @@
 #include <cstdint>
 #include <cstring>
 #include <exception>
+#include <memory>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -211,7 +212,8 @@ namespace {
   TEST_F(TStreamServerTest, TcpIpv4Test) {
     std::list<TConnectionWorker> workers;
     TTcpIpv4Server server(16, htonl(INADDR_LOOPBACK), 0,
-        new TTestServerConnectionHandler(workers),
+        std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>(
+            new TTestServerConnectionHandler(workers)),
         [](const char *) noexcept {
           ASSERT_TRUE(false);
         });
@@ -268,7 +270,8 @@ namespace {
   TEST_F(TStreamServerTest, TcpIpv6Test) {
     std::list<TConnectionWorker> workers;
     TTcpIpv6Server server(16, in6addr_loopback, 0,
-        new TTestServerConnectionHandler(workers),
+        std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>(
+            new TTestServerConnectionHandler(workers)),
         [](const char *) noexcept {
           ASSERT_TRUE(false);
         });
@@ -327,7 +330,8 @@ namespace {
     TTmpFile tmp_file;
     tmp_file.SetDeleteOnDestroy(true);
     TUnixStreamServer server(16, tmp_file.GetName(),
-        new TTestServerConnectionHandler(workers),
+        std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>(
+            new TTestServerConnectionHandler(workers)),
         [](const char *) noexcept {
           ASSERT_TRUE(false);
         });
@@ -384,7 +388,8 @@ namespace {
     std::list<TConnectionWorker> workers;
     char bad_path[] = "/nonexistent/path";
     TUnixStreamServer server(16, bad_path,
-        new TTestServerConnectionHandler(workers),
+        std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>(
+            new TTestServerConnectionHandler(workers)),
         [](const char *) noexcept {
           ASSERT_TRUE(false);
         });

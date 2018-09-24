@@ -26,6 +26,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <stdexcept>
 
 #include <base/no_copy_semantics.h>
@@ -49,12 +50,13 @@ namespace Dory {
 
           ~TProduceProto() override = default;
 
-          TProduceRequestWriterApi *
+          std::unique_ptr<TProduceRequestWriterApi>
           CreateProduceRequestWriter() const override;
 
-          TMsgSetWriterApi *CreateMsgSetWriter() const override;
+          std::unique_ptr<TMsgSetWriterApi>
+          CreateMsgSetWriter() const override;
 
-          TProduceResponseReaderApi *
+          std::unique_ptr<TProduceResponseReaderApi>
           CreateProduceResponseReader() const override;
 
           TAckResultAction ProcessAck(int16_t ack_value) const override;

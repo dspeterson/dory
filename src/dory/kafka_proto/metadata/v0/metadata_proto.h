@@ -26,6 +26,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #include <base/no_copy_semantics.h>
@@ -54,7 +55,7 @@ namespace Dory {
               std::vector<uint8_t> &result, const char *topic,
               int32_t correlation_id) const override;
 
-          TMetadata *BuildMetadataFromResponse(
+          std::unique_ptr<TMetadata> BuildMetadataFromResponse(
               const void *response_buf,
               size_t response_buf_size) const override;
 

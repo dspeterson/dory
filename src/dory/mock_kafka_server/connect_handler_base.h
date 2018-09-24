@@ -23,6 +23,7 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
 
 #include <base/no_copy_semantics.h>
 #include <dory/mock_kafka_server/mock_kafka_worker.h>
@@ -55,7 +56,7 @@ namespace Dory {
           : Ss(ss) {
       }
 
-      void RunThread(TMockKafkaWorker *w);
+      void RunThread(std::unique_ptr<TMockKafkaWorker> &&w);
 
       TSharedState &Ss;
 

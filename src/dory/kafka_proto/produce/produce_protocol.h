@@ -28,6 +28,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -65,16 +66,17 @@ namespace Dory {
 
         /* Return a pointer to a newly created produce request writer object.
            Caller assumes responsibility for deleting object. */
-        virtual TProduceRequestWriterApi *
+        virtual std::unique_ptr<TProduceRequestWriterApi>
         CreateProduceRequestWriter() const = 0;
 
         /* Return a pointer to a newly created message set writer object.
            Caller assumes responsibility for deleting object. */
-        virtual TMsgSetWriterApi *CreateMsgSetWriter() const = 0;
+        virtual std::unique_ptr<TMsgSetWriterApi>
+        CreateMsgSetWriter() const = 0;
 
         /* Return a pointer to a newly created produce response reader object.
            Caller assumes responsibility for deleting object. */
-        virtual TProduceResponseReaderApi *
+        virtual std::unique_ptr<TProduceResponseReaderApi>
         CreateProduceResponseReader() const = 0;
 
         virtual TAckResultAction ProcessAck(int16_t ack_value) const = 0;

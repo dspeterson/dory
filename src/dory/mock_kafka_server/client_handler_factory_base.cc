@@ -26,11 +26,15 @@
 using namespace Dory;
 using namespace Dory::MockKafkaServer;
 
-TClientHandlerFactoryBase *
+std::unique_ptr<TClientHandlerFactoryBase>
 TClientHandlerFactoryBase::CreateFactory(const TConfig &config,
     const TSetup::TInfo &setup) {
   /* TODO: clean up API version logic */
-  return ((config.ProduceApiVersion == 0) &&
-      (config.MetadataApiVersion == 0)) ?
-      new TV0ClientHandlerFactory(config, setup) : nullptr;
+  std::unique_ptr<TClientHandlerFactoryBase> result;
+
+  if ((config.ProduceApiVersion == 0) && (config.MetadataApiVersion == 0)) {
+    result.reset(new TV0ClientHandlerFactory(config, setup));
+  }
+
+  return result;
 }

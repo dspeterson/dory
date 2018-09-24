@@ -319,17 +319,19 @@ bool CreateDg(std::vector<uint8_t> &buf, const TConfig &cfg,
   return true;
 }
 
-static TClientSenderBase *CreateSender(const TConfig &cfg) {
+static std::unique_ptr<TClientSenderBase> CreateSender(const TConfig &cfg) {
   if (!cfg.SocketPath.empty()) {
-    return new TUnixDgSender(cfg.SocketPath.c_str());
+    return std::unique_ptr<TClientSenderBase>(
+        new TUnixDgSender(cfg.SocketPath.c_str()));
   }
 
   if (!cfg.StreamSocketPath.empty()) {
-    return new TUnixStreamSender(cfg.StreamSocketPath.c_str());
+    return std::unique_ptr<TClientSenderBase>(
+        new TUnixStreamSender(cfg.StreamSocketPath.c_str()));
   }
 
   assert(cfg.Port.IsKnown());
-  return new TTcpSender(*cfg.Port);
+  return std::unique_ptr<TClientSenderBase>(new TTcpSender(*cfg.Port));
 }
 
 static int ToDoryMain(int argc, char *argv[]) {

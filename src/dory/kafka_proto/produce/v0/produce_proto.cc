@@ -89,22 +89,23 @@ SERVER_COUNTER(AckErrorUnsupportedSaslMechanism);
 SERVER_COUNTER(AckErrorUnsupportedVersion);
 SERVER_COUNTER(AckOk);
 
-TProduceRequestWriterApi *
+std::unique_ptr<TProduceRequestWriterApi>
 TProduceProto::CreateProduceRequestWriter() const {
   assert(this);
-  return new TProduceRequestWriter;
+  return std::unique_ptr<TProduceRequestWriterApi>(new TProduceRequestWriter);
 }
 
-TMsgSetWriterApi *
+std::unique_ptr<TMsgSetWriterApi>
 TProduceProto::CreateMsgSetWriter() const {
   assert(this);
-  return new TMsgSetWriter;
+  return std::unique_ptr<TMsgSetWriterApi>(new TMsgSetWriter);
 }
 
-TProduceResponseReaderApi *
+std::unique_ptr<TProduceResponseReaderApi>
 TProduceProto::CreateProduceResponseReader() const {
   assert(this);
-  return new TProduceResponseReader;
+  return std::unique_ptr<TProduceResponseReaderApi>(
+      new TProduceResponseReader);
 }
 
 static void MaybeLogError(bool log_error, int16_t ack_value) {

@@ -245,7 +245,7 @@ void TMetadata::TBuilder::CloseTopic() {
   State = TState::AddingTopics;
 }
 
-TMetadata *TMetadata::TBuilder::Build() {
+std::unique_ptr<TMetadata> TMetadata::TBuilder::Build() {
   assert(this);
   assert((State != TState::AddingBrokers) &&
          (State != TState::AddingOneTopic));
@@ -257,7 +257,7 @@ TMetadata *TMetadata::TBuilder::Build() {
                     std::move(TopicBrokerVec), std::move(Topics),
                     std::move(TopicNameToIndex)));
   Reset();
-  return result.release();
+  return result;
 }
 
 void TMetadata::TBuilder::GroupInServiceBrokers() {

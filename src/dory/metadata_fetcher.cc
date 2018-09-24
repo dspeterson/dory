@@ -129,8 +129,8 @@ std::unique_ptr<TMetadata> TMetadataFetcher::Fetch(int timeout_ms) {
   StreamReader.ConsumeReadyMsg();
 
   try {
-    result.reset(MetadataProtocol->BuildMetadataFromResponse(&response[0],
-        response_size));
+    result = MetadataProtocol->BuildMetadataFromResponse(&response[0],
+        response_size);
   } catch (const TMetadataProtocol::TBadMetadataResponse &x) {
     BadMetadataResponse.Increment();
     syslog(LOG_ERR, "Failed to parse metadata response: %s", x.what());

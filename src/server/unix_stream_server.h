@@ -23,6 +23,7 @@
 #pragma once
 
 #include <cassert>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -43,26 +44,12 @@ namespace Server {
 
     public:
     TUnixStreamServer(int backlog, const char *path,
-        TConnectionHandlerApi *connection_handler,
+        std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
         const TFatalErrorHandler &fatal_error_handler);
 
-    TUnixStreamServer(int backlog, const std::string &path,
-        TConnectionHandlerApi *connection_handler,
-        const TFatalErrorHandler &fatal_error_handler)
-        : TUnixStreamServer(backlog, path.c_str(), connection_handler,
-              fatal_error_handler) {
-    }
-
     TUnixStreamServer(int backlog, const char *path,
-        TConnectionHandlerApi *connection_handler,
+        std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
         TFatalErrorHandler &&fatal_error_handler);
-
-    TUnixStreamServer(int backlog, const std::string &path,
-        TConnectionHandlerApi *connection_handler,
-        TFatalErrorHandler &&fatal_error_handler)
-        : TUnixStreamServer(backlog, path.c_str(), connection_handler,
-              std::move(fatal_error_handler)) {
-    }
 
     ~TUnixStreamServer() override = default;
 

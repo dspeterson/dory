@@ -32,40 +32,42 @@ using namespace Server;
 
 TTcpIpv6Server::TTcpIpv6Server(int backlog, const struct in6_addr &bind_addr,
     in_port_t port, uint32_t scope_id,
-    TConnectionHandlerApi *connection_handler,
+    std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
     const TFatalErrorHandler &fatal_error_handler)
     : TStreamServerBase(backlog,
           reinterpret_cast<struct sockaddr *>(&ClientAddr), sizeof(ClientAddr),
-          connection_handler, fatal_error_handler),
+          std::move(connection_handler), fatal_error_handler),
       BindAddr(bind_addr),
       Port(port),
       ScopeId(scope_id) {
 }
 
 TTcpIpv6Server::TTcpIpv6Server(int backlog, const struct in6_addr &bind_addr,
-    in_port_t port, TConnectionHandlerApi *connection_handler,
+    in_port_t port,
+    std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
     const TFatalErrorHandler &fatal_error_handler)
-    : TTcpIpv6Server(backlog, bind_addr, port, 0, connection_handler,
+    : TTcpIpv6Server(backlog, bind_addr, port, 0, std::move(connection_handler),
           fatal_error_handler) {
 }
 
 TTcpIpv6Server::TTcpIpv6Server(int backlog, const struct in6_addr &bind_addr,
     in_port_t port, uint32_t scope_id,
-    TConnectionHandlerApi *connection_handler,
+    std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
     TFatalErrorHandler &&fatal_error_handler)
     : TStreamServerBase(backlog,
           reinterpret_cast<struct sockaddr *>(&ClientAddr), sizeof(ClientAddr),
-          connection_handler, std::move(fatal_error_handler)),
+      std::move(connection_handler), std::move(fatal_error_handler)),
       BindAddr(bind_addr),
       Port(port),
       ScopeId(scope_id) {
 }
 
 TTcpIpv6Server::TTcpIpv6Server(int backlog, const struct in6_addr &bind_addr,
-    in_port_t port, TConnectionHandlerApi *connection_handler,
+    in_port_t port,
+    std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
     TFatalErrorHandler &&fatal_error_handler)
-    : TTcpIpv6Server(backlog, bind_addr, port, 0, connection_handler,
-          std::move(fatal_error_handler)) {
+    : TTcpIpv6Server(backlog, bind_addr, port, 0,
+          std::move(connection_handler), std::move(fatal_error_handler)) {
 }
 
 in_port_t TTcpIpv6Server::GetBindPort() const {

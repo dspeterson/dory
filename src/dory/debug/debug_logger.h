@@ -25,6 +25,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <list>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -84,7 +85,7 @@ namespace Dory {
 
       const TDebugSetup::TLogId LogId;
 
-      TSettings::TPtr Settings;
+      std::shared_ptr<TSettings> Settings;
 
       int LogFd;
 

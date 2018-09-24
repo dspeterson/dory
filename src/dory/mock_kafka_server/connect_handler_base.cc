@@ -23,6 +23,7 @@
 
 #include <cassert>
 #include <exception>
+#include <utility>
 
 #include <syslog.h>
 
@@ -41,7 +42,7 @@ void TConnectHandlerBase::OnShutdown() {
   Unregister();
 }
 
-void TConnectHandlerBase::RunThread(TMockKafkaWorker *w) {
+void TConnectHandlerBase::RunThread(std::unique_ptr<TMockKafkaWorker> &&w) {
   assert(this);
 
   class t_cleanup final {
@@ -74,7 +75,7 @@ void TConnectHandlerBase::RunThread(TMockKafkaWorker *w) {
     bool Active;
   };  // t_cleanup
 
-  std::unique_ptr<TMockKafkaWorker> worker(w);
+  std::unique_ptr<TMockKafkaWorker> worker(std::move(w));
   int shutdown_wait_fd = worker->GetShutdownWaitFd();
   std::unique_ptr<TThreadTerminateHandler> terminate_handler(
       new TThreadTerminateHandler(

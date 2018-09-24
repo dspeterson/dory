@@ -102,7 +102,8 @@ void TStreamServerBase::Reset() {
 }
 
 TStreamServerBase::TStreamServerBase(int backlog, struct sockaddr *addr,
-    socklen_t addr_space, TConnectionHandlerApi *connection_handler,
+    socklen_t addr_space,
+    std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
     const TFatalErrorHandler &fatal_error_handler)
     : FatalErrorHandler(fatal_error_handler),
       Backlog(backlog),
@@ -110,7 +111,7 @@ TStreamServerBase::TStreamServerBase(int backlog, struct sockaddr *addr,
       AddrSpace(addr_space),
       SyncStartSuccess(false),
       SyncStartNotify(nullptr),
-      ConnectionHandler(connection_handler) {
+      ConnectionHandler(std::move(connection_handler)) {
   assert(ConnectionHandler);
 
   /* not strictly necessary */
@@ -118,7 +119,8 @@ TStreamServerBase::TStreamServerBase(int backlog, struct sockaddr *addr,
 }
 
 TStreamServerBase::TStreamServerBase(int backlog, struct sockaddr *addr,
-    socklen_t addr_space, TConnectionHandlerApi *connection_handler,
+    socklen_t addr_space,
+    std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
     TFatalErrorHandler &&fatal_error_handler)
     : FatalErrorHandler(std::move(fatal_error_handler)),
       Backlog(backlog),
@@ -126,7 +128,7 @@ TStreamServerBase::TStreamServerBase(int backlog, struct sockaddr *addr,
       AddrSpace(addr_space),
       SyncStartSuccess(false),
       SyncStartNotify(nullptr),
-      ConnectionHandler(connection_handler) {
+      ConnectionHandler(std::move(connection_handler)) {
   assert(ConnectionHandler);
 
   /* not strictly necessary */

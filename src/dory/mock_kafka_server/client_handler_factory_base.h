@@ -45,12 +45,12 @@ namespace Dory {
 
       /* Create a TSingleClientHandlerBase of the appropriate subclass type
          depending on what version of Kafka we are simulating. */
-      virtual TSingleClientHandlerBase *CreateClientHandler(
+      virtual std::unique_ptr<TSingleClientHandlerBase> CreateClientHandler(
           const std::shared_ptr<TPortMap> &port_map, size_t port_offset,
           TSharedState &ss, Base::TFd &&client_socket) = 0;
 
-      static TClientHandlerFactoryBase *CreateFactory(const TConfig &config,
-          const TSetup::TInfo &setup);
+      static std::unique_ptr<TClientHandlerFactoryBase>
+          CreateFactory(const TConfig &config, const TSetup::TInfo &setup);
 
       protected:
       const TConfig &Config;

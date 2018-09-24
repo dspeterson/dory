@@ -117,9 +117,8 @@ bool TBatchConfigBuilder::SetMessageMaxBytes(size_t limit) {
 
 TGlobalBatchConfig TBatchConfigBuilder::Build() {
   assert(this);
-  std::shared_ptr<TPerTopicBatcher::TConfig> per_topic_config(
-      new TPerTopicBatcher::TConfig(DefaultTopicConfig,
-                                    std::move(PerTopicMap)));
+  auto per_topic_config = std::make_shared<TPerTopicBatcher::TConfig>(
+      DefaultTopicConfig, std::move(PerTopicMap));
   std::unordered_set<std::string> topic_filter;
   bool exclude_topic_filter = false;
 
@@ -139,8 +138,8 @@ TGlobalBatchConfig TBatchConfigBuilder::Build() {
 
   TGlobalBatchConfig build_result(std::move(per_topic_config),
       TCombinedTopicsBatcher::TConfig(BrokerBatchConfig,
-          std::shared_ptr<std::unordered_set<std::string>>(
-              new std::unordered_set<std::string>(std::move(topic_filter))),
+          std::make_shared<std::unordered_set<std::string>>(
+              std::move(topic_filter)),
           exclude_topic_filter),
       ProduceRequestDataLimit, MessageMaxBytes);
   Clear();
