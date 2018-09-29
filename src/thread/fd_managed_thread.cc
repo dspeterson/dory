@@ -67,7 +67,7 @@ void TFdManagedThread::RequestShutdown() {
   ShutdownRequestedSem.Push();
 }
 
-const TFd &TFdManagedThread::GetShutdownWaitFd() const {
+const TFd &TFdManagedThread::GetShutdownWaitFd() const noexcept {
   assert(this);
   return ShutdownFinishedSem.GetFd();
 }

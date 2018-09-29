@@ -34,7 +34,7 @@ TNamedUnixSocket::TNamedUnixSocket(int type, int protocol)
     : Fd(IfLt0(socket(AF_LOCAL, type, protocol))) {
 }
 
-void TNamedUnixSocket::Reset() {
+void TNamedUnixSocket::Reset() noexcept {
   assert(this);
   Fd.Reset();
 

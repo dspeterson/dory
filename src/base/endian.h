@@ -1,4 +1,4 @@
-/* <io/endian.h>
+/* <base/endian.h>
 
    ----------------------------------------------------------------------------
    Copyright 2010-2013 if(we)
@@ -23,7 +23,7 @@
 
 #include <cstdint>
 
-namespace Io {
+namespace Base {
 
   /* The 8-bit version, to facilitate templates which can take any of the
      uint[n]_t types. */
@@ -66,5 +66,5 @@ namespace Io {
     return SwapEnds(static_cast<uint64_t>(val));
   }
 
-}  // Io
+}  // Base
 

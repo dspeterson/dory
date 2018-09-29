@@ -140,7 +140,7 @@ namespace Thread {
          request.  A false value indicates that an available thread was
          obtained from the pool.  This may facilitate maintaining metrics on
          the pool's effectiveness. */
-      bool IsNew() const {
+      bool IsNew() const noexcept {
         assert(this);
         assert(Worker);
         return !Worker->IsStarted();
@@ -228,7 +228,7 @@ namespace Thread {
 
       /* Return a pointer to the worker (if any) that we contain.  Return
          nullptr if we are empty.  We retain ownership of worker. */
-      TWorkerBase *GetWorkerBase() const {
+      TWorkerBase *GetWorkerBase() const noexcept {
         assert(this);
         return Worker;
       }
@@ -316,7 +316,7 @@ namespace Thread {
        pool's internal state.  While the pool is running, the returned file
        descriptor should be monitored for readability so that fatal errors may
        be detected. */
-    const Base::TFd &GetShutdownWaitFd() const {
+    const Base::TFd &GetShutdownWaitFd() const noexcept {
       assert(this);
       return Manager.GetShutdownWaitFd();
     }

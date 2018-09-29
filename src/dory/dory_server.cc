@@ -194,7 +194,7 @@ TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
       std::move(batch_config), pool_block_size);
 }
 
-void TDoryServer::HandleShutdownSignal(int /*signum*/) {
+void TDoryServer::HandleShutdownSignal(int /*signum*/) noexcept {
   std::lock_guard<std::mutex> lock(ServerListMutex);
 
   for (TDoryServer *server: ServerList) {
@@ -360,12 +360,22 @@ int TDoryServer::Run() {
   return Shutdown() && no_error ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
-void TDoryServer::RequestShutdown() {
+void TDoryServer::RequestShutdown() noexcept {
   assert(this);
 
-  if (!ShutdownRequested.test_and_set()) {
-    GotShutdownSignal.Increment();
-    ShutdownRequestSem.Push();
+  try {
+    if (!ShutdownRequested.test_and_set()) {
+      GotShutdownSignal.Increment();
+      ShutdownRequestSem.Push();
+    }
+  } catch (const std::exception &x) {
+    syslog(LOG_ERR, "Fatal exception in TDoryServer::RequestShutdown(): %s",
+        x.what());
+    _exit(EXIT_FAILURE);
+  } catch (...) {
+    syslog(LOG_ERR,
+        "Fatal unknown exception in TDoryServer::RequestShutdown()");
+    _exit(EXIT_FAILURE);
   }
 }
 

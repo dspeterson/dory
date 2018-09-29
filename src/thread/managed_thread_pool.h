@@ -119,7 +119,7 @@ namespace Thread {
 
       /* Return pointer to contained worker, or nullptr if wrapper is empty.
          Pool maintains ownership of worker and controls its lifetime. */
-      TWorker *GetWorker() const {
+      TWorker *GetWorker() const noexcept {
         return static_cast<TWorker *>(GetWorkerBase());
       }
 

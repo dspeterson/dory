@@ -151,7 +151,7 @@ namespace Dory {
         bool &large_sendbuf_required, bool allow_input_bind_ephemeral,
         bool enable_lz4, size_t pool_block_size = 128);
 
-    static void HandleShutdownSignal(int signum);
+    static void HandleShutdownSignal(int signum) noexcept;
 
     explicit TDoryServer(TServerConfig &&config);
 
@@ -207,7 +207,7 @@ namespace Dory {
 
     /* Called by SIGINT/SIGTERM handler.  Also called by test code to shut down
        dory. */
-    void RequestShutdown();
+    void RequestShutdown() noexcept;
 
     private:
     /* Thread pool type for handling local TCP and UNIX domain stream client

@@ -2,6 +2,7 @@
  
    ----------------------------------------------------------------------------
    Copyright 2010-2013 if(we)
+   Copyright 2018 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -20,76 +21,18 @@
  */
   
 #include <base/opt.h>
-  
-#include <string>
-  
-#include <base/no_copy_semantics.h>
-  
-#include <gtest/gtest.h>
-  
-using namespace std;
-using namespace Base;
- 
-namespace {
- 
-  class TToken {
-    public:
-  
-    TToken()
-        : Dummy(0) {
-      Push('D');
-    }
-  
-    TToken(TToken &&that)
-        : Dummy(that.Dummy) {
-      Push('M');
-    }
-  
-    TToken(const TToken &that)
-        : Dummy(that.Dummy) {
-      Push('C');
-    }
-  
-    ~TToken() {
-      Push('X');
-    }
-  
-    TToken &operator=(TToken &&that) {
-      Push('S');
-      swap(Dummy, that.Dummy);
-      return *this;
-    }
-  
-    TToken &operator=(const TToken &that) {
-      Push('A');
-      return *this = TToken(that);
-    }
-  
-    static string LatchOps() {
-      string temp = Ops;
-      Ops.clear();
-      return temp;
-    }
-  
-    int Dummy;
-  
-    private:
-  
-    static void Push(char op) {
-      Ops.push_back(op);
-    }
-  
-    static string Ops;
-  
-  };
-  
-  string TToken::Ops;
 
-#if 0
-  ostream &operator<<(ostream &strm, const TToken &that) {
-    return strm << "TToken(" << that.Dummy << ')';
-  }
-#endif
+#include <cassert>
+#include <string>
+#include <utility>
+
+#include <base/no_copy_semantics.h>
+
+#include <gtest/gtest.h>
+
+using namespace Base;
+
+namespace {
 
   /* The fixture for testing class TOpt. */
   class TOptTest : public ::testing::Test {
@@ -104,63 +47,283 @@ namespace {
     void TearDown() override {
     }
   };  // TOptTest
-  
-  TEST_F(TOptTest, KnownVsUnknown) {
+
+  TEST_F(TOptTest, BasicTests) {
     TOpt<int> opt;
     ASSERT_FALSE(opt);
     ASSERT_FALSE(opt.IsKnown());
     ASSERT_TRUE(opt.IsUnknown());
+    ASSERT_EQ(opt.TryGet(), nullptr);
     opt = 0;
     ASSERT_TRUE(opt);
     ASSERT_TRUE(opt.IsKnown());
     ASSERT_FALSE(opt.IsUnknown());
+    ASSERT_EQ(*opt, 0);
+    *opt = 5;
+    ASSERT_TRUE(opt.IsKnown());
+    ASSERT_EQ(*opt, 5);
+    ASSERT_EQ(*opt.Get(), 5);
+    ASSERT_EQ(*opt.TryGet(), 5);
+    opt.MakeKnown(10);  // no-op since 'opt' was already known
+    ASSERT_EQ(*opt, 5);
     opt.Reset();
     ASSERT_FALSE(opt);
     ASSERT_FALSE(opt.IsKnown());
     ASSERT_TRUE(opt.IsUnknown());
     ASSERT_FALSE(*opt.Unknown);
+    opt.MakeKnown(20);
+    ASSERT_TRUE(opt.IsKnown());
+    ASSERT_EQ(*opt, 20);
   }
-  
-  TEST_F(TOptTest, TokenBasics) {
-    /* extra */ {
-      TToken a;
-      ASSERT_EQ(TToken::LatchOps(), string("D"));
-      TToken b = a;
-      ASSERT_EQ(TToken::LatchOps(), string("C"));
-      TToken c = move(b);
-      ASSERT_EQ(TToken::LatchOps(), string("M"));
-      a = move(b);
-      ASSERT_EQ(TToken::LatchOps(), string("S"));
-      a = c;
-      ASSERT_EQ(TToken::LatchOps(), string("ACSX"));
+
+  class THolder {
+    public:
+    THolder() = default;
+
+    explicit THolder(const std::string &s)
+        : Value(s) {
     }
-    ASSERT_EQ(TToken::LatchOps(), string("XXX"));
+
+    explicit THolder(std::string &&s) noexcept
+        : Value(std::move(s)) {
+      /* Explicitly clear s to make it obvious that s was moved from. */
+      s.clear();
+    }
+
+    THolder(const THolder &) = default;
+
+    THolder(THolder &&other) noexcept
+        : Value(std::move(other.Value)) {
+      /* Explicitly clear other.Value to make it obvious that other.Value was
+         moved from. */
+      other.Value.clear();
+    }
+
+    ~THolder() {
+      assert(this);
+
+      if (DtorFlag) {
+        *DtorFlag = true;
+      }
+    }
+
+    THolder &operator=(const THolder &) = default;
+
+    THolder &operator=(THolder &&other) noexcept {
+      assert(this);
+      Value = std::move(other.Value);
+
+      /* Explicitly clear other.Value to make it obvious that other.Value was
+         moved from. */
+      other.Value.clear();
+
+      return *this;
+    }
+
+    void SetDtorFlag(bool &flag) noexcept {
+      assert(this);
+      DtorFlag = &flag;
+      *DtorFlag = false;
+    }
+
+    const std::string &GetValue() const noexcept {
+      assert(this);
+      return Value;
+    }
+
+    std::string &GetValue() noexcept {
+      assert(this);
+      return Value;
+    }
+
+    bool IsEmpty() const noexcept {
+      assert(this);
+      return Value.empty();
+    }
+
+    private:
+    bool *DtorFlag = nullptr;
+
+    std::string Value;
+  };
+
+  TEST_F(TOptTest, Reset) {
+    TOpt<THolder> opt(THolder("blah"));
+    ASSERT_TRUE(opt.IsKnown());
+    ASSERT_EQ(opt->GetValue(), "blah");
+    bool dtor_called = false;
+    opt->SetDtorFlag(dtor_called);
+    opt.Reset();
+    ASSERT_TRUE(dtor_called);
+    ASSERT_FALSE(opt.IsKnown());
   }
-  
-  TEST_F(TOptTest, MoveAndCopy) {
-    TToken token;
-    TOpt<TToken> a, b = token, c = move(b);
-    ASSERT_EQ(TToken::LatchOps(), string("DCMX"));
-    ASSERT_FALSE(a);
-    ASSERT_FALSE(b);
-    ASSERT_TRUE(c);
-    a = move(c);
-    ASSERT_EQ(TToken::LatchOps(), string("MX"));
-    ASSERT_TRUE(a);
-    ASSERT_FALSE(c);
-    b = a;
-    ASSERT_EQ(TToken::LatchOps(), string("CMX"));
-    ASSERT_TRUE(a);
-    ASSERT_TRUE(b);
-    TOpt<TToken> d = b;
-    ASSERT_EQ(TToken::LatchOps(), string("C"));
-    ASSERT_TRUE(d);
-    d.MakeKnown();
-    ASSERT_EQ(TToken::LatchOps(), string(""));
-    ASSERT_TRUE(d);
-    c.MakeKnown();
-    ASSERT_EQ(TToken::LatchOps(), string("D"));
-    ASSERT_TRUE(c);
+
+  TEST_F(TOptTest, MoveConstruction) {
+    // test move construction from TVal
+    THolder h("blah");
+    ASSERT_FALSE(h.IsEmpty());
+    TOpt<THolder> opt1(std::move(h));
+    ASSERT_TRUE(h.IsEmpty());
+    ASSERT_TRUE(opt1.IsKnown());
+    ASSERT_EQ(opt1->GetValue(), "blah");
+
+    // test move construction from nonempty TOpt
+    TOpt<THolder> opt2(std::move(opt1));
+    ASSERT_TRUE(opt2.IsKnown());
+    ASSERT_TRUE(opt1.IsKnown());
+    ASSERT_EQ(opt2->GetValue(), "blah");
+    ASSERT_TRUE(opt1->IsEmpty());
+
+    // test move construction from empty TOpt
+    TOpt<THolder> opt3;
+    ASSERT_FALSE(opt3.IsKnown());
+    TOpt<THolder> opt4(std::move(opt3));
+    ASSERT_FALSE(opt3.IsKnown());
+    ASSERT_FALSE(opt4.IsKnown());
+  }
+
+  TEST_F(TOptTest, MoveAssignment) {
+    // test move assignment from THolder to empty TOpt
+    THolder h("blah");
+    ASSERT_FALSE(h.IsEmpty());
+    TOpt<THolder> opt1;
+    ASSERT_FALSE(opt1.IsKnown());
+    opt1 = std::move(h);
+    ASSERT_TRUE(h.IsEmpty());
+    ASSERT_TRUE(opt1.IsKnown());
+    ASSERT_EQ(opt1->GetValue(), "blah");
+
+    // test move assignment from THolder to nonempty TOpt
+    h.GetValue() = "duh";
+    ASSERT_FALSE(h.IsEmpty());
+    opt1 = std::move(h);
+    ASSERT_TRUE(h.IsEmpty());
+    ASSERT_TRUE(opt1.IsKnown());
+    ASSERT_EQ(opt1->GetValue(), "duh");
+
+    // test move assignment from nonempty TOpt to nonempty TOpt
+    TOpt<THolder> opt2(THolder("barf"));
+    ASSERT_TRUE(opt2.IsKnown());
+    ASSERT_EQ(opt2->GetValue(), "barf");
+    bool dtor_called = false;
+    opt2->SetDtorFlag(dtor_called);
+    opt2 = std::move(opt1);
+    ASSERT_FALSE(dtor_called);
+    ASSERT_TRUE(opt1.IsKnown());
+    ASSERT_TRUE(opt2.IsKnown());
+    ASSERT_EQ(opt2->GetValue(), "duh");
+    ASSERT_TRUE(opt1->IsEmpty());
+
+    // test move assignment from empty TOpt to nonempty TOpt
+    opt1.Reset();
+    ASSERT_FALSE(opt1.IsKnown());
+    opt2->SetDtorFlag(dtor_called);
+    opt2 = std::move(opt1);
+    ASSERT_TRUE(dtor_called);
+    ASSERT_FALSE(opt1.IsKnown());
+    ASSERT_FALSE(opt2.IsKnown());
+
+    // test move assignment from nonempty TOpt to empty TOpt
+    opt1 = THolder("hiccup");
+    ASSERT_TRUE(opt1.IsKnown());
+    opt2 = std::move(opt1);
+    ASSERT_TRUE(opt1.IsKnown());
+    ASSERT_TRUE(opt2.IsKnown());
+    ASSERT_TRUE(opt1->IsEmpty());
+    ASSERT_EQ(opt2->GetValue(), "hiccup");
+
+    // test move assignment from empty TOpt to empty TOpt
+    opt1.Reset();
+    opt2.Reset();
+    ASSERT_FALSE(opt1.IsKnown());
+    ASSERT_FALSE(opt2.IsKnown());
+    opt2 = std::move(opt1);
+    ASSERT_FALSE(opt1.IsKnown());
+    ASSERT_FALSE(opt2.IsKnown());
+  }
+
+  TEST_F(TOptTest, CopyConstruction) {
+    // test copy construction from TVal
+    THolder h("blah");
+    ASSERT_FALSE(h.IsEmpty());
+    TOpt<THolder> opt1(h);
+    ASSERT_EQ(h.GetValue(), "blah");
+    ASSERT_TRUE(opt1.IsKnown());
+    ASSERT_EQ(opt1->GetValue(), "blah");
+
+    // test copy construction from nonempty TOpt
+    TOpt<THolder> opt2(opt1);
+    ASSERT_TRUE(opt2.IsKnown());
+    ASSERT_TRUE(opt1.IsKnown());
+    ASSERT_EQ(opt2->GetValue(), "blah");
+    ASSERT_EQ(opt1->GetValue(), "blah");
+
+    // test copy construction from empty TOpt
+    TOpt<THolder> opt3;
+    ASSERT_FALSE(opt3.IsKnown());
+    TOpt<THolder> opt4(opt3);
+    ASSERT_FALSE(opt3.IsKnown());
+    ASSERT_FALSE(opt4.IsKnown());
+  }
+
+  TEST_F(TOptTest, CopyAssignment) {
+    // test copy assignment from THolder to empty TOpt
+    THolder h("blah");
+    ASSERT_FALSE(h.IsEmpty());
+    TOpt<THolder> opt1;
+    ASSERT_FALSE(opt1.IsKnown());
+    opt1 = h;
+    ASSERT_EQ(h.GetValue(), "blah");
+    ASSERT_TRUE(opt1.IsKnown());
+    ASSERT_EQ(opt1->GetValue(), "blah");
+
+    // test copy assignment from THolder to nonempty TOpt
+    h.GetValue() = "duh";
+    ASSERT_FALSE(h.IsEmpty());
+    opt1 = h;
+    ASSERT_EQ(h.GetValue(), "duh");
+    ASSERT_TRUE(opt1.IsKnown());
+    ASSERT_EQ(opt1->GetValue(), "duh");
+
+    // test copy assignment from nonempty TOpt to nonempty TOpt
+    TOpt<THolder> opt2(THolder("barf"));
+    ASSERT_TRUE(opt2.IsKnown());
+    ASSERT_EQ(opt2->GetValue(), "barf");
+    bool dtor_called = false;
+    opt2->SetDtorFlag(dtor_called);
+    opt2 = opt1;
+    ASSERT_FALSE(dtor_called);
+    ASSERT_TRUE(opt1.IsKnown());
+    ASSERT_TRUE(opt2.IsKnown());
+    ASSERT_EQ(opt2->GetValue(), "duh");
+    ASSERT_EQ(opt1->GetValue(), "duh");
+
+    // test copy assignment from empty TOpt to nonempty TOpt
+    opt1.Reset();
+    ASSERT_FALSE(opt1.IsKnown());
+    opt2->SetDtorFlag(dtor_called);
+    opt2 = opt1;
+    ASSERT_TRUE(dtor_called);
+    ASSERT_FALSE(opt1.IsKnown());
+    ASSERT_FALSE(opt2.IsKnown());
+
+    // test copy assignment from nonempty TOpt to empty TOpt
+    opt1 = THolder("hiccup");
+    ASSERT_TRUE(opt1.IsKnown());
+    opt2 = opt1;
+    ASSERT_TRUE(opt1.IsKnown());
+    ASSERT_TRUE(opt2.IsKnown());
+    ASSERT_EQ(opt1->GetValue(), "hiccup");
+    ASSERT_EQ(opt2->GetValue(), "hiccup");
+
+    // test copy assignment from empty TOpt to empty TOpt
+    opt1.Reset();
+    opt2.Reset();
+    ASSERT_FALSE(opt1.IsKnown());
+    ASSERT_FALSE(opt2.IsKnown());
+    opt2 = opt1;
+    ASSERT_FALSE(opt1.IsKnown());
+    ASSERT_FALSE(opt2.IsKnown());
   }
 
 }  // namespace

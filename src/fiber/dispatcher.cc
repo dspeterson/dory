@@ -252,7 +252,7 @@ size_t TDispatcher::GetMaxEventCount() {
 
 volatile bool TDispatcher::GotShutdownSignal = false;
 
-void TDispatcher::ShutdownSigHandler(int /*signum*/) {
+void TDispatcher::ShutdownSigHandler(int /*signum*/) noexcept {
   GotShutdownSignal = true;
 }
 

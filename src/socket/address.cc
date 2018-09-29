@@ -29,15 +29,14 @@
 #include <netdb.h>
 #include <unistd.h>
 
+#include <base/endian.h>
 #include <base/no_default_case.h>
 #include <base/os_error.h>
 #include <base/zero.h>
-#include <io/endian.h>
 #include <socket/named_unix_socket.h>
 
 using namespace std;
 using namespace Base;
-using namespace Io;
 using namespace Socket;
 
 TAddress::TAddress(TSpecial special, in_port_t port) {

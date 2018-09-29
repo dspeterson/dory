@@ -45,32 +45,32 @@ namespace Socket {
       Reset();
     }
 
-    const Base::TFd &GetFd() const {
+    const Base::TFd &GetFd() const noexcept {
       assert(this);
       return Fd;
     }
 
-    const std::string &GetPath() const {
+    const std::string &GetPath() const noexcept {
       assert(this);
       return Path;
     }
 
-    operator int() const {
+    operator int() const noexcept {
       assert(this);
       return Fd;
     }
 
-    bool IsBound() const {
+    bool IsBound() const noexcept {
       assert(this);
       return !Path.empty();
     }
 
-    bool IsOpen() const {
+    bool IsOpen() const noexcept {
       assert(this);
       return Fd.IsOpen();
     }
 
-    void Reset();
+    void Reset() noexcept;
 
     private:
     Base::TFd Fd;

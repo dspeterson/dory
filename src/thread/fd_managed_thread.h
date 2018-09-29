@@ -86,7 +86,7 @@ namespace Thread {
        select(), poll(), or epoll() to wait for the descritpor to become
        readable.  Once the descriptor becomes readable, the Join() method must
        still be called. */
-    const Base::TFd &GetShutdownWaitFd() const;
+    const Base::TFd &GetShutdownWaitFd() const noexcept;
 
     /* After calling RequestShutdown(), call this method to wait for the thread
        to terminate.  To avoid blocking for an extended period, one may test
@@ -96,13 +96,13 @@ namespace Thread {
        thread has terminated. */
     void Join();
 
-    const std::thread &GetThread() const {
+    const std::thread &GetThread() const noexcept {
       assert(this);
       assert(Thread.joinable());
       return Thread;
     }
 
-    std::thread &GetThread() {
+    std::thread &GetThread() noexcept {
       assert(this);
       assert(Thread.joinable());
       return Thread;

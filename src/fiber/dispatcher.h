@@ -276,7 +276,7 @@ namespace Fiber{
     }
 
     private:
-    static void ShutdownSigHandler(int signum);
+    static void ShutdownSigHandler(int signum) noexcept;
 
     /* Wait for one or more I/O events to happen, then call their
        dispatcher(s).  If max_timeout is known, wait no longer than it

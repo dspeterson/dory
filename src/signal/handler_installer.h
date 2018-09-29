@@ -37,7 +37,8 @@ namespace Signal {
 
     public:
     /* Set the mask to the given set. */
-    explicit THandlerInstaller(int sig, void (*handler)(int) = DoNothing)
+    explicit THandlerInstaller(int sig,
+        void (*handler)(int) noexcept = DoNothing)
         : SignalNumber(sig) {
       struct sigaction new_act;
       Base::Zero(new_act);
@@ -52,14 +53,14 @@ namespace Signal {
     }
 
     /* The signal we handle. */
-    int GetSignalNumber() const {
+    int GetSignalNumber() const noexcept {
       assert(this);
       return SignalNumber;
     }
 
     private:
     /* The do-nothing handler. */
-    static void DoNothing(int sig);
+    static void DoNothing(int sig) noexcept;
 
     /* See accessor. */
     int SignalNumber;

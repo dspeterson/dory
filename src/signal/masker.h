@@ -46,7 +46,8 @@ namespace Signal {
       pthread_sigmask(SIG_SETMASK, &OldSet, nullptr);
     }
 
-    const sigset_t &GetOldSet() const {
+    const sigset_t &GetOldSet() const noexcept {
+      assert(this);
       return OldSet;
     }
 

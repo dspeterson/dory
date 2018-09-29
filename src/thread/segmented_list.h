@@ -381,7 +381,7 @@ namespace Thread {
     }
 
     /* for testing */
-    bool SanityCheck() const {
+    bool SanityCheck() const noexcept {
       assert(this);
 
       if (NumSegments != AllSegments.size()) {
@@ -559,7 +559,7 @@ namespace Thread {
       }
 
       /* for testing */
-      bool SanityCheck() const {
+      bool SanityCheck() const noexcept {
         assert(this);
         return (Items.size() == NumItems);
       }

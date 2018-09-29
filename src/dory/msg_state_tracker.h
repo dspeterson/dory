@@ -23,6 +23,7 @@
 
 #include <cassert>
 #include <functional>
+#include <list>
 #include <mutex>
 #include <string>
 #include <unordered_map>
