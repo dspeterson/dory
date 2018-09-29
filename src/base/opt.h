@@ -63,7 +63,7 @@ namespace Base {
 
      There is a std stream inserter for this type. */
   template <typename TVal>
-  class TOpt {
+  class TOpt final {
     public:
     /* Default-construct as an unknown. */
     TOpt() noexcept
