@@ -52,10 +52,7 @@ TBackoffRateLimiter::TBackoffRateLimiter(
     size_t initial_delay, size_t max_double,
     const std::function<unsigned ()> &random_number_generator)
     : BackoffWindow(ComputeBackoffWindow(initial_delay, max_double)),
-      DelayGenerator(initial_delay, max_double, random_number_generator),
-      FirstTime(true),
-      WindowStartTime({ 0, 0 }),
-      LastEventTime({ 0, 0 }) {
+      DelayGenerator(initial_delay, max_double, random_number_generator) {
 }
 
 size_t TBackoffRateLimiter::ComputeDelay() {

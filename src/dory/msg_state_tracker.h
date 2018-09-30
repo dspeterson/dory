@@ -42,22 +42,16 @@ namespace Dory {
 
     public:
     struct TTopicStats {
-      long BatchingCount;
+      long BatchingCount = 0;
 
-      long SendWaitCount;
+      long SendWaitCount = 0;
 
-      long AckWaitCount;
+      long AckWaitCount = 0;
 
-      TTopicStats()
-          : BatchingCount(0),
-            SendWaitCount(0),
-            AckWaitCount(0) {
-      }
+      TTopicStats() = default;
     };  // TTopicStats
 
-    TMsgStateTracker()
-        : NewCount(0) {
-    }
+    TMsgStateTracker() = default;
 
     /* A brand new message has been created.  Update our stats to indicate
        this. */
@@ -140,12 +134,7 @@ namespace Dory {
     private:
     class TDeltaComputer final {
       public:
-      TDeltaComputer()
-          : NewDelta(0),
-            BatchingDelta(0),
-            SendWaitDelta(0),
-            AckWaitDelta(0) {
-      }
+      TDeltaComputer() = default;
 
       long GetNewDelta() const {
         assert(this);
@@ -176,13 +165,13 @@ namespace Dory {
       void CountProcessedEntered(TMsg::TState prev_state);
 
       private:
-      long NewDelta;
+      long NewDelta = 0;
 
-      long BatchingDelta;
+      long BatchingDelta = 0;
 
-      long SendWaitDelta;
+      long SendWaitDelta = 0;
 
-      long AckWaitDelta;
+      long AckWaitDelta = 0;
     };  // TDeltaComputer
 
     struct TTopicStatsWrapper {
@@ -191,11 +180,9 @@ namespace Dory {
       /* A true value indicates that this topic is no longer present in the
          metadata, and can therefore be deleted from our stats once its counts
          reach 0. */
-      bool OkToDelete;
+      bool OkToDelete = false;
 
-      TTopicStatsWrapper()
-          : OkToDelete(false) {
-      }
+      TTopicStatsWrapper() = default;
     };  // TTopicStatsWrapper
 
     void UpdateStats(const std::string &topic, const TDeltaComputer &comp);
@@ -208,7 +195,7 @@ namespace Dory {
 
     /* Messages in state TMsg::TState::New are not broken down by topic, since
        some may have invalid topics. */
-    long NewCount;
+    long NewCount = 0;
   };  // TMsgStateTracker
 
 }  // Dory

@@ -152,7 +152,7 @@ namespace Base {
     DIR *Handle;
 
     /* See TPos, above. */
-    mutable TPos Pos;
+    mutable TPos Pos = NotFresh;
 
     /* Our current entry.  Only valid when Pos == AtEntry. */
     mutable dirent DirEnt;

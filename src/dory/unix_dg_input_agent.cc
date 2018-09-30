@@ -27,7 +27,6 @@
 #include <system_error>
 
 #include <poll.h>
-#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <syslog.h>
@@ -53,15 +52,11 @@ TUnixDgInputAgent::TUnixDgInputAgent(const TConfig &config, TPool &pool,
     TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
     TGatePutApi<TMsg::TPtr> &output_queue)
     : Config(config),
-      Destroying(false),
       Pool(pool),
       MsgStateTracker(msg_state_tracker),
       AnomalyTracker(anomaly_tracker),
-      InputSocket(SOCK_DGRAM, 0),
       InputBuf(config.MaxInputMsgSize),
-      OutputQueue(output_queue),
-      SyncStartSuccess(false),
-      SyncStartNotify(nullptr) {
+      OutputQueue(output_queue) {
 }
 
 TUnixDgInputAgent::~TUnixDgInputAgent() {

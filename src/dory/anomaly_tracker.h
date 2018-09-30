@@ -96,14 +96,13 @@ namespace Dory {
       TInterval Interval;
 
       /* This is the total number of anomalies. */
-      size_t Count;
+      size_t Count = 1;
 
       /* Parameter 'initial' specifies the timestamp of the first anomaly for
          a topic.  Both endpoints of the interval are initialized to this value
          and the count is initialized to 1. */
       explicit TTopicInfo(TMsg::TTimestamp initial)
-          : Interval(initial),
-            Count(1) {
+          : Interval(initial) {
       }
     };  // TTopicInfo
 
@@ -121,10 +120,10 @@ namespace Dory {
     struct TInfo {
       private:
       /* A unique ID number for this TInfo. */
-      size_t ReportId;
+      size_t ReportId = 0;
 
       /* Start time of reporting interval in seconds since the epoch. */
-      uint64_t StartTime;
+      uint64_t StartTime = 0;
 
       public:
       size_t GetReportId() const {
@@ -176,49 +175,34 @@ namespace Dory {
       std::list<std::string> BadTopics;
 
       /* Count of discarded malformed messages. */
-      size_t MalformedMsgCount;
+      size_t MalformedMsgCount = 0;
 
       /* This is incremented each time a UNIX domain stream client disconnects
          with a partial message left behind.  This may indicate a client
          problem, such as a buggy client crashing while in the middle of
          sending a message. */
-      size_t UnixStreamUncleanDisconnectCount;
+      size_t UnixStreamUncleanDisconnectCount = 0;
 
       /* This is incremented each time a local TCP client disconnects with a
          partial message left behind.  This may indicate a client problem, such
          as a buggy client crashing while in the middle of sending a message.
        */
-      size_t TcpUncleanDisconnectCount;
+      size_t TcpUncleanDisconnectCount = 0;
 
       /* Count of messages discarded due to unsupported API key. */
-      size_t UnsupportedApiKeyMsgCount;
+      size_t UnsupportedApiKeyMsgCount = 0;
 
       /* Count of messages discarded due to unsupported message version. */
-      size_t UnsupportedVersionMsgCount;
+      size_t UnsupportedVersionMsgCount = 0;
 
       /* Count of messages discarded due to bad topic. */
-      size_t BadTopicMsgCount;
+      size_t BadTopicMsgCount = 0;
 
-      TInfo()
-          : ReportId(0),
-            StartTime(0),
-            MalformedMsgCount(0),
-            UnixStreamUncleanDisconnectCount(0),
-            TcpUncleanDisconnectCount(0),
-            UnsupportedApiKeyMsgCount(0),
-            UnsupportedVersionMsgCount(0),
-            BadTopicMsgCount(0) {
-      }
+      TInfo() = default;
 
       TInfo(size_t report_id, uint64_t start_time)
           : ReportId(report_id),
-            StartTime(start_time),
-            MalformedMsgCount(0),
-            UnixStreamUncleanDisconnectCount(0),
-            TcpUncleanDisconnectCount(0),
-            UnsupportedApiKeyMsgCount(0),
-            UnsupportedVersionMsgCount(0),
-            BadTopicMsgCount(0) {
+            StartTime(start_time) {
       }
     };  // TInfo
 

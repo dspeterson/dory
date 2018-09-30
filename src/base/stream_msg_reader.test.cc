@@ -45,34 +45,27 @@ namespace {
     /* snapshot of reader state on call to one of its subclass-implemented
        methods */
     struct TStateSnapshot {
-      size_t CallCount;
+      size_t CallCount = 0;
 
-      TStreamMsgReader::TState State;
+      TStreamMsgReader::TState State = TStreamMsgReader::TState::DataInvalid;
 
       std::string Data;
 
-      bool EndOfInput;
+      bool EndOfInput = false;
 
-      TStateSnapshot()
-          : CallCount(0),
-            State(TStreamMsgReader::TState::DataInvalid),
-            EndOfInput(false) {
-      }
+      TStateSnapshot() = default;
     };  // TStateSnapshot
 
     struct TReadyMsgStateSnapshot {
       std::string ReadyMsg;
 
-      size_t ReadyMsgOffset;
+      size_t ReadyMsgOffset = 0;
 
-      TReadyMsgStateSnapshot()
-          : ReadyMsgOffset(0) {
-      }
+      TReadyMsgStateSnapshot() = default;
     };  // TReadyMsgStateSnapshot
 
     explicit TTestReader(int fd)
         : TStreamMsgReader(fd),
-          GetNextReadSizeReturnValue(0),
           GetNextMsgReturnValue(
               TOpt<TGetMsgResult>(
                   TStreamMsgReader::TGetMsgResult::Invalid())) {
@@ -110,7 +103,7 @@ namespace {
 
     TReadyMsgStateSnapshot ReadyStateOnBeforeConsumeReadyMsg;
 
-    size_t GetNextReadSizeReturnValue;
+    size_t GetNextReadSizeReturnValue = 0;
 
     TOpt<TGetMsgResult> GetNextMsgReturnValue;
   };  // TTestReader

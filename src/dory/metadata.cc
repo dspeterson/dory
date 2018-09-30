@@ -47,10 +47,7 @@ bool TMetadata::TBroker::operator==(const TBroker &that) const {
 }
 
 TMetadata::TBuilder::TBuilder()
-    : RandomEngine(GetEpochMilliseconds()),
-      State(TState::Initial),
-      CurrentTopicIndex(0),
-      InServiceBrokerCount(0) {
+    : RandomEngine(GetEpochMilliseconds()) {
 }
 
 void TMetadata::TBuilder::OpenBrokerList() {

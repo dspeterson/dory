@@ -44,7 +44,7 @@ namespace Dory {
       struct TConf {
         /* This number must be > 0.  It specifies a time interval length in
            milliseconds for rate limit enforcement. */
-        size_t Interval;
+        size_t Interval = 1;
 
         /* Optional maximum # of allowed messages for a given topic within
            'Interval' above.  Messages that would cause the maximum to be
@@ -53,9 +53,7 @@ namespace Dory {
         Base::TOpt<size_t> MaxCount;
 
         /* Default constructor specifies no limit. */
-        TConf()
-            : Interval(1) {
-        }
+        TConf() = default;
 
         TConf(size_t interval, size_t max_count)
             : Interval(interval),
@@ -175,9 +173,7 @@ namespace Dory {
         }
       };  // TMissingDefaultTopic
 
-      TBuilder()
-          : GotDefaultTopic(false) {
-      }
+      TBuilder() = default;
 
       void Reset();
 
@@ -200,7 +196,7 @@ namespace Dory {
 
       TTopicRateConf BuildResult;
 
-      bool GotDefaultTopic;
+      bool GotDefaultTopic = false;
     };  // TTopicRateConf::TBuilder
 
   }  // Conf

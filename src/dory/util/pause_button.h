@@ -36,7 +36,7 @@ namespace Dory {
       NO_COPY_SEMANTICS(TPauseButton);
 
       public:
-      TPauseButton();
+      TPauseButton() = default;
 
       const Base::TFd &GetFd() const {
         assert(this);
@@ -54,7 +54,7 @@ namespace Dory {
 
       Base::TEventSemaphore Button;
 
-      bool PauseActivated;
+      bool PauseActivated = false;
     };  // TPauseButton
 
   }  // Util

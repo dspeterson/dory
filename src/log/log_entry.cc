@@ -40,8 +40,7 @@ TLogEntry::TLogEntry(TLogWriterApi &log_writer, int level)
          newline and C string terminator. */
     : TArrayOstreamBase<BUF_SIZE>(2),
       LogWriter(log_writer), 
-      Level(CheckLevel(level)),
-      Written(false) {
+      Level(CheckLevel(level)) {
 }
 
 TLogEntry::~TLogEntry() {

@@ -138,7 +138,10 @@ namespace Capped {
     void DoFreeList(TBlock *first_block);
 
     /* See accessors. */
-    const size_t BlockSize, BlockCount;
+    const size_t BlockSize;
+
+    /* See accessors. */
+    const size_t BlockCount;
 
     /* If true then the pool is protected by a mutex (see below).  Otherwise
        access to the pool is unsynchronized. */
@@ -151,7 +154,7 @@ namespace Capped {
 
     /* The first block available to be allocated, or null if we're out of
        blocks. */
-    TBlock *FirstFreeBlock;
+    TBlock *FirstFreeBlock = nullptr;
 
     /* Our storage space.  Never null. */
     char *Storage;

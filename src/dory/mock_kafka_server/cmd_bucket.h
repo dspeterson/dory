@@ -39,9 +39,7 @@ namespace Dory {
       NO_COPY_SEMANTICS(TCmdBucket);
 
       public:
-      TCmdBucket()
-          : SequenceNumCounter(0) {
-      }
+      TCmdBucket() = default;
 
       /* Put 'cmd' in the bucket, appending it to the queue. */
       void Put(const TCmd &cmd);
@@ -69,7 +67,7 @@ namespace Dory {
       std::list<std::pair<size_t, TCmd>> CmdQueue;
 
       /* For generating sequence numbers. */
-      size_t SequenceNumCounter;
+      size_t SequenceNumCounter = 0;
     };  // TCmdBucket
 
   }  // MockKafkaServer

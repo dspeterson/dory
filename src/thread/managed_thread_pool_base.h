@@ -189,9 +189,7 @@ namespace Thread {
       }
 
       protected:
-      TReadyWorkerBase() noexcept
-          : Worker(nullptr) {
-      }
+      TReadyWorkerBase() noexcept = default;
 
       /* Construct wrapper containing newly allocated thread (from call to
          GetAvailableWorker()), or no thread in case where allocation failed
@@ -241,7 +239,7 @@ namespace Thread {
          allocation was attempted, then the object is on the busy list, but
          doesn't yet contain an actual thread.  In this case, it will be
          populated with a new thread when Launch() is called. */
-      TWorkerBase *Worker;
+      TWorkerBase *Worker = nullptr;
     };  // TReadyWorkerBase
 
     /* After calling Start(), pool should not be destroyed until it has been
@@ -473,7 +471,7 @@ namespace Thread {
          idle list was empty.  When the worker finishes working, this ensures
          that its 'WorkerThread' member has been assigned before the worker
          places itself on the idle list, thus avoiding a race condition. */
-      bool WaitAfterDoWork;
+      bool WaitAfterDoWork = false;
 
       /* This serves two purposes:
 
@@ -506,7 +504,7 @@ namespace Thread {
       /* This is set or cleared before the worker is awakened from sleeping on
          'WakeupWait'.  If true, the worker terminates.  Otherwise the worker
          starts working. */
-      bool TerminateRequested;
+      bool TerminateRequested = false;
 
       /* so TManager can call Terminate() and Join() */
       friend class TManager;
@@ -631,13 +629,13 @@ namespace Thread {
        about to die (due to prune operation or shutdown request), it decrements
        this.  If 'PoolIsReady' is false when count reaches 0, the worker
        pushes 'AllWorkersFinished' to notify manager. */
-    size_t LiveWorkerCount;
+    size_t LiveWorkerCount = 0;
 
     /* The manager clears this when it gets a shutdown request.  If
        'LiveWorkerCount' is nonzero when the manager clears this, then the
        manager waits for 'AllWorkersFinished'.  Volatile because workers test
        this in a loop. */
-    volatile bool PoolIsReady;
+    volatile bool PoolIsReady = false;
 
     /* Thread pool configuration.  Manager thread maintains its own private
        copy of this, and updates its copy whenever config changes. */
@@ -645,7 +643,7 @@ namespace Thread {
 
     /* true when pool configuration has changed and manager thread has not yet
        updated its state */
-    bool ReconfigPending;
+    bool ReconfigPending = false;
 
     /* Pool stats.  Mutable because GetStats() sets 'LiveWorkerCount' and
        'IdleWorkerCount' in 'Stats' before returning a copy. */

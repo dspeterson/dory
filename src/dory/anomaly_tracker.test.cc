@@ -89,7 +89,7 @@ namespace {
   struct TAnomalyTrackerConfig {
     std::unique_ptr<TPool> Pool;
 
-    uint64_t ClockValue;
+    uint64_t ClockValue = 0;
 
     TMockClock Clock;  // hickory dickory dock
 
@@ -115,7 +115,6 @@ namespace {
 
   TAnomalyTrackerConfig::TAnomalyTrackerConfig(size_t report_interval)
       : Pool(new TPool(64, 1024 * 1024, TPool::TSync::Mutexed)),
-        ClockValue(0),
         Clock(&ClockValue),
         AnomalyTracker(DiscardFileLogger, report_interval,
                        std::numeric_limits<size_t>::max(), Clock) {

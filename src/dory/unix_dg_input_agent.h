@@ -51,6 +51,7 @@
 #include <vector>
 
 #include <netinet/in.h>
+#include <sys/socket.h>
 
 #include <base/event_semaphore.h>
 #include <base/fd.h>
@@ -92,7 +93,7 @@ namespace Dory {
 
     const TConfig &Config;
 
-    bool Destroying;
+    bool Destroying = false;
 
     /* Blocks for TBlob objects containing message data get allocated from
        here. */
@@ -104,7 +105,7 @@ namespace Dory {
     TAnomalyTracker &AnomalyTracker;
 
     /* This is the UNIX domain datagram socket that web clients write to. */
-    Socket::TNamedUnixSocket InputSocket;
+    Socket::TNamedUnixSocket InputSocket{SOCK_DGRAM, 0};
 
     /* We read from the UNIX datagram socket into this buffer. */
     std::vector<uint8_t> InputBuf;
@@ -112,9 +113,9 @@ namespace Dory {
     /* Messages are queued here for the router thread. */
     Thread::TGatePutApi<TMsg::TPtr> &OutputQueue;
 
-    bool SyncStartSuccess;
+    bool SyncStartSuccess = false;
 
-    Base::TEventSemaphore *SyncStartNotify;
+    Base::TEventSemaphore *SyncStartNotify = nullptr;
   };  // TUnixDgInputAgent
 
 }  // Dory

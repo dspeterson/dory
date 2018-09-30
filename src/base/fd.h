@@ -58,23 +58,20 @@ namespace Base {
     public:
 
     /* Default-construct as an illegal value (-1). */
-    TFd() noexcept
-        : OsHandle(-1) {
-    }
+    TFd() noexcept = default;
 
     /* Move-construct, leaving the donor in the default-constructed state. */
-    TFd(TFd &&that) noexcept {
+    TFd(TFd &&that) noexcept
+        : OsHandle(that.OsHandle) {
       assert(&that);
-      OsHandle = that.OsHandle;
       that.OsHandle = -1;
     }
 
     /* Copy-construct, duplicating the file descriptor with the OS call dup(),
        if necessary. */
-    TFd(const TFd &that) {
-      assert(&that);
-      OsHandle = (that.OsHandle >= 3) ?
-          IfLt0(dup(that.OsHandle)) : that.OsHandle;
+    TFd(const TFd &that)
+        : OsHandle((that.OsHandle >= 3) ?
+              IfLt0(dup(that.OsHandle)) : that.OsHandle) {
     }
 
     /* Construct from a naked file descriptor, which the new instance will own.
@@ -82,8 +79,8 @@ namespace Base {
        socket(), which returns a newly created file descriptor.  If the result
        is not a legal file descriptor, this function will throw the appropriate
        error. */
-    TFd(int os_handle) {
-      OsHandle = IfLt0(os_handle);
+    TFd(int os_handle)
+        : OsHandle(IfLt0(os_handle)) {
     }
 
     /* Close the file descriptor we own, if any.  If the descriptor is in the
@@ -184,7 +181,7 @@ namespace Base {
         : OsHandle(os_handle) {}
 
     /* The naked file descriptor we wrap.  This can be -1. */
-    int OsHandle;
+    int OsHandle = -1;
   };  // TFd
 
   /* Wrappers of stdin (0), stdout (1), and stderr (2). */

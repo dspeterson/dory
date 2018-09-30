@@ -41,12 +41,12 @@ namespace Dory {
       NO_COPY_SEMANTICS(TMockKafkaConfig);
 
       private:
-      bool KafkaStarted;
+      bool KafkaStarted = false;
 
       public:
-      Base::TTmpFile SetupFile;
+      Base::TTmpFile SetupFile{"/tmp/dory_tmp.XXXXXX", true};
 
-      Base::TTmpDir OutputDir;
+      Base::TTmpDir OutputDir{"/tmp/dory_tmp.XXXXXX", true};
 
       std::vector<const char *> Args;
 

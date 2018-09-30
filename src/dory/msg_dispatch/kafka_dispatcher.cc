@@ -52,8 +52,7 @@ TKafkaDispatcher::TKafkaDispatcher(const TConfig &config,
     TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
     const TGlobalBatchConfig &batch_config, const TDebugSetup &debug_setup)
     : Ds(config, compression_conf, msg_state_tracker, anomaly_tracker,
-      debug_setup, batch_config), State(TState::Stopped),
-      OkShutdown(true) {
+          debug_setup, batch_config) {
 }
 
 void TKafkaDispatcher::SetProduceProtocol(

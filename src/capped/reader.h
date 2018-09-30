@@ -40,12 +40,12 @@ namespace Capped {
     /* Construct a reader to read the data from the given blob.  The reader
        does NOT make its own copy of the blob's data, so you must make sure
        that the blob continues to exist as long as it has readers. */
-    explicit TReader(const TBlob *blob) noexcept {
+    explicit TReader(const TBlob *blob) noexcept
+        : Blob(blob),
+          Block(blob->FirstBlock),
+          Cursor(blob->FirstBlock ? blob->FirstBlock->Data : nullptr),
+          BytesRemaining(blob->Size()) {
       assert(blob);
-      Blob = blob;
-      Block = blob->FirstBlock;
-      Cursor = Block ? Block->Data : nullptr;
-      BytesRemaining = blob->Size();
     }
 
     /* Shallow copy is ok. */

@@ -35,21 +35,21 @@ namespace Dory {
       /* Throws TArgParseError on error parsing args. */
       TConfig(int argc, char *argv[]);
 
-      bool LogEcho;
+      bool LogEcho = false;
 
-      size_t ProduceApiVersion;
+      size_t ProduceApiVersion = 0;
 
-      size_t MetadataApiVersion;
+      size_t MetadataApiVersion = 0;
 
-      size_t QuietLevel;
+      size_t QuietLevel = 0;
 
       std::string SetupFile;
 
       std::string OutputDir;
 
-      in_port_t CmdPort;
+      in_port_t CmdPort = 9080;
 
-      bool SingleOutputFile;
+      bool SingleOutputFile = false;
     };  // TConfig
 
   }  // MockKafkaServer

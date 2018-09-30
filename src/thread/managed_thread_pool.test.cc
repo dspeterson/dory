@@ -212,11 +212,7 @@ class TStressTest1WorkFn {
 
 class TStressTest2WorkFn {
   public:
-  explicit TStressTest2WorkFn(nullptr_t)
-      : Pool(nullptr),
-        Counter(nullptr),
-        WorkingCount(nullptr),
-        RemainingCount(1) {
+  explicit TStressTest2WorkFn(nullptr_t) {
   }
 
   TStressTest2WorkFn &operator=(nullptr_t) {
@@ -300,21 +296,20 @@ class TStressTest2WorkFn {
   }
 
   private:
+  TStressTest2WorkFn() = default;
+
   void Clear() {
     assert(this);
-    Pool = nullptr;
-    Counter = nullptr;
-    WorkingCount = nullptr;
-    RemainingCount = 1;
+    *this = TStressTest2WorkFn();
   }
 
-  TManagedThreadFnObjPool *Pool;
+  TManagedThreadFnObjPool *Pool = nullptr;
 
-  std::atomic<size_t> *Counter;
+  std::atomic<size_t> *Counter = nullptr;
 
-  std::atomic<size_t> *WorkingCount;
+  std::atomic<size_t> *WorkingCount = nullptr;
 
-  size_t RemainingCount;
+  size_t RemainingCount = 1;
 };  // TStressTest2WorkFn
 
 namespace {

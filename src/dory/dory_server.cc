@@ -227,7 +227,6 @@ TDoryServer::TDoryServer(TServerConfig &&config)
     : Config(std::move(config.Config)),
       Conf(std::move(config.Conf)),
       PoolBlockSize(config.PoolBlockSize),
-      Started(false),
       Pool(PoolBlockSize,
            ComputeBlockCount(Config->MsgBufferMax, PoolBlockSize),
            Capped::TPool::TSync::Mutexed),
@@ -240,8 +239,7 @@ TDoryServer::TDoryServer(TServerConfig &&config)
           AnomalyTracker, config.BatchConfig, DebugSetup),
       RouterThread(*Config, Conf, AnomalyTracker, MsgStateTracker,
           config.BatchConfig, DebugSetup, Dispatcher),
-      MetadataTimestamp(RouterThread.GetMetadataTimestamp()),
-      ShutdownRequested(false) {
+      MetadataTimestamp(RouterThread.GetMetadataTimestamp()) {
   if (!Config->ReceiveStreamSocketName.empty() ||
       Config->InputPort.IsKnown()) {
     /* Create thread pool if UNIX stream or TCP input is enabled. */
@@ -704,7 +702,7 @@ bool TDoryServer::Shutdown() {
   return shutdown_ok;
 }
 
-const int TDoryServer::STREAM_BACKLOG = 16;
+const int TDoryServer::STREAM_BACKLOG;
 
 std::mutex TDoryServer::ServerListMutex;
 

@@ -153,8 +153,7 @@ namespace Dory {
           size_t kill_switch_limit_bytes)
           : DebugDir(debug_dir),
             KillSwitchLimitSeconds(kill_switch_limit_seconds),
-            KillSwitchLimitBytes(kill_switch_limit_bytes),
-            SettingsVersion(0) {
+            KillSwitchLimitBytes(kill_switch_limit_bytes) {
         GetLogPath(TLogId::MSG_RECEIVE) =
             std::move(std::string(debug_dir) + "/msg_receive");
         GetLogPath(TLogId::MSG_SEND) =
@@ -264,7 +263,7 @@ namespace Dory {
 
       std::shared_ptr<TSettings> Settings;
 
-      size_t SettingsVersion;
+      size_t SettingsVersion = 0;
     };  // TDebugSetup
 
   }  // Debug

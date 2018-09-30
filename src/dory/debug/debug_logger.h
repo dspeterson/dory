@@ -50,8 +50,7 @@ namespace Dory {
             CachedSettingsVersion(Settings->GetVersion()),
             CachedDebugTopics(Settings->GetDebugTopics()),
             LoggingEnabled(Settings->LoggingIsEnabled()),
-            LoggingEnabledAt(Now()),
-            MsgCount(0) {
+            LoggingEnabledAt(Now()) {
       }
 
       void LogMsg(const TMsg &msg);
@@ -97,7 +96,7 @@ namespace Dory {
 
       unsigned long LoggingEnabledAt;
 
-      size_t MsgCount;
+      size_t MsgCount = 0;
 
       std::vector<uint8_t> RawData;
 

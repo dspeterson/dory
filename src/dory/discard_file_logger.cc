@@ -28,7 +28,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <limits>
 #include <sstream>
 #include <stdexcept>
 
@@ -93,13 +92,6 @@ static void CreateDir(const char *dir) {
     /* TODO: Modify implementation to keep running, with discard file logging
        disabled. */
   }
-}
-
-TDiscardFileLogger::TDiscardFileLogger()
-    : MaxMsgPrefixLen(std::numeric_limits<size_t>::max()),
-      Enabled(false),
-      MaxFileSize(0),
-      MaxArchiveSize(0) {
 }
 
 TDiscardFileLogger::~TDiscardFileLogger() {
@@ -432,15 +424,12 @@ struct TOldLogFileInfo {
   std::string AbsolutePath;
 
   /* File size in bytes. */
-  uint64_t Size;
+  uint64_t Size = 0;
 
   /* Epoch milliseconds value obtained from filename. */
-  uint64_t EpochMilliseconds;
+  uint64_t EpochMilliseconds = 0;
 
-  TOldLogFileInfo()
-      : Size(0),
-        EpochMilliseconds(0) {
-  }
+  TOldLogFileInfo() = default;
 
   TOldLogFileInfo(std::string &&absolute_path, uint64_t size,
       uint64_t epoch_ms)

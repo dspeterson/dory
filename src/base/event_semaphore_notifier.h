@@ -50,7 +50,7 @@ namespace Base {
     void Notify() noexcept;
 
     private:
-    bool Done;
+    bool Done = false;
 
     TEventSemaphore &Sem;
 

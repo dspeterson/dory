@@ -95,20 +95,16 @@ namespace {
     public:
     TDoryTestServer(in_port_t broker_port, size_t msg_buffer_max_kb,
         const std::string &dory_conf)
-        : TcpInputActive(false),
-          BrokerPort(broker_port),
+        : BrokerPort(broker_port),
           MsgBufferMaxKb(msg_buffer_max_kb),
-          DoryConf(dory_conf),
-          DoryReturnValue(EXIT_FAILURE) {
+          DoryConf(dory_conf) {
     }
 
     TDoryTestServer(in_port_t broker_port, size_t msg_buffer_max_kb,
         std::string &&dory_conf)
-        : TcpInputActive(false),
-          BrokerPort(broker_port),
+        : BrokerPort(broker_port),
           MsgBufferMaxKb(msg_buffer_max_kb),
-          DoryConf(std::move(dory_conf)),
-          DoryReturnValue(EXIT_FAILURE) {
+          DoryConf(std::move(dory_conf)) {
     }
 
     virtual ~TDoryTestServer();
@@ -201,7 +197,7 @@ namespace {
 
     TOpt<TTmpFileName> UnixStreamSocketName;
 
-    bool TcpInputActive;
+    bool TcpInputActive = false;
 
     in_port_t BrokerPort;
 
@@ -209,7 +205,7 @@ namespace {
 
     std::string DoryConf;
 
-    int DoryReturnValue;
+    int DoryReturnValue = EXIT_FAILURE;
 
     std::unique_ptr<TDoryServer> Dory;
   };  // TDoryTestServer

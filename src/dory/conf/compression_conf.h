@@ -43,19 +43,16 @@ namespace Dory {
       class TBuilder;
 
       struct TConf {
-        Compress::TCompressionType Type;
+        Compress::TCompressionType Type = Compress::TCompressionType::None;
 
         /* Minimum total size of uncompressed message bodies required for
            compression to be used. */
-        size_t MinSize;
+        size_t MinSize = 0;
 
         /* Compression level, if specified. */
         Base::TOpt<int> Level;
 
-        TConf()
-            : Type(Compress::TCompressionType::None),
-              MinSize(0) {
-        }
+        TConf() = default;
 
         TConf(Compress::TCompressionType type, size_t min_size,
             const Base::TOpt<int> &level)
@@ -79,9 +76,7 @@ namespace Dory {
         return StringToType(s.c_str(), result);
       }
 
-      TCompressionConf()
-          : SizeThresholdPercent(100) {
-      }
+      TCompressionConf() = default;
 
       TCompressionConf(const TCompressionConf &) = default;
 
@@ -107,7 +102,7 @@ namespace Dory {
       }
 
       private:
-      size_t SizeThresholdPercent;
+      size_t SizeThresholdPercent = 100;
 
       TConf DefaultTopicConfig;
 

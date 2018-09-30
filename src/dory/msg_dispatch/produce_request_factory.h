@@ -211,7 +211,7 @@ namespace Dory {
       std::shared_ptr<TMetadata> Metadata;
 
       /* Correlation ID counter. */
-      int32_t CorrIdCounter;
+      int32_t CorrIdCounter = 0;
 
       /* Batches of messages to be combined into produce requests. */
       std::list<std::list<TMsg::TPtr>> InputQueue;

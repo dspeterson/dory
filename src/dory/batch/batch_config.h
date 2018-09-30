@@ -29,11 +29,7 @@ namespace Dory {
   namespace Batch {
 
     struct TBatchConfig {
-      TBatchConfig()
-          : TimeLimit(0),
-            MsgCount(0),
-            ByteCount(0) {
-      }
+      TBatchConfig() = default;
 
       TBatchConfig(size_t time_limit, size_t msg_count, size_t byte_count)
           : TimeLimit(time_limit),
@@ -50,11 +46,11 @@ namespace Dory {
         *this = TBatchConfig();
       }
 
-      size_t TimeLimit;  // milliseconds
+      size_t TimeLimit = 0;  // milliseconds
 
-      size_t MsgCount;
+      size_t MsgCount = 0;
 
-      size_t ByteCount;
+      size_t ByteCount = 0;
     };  // TBatchConfig
 
     inline bool BatchingIsEnabled(const TBatchConfig &config) {

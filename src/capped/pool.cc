@@ -31,8 +31,9 @@ using namespace Base;
 using namespace Capped;
 
 TPool::TPool(size_t block_size, size_t block_count, TSync sync_policy)
-    : BlockSize(max(block_size, sizeof(TBlock))), BlockCount(block_count),
-      Guarded(sync_policy != TSync::Unguarded), FirstFreeBlock(nullptr) {
+    : BlockSize(max(block_size, sizeof(TBlock))),
+      BlockCount(block_count),
+      Guarded(sync_policy != TSync::Unguarded) {
   /* Allocate enough storage space for all our blocks. */
   size_t size = BlockSize * BlockCount;
   Storage = new char[size];

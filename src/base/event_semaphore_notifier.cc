@@ -25,8 +25,7 @@ using namespace Base;
 
 TEventSemaphoreNotifier::TEventSemaphoreNotifier(TEventSemaphore &sem,
     const TErrorHandler &error_handler)
-    : Done(false),
-      Sem(sem), 
+    : Sem(sem),
       ErrorHandler(error_handler) {
 }
 

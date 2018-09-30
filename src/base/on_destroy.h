@@ -34,8 +34,7 @@ namespace Base {
 
     public:
     explicit TOnDestroy(const std::function<void() noexcept> &action)
-        : Action(action),
-          Active(true) {
+        : Action(action) {
     }
 
     ~TOnDestroy() {
@@ -52,7 +51,7 @@ namespace Base {
     private:
     const std::function<void() noexcept> Action;
 
-    bool Active;
+    bool Active = true;
   };  // TOnDestroy
 
 }  // Base

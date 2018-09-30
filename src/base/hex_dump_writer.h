@@ -58,7 +58,7 @@ namespace Base {
     class TFormat final {
       public:
       /* constructr specifies a default format */
-      TFormat();
+      TFormat() = default;
 
       /* constructor allows client to specify all format parameters */
       TFormat(size_t bytes_per_line, size_t addr_print_width,
@@ -187,44 +187,44 @@ namespace Base {
 
       private:
       /* This is the number of data bytes to display per line of output. */
-      size_t BytesPerLine;
+      size_t BytesPerLine = 8;
 
       /* Each line of output begins with the address of the first data byte
          displayed on that line.  This specifies the number of bytes wide the
          address should be displayed as.  The value must be from 1 to 8. */
-      size_t AddrPrintWidth;
+      size_t AddrPrintWidth = 8;
 
       /* This is a string to display at the start of each output line.  Its
          purpose is to indent the output. */
-      std::string Indent;
+      std::string Indent = "";
 
       /* This is a string to display between the address and the bytes of data
          displayed in hex.  It serves as a separator. */
-      std::string Sep1;
+      std::string Sep1 = " | ";
 
       /* This is a string to display between individual hex values.  It serves
          as a separator. */
-      std::string Sep2;
+      std::string Sep2 = " ";
 
       /* This is a string to display between the bytes of data in hex and the
          bytes of data displayed as characters.  It serves as a separator. */
-      std::string Sep3;
+      std::string Sep3 = " | ";
 
       /* This is a substitute character to display in place of nonprintable
          characters. */
-      char Nonprintable;
+      char Nonprintable = '.';
 
       /* This is a client-supplied function that takes a byte value as input
          and returns a boolean value indicating whether the corresponding
          character is printable. */
-      TIsPrintableFn IsPrintableFn;
+      TIsPrintableFn IsPrintableFn = DefaultIsPrintableFn;
 
       friend class THexDumpWriter;  // for easy access
     };  // TFormat
 
     /* This constructor specifies a default-constructed TFormat object, and
        DefaultPrintFn() as the print function. */
-    THexDumpWriter();
+    THexDumpWriter() = default;
 
     /* This constructor allows the client to specify a TFormat object, and uses
        DefaultPrintFn() as the print function. */
@@ -250,7 +250,7 @@ namespace Base {
 
     TFormat Format;
 
-    TPrintFn PrintFn;
+    TPrintFn PrintFn = DefaultPrintFn;
   };  // THexDumpWriter
 
 }  // Base

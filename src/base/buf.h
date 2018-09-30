@@ -43,16 +43,12 @@ namespace Base {
     using TStorage = typename std::vector<T>;
 
     /* Construct initially empty buffer. */
-    TBuf()
-        : ItemOffset(0),
-          ItemCount(0) {
-    }
+    TBuf() = default;
 
     /* Construct buffer, populating it with 'items', whose contents are copied
        into the container. */
     explicit TBuf(const TStorage &items)
         : Storage(items),
-          ItemOffset(0),
           ItemCount(Storage.size()) {
     }
 
@@ -60,7 +56,6 @@ namespace Base {
        into the container. */
     explicit TBuf(TStorage &&items) noexcept
         : Storage(std::move(items)),
-          ItemOffset(0),
           ItemCount(Storage.size()) {
     }
 
@@ -308,12 +303,12 @@ namespace Base {
 
     /* Indicates position in 'Storage' of first item that is ready to be
        consumed. */
-    size_t ItemOffset;
+    size_t ItemOffset = 0;
 
     /* Indicates number of items in 'Storage' that are ready to be consumed.
        Any space in 'Storage' following items available for consumption can be
        filled with additional items. */
-    size_t ItemCount;
+    size_t ItemCount = 0;
   };  // TBuf
 
 }  // Base

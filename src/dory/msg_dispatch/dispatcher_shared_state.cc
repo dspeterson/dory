@@ -47,9 +47,7 @@ TDispatcherSharedState::TDispatcherSharedState(const TConfig &config,
       MsgStateTracker(msg_state_tracker),
       AnomalyTracker(anomaly_tracker),
       DebugSetup(debug_setup),
-      BatchConfig(batch_config),
-      RunningThreadCount(0),
-      AckCount(0) {
+      BatchConfig(batch_config) {
 }
 
 void TDispatcherSharedState::Discard(TMsg::TPtr &&msg,

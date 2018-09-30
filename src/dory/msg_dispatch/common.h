@@ -53,14 +53,12 @@ namespace Dory {
          configured for this topic, then this value is unused.  Its purpose is
          to prevent creation of a compressed message set whose size is large
          enough to cause Kafka to return a MessageSizeTooLarge error. */
-      size_t DataSize;
+      size_t DataSize = 0;
 
       /* These are the messages in the message set. */
       std::list<TMsg::TPtr> Contents;
 
-      TMsgSet()
-          : DataSize(0) {
-      }
+      TMsgSet() = default;
     };  // TMsgSet
 
     /* All messages in map have same topic.  Key is partition and value is all

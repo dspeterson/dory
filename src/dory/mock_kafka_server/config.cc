@@ -80,12 +80,6 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
   }
 }
 
-TConfig::TConfig(int argc, char *argv[])
-    : LogEcho(false),
-      ProduceApiVersion(0),
-      MetadataApiVersion(0),
-      QuietLevel(0),
-      CmdPort(9080),
-      SingleOutputFile(false) {
+TConfig::TConfig(int argc, char *argv[]) {
   ParseArgs(argc, argv, *this);
 }

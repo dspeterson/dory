@@ -102,15 +102,14 @@ namespace Socket {
       /* Our current position in the linked list returned by getaddrinfo().
          Null if we've reached the end of the list or if we've invalidated our
          current position. */
-      mutable addrinfo *Csr;
+      mutable addrinfo *Csr = nullptr;
 
       /* The pointer after Csr, if any.
          Null if we've reached the end of the list. */
-      mutable addrinfo *Next;
+      mutable addrinfo *Next = nullptr;
 
       /* The address pointed to by Csr, formatted for use. */
       mutable TAddress Address;
-
     };  // TCursor
 
   }  // Db

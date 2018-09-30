@@ -22,6 +22,7 @@
 #include <base/stream_msg_reader.h>
 
 #include <cerrno>
+#include <utility>
 
 #include <unistd.h>
 
@@ -33,15 +34,15 @@ using namespace Base;
 TStreamMsgReader::TState TStreamMsgReader::Read() {
   assert(this);
 
-  if (State != TState::ReadNeeded) {
+  if (Impl.State != TState::ReadNeeded) {
     assert(false);
-    return State;
+    return Impl.State;
   }
 
-  assert(Fd >= 0);
-  assert(ReadyMsgOffset == 0);
-  assert(ReadyMsgSize == 0);
-  assert(!EndOfInput);
+  assert(Impl.Fd >= 0);
+  assert(Impl.ReadyMsgOffset == 0);
+  assert(Impl.ReadyMsgSize == 0);
+  assert(!Impl.EndOfInput);
   size_t read_size = GetNextReadSize();
 
   if (read_size == 0) {
@@ -50,20 +51,20 @@ TStreamMsgReader::TState TStreamMsgReader::Read() {
        subclass implementation will probably never return 0 from
        GetNextReadSize() but we can't predict how subclasses will be
        implemented. */
-    return State;
+    return Impl.State;
   }
 
-  Buf.EnsureSpace(read_size);
+  Impl.Buf.EnsureSpace(read_size);
 
   /* Note that read() works with TCP and UNIX domain stream sockets, as well as
      standard UNIX pipes. */
-  ssize_t ret = read(Fd, Buf.Space(), read_size);
+  ssize_t ret = read(Impl.Fd, Impl.Buf.Space(), read_size);
 
   if (ret < 0) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wlogical-op"
     if ((errno == EAGAIN) || (errno == EWOULDBLOCK) || (errno == EINTR)) {
-      return State;
+      return Impl.State;
     }
 #pragma GCC diagnostic pop
 
@@ -74,34 +75,35 @@ TStreamMsgReader::TState TStreamMsgReader::Read() {
     /* There is no more data to read, but depending on how a subclass
        implements GetNextMsg(), the buffer may still contain unprocessed
        messages. */
-    EndOfInput = true;
+    Impl.EndOfInput = true;
   }
 
-  Buf.MarkSpaceConsumed(static_cast<size_t>(ret));
+  Impl.Buf.MarkSpaceConsumed(static_cast<size_t>(ret));
   return TryAdvanceToNextMsg();
 }
 
 TStreamMsgReader::TState TStreamMsgReader::ConsumeReadyMsg() {
   assert(this);
 
-  if (State != TState::MsgReady) {
+  if (Impl.State != TState::MsgReady) {
     assert(false);
-    return State;
+    return Impl.State;
   }
 
-  assert(Fd >= 0);
-  assert(ReadyMsgOffset <= GetDataSize());
-  assert(ReadyMsgSize <= (GetDataSize() - ReadyMsgOffset));
+  assert(Impl.Fd >= 0);
+  assert(Impl.ReadyMsgOffset <= GetDataSize());
+  assert(Impl.ReadyMsgSize <= (GetDataSize() - Impl.ReadyMsgOffset));
 
   /* hook for subclass to update its internal state */
   BeforeConsumeReadyMsg();
 
-  assert(TrailingDataSize <=
-      ((GetDataSize() - ReadyMsgOffset) - ReadyMsgSize));
-  Buf.MarkDataConsumed(ReadyMsgOffset + ReadyMsgSize + TrailingDataSize);
-  ReadyMsgOffset = 0;
-  ReadyMsgSize = 0;
-  TrailingDataSize = 0;
+  assert(Impl.TrailingDataSize <=
+      ((GetDataSize() - Impl.ReadyMsgOffset) - Impl.ReadyMsgSize));
+  Impl.Buf.MarkDataConsumed(Impl.ReadyMsgOffset + Impl.ReadyMsgSize +
+      Impl.TrailingDataSize);
+  Impl.ReadyMsgOffset = 0;
+  Impl.ReadyMsgSize = 0;
+  Impl.TrailingDataSize = 0;
   return TryAdvanceToNextMsg();
 }
 
@@ -112,110 +114,106 @@ const uint8_t *TStreamMsgReader::GetReadyMsg() const noexcept {
   /* We use a lot of defensive programming below to prevent buggy code from
      reading past the end of the buffer. */
 
-  if ((State != TState::MsgReady) || RestrictReadyMsgCalls) {
+  if ((Impl.State != TState::MsgReady) || Impl.RestrictReadyMsgCalls) {
     assert(false);
     return &empty_data;
   }
 
-  if (Fd < 0) {
+  if (Impl.Fd < 0) {
     assert(false);
     return &empty_data;
   }
 
   size_t data_size = GetDataSize();
 
-  if (ReadyMsgOffset > data_size) {
+  if (Impl.ReadyMsgOffset > data_size) {
     assert(false);
     return &empty_data;
   }
 
-  if (ReadyMsgSize > (data_size - ReadyMsgOffset)) {
+  if (Impl.ReadyMsgSize > (data_size - Impl.ReadyMsgOffset)) {
     assert(false);
     return &empty_data;
   }
 
-  if (TrailingDataSize > ((data_size - ReadyMsgOffset) - ReadyMsgSize)) {
+  if (Impl.TrailingDataSize >
+      ((data_size - Impl.ReadyMsgOffset) - Impl.ReadyMsgSize)) {
     assert(false);
     return &empty_data;
   }
 
-  if ((GetDataSize() == 0) || (ReadyMsgSize == 0)) {
+  if ((GetDataSize() == 0) || (Impl.ReadyMsgSize == 0)) {
     return &empty_data;
   }
 
-  return GetData() + ReadyMsgOffset;
+  return GetData() + Impl.ReadyMsgOffset;
 }
 
 const uint8_t *TStreamMsgReader::GetData() const noexcept {
   assert(this);
   static const uint8_t empty_data = 0;
-  return Buf.DataIsEmpty() ? &empty_data : Buf.Data();
+  return Impl.Buf.DataIsEmpty() ? &empty_data : Impl.Buf.Data();
 }
 
 void TStreamMsgReader::Reset(int fd) noexcept {
   assert(this);
 
   /* Give subclass code a chance to reset its state before we reset ours. */
-  RestrictReadyMsgCalls = true;
+  Impl.RestrictReadyMsgCalls = true;
   HandleReset();
-  RestrictReadyMsgCalls = false;
+  Impl.RestrictReadyMsgCalls = false;
 
-  bool no_fd = (fd < 0);
-  State = no_fd ? TState::AtEnd : TState::ReadNeeded;
-  Fd = no_fd ? -1 : fd;
-  Buf.Clear();
-  RestrictReadyMsgCalls = false;
-  ReadyMsgOffset = 0;
-  ReadyMsgSize = 0;
-  TrailingDataSize = 0;
-  EndOfInput = no_fd;
+  Impl.Buf.Clear();
+  Impl = TImpl(fd, std::move(Impl.Buf));
 }
 
 TStreamMsgReader::TStreamMsgReader(int fd)
-    : State((fd < 0) ? TState::AtEnd : TState::ReadNeeded),
-      Fd((fd < 0) ? -1 : fd),
-      RestrictReadyMsgCalls(false),
-      ReadyMsgOffset(0),
-      ReadyMsgSize(0),
-      TrailingDataSize(0),
-      EndOfInput(fd < 0) {
+    : Impl(fd) {
 }
 
 TStreamMsgReader::TState TStreamMsgReader::TryAdvanceToNextMsg() {
   assert(this);
-  RestrictReadyMsgCalls = true;
+  Impl.RestrictReadyMsgCalls = true;
   TGetMsgResult result = GetNextMsg();
-  RestrictReadyMsgCalls = false;
+  Impl.RestrictReadyMsgCalls = false;
 
   switch (result.DataState) {
     case TDataState::MsgReady: {
       if ((result.MsgOffset > GetDataSize()) ||
           (result.MsgSize > (GetDataSize() - result.MsgOffset)) ||
           (result.TrailingDataSize >
-              ((GetDataSize() - ReadyMsgOffset) - ReadyMsgSize))) {
+              ((GetDataSize() - Impl.ReadyMsgOffset) - Impl.ReadyMsgSize))) {
         /* Make sure a buggy subclass will not cause us to read beyond the end
            of the buffer. */
         assert(false);
-        State = TState::DataInvalid;
-        return State;
+        Impl.State = TState::DataInvalid;
+        return Impl.State;
       }
 
-      ReadyMsgOffset = result.MsgOffset;
-      ReadyMsgSize = result.MsgSize;
-      TrailingDataSize = result.TrailingDataSize;
-      State = TState::MsgReady;
+      Impl.ReadyMsgOffset = result.MsgOffset;
+      Impl.ReadyMsgSize = result.MsgSize;
+      Impl.TrailingDataSize = result.TrailingDataSize;
+      Impl.State = TState::MsgReady;
       break;
     }
     case TDataState::NoMsgReady: {
-      State = EndOfInput ? TState::AtEnd : TState::ReadNeeded;
+      Impl.State = Impl.EndOfInput ? TState::AtEnd : TState::ReadNeeded;
       break;
     }
     case TDataState::Invalid: {
-      State = TState::DataInvalid;
+      Impl.State = TState::DataInvalid;
       break;
     }
     NO_DEFAULT_CASE;
   }
 
-  return State;
+  return Impl.State;
+}
+
+TStreamMsgReader::TImpl::TImpl(int fd, TBuf<uint8_t> &&buf)
+    : State((fd < 0) ? TState::AtEnd : TState::ReadNeeded),
+      Fd((fd < 0) ? -1 : fd),
+      Buf(std::move(buf)),
+      EndOfInput(fd < 0)
+{
 }

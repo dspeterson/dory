@@ -27,16 +27,6 @@ using namespace Dory;
 using namespace Dory::Batch;
 using namespace Dory::Conf;
 
-TBatchConfigBuilder::TBatchConfigBuilder()
-    : DefaultTopicConfigSpecified(false),
-      DefaultTopicSkipBrokerBatching(false),
-      BrokerBatchConfigSpecified(false),
-      ProduceRequestDataLimitSpecified(false),
-      ProduceRequestDataLimit(0),
-      MessageMaxBytesSpecified(false),
-      MessageMaxBytes(0) {
-}
-
 bool TBatchConfigBuilder::AddTopic(const std::string &topic,
     const TBatchConfig *config) {
   assert(this);

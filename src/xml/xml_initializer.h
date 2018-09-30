@@ -86,7 +86,7 @@ namespace Xml {
     private:
     /* true if initialization has been successfully performed, or false
        otherwise. */
-    bool Initialized;
+    bool Initialized = false;
   };  // TXmlInitializer
 
 }  // Xml

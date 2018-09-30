@@ -79,12 +79,10 @@ namespace Dory {
       };  // TRequestType
 
       struct TMetadataRequest {
-        int32_t CorrelationId;
+        int32_t CorrelationId = 0;
         std::string Topic;  // empty string means "all topics"
 
-        TMetadataRequest()
-            : CorrelationId(0) {
-        }
+        TMetadataRequest() = default;
       };  // TMetadataRequest
 
       TSingleClientHandlerBase(const TConfig &config,
@@ -96,11 +94,7 @@ namespace Dory {
             Setup(setup),
             Ss(ss),
             PortMap(port_map),
-            PortOffset(port_offset),
-            ProduceRequestCount(0),
-            MetadataRequestCount(0),
-            MsgSetCount(0),
-            MsgCount(0) {
+            PortOffset(port_offset) {
         assert(PortOffset < Setup.Ports.size());
       }
 
@@ -194,13 +188,13 @@ namespace Dory {
 
       std::string PeerAddressString;
 
-      size_t ProduceRequestCount;
+      size_t ProduceRequestCount = 0;
 
-      size_t MetadataRequestCount;
+      size_t MetadataRequestCount = 0;
 
-      size_t MsgSetCount;
+      size_t MsgSetCount = 0;
 
-      size_t MsgCount;
+      size_t MsgCount = 0;
 
       TMetadataRequest MetadataRequest;
 

@@ -40,17 +40,6 @@ void THexDumpWriter::DefaultPrintFn(const std::string &output,
   }
 }
 
-THexDumpWriter::TFormat::TFormat()
-    : BytesPerLine(8),
-      AddrPrintWidth(8),
-      Indent(""),
-      Sep1(" | "),
-      Sep2(" "),
-      Sep3(" | "),
-      Nonprintable('.'),
-      IsPrintableFn(DefaultIsPrintableFn) {
-}
-
 THexDumpWriter::TFormat::TFormat(size_t bytes_per_line,
     size_t addr_print_width, const std::string &indent,
     const std::string &sep1, const std::string &sep2, const std::string &sep3,
@@ -65,13 +54,8 @@ THexDumpWriter::TFormat::TFormat(size_t bytes_per_line,
       IsPrintableFn(is_printable_fn) {
 }
 
-THexDumpWriter::THexDumpWriter()
-    : PrintFn(DefaultPrintFn) {
-}
-
 THexDumpWriter::THexDumpWriter(const TFormat &format)
-    : Format(format),
-      PrintFn(DefaultPrintFn) {
+    : Format(format) {
 }
 
 THexDumpWriter::THexDumpWriter(const TPrintFn &print_fn)

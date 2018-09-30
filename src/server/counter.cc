@@ -28,9 +28,7 @@ using namespace Server;
 
 TCounter::TCounter(const TCodeLocation &code_location, const char *name)
     : CodeLocation(code_location),
-      Name(name),
-      UnsampledCount(0),
-      SampledCount(0) {
+      Name(name) {
   assert(name);
   NextCounter = FirstCounter;
   FirstCounter = this;

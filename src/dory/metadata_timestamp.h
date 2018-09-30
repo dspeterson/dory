@@ -34,11 +34,7 @@ namespace Dory {
     NO_COPY_SEMANTICS(TMetadataTimestamp);
 
     public:
-    /* Trivial constructor. */
-    TMetadataTimestamp()
-        : LastUpdateTime(0),
-          LastModifiedTime(0) {
-    }
+    TMetadataTimestamp() = default;
 
     /* Called by router thread when it updates its metadata. */
     void RecordUpdate(bool modified);
@@ -56,11 +52,11 @@ namespace Dory {
     /* Updated with current time in UTC whenever router thread gets new
        metadata (regardless of whether metadata is unchanged because new and
        old metadata are identical). */
-    uint64_t LastUpdateTime;
+    uint64_t LastUpdateTime = 0;
 
     /* Updated with current time in UTC whenever router thread gets new
        metadata and replaces its current metadata with the new metadata. */
-    uint64_t LastModifiedTime;
+    uint64_t LastModifiedTime = 0;
   };  // TMetadataTimestamp
 
 }  // Dory

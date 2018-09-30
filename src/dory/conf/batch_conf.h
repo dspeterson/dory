@@ -85,12 +85,7 @@ namespace Dory {
         return StringToTopicAction(s.c_str(), result);
       }
 
-      TBatchConf()
-          : ProduceRequestDataLimit(0),
-            MessageMaxBytes(0),
-            CombinedTopicsBatchingEnabled(false),
-            DefaultTopicAction(TTopicAction::Disable) {
-      }
+      TBatchConf() = default;
 
       TBatchConf(const TBatchConf &) = default;
 
@@ -136,15 +131,15 @@ namespace Dory {
       }
 
       private:
-      size_t ProduceRequestDataLimit;
+      size_t ProduceRequestDataLimit = 0;
 
-      size_t MessageMaxBytes;
+      size_t MessageMaxBytes = 0;
 
-      bool CombinedTopicsBatchingEnabled;
+      bool CombinedTopicsBatchingEnabled = false;
 
       TBatchValues CombinedTopicsConfig;
 
-      TTopicAction DefaultTopicAction;
+      TTopicAction DefaultTopicAction = TTopicAction::Disable;
 
       TBatchValues DefaultTopicConfig;
 

@@ -42,7 +42,7 @@ namespace Dory {
       NO_COPY_SEMANTICS(TBatchConfigBuilder);
 
       public:
-      TBatchConfigBuilder();
+      TBatchConfigBuilder() = default;
 
       /* A null value for 'config' indicates "skip combined topics batching and
          send immediately".  If 'config' is not null and
@@ -84,13 +84,13 @@ namespace Dory {
       private:
       std::unordered_map<std::string, TBatchConfig> PerTopicMap;
 
-      bool DefaultTopicConfigSpecified;
+      bool DefaultTopicConfigSpecified = false;
 
       TBatchConfig DefaultTopicConfig;
 
-      bool DefaultTopicSkipBrokerBatching;
+      bool DefaultTopicSkipBrokerBatching = false;
 
-      bool BrokerBatchConfigSpecified;
+      bool BrokerBatchConfigSpecified = false;
 
       TBatchConfig BrokerBatchConfig;
 
@@ -100,13 +100,13 @@ namespace Dory {
 
       std::unordered_set<std::string> PerTopicBatchingTopics;
 
-      bool ProduceRequestDataLimitSpecified;
+      bool ProduceRequestDataLimitSpecified = false;
 
-      size_t ProduceRequestDataLimit;
+      size_t ProduceRequestDataLimit = 0;
 
-      bool MessageMaxBytesSpecified;
+      bool MessageMaxBytesSpecified = false;
 
-      size_t MessageMaxBytes;
+      size_t MessageMaxBytes = 0;
     };  // TBatchConfigBuilder
 
   }  // Batch

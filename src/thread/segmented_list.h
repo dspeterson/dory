@@ -54,9 +54,9 @@ namespace Thread {
            }
          }
 
-      Thus, threads become elgible for pruning once they have been idle for a
+      Thus, threads become eligible for pruning once they have been idle for a
       certain length of time.  Values Smax and T determine how long a thread
-      must remain idle to become elgible for pruning, and whether the pruning
+      must remain idle to become eligible for pruning, and whether the pruning
       is done in a coarse or fine-grained manner.  Operations are implemented
       to be O(1) whenever possible. */
   template <typename T>
@@ -65,11 +65,7 @@ namespace Thread {
 
     public:
     TSegmentedList()
-        : AllSegments(1),
-          NumSegments(1),
-          TotalItems(0),
-          FirstNonempty(nullptr),
-          LastNonempty(nullptr) {
+        : AllSegments(1) {
     }
 
     /* Return true if the list contains 0 items, or false otherwise.  This is
@@ -446,11 +442,7 @@ namespace Thread {
       NO_COPY_SEMANTICS(TSegment);
 
       public:
-      TSegment() noexcept
-          : PrevNonempty(nullptr),
-            NextNonempty(nullptr),
-            NumItems(0) {
-      }
+      TSegment() = default;
 
       /* Return true if segment is empty or false otherwise. */
       bool Empty() const noexcept {
@@ -567,14 +559,14 @@ namespace Thread {
       /* When the segment is nonempty, these are used to link it into a list of
          all nonempty segments.  They are both null when the segment is empty.
        */
-      TSegment *PrevNonempty;
-      TSegment *NextNonempty;
+      TSegment *PrevNonempty = nullptr;
+      TSegment *NextNonempty = nullptr;
 
       private:
       std::list<T> Items;
 
       /* Maintain separate item count, since Items.size() is not O(1). */
-      size_t NumItems;
+      size_t NumItems = 0;
     };  // TSegment
 
     /* The first segment just became nonempty.  Add it to the front of the
@@ -680,10 +672,10 @@ namespace Thread {
 
     /* Maintain separate segment count, since AllSegments.size() is not O(1).
      */
-    size_t NumSegments;
+    size_t NumSegments = 1;
 
     /* Total item count for all segments. */
-    size_t TotalItems;
+    size_t TotalItems = 0;
 
     /* When list contains at least one nonempty segment, these point to the
        first and last nonempty segment, respectively.  Together with the
@@ -692,8 +684,8 @@ namespace Thread {
        'AllSegments'.  The list facilitates an O(1) implementation of
        RemoveOneNewest().  Both pointers are null when all segments are empty.
      */
-    TSegment *FirstNonempty;
-    TSegment *LastNonempty;
+    TSegment *FirstNonempty = nullptr;
+    TSegment *LastNonempty = nullptr;
   };  //  TSegmentedList
 
 }  // Thread

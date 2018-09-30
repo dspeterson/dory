@@ -111,11 +111,11 @@ namespace Dory {
       private:
       /* This is the total number of connector threads that have been started
          and have not yet called MarkShutdownFinished(); */
-      std::atomic<size_t> RunningThreadCount;
+      std::atomic<size_t> RunningThreadCount{0};
 
       Base::TEventSemaphore ShutdownFinished;
 
-      std::atomic<size_t> AckCount;
+      std::atomic<size_t> AckCount{0};
     };  // TDispatcherSharedState
 
   }  // MsgDispatch

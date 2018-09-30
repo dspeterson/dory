@@ -126,8 +126,6 @@ TStreamServerBase::TStreamServerBase(int backlog, struct sockaddr *addr,
       Backlog(backlog),
       Addr(addr),
       AddrSpace(addr_space),
-      SyncStartSuccess(false),
-      SyncStartNotify(nullptr),
       ConnectionHandler(std::move(connection_handler)) {
   assert(ConnectionHandler);
 

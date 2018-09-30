@@ -78,29 +78,29 @@ struct TConfig {
 
   std::string Topic;
 
-  uint32_t PartitionKey;
+  uint32_t PartitionKey = 0;
 
-  bool UsePartitionKey;
+  bool UsePartitionKey = false;
 
   std::string Key;
 
   std::string Value;
 
-  bool ValueSpecified;
+  bool ValueSpecified = false;
 
-  bool Stdin;
+  bool Stdin = false;
 
-  size_t Count;
+  size_t Count = 1;
 
-  size_t Interval;
+  size_t Interval = 0;
 
-  bool Seq;
+  bool Seq = false;
 
-  size_t Pad;
+  size_t Pad = 0;
 
-  bool Bad;
+  bool Bad = false;
 
-  size_t Print;
+  size_t Print = 0;
 };  // TConfig
 
 static void ParseArgs(int argc, char *argv[], TConfig &config) {
@@ -208,17 +208,7 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
   }
 }
 
-TConfig::TConfig(int argc, char *argv[])
-    : PartitionKey(0),
-      UsePartitionKey(false),
-      ValueSpecified(false),
-      Stdin(false),
-      Count(1),
-      Interval(0),
-      Seq(false),
-      Pad(0),
-      Bad(false),
-      Print(0) {
+TConfig::TConfig(int argc, char *argv[]) {
   ParseArgs(argc, argv, *this);
 }
 

@@ -75,11 +75,11 @@ namespace Base {
 
     TRandomExpBackoff DelayGenerator;
 
-    bool FirstTime;
+    bool FirstTime = true;
 
-    struct timespec WindowStartTime;
+    struct timespec WindowStartTime = {0, 0};
 
-    struct timespec LastEventTime;
+    struct timespec LastEventTime = {0, 0};
   };  // TBackoffRateLimiter
 
 }  // Base

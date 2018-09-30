@@ -37,9 +37,7 @@ namespace {
     NO_COPY_SEMANTICS(TTestLogWriter);
 
     public:
-    TTestLogWriter()
-        : WrittenCount(0) {
-    }
+    TTestLogWriter() = default;
 
     ~TTestLogWriter() override = default;
 
@@ -66,7 +64,7 @@ namespace {
     }
 
     private:
-    size_t WrittenCount;
+    size_t WrittenCount = 0;
 
     std::string Entry;
 

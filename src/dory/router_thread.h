@@ -300,7 +300,7 @@ namespace Dory {
     TMsgRateLimiter MsgRateLimiter;
 
     /* Header overhead for a single message.  For checking message size. */
-    size_t SingleMsgOverhead;
+    size_t SingleMsgOverhead = 0;
 
     /* Maximum total message size (key + value + header space (see
        'SingleMsgOverhead' above)) allowed by Kafka brokers. */
@@ -317,15 +317,15 @@ namespace Dory {
        initialization and is open for business. */
     Base::TEventSemaphore InitFinishedSem;
 
-    bool Destroying;
+    bool Destroying = false;
 
     /* Set to true when StartShutdown() has been called but ContinueShutdown()
        still needs to be called. */
-    bool NeedToContinueShutdown;
+    bool NeedToContinueShutdown = false;
 
     /* After the router thread has shut down, this indicates whether it shut
        down normally or with an error. */
-    bool OkShutdown;
+    bool OkShutdown = true;
 
     /* The router thread receives messages from the input thread through this
        channel. */

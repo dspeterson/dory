@@ -25,15 +25,6 @@
 
 using namespace Thread;
 
-TManagedThreadPoolConfig::TManagedThreadPoolConfig()
-    : MinPoolSize(0),
-      MaxPoolSize(0),
-      PruneQuantumMs(30000),
-      PruneQuantumCount(10),
-      MaxPruneFraction(500),
-      MinIdleFraction(20) {
-}
-
 TManagedThreadPoolConfig::TManagedThreadPoolConfig(size_t min_pool_size,
     size_t max_pool_size, size_t prune_quantum_ms, size_t prune_quantum_count,
     size_t max_prune_fraction, size_t min_idle_fraction)

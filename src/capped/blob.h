@@ -38,9 +38,7 @@ namespace Capped {
     using TBlock = TPool::TBlock;
 
     /* Default-construct an empty blob. */
-    TBlob() noexcept
-        : Pool(nullptr), FirstBlock(nullptr), LastBlockSize(0), NumBytes(0) {
-    }
+    TBlob() noexcept = default;
 
     /* Move the data from that blob into a new one, leaving that blob empty. */
     TBlob(TBlob &&that) noexcept
@@ -160,17 +158,17 @@ namespace Capped {
     size_t DoGetDataInFirstBlock(char *&data) const;
 
     /* The pool to which to return our blocks, or null if we're empty. */
-    TPool *Pool;
+    TPool *Pool = nullptr;
 
     /* The first buffer in our linked list, or null if we're empty. */
-    TBlock *FirstBlock;
+    TBlock *FirstBlock = nullptr;
 
     /* The number of bytes used in the last buffer's block.  All other buffers
        are completely full. */
-    size_t LastBlockSize;
+    size_t LastBlockSize = 0;
 
     /* The total size in bytes of the data contained. */
-    size_t NumBytes;
+    size_t NumBytes = 0;
 
     friend class TReader;
     friend class TWriter;

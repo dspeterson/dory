@@ -66,8 +66,7 @@ TProduceRequestFactory::TProduceRequestFactory(const TConfig &config,
       MaxCompressionRatio(compression_conf.GetSizeThresholdPercent() / 100.0f),
       RequestWriter(produce_protocol->CreateProduceRequestWriter()),
       MsgSetWriter(produce_protocol->CreateMsgSetWriter()),
-      DefaultTopicCompressionInfo(compression_conf.GetDefaultTopicConfig()),
-      CorrIdCounter(0) {
+      DefaultTopicCompressionInfo(compression_conf.GetDefaultTopicConfig()) {
   InitTopicDataMap(compression_conf);
 }
 

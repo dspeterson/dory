@@ -50,24 +50,20 @@ namespace Dory {
       struct TProduceRequestInfo {
         std::string Topic;
 
-        int32_t Partition;
+        int32_t Partition = 0;
 
-        Compress::TCompressionType CompressionType;
+        Compress::TCompressionType CompressionType =
+            Compress::TCompressionType::None;
 
-        size_t MsgCount;
+        size_t MsgCount = 0;
 
         std::string FirstMsgKey;
 
         std::string FirstMsgValue;
 
-        int16_t ReturnedErrorCode;
+        int16_t ReturnedErrorCode = 0;
 
-        TProduceRequestInfo()
-            : Partition(0),
-              CompressionType(Compress::TCompressionType::None),
-              MsgCount(0),
-              ReturnedErrorCode(0) {
-        }
+        TProduceRequestInfo() = default;
 
         TProduceRequestInfo(const TProduceRequestInfo &) = default;
 
@@ -82,11 +78,9 @@ namespace Dory {
         /* Empty indicates all topics. */
         std::string Topic;
 
-        int16_t ReturnedErrorCode;
+        int16_t ReturnedErrorCode = 0;
 
-        TMetadataRequestInfo()
-            : ReturnedErrorCode(0) {
-        }
+        TMetadataRequestInfo() = default;
 
         TMetadataRequestInfo(const TMetadataRequestInfo &) = default;
 

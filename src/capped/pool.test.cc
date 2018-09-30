@@ -35,12 +35,10 @@ namespace {
   /* A point in 3D space. */
   class TPoint {
     public:
-    /* Default to the origin. */
-    TPoint()
-        : X(0), Y(0), Z(0) {}
+    TPoint() = default;
   
-    /* Our coordinates. */
-    int64_t X, Y, Z;
+    /* Our coordinates.  Default to the origin. */
+    int64_t X = 0, Y = 0, Z = 0;
   
     /* Allocate memory from our pool. */
     static void *operator new(size_t) {

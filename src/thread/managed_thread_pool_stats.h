@@ -28,41 +28,41 @@ namespace Thread {
   /* Statistics on managed thread pool operation. */
   struct TManagedThreadPoolStats final {
     /* # of times SetConfig() is called with new config. */
-    size_t SetConfigCount;
+    size_t SetConfigCount = 0;
 
     /* # of times manager does reconfig (may be less than # of times
        SetConfig() is called). */
-    size_t ReconfigCount;
+    size_t ReconfigCount = 0;
 
     /* # of prune operations performed by manager.  A single prune operation
        prunes 0 or more (possibly many) threads. */
-    size_t PruneOpCount;
+    size_t PruneOpCount = 0;
 
     /* Total # of threads pruned. */
-    size_t PrunedThreadCount;
+    size_t PrunedThreadCount = 0;
 
     /* Minimum # of threads pruned in a single operation. */
-    size_t MinPrunedByOp;
+    size_t MinPrunedByOp = 0;
 
     /* Maximum # of threads pruned in a single operation. */
-    size_t MaxPrunedByOp;
+    size_t MaxPrunedByOp = 0;
 
     /* # of times a worker was successfully allocated from pool. */
-    size_t PoolHitCount;
+    size_t PoolHitCount = 0;
 
     /* # of times a new worker was created because the pool had no idle
        workers.  This will be less than 'CreateWorkerCount' in the case where
        the pool was populated with an initial set of workers on startup, before
        handling any requests for workers. */
-    size_t PoolMissCount;
+    size_t PoolMissCount = 0;
 
     /* # of times a worker was not obtained from the pool due to the configured
        size limit. */
-    size_t PoolMaxSizeEnforceCount;
+    size_t PoolMaxSizeEnforceCount = 0;
 
     /* # of times a new worker is created.  This includes pool misses and
       threads created to initially populate pool. */
-    size_t CreateWorkerCount;
+    size_t CreateWorkerCount = 0;
 
     /* # of times a worker is released without being launched.  Note that the
        worker will not have an actual thread in the case where the worker was
@@ -72,24 +72,24 @@ namespace Thread {
        the idle list even if it actually contains an actual thread.  For both
        of these reasons, this value may be greater than 'PrunedThreadCount'
        once the pool has finished shutting down. */
-    size_t PutBackCount;
+    size_t PutBackCount = 0;
 
     /* # of times a thread finishes work. */
-    size_t FinishWorkCount;
+    size_t FinishWorkCount = 0;
 
     /* # of times a worker error is queued for receipt by client. */
-    size_t QueueErrorCount;
+    size_t QueueErrorCount = 0;
 
     /* # of times the client is notified of a queued worker error. */
-    size_t NotifyErrorCount;
+    size_t NotifyErrorCount = 0;
 
     /* # of busy or idle workers. */
-    size_t LiveWorkerCount;
+    size_t LiveWorkerCount = 0;
 
     /* # of idle workers. */
-    size_t IdleWorkerCount;
+    size_t IdleWorkerCount = 0;
 
-    TManagedThreadPoolStats();
+    TManagedThreadPoolStats() = default;
   };  // TManagedThreadPoolStats
 
 }  // Thread

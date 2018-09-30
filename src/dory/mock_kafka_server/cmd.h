@@ -44,15 +44,15 @@ namespace Dory {
       };  // TType
 
       /* This specifies the command type. */
-      TType Type;
+      TType Type = TType::SEND_PRODUCE_RESPONSE_ERROR;
 
       /* A command can have 2 32-bit signed integer parameters: this is the
          first one. */
-      int32_t Param1;
+      int32_t Param1 = 0;
 
       /* A command can have 2 32-bit signed integer parameters: this is the
          second one. */
-      int32_t Param2;
+      int32_t Param2 = 0;
 
       /* For produce requests, this is a message string to match exactly.  For
          metadata requests, this is a topic string to match exactly. */
@@ -68,11 +68,7 @@ namespace Dory {
 
       static TType ToType(uint8_t type);
 
-      TCmd()
-          : Type(TType::SEND_PRODUCE_RESPONSE_ERROR),
-            Param1(0),
-            Param2(0) {
-      }
+      TCmd() = default;
 
       TCmd(TType type, int32_t param1, int32_t param2,
            const std::string &str, const std::string &client_addr)

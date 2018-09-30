@@ -42,9 +42,11 @@ namespace Dory {
         TakeMsgAndLeaveBatch
       };  // TAction
 
-      TBatcherCore();
+      TBatcherCore() = default;
 
-      explicit TBatcherCore(const TBatchConfig &config);
+      explicit TBatcherCore(const TBatchConfig &config)
+          : Config(config) {
+      }
 
       TBatcherCore(const TBatcherCore &) = default;
 
@@ -101,11 +103,12 @@ namespace Dory {
 
       TBatchConfig Config;
 
-      TMsg::TTimestamp MinTimestamp;
+      TMsg::TTimestamp MinTimestamp =
+          std::numeric_limits<TMsg::TTimestamp>::max();
 
-      size_t MsgCount;
+      size_t MsgCount = 0;
 
-      size_t ByteCount;
+      size_t ByteCount = 0;
     };  // TBatcherCore
 
   }  // Batch

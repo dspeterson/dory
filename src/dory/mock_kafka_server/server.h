@@ -70,9 +70,7 @@ namespace Dory {
       TServer(const TConfig &config, bool use_ephemeral_ports,
           bool track_received_requests)
           : UseEphemeralPorts(use_ephemeral_ports),
-            InitSucceeded(false),
             Ss(config, track_received_requests),
-            CmdPort(0),
             PortMap(new TPortMap) {
       }
 
@@ -124,7 +122,7 @@ namespace Dory {
          explanation of this. */
       const bool UseEphemeralPorts;
 
-      bool InitSucceeded;
+      bool InitSucceeded = false;
 
       TSharedState Ss;
 
@@ -144,7 +142,7 @@ namespace Dory {
 
       /* This is the port the server listens on for error injection commands.
        */
-      in_port_t CmdPort;
+      in_port_t CmdPort = 0;
 
       /* Mappings between virtual and physical ports.  See big comment in
          <dory/mock_kafka_server/port_map.h> for an explanation of what is

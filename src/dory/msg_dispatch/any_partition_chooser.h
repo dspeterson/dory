@@ -35,10 +35,7 @@ namespace Dory {
 
     class TAnyPartitionChooser final {
       public:
-      TAnyPartitionChooser()
-          : Count(0), 
-            ChoiceUsed(false) {
-      }
+      TAnyPartitionChooser() = default;
 
       int32_t GetChoice(size_t broker_index, const TMetadata &md,
           const std::string &topic) {
@@ -70,11 +67,11 @@ namespace Dory {
       void Choose(size_t broker_index, const TMetadata &md,
           const std::string &topic);
 
-      size_t Count;
+      size_t Count = 0;
 
       Base::TOpt<int32_t> Choice;
 
-      bool ChoiceUsed;
+      bool ChoiceUsed = false;
     };  // TAnyPartitionChooser
 
   }  // MsgDispatch

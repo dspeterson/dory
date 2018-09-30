@@ -62,19 +62,6 @@ SERVER_COUNTER(UnixStreamInputSocketGotData);
 SERVER_COUNTER(UnixStreamInputSocketRead);
 SERVER_COUNTER(UnixStreamInputUncleanDisconnect);
 
-TStreamClientWorkFn::TStreamClientWorkFn(nullptr_t) noexcept
-    : IsTcp(false),
-      Config(nullptr),
-      Pool(nullptr),
-      MsgStateTracker(nullptr),
-      AnomalyTracker(nullptr),
-      OutputQueue(nullptr),
-      ShutdownRequestFd(nullptr),
-      /* The value of 0 for the max message body size is just a placeholder.
-         The real value will be set in SetState(). */
-      StreamReader(true, true, 0, 64 * 1024) {
-}
-
 TStreamClientWorkFn &TStreamClientWorkFn::TStreamClientWorkFn::operator=(
     nullptr_t) noexcept {
   assert(this);

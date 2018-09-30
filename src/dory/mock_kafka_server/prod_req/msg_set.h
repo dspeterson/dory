@@ -38,9 +38,7 @@ namespace Dory {
       class TMsgSet final {
         public:
         explicit TMsgSet(int32_t partition)
-            : Partition(partition),
-              CompressionType(Compress::TCompressionType::None),
-              MsgCrcsOk(true) {
+            : Partition(partition) {
         }
 
         TMsgSet(const TMsgSet &) = default;
@@ -92,9 +90,10 @@ namespace Dory {
         private:
         int32_t Partition;
 
-        Compress::TCompressionType CompressionType;
+        Compress::TCompressionType CompressionType =
+            Compress::TCompressionType::None;
 
-        bool MsgCrcsOk;
+        bool MsgCrcsOk = true;
 
         std::vector<TMsg> MsgVec;
       };  // TMsgSet

@@ -162,9 +162,9 @@ namespace Server {
 
     const socklen_t AddrSpace;
 
-    bool SyncStartSuccess;
+    bool SyncStartSuccess = false;
 
-    Base::TEventSemaphore *SyncStartNotify;
+    Base::TEventSemaphore *SyncStartNotify = nullptr;
 
     Base::TFd ListeningSocket;
 

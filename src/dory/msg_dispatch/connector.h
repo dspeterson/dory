@@ -251,12 +251,12 @@ namespace Dory {
          (for instance, a mismatched correlation ID), reliable communication is
          no longer possible, so the connector shuts down immediately without
          setting this flag. */
-      bool PauseInProgress;
+      bool PauseInProgress = false;
 
       /* This flag is only set on destructor invocation.  If the connector
          thread is still executing at this point, then a fatal error has
          occurred, so it must shut down immediately. */
-      bool Destroying;
+      bool Destroying = false;
 
       /* Known when the router thread has sent a fast or slow shutdown command,
          which the connector thread has not yet received.  When the connector
@@ -302,7 +302,7 @@ namespace Dory {
          or some other type of serious error (such as correlation ID mismatch).
          If the thread shut down due to an error ack or detection of a pause
          initiated by another connector, this will be true. */
-      bool OkShutdown;
+      bool OkShutdown = true;
     };  // TConnector
 
   }  // MsgDispatch

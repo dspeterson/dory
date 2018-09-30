@@ -53,8 +53,7 @@ void TConnectHandlerBase::RunThread(std::unique_ptr<TMockKafkaWorker> &&w) {
         std::unordered_map<int, TSharedState::TPerConnectionState> &state_map,
         int key)
         : StateMap(state_map),
-          Key(key),
-          Active(true) {
+          Key(key) {
     }
 
     ~t_cleanup() {
@@ -72,7 +71,7 @@ void TConnectHandlerBase::RunThread(std::unique_ptr<TMockKafkaWorker> &&w) {
 
     int Key;
 
-    bool Active;
+    bool Active = true;
   };  // t_cleanup
 
   std::unique_ptr<TMockKafkaWorker> worker(std::move(w));

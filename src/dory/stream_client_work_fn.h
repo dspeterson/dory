@@ -38,7 +38,8 @@ namespace Dory {
     NO_COPY_SEMANTICS(TStreamClientWorkFn);
 
     public:
-    explicit TStreamClientWorkFn(nullptr_t) noexcept;
+    explicit TStreamClientWorkFn(nullptr_t) noexcept {
+    }
 
     TStreamClientWorkFn &operator=(nullptr_t) noexcept;
 
@@ -51,6 +52,8 @@ namespace Dory {
         Base::TFd &&client_socket) noexcept;
 
     private:
+    TStreamClientWorkFn() = default;
+
     void HandleClientClosed() const;
 
     void HandleDataInvalid();
@@ -59,32 +62,34 @@ namespace Dory {
 
     /* true indicates that we are handling a local TCP connection.  false
        indicates that we are handling a UNIX domain stream connection. */
-    bool IsTcp;
+    bool IsTcp = false;
 
-    const TConfig *Config;
+    const TConfig *Config = nullptr;
 
     /* Blocks for TBlob objects containing message data get allocated from
        here. */
-    Capped::TPool *Pool;
+    Capped::TPool *Pool = nullptr;
 
-    TMsgStateTracker *MsgStateTracker;
+    TMsgStateTracker *MsgStateTracker = nullptr;
 
     /* For tracking discarded messages and possible duplicates. */
-    TAnomalyTracker *AnomalyTracker;
+    TAnomalyTracker *AnomalyTracker = nullptr;
 
     /* Messages are queued here for the router thread. */
-    Thread::TGatePutApi<TMsg::TPtr> *OutputQueue;
+    Thread::TGatePutApi<TMsg::TPtr> *OutputQueue = nullptr;
 
     /* Becomes readable when thread pool receives a shutdown request. */
-    const Base::TFd *ShutdownRequestFd;
+    const Base::TFd *ShutdownRequestFd = nullptr;
 
     /* UNIX domain stream or local TCP socket connected to client. */
     Base::TFd ClientSocket;
 
     using TStreamReader = Base::TStreamMsgWithSizeReader<int32_t>;
 
-    /* This handles the details of reading messages from the client socket. */
-    TStreamReader StreamReader;
+    /* This handles the details of reading messages from the client socket.
+       The value of 0 for the max message body size is just a placeholder.  The
+       real value will be set in SetState(). */
+    TStreamReader StreamReader{true, true, 0, 64 * 1024};
   };  // TStreamClientWorkFn
 
 }  // Dory

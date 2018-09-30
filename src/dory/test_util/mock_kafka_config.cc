@@ -31,10 +31,8 @@ using namespace Base;
 using namespace Dory;
 using namespace Dory::TestUtil;
 
-TMockKafkaConfig::TMockKafkaConfig(const std::vector<std::string> &config_file)
-    : KafkaStarted(false),
-      SetupFile("/tmp/dory_tmp.XXXXXX", true),
-      OutputDir("/tmp/dory_tmp.XXXXXX", true) {
+TMockKafkaConfig::TMockKafkaConfig(
+    const std::vector<std::string> &config_file) {
   for (const std::string &line : config_file) {
     IfLt0(write(SetupFile.GetFd(), line.data(), line.size()));
     IfLt0(write(SetupFile.GetFd(), "\n", 1));

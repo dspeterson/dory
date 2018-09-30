@@ -59,28 +59,22 @@ namespace Dory {
     /* Rate limiting state for a single topic. */
     struct TTopicState {
         /* true indicates that rate limiting for this topic is enabled. */
-        bool Enable;
+        bool Enable = false;
 
         /* Interval length in milliseconds from config file. */
-        size_t Interval;
+        size_t Interval = 1;
 
         /* Max # of allowed messages within 'Interval', from config file. */
-        size_t MaxCount;
+        size_t MaxCount = 0;
 
         /* Start time of current interval in milliseconds since the epoch. */
-        uint64_t IntervalStart;
+        uint64_t IntervalStart = 0;
 
         /* # of messages currently received during interval starting on
            'IntervalStart' */
-        size_t Count;
+        size_t Count = 0;
 
-        TTopicState()
-            : Enable(false),
-              Interval(1),
-              MaxCount(0),
-              IntervalStart(0),
-              Count(0) {
-        }
+        TTopicState() = default;
     };  // TTopicState
 
     static bool RateLimitingIsEnabled(const Conf::TTopicRateConf &conf);

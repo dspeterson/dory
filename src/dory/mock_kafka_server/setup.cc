@@ -50,10 +50,6 @@ TSetup::TFileFormatError::TFileFormatError(size_t line_num, const char *msg)
       LineNum(line_num) {
 }
 
-TSetup::TSetup()
-    : LineNum(0) {
-}
-
 void TSetup::Get(const std::string &setup_file_path, TInfo &out) {
   assert(this);
   Result.Clear();

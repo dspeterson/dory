@@ -59,8 +59,7 @@ namespace Xml {
 
     TXmlInputLineInfo(XMLFileLoc line_num, XMLFileLoc column_num)
         : LineNum(line_num),
-          ColumnNum(column_num),
-          RefCount(1) {
+          ColumnNum(column_num) {
     }
 
     XMLFileLoc GetLineNum() const noexcept {
@@ -94,7 +93,7 @@ namespace Xml {
 
     const XMLFileLoc ColumnNum;
 
-    size_t RefCount;
+    size_t RefCount = 1;
   };  // TXmlInputLineInfo
 
 }  // Xml

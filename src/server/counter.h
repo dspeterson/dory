@@ -169,10 +169,10 @@ namespace Server {
     /* The currently incrementing count.  There is no direct access to this
        variable; instead, the Sample() function adds this variable to
        SampledCount, then sets this variable back to zero. */
-    uint32_t UnsampledCount;
+    uint32_t UnsampledCount = 0;
 
     /* See accessor. */
-    uint32_t SampledCount;
+    uint32_t SampledCount = 0;
 
     /* See accessor. */
     TCounter *NextCounter;

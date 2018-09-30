@@ -32,7 +32,7 @@ using namespace std;
 using namespace Base;
 
 TDirIter::TDirIter(const char *dir)
-    : Handle(opendir(dir)), Pos(NotFresh) {
+    : Handle(opendir(dir)) {
   if (!Handle) {
     ThrowSystemError(errno);
   }

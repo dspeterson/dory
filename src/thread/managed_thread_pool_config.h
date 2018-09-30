@@ -29,7 +29,7 @@ namespace Thread {
   /* Managed thread pool config class. */
   class TManagedThreadPoolConfig final {
     public:
-    TManagedThreadPoolConfig();
+    TManagedThreadPoolConfig() = default;
 
     /* Config parameters:
 
@@ -137,17 +137,17 @@ namespace Thread {
     void SetMinIdleFraction(size_t min_idle_fraction);
 
     private:
-    size_t MinPoolSize;
+    size_t MinPoolSize = 0;
 
-    size_t MaxPoolSize;
+    size_t MaxPoolSize = 0;
 
-    size_t PruneQuantumMs;
+    size_t PruneQuantumMs = 30000;
 
-    size_t PruneQuantumCount;
+    size_t PruneQuantumCount = 10;
 
-    size_t MaxPruneFraction;
+    size_t MaxPruneFraction = 500;
 
-    size_t MinIdleFraction;
+    size_t MinIdleFraction = 20;
   };  // TManagedThreadPoolConfig
 
 }  // Thread

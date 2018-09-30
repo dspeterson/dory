@@ -34,10 +34,7 @@ namespace Dory {
 
     class TGlobalBatchConfig final {
       public:
-      TGlobalBatchConfig()
-          : ProduceRequestDataLimit(0),
-            MessageMaxBytes(0) {
-      }
+      TGlobalBatchConfig() = default;
 
       TGlobalBatchConfig(
           std::shared_ptr<TPerTopicBatcher::TConfig> &&per_topic_config,
@@ -89,9 +86,9 @@ namespace Dory {
 
       TCombinedTopicsBatcher::TConfig CombinedTopicsConfig;
 
-      size_t ProduceRequestDataLimit;
+      size_t ProduceRequestDataLimit = 0;
 
-      size_t MessageMaxBytes;
+      size_t MessageMaxBytes = 0;
     };  // TGlobalBatchConfig
 
   }  // Batch

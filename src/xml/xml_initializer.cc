@@ -70,8 +70,7 @@ bool TXmlInitializer::Cleanup() noexcept {
   return success;
 }
 
-TXmlInitializer::TXmlInitializer(bool init_on_construction)
-    : Initialized(false) {
+TXmlInitializer::TXmlInitializer(bool init_on_construction) {
   if (init_on_construction) {
     Init();
   }

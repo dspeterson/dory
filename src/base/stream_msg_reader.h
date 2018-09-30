@@ -77,7 +77,7 @@ namespace Base {
     /* Returns current state of reader. */
     TState GetState() const noexcept {
       assert(this);
-      return State;
+      return Impl.State;
     }
 
     /* When in state TState::MsgReady, returns a pointer to the ready message.
@@ -91,14 +91,14 @@ namespace Base {
        except BeforeConsumeReadyMsg(). */
     size_t GetReadyMsgSize() const noexcept {
       assert(this);
-      assert(State == TState::MsgReady);
-      assert(!RestrictReadyMsgCalls);
-      assert(Fd >= 0);
-      assert(ReadyMsgOffset <= GetDataSize());
-      assert(ReadyMsgSize <= (GetDataSize() - ReadyMsgOffset));
-      assert(TrailingDataSize <=
-          ((GetDataSize() - ReadyMsgOffset) - ReadyMsgSize));
-      return ReadyMsgSize;
+      assert(Impl.State == TState::MsgReady);
+      assert(!Impl.RestrictReadyMsgCalls);
+      assert(Impl.Fd >= 0);
+      assert(Impl.ReadyMsgOffset <= GetDataSize());
+      assert(Impl.ReadyMsgSize <= (GetDataSize() - Impl.ReadyMsgOffset));
+      assert(Impl.TrailingDataSize <=
+          ((GetDataSize() - Impl.ReadyMsgOffset) - Impl.ReadyMsgSize));
+      return Impl.ReadyMsgSize;
     }
 
     /* Client code can use this to obtain any partial message data remaining
@@ -124,14 +124,14 @@ namespace Base {
        terminators. */
     size_t GetDataSize() const noexcept {
       assert(this);
-      return Buf.DataSize();
+      return Impl.Buf.DataSize();
     }
 
     /* Returns the file descriptor that the reader is reading from, or -1 if it
        currently has no associated file descriptor. */
     int GetFd() const noexcept {
       assert(this);
-      return Fd;
+      return Impl.Fd;
     }
 
     /* Resets the state of the reader to the same state created by the
@@ -217,11 +217,15 @@ namespace Base {
         : TStreamMsgReader(-1) {
     }
 
+    TStreamMsgReader(TStreamMsgReader &&) noexcept = default;
+
+    TStreamMsgReader &operator=(TStreamMsgReader &&) noexcept = default;
+
     /* GetNextMsg() may call this to determine whether the end of input has
        been reached. */
     bool AtEndOfInput() const noexcept {
       assert(this);
-      return EndOfInput;
+      return Impl.EndOfInput;
     }
 
     /* Convenience method for subclasses to use.  Note that when a message is
@@ -230,14 +234,14 @@ namespace Base {
        subclass-implemented method except BeforeConsumeReadyMsg(). */
     size_t GetReadyMsgOffset() const noexcept {
       assert(this);
-      assert(State == TState::MsgReady);
-      assert(!RestrictReadyMsgCalls);
-      assert(Fd >= 0);
-      assert(ReadyMsgOffset <= GetDataSize());
-      assert(ReadyMsgSize <= (GetDataSize() - ReadyMsgOffset));
-      assert(TrailingDataSize <=
-          ((GetDataSize() - ReadyMsgOffset) - ReadyMsgSize));
-      return ReadyMsgOffset;
+      assert(Impl.State == TState::MsgReady);
+      assert(!Impl.RestrictReadyMsgCalls);
+      assert(Impl.Fd >= 0);
+      assert(Impl.ReadyMsgOffset <= GetDataSize());
+      assert(Impl.ReadyMsgSize <= (GetDataSize() - Impl.ReadyMsgOffset));
+      assert(Impl.TrailingDataSize <=
+          ((GetDataSize() - Impl.ReadyMsgOffset) - Impl.ReadyMsgSize));
+      return Impl.ReadyMsgOffset;
     }
 
     /* Base class calls this when it needs to determine how many bytes to read
@@ -262,37 +266,51 @@ namespace Base {
        accordingly. */
     TState TryAdvanceToNextMsg();
 
-    /* Client-visible state of message reader. */
-    TState State;
+    struct TImpl {
+      /* Client-visible state of message reader. */
+      TState State;
 
-    /* File descriptor to read from. */
-    int Fd;
+      /* File descriptor to read from. */
+      int Fd;
 
-    /* Buffer to read data into. */
-    Base::TBuf<uint8_t> Buf;
+      /* Buffer to read data into. */
+      Base::TBuf<uint8_t> Buf;
 
-    /* Used as a sanity check to prevent calls to GetReadyMsg(),
-       GetReadyMsgSize(), or GetReadyMsgOffest() from any subclass-implemeted
-       method except BeforeConsumeReadyMsg(). */
-    bool RestrictReadyMsgCalls;
+      /* Used as a sanity check to prevent calls to GetReadyMsg(),
+         GetReadyMsgSize(), or GetReadyMsgOffest() from any subclass-implemeted
+         method except BeforeConsumeReadyMsg(). */
+      bool RestrictReadyMsgCalls = false;
 
-    /* When a message is ready for the client to consume, this is the offset of
-       the message from the location returned by GetData(). */
-    size_t ReadyMsgOffset;
+      /* When a message is ready for the client to consume, this is the offset of
+         the message from the location returned by GetData(). */
+      size_t ReadyMsgOffset = 0;
 
-    /* When a message is ready for the client to consume, this is the size in
-       bytes of the message. */
-    size_t ReadyMsgSize;
+      /* When a message is ready for the client to consume, this is the size in
+         bytes of the message. */
+      size_t ReadyMsgSize = 0;
 
-    /* When a message is ready for the client to consume, this indicates the
-       size in bytes of any trailing data.  For instance, if a message consists
-       of a sequence of non-null bytes terminated by a null byte, this would be
-       1.  If each message is preceded by a size field, this would be 0. */
-    size_t TrailingDataSize;
+      /* When a message is ready for the client to consume, this indicates the
+         size in bytes of any trailing data.  For instance, if a message consists
+         of a sequence of non-null bytes terminated by a null byte, this would be
+         1.  If each message is preceded by a size field, this would be 0. */
+      size_t TrailingDataSize = 0;
 
-    /* A true value indicates that the other end of the socket or pipe has been
-       closed and no more data is available. */
-    bool EndOfInput;
+      /* A true value indicates that the other end of the socket or pipe has been
+         closed and no more data is available. */
+      bool EndOfInput;
+
+      TImpl(int fd, Base::TBuf<uint8_t> &&buf);
+
+      explicit TImpl(int fd)
+          : TImpl(fd, Base::TBuf<uint8_t>()) {
+      }
+
+      TImpl(TImpl &&) noexcept = default;
+
+      TImpl &operator=(TImpl &&) noexcept = default;
+    };
+
+    TImpl Impl;
   };  // TStreamMsgReader
 
 }  // Base

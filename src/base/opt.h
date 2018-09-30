@@ -66,35 +66,30 @@ namespace Base {
   class TOpt final {
     public:
     /* Default-construct as an unknown. */
-    TOpt() noexcept
-        : Val(nullptr) {
-    }
+    TOpt() noexcept = default;
 
     TOpt(TOpt &&that)
-        noexcept(std::is_nothrow_move_constructible<TVal>::value) {
-      assert(&that);
-      Val = (that.Val) ? new (Storage) TVal(std::move(*that.Val)) : nullptr;
+        noexcept(std::is_nothrow_move_constructible<TVal>::value)
+        : Val((that.Val) ?
+              new (Storage) TVal(std::move(*that.Val)) : nullptr) {
     }
 
     TOpt(const TOpt &that)
-        noexcept(std::is_nothrow_copy_constructible<TVal>::value) {
-      assert(&that);
-      Val = that.Val ? new (Storage) TVal(*that.Val) : nullptr;
+        noexcept(std::is_nothrow_copy_constructible<TVal>::value)
+        : Val(that.Val ? new (Storage) TVal(*that.Val) : nullptr) {
     }
 
     /* Construct by moving the given value into our internal storage.
        What remains of the donor is up to TVal. */
     TOpt(TVal &&that)
-        noexcept(std::is_nothrow_move_constructible<TVal>::value) {
-      assert(&that);
-      Val = new (Storage) TVal(std::move(that));
+        noexcept(std::is_nothrow_move_constructible<TVal>::value)
+        : Val(new (Storage) TVal(std::move(that))) {
     }
 
     /* Construct with a copy of the given value. */
     TOpt(const TVal &that)
-        noexcept(std::is_nothrow_copy_constructible<TVal>::value) {
-      assert(&that);
-      Val = new (Storage) TVal(that);
+        noexcept(std::is_nothrow_copy_constructible<TVal>::value)
+        : Val(new (Storage) TVal(that)) {
     }
 
     /* If we're known, destroy our value as we go.  Implicitly noexcept if
@@ -292,7 +287,7 @@ namespace Base {
 
     /* A pointer to our current value.  If this is null, then our value is
        unknown.  If it is non-null, then it points to Storage. */
-    TVal *Val;
+    TVal *Val = nullptr;
   };  // TOpt
 
   /* See declaration. */

@@ -61,19 +61,19 @@ struct TConfig {
 
   std::string Host;
 
-  in_port_t Port;
+  in_port_t Port = 9080;
 
-  int16_t AckError;
+  int16_t AckError = 0;
 
-  bool AckDisconnect;
+  bool AckDisconnect = false;
 
-  int16_t SingleTopicMdError;
+  int16_t SingleTopicMdError = 0;
 
-  int16_t AllTopicsMdError;
+  int16_t AllTopicsMdError = 0;
 
-  bool SingleTopicMdDisconnect;
+  bool SingleTopicMdDisconnect = false;
 
-  bool AllTopicsMdDisconnect;
+  bool AllTopicsMdDisconnect = false;
 
   std::string ClientAddr;
 
@@ -152,14 +152,7 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
   }
 }
 
-TConfig::TConfig(int argc, char *argv[])
-    : Port(9080),
-      AckError(0),
-      AckDisconnect(false),
-      SingleTopicMdError(0),
-      AllTopicsMdError(0),
-      SingleTopicMdDisconnect(false),
-      AllTopicsMdDisconnect(false) {
+TConfig::TConfig(int argc, char *argv[]) {
   ParseArgs(argc, argv, *this);
 }
 

@@ -63,7 +63,7 @@ namespace {
 
   struct TDoryConfig {
     private:
-    bool DoryStarted;
+    bool DoryStarted = false;
 
     public:
     DEFINE_ERROR(TStartFailure, std::runtime_error,
@@ -122,8 +122,7 @@ namespace {
   }
 
   TDoryConfig::TDoryConfig(size_t pool_block_size)
-      : DoryStarted(false),
-        Pool(pool_block_size, ComputeBlockCount(1, pool_block_size),
+      : Pool(pool_block_size, ComputeBlockCount(1, pool_block_size),
              TPool::TSync::Mutexed),
         AnomalyTracker(DiscardFileLogger, 0,
                        std::numeric_limits<size_t>::max()),

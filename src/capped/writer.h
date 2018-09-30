@@ -73,7 +73,8 @@ namespace Capped {
        If all our data fits in one chunk, both pointers will point to the same
        block.  If we use two or more chunks, then these pointers will point to
        different blocks. */
-    TBlock *FirstBlock, *LastBlock;
+    TBlock *FirstBlock;
+    TBlock *LastBlock;
 
     /* The position with in our last block's chunk where Write() will append
        more data.  This is null iff. LastBlock is null. */

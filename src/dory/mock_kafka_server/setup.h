@@ -57,44 +57,34 @@ namespace Dory {
          broker we can inject periodic delays before reading a request and/or
          sending an ACK. */
       struct TPort {
-        size_t ReadDelay;  // delay in milliseconds before socket read
-        size_t ReadDelayInterval;  // how often to impose read delay
-        size_t AckDelay;  // delay in milliseconds before sending ACK
-        size_t AckDelayInterval;  // how often to impose ACK delay
+        size_t ReadDelay = 0;  // delay in milliseconds before socket read
+        size_t ReadDelayInterval = 1;  // how often to impose read delay
+        size_t AckDelay = 0;  // delay in milliseconds before sending ACK
+        size_t AckDelayInterval = 1;  // how often to impose ACK delay
 
-        TPort()
-            : ReadDelay(0),
-              ReadDelayInterval(1),
-              AckDelay(0),
-              AckDelayInterval(1) {
-        }
+        TPort() = default;
       };  // TPort
 
       /* For each partition within a topic, we can inject periodic ACK errors.
        */
       struct TPartition {
-        int16_t AckError;
-        size_t AckErrorInterval;
+        int16_t AckError = 0;
+        size_t AckErrorInterval = 1;
 
-        TPartition()
-            : AckError(0),
-              AckErrorInterval(1) {
-        }
+        TPartition() = default;
       };  // TPartition
 
       struct TTopic {
         std::vector<TPartition> Partitions;
 
-        size_t FirstPortOffset;
+        size_t FirstPortOffset = 0;
 
-        TTopic()
-            : FirstPortOffset(0) {
-        }
+        TTopic() = default;
       };  // TTopic
 
       struct TInfo {
         /* first port in range of consecutive port numbers */
-        in_port_t BasePort;
+        in_port_t BasePort = 0;
 
         /* Item 0 is BasePort, item 1 is (BasePort + 1), etc. */
         std::vector<TPort> Ports;
@@ -102,9 +92,7 @@ namespace Dory {
         /* Key is topic name. */
         std::unordered_map<std::string, TTopic> Topics;
 
-        TInfo()
-            : BasePort(0) {
-        }
+        TInfo() = default;
 
         void Clear() {
           BasePort = 0;
@@ -113,7 +101,7 @@ namespace Dory {
         }
       };  // TInfo
 
-      TSetup();
+      TSetup() = default;
 
       /* Read info from 'setup_file_path' and store it in 'out'.
          Here is a simple example illustrating the setup file format:
@@ -178,7 +166,7 @@ namespace Dory {
 
       void FillResult(std::istream &in);
 
-      size_t LineNum;
+      size_t LineNum = 0;
 
       std::vector<std::string> CurrentLineTokens;
 

@@ -27,19 +27,6 @@ using namespace Base;
 using namespace Dory;
 using namespace Dory::Batch;
 
-TBatcherCore::TBatcherCore()
-    : MinTimestamp(std::numeric_limits<TMsg::TTimestamp>::max()),
-      MsgCount(0),
-      ByteCount(0) {
-}
-
-TBatcherCore::TBatcherCore(const TBatchConfig &config)
-    : Config(config),
-      MinTimestamp(std::numeric_limits<TMsg::TTimestamp>::max()),
-      MsgCount(0),
-      ByteCount(0) {
-}
-
 TOpt<TMsg::TTimestamp> TBatcherCore::GetNextCompleteTime() const {
   assert(this);
 

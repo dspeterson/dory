@@ -63,11 +63,11 @@ struct TConfig {
 
   std::string BrokerHost;
 
-  in_port_t BrokerPort;
+  in_port_t BrokerPort = 9092;
 
   std::string Topic;
 
-  size_t RequestCount;
+  size_t RequestCount = 1;
 };  // TConfig
 
 static void ParseArgs(int argc, char *argv[], TConfig &config) {
@@ -103,9 +103,7 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
   }
 }
 
-TConfig::TConfig(int argc, char *argv[])
-    : BrokerPort(9092),
-      RequestCount(1) {
+TConfig::TConfig(int argc, char *argv[]) {
   ParseArgs(argc, argv, *this);
 }
 

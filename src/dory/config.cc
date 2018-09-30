@@ -31,7 +31,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <libgen.h>
-#include <syslog.h>
 
 #include <base/basename.h>
 #include <base/no_default_case.h>
@@ -401,38 +400,7 @@ static void ParseArgs(int argc, char *argv[], TConfig &config,
   }
 }
 
-TConfig::TConfig(int argc, char *argv[], bool allow_input_bind_ephemeral)
-    : LogLevel(LOG_NOTICE),
-      LogEcho(false),
-      StatusPort(9090),
-      StatusLoopbackOnly(false),
-      MsgBufferMax(256 * 1024),
-      MaxInputMsgSize(64 * 1024),
-      MaxStreamInputMsgSize(2 * 1024 * 1024),
-      AllowLargeUnixDatagrams(false),
-      MaxFailedDeliveryAttempts(5),
-      Daemon(false),
-      ClientIdWasEmpty(true),
-      RequiredAcks(-1),
-      ReplicationTimeout(10000),
-      ShutdownMaxDelay(30000),
-      DispatcherRestartMaxDelay(5000),
-      MetadataRefreshInterval(15),
-      KafkaSocketTimeout(60),
-      PauseRateLimitInitial(5000),
-      PauseRateLimitMaxDouble(4),
-      MinPauseDelay(5000),
-      DiscardReportInterval(600),
-      NoLogDiscard(false),
-      DebugDir("/home/dory/debug"),
-      MsgDebugTimeLimit(3600),
-      MsgDebugByteLimit(2UL * 1024UL * 1024UL * 1024UL),
-      SkipCompareMetadataOnRefresh(false),
-      DiscardLogMaxFileSize(1024),
-      DiscardLogMaxArchiveSize(8 * 1024),
-      DiscardLogBadMsgPrefixSize(256),
-      DiscardReportBadMsgPrefixSize(256),
-      TopicAutocreate(false) {
+TConfig::TConfig(int argc, char *argv[], bool allow_input_bind_ephemeral) {
   ParseArgs(argc, argv, *this, allow_input_bind_ephemeral);
 }
 

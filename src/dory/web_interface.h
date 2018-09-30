@@ -49,7 +49,6 @@ namespace Dory {
                   Base::TEventSemaphore &metadata_update_request_sem,
                   Debug::TDebugSetup &debug_setup)
         : Port(port),
-          HttpServerStarted(false),
           MsgStateTracker(msg_state_tracker),
           AnomalyTracker(anomaly_tracker),
           MetadataTimestamp(metadata_timestamp),
@@ -120,7 +119,7 @@ namespace Dory {
 
     const in_port_t Port;
 
-    bool HttpServerStarted;
+    bool HttpServerStarted = false;
 
     TMsgStateTracker &MsgStateTracker;
 

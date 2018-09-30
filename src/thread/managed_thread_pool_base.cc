@@ -266,9 +266,7 @@ void TManagedThreadPoolBase::TWorkerBase::Activate() {
 TManagedThreadPoolBase::TWorkerBase::TWorkerBase(
     TManagedThreadPoolBase &my_pool, bool start)
     : MyPool(my_pool),
-      WaitAfterDoWork(false),
-      BusyListPos(my_pool.BusyList.end()),
-      TerminateRequested(false) {
+      BusyListPos(my_pool.BusyList.end()) {
   /* Lock this _before_ starting the worker, so it blocks when attempting to
      acquire the lock.  The worker sleeps on this when in the idle state. */
   WakeupWait.lock();
@@ -532,10 +530,7 @@ TManagedThreadPoolBase::TManagedThreadPoolBase(
     const TFatalErrorHandler &fatal_error_handler,
     const TManagedThreadPoolConfig &cfg)
     : FatalErrorHandler(fatal_error_handler),
-      LiveWorkerCount(0),
-      PoolIsReady(false),
       Config(cfg),
-      ReconfigPending(false),
       Manager(*this) {
 }
 
@@ -543,10 +538,7 @@ TManagedThreadPoolBase::TManagedThreadPoolBase(
     TFatalErrorHandler &&fatal_error_handler,
     const TManagedThreadPoolConfig &cfg)
     : FatalErrorHandler(std::move(fatal_error_handler)),
-      LiveWorkerCount(0),
-      PoolIsReady(false),
       Config(cfg),
-      ReconfigPending(false),
       Manager(*this) {
 }
 

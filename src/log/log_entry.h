@@ -88,7 +88,7 @@ namespace Log {
     /* True indicates that entry has been written (either successfully or
        unsuccessfully).  In this case, destructor should _not_ attempt to write
        entry. */
-    bool Written;
+    bool Written = false;
   };  // TLogEntry
 
 }  // Log

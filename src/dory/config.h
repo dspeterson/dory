@@ -27,6 +27,7 @@
 
 #include <netinet/in.h>
 #include <sys/stat.h>
+#include <syslog.h>
 
 #include <base/opt.h>
 
@@ -38,9 +39,9 @@ namespace Dory {
 
     std::string ConfigPath;
 
-    int LogLevel;
+    int LogLevel = LOG_NOTICE;
 
-    bool LogEcho;
+    bool LogEcho = false;
 
     std::string ReceiveSocketName;
 
@@ -59,67 +60,67 @@ namespace Dory {
 
     Base::TOpt<size_t> ProduceApiVersion;
 
-    in_port_t StatusPort;
+    in_port_t StatusPort = 9090;
 
-    bool StatusLoopbackOnly;
+    bool StatusLoopbackOnly = false;
 
-    size_t MsgBufferMax;
+    size_t MsgBufferMax = 256 * 1024;
 
-    size_t MaxInputMsgSize;
+    size_t MaxInputMsgSize = 64 * 1024;
 
-    size_t MaxStreamInputMsgSize;
+    size_t MaxStreamInputMsgSize = 2 * 1024 * 1024;
 
-    bool AllowLargeUnixDatagrams;
+    bool AllowLargeUnixDatagrams = false;
 
-    size_t MaxFailedDeliveryAttempts;
+    size_t MaxFailedDeliveryAttempts = 5;
 
-    bool Daemon;
+    bool Daemon = false;
 
     std::string ClientId;
 
-    bool ClientIdWasEmpty;
+    bool ClientIdWasEmpty = true;
 
-    int16_t RequiredAcks;
+    int16_t RequiredAcks = -1;
 
-    size_t ReplicationTimeout;
+    size_t ReplicationTimeout = 10000;
 
-    size_t ShutdownMaxDelay;
+    size_t ShutdownMaxDelay = 30000;
 
-    size_t DispatcherRestartMaxDelay;
+    size_t DispatcherRestartMaxDelay = 5000;
 
-    size_t MetadataRefreshInterval;
+    size_t MetadataRefreshInterval = 15;
 
-    size_t KafkaSocketTimeout;
+    size_t KafkaSocketTimeout = 60;
 
-    size_t PauseRateLimitInitial;
+    size_t PauseRateLimitInitial = 5000;
 
-    size_t PauseRateLimitMaxDouble;
+    size_t PauseRateLimitMaxDouble = 4;
 
-    size_t MinPauseDelay;
+    size_t MinPauseDelay = 5000;
 
-    size_t DiscardReportInterval;
+    size_t DiscardReportInterval = 600;
 
-    bool NoLogDiscard;
+    bool NoLogDiscard = false;
 
-    std::string DebugDir;
+    std::string DebugDir{"/home/dory/debug"};
 
-    size_t MsgDebugTimeLimit;
+    size_t MsgDebugTimeLimit = 3600;
 
-    size_t MsgDebugByteLimit;
+    size_t MsgDebugByteLimit = 2UL * 1024UL * 1024UL * 1024UL;
 
-    bool SkipCompareMetadataOnRefresh;
+    bool SkipCompareMetadataOnRefresh = false;
 
     std::string DiscardLogPath;
 
-    size_t DiscardLogMaxFileSize;
+    size_t DiscardLogMaxFileSize = 1024;
 
-    size_t DiscardLogMaxArchiveSize;
+    size_t DiscardLogMaxArchiveSize = 8 * 1024;
 
-    size_t DiscardLogBadMsgPrefixSize;
+    size_t DiscardLogBadMsgPrefixSize = 256;
 
-    size_t DiscardReportBadMsgPrefixSize;
+    size_t DiscardReportBadMsgPrefixSize = 256;
 
-    bool TopicAutocreate;
+    bool TopicAutocreate = false;
   };  // TConfig
 
   void LogConfig(const TConfig &config);

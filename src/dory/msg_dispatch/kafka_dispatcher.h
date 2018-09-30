@@ -101,9 +101,9 @@ namespace Dory {
       private:
       TDispatcherSharedState Ds;
 
-      TState State;
+      TState State = TState::Stopped;
 
-      bool OkShutdown;
+      bool OkShutdown = true;
 
       std::vector<std::unique_ptr<TConnector>> Connectors;
     };  // TKafkaDispatcher

@@ -84,8 +84,7 @@ namespace Dory {
       TBroker(int32_t id, std::string &&hostname, uint16_t port)
           : Id(id),
             Hostname(std::move(hostname)),
-            Port(port),
-            InService(false) {
+            Port(port) {
       }
 
       void MarkInService() {
@@ -104,7 +103,7 @@ namespace Dory {
 
       /* True if broker has at least one partition that can receive
          messages. */
-      bool InService;
+      bool InService = false;
 
       friend class TMetadata;
     };  // TBroker
@@ -275,20 +274,20 @@ namespace Dory {
 
       std::default_random_engine RandomEngine;
 
-      TState State;
+      TState State = TState::Initial;
 
       /* Key is Kafka ID, and value is index in 'Brokers' vector. */
       std::unordered_map<int32_t, size_t> BrokerMap;
 
       std::string CurrentTopicName;
 
-      size_t CurrentTopicIndex;
+      size_t CurrentTopicIndex = 0;
 
       std::unordered_set<int32_t> CurrentTopicPartitions;
 
       std::vector<TBroker> Brokers;
 
-      size_t InServiceBrokerCount;
+      size_t InServiceBrokerCount = 0;
 
       std::vector<int32_t> TopicBrokerVec;
 

@@ -92,13 +92,10 @@ TConnector::TConnector(size_t my_broker_index, TDispatcherSharedState &ds)
       /* TODO: rethink DebugLogger stuff */
       RequestFactory(ds.Config, ds.BatchConfig, ds.CompressionConf,
                      ds.ProduceProtocol, my_broker_index),
-      PauseInProgress(false),
-      Destroying(false),
       ResponseReader(ds.ProduceProtocol->CreateProduceResponseReader()),
       /* Note: The max message body size value is a loose upper bound to guard
          against a response with a ridiculously large size field. */
-      StreamReader(false, true, 4 * 1024 * 1024, 64 * 1024),
-      OkShutdown(true) {
+      StreamReader(false, true, 4 * 1024 * 1024, 64 * 1024) {
   static_assert(sizeof(TStreamReader::TSizeFieldType) ==
       REQUEST_OR_RESPONSE_SIZE_SIZE, "Wrong size field size for StreamReader");
 }

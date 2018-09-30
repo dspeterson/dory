@@ -229,7 +229,7 @@ namespace Dory {
 
     /* For listen() system call for UNIX domain stream and local TCP sockets.
        TODO: consider providing command line option(s) for setting backlog. */
-    static const int STREAM_BACKLOG;
+    static const int STREAM_BACKLOG = 16;
 
     /* Protects 'ServerList' below. */
     static std::mutex ServerListMutex;
@@ -248,7 +248,7 @@ namespace Dory {
 
     const size_t PoolBlockSize;
 
-    bool Started;
+    bool Started = false;
 
     Capped::TPool Pool;
 
@@ -302,7 +302,7 @@ namespace Dory {
        Here we use atomic flag because test process might get signal while
        calling RequestShutdown().
      */
-    std::atomic_flag ShutdownRequested;
+    std::atomic_flag ShutdownRequested{false};
 
     /* Becomes readable when the server has finished initialization or is
        shutting down.  Test code monitors this. */

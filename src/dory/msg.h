@@ -213,16 +213,16 @@ namespace Dory {
 
     /* State of message.  Destructor verifies that value is TState::Processed.
      */
-    TState State;
+    TState State = TState::New;
 
     /* Number of failed deliveries. */
-    size_t FailedDeliveryAttemptCount;
+    size_t FailedDeliveryAttemptCount = 0;
 
     /* The Kafka topic to deliver to. */
     const std::string Topic;
 
     /* The Kafka partition (within the specified topic) to deliver to. */
-    int32_t Partition;
+    int32_t Partition = 0;
 
     /* The key and value stored as a single sequence of bytes.  The value
        immediately follows the key. */

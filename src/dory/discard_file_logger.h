@@ -24,6 +24,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -68,7 +69,7 @@ namespace Dory {
       FailedTopicAutocreate
     };
 
-    TDiscardFileLogger();
+    TDiscardFileLogger() = default;
 
     ~TDiscardFileLogger();
 
@@ -246,7 +247,7 @@ namespace Dory {
 
     void WriteToLog(const std::string &log_entry);
 
-    size_t MaxMsgPrefixLen;
+    size_t MaxMsgPrefixLen = std::numeric_limits<size_t>::max();
 
     /* Protects everything below.  However, reads of boolean 'Enabled' value
        may occur without acquiring 'Mutex' */
@@ -255,7 +256,7 @@ namespace Dory {
     /* Indicates whether logging is enabled.  Threads may read this value
        without holding 'Mutex', but value is never modified without holding
        'Mutex'. */
-    bool Enabled;
+    bool Enabled = false;
 
     /* Thread that deletes old logfiles. */
     std::unique_ptr<TArchiveCleaner> ArchiveCleaner;
@@ -272,11 +273,11 @@ namespace Dory {
     std::string LogFilename;
 
     /* Upper bound on size in bytes of logfile. */
-    uint64_t MaxFileSize;
+    uint64_t MaxFileSize = 0;
 
     /* Upper bound on combined size in bytes of old logfiles.  May be briefly
        violated until log cleaning thread runs. */
-    uint64_t MaxArchiveSize;
+    uint64_t MaxArchiveSize = 0;
 
     /* Descriptor for logfile. */
     Base::TFd LogFd;

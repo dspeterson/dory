@@ -46,8 +46,7 @@ namespace Dory {
 
       public:
       explicit TMainThread(const TConfig &config)
-          : OkShutdown(true),
-            Server(config, true, true) {
+          : Server(config, true, true) {
       }
 
       ~TMainThread() override;
@@ -107,7 +106,7 @@ namespace Dory {
       private:
       /* Indicates whether the mock Kafka server terminated normally or with an
          error.  */
-      bool OkShutdown;
+      bool OkShutdown = true;
 
       /* This becomes readable when the input thread has finished its
          initialization and is open for business. */
