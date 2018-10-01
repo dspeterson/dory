@@ -226,8 +226,8 @@ namespace Xml {
       static T GetInt(const xercesc::DOMElement &elem, const char *attr_name,
           unsigned int opts = 0) {
         static_assert(std::is_integral<T>::value &&
-            !std::is_same<T, bool>::value, "Type parameter must be integral "
-                "and not bool");
+            !std::is_same<T, bool>::value,
+            "Type parameter must be integral and not bool");
 
         if (std::is_same<T, int64_t>::value) {
           return GetInt64(elem, attr_name, opts);
@@ -332,8 +332,8 @@ namespace Xml {
           const xercesc::DOMElement &elem, const char *attr_name,
           const char *empty_value_name, unsigned int opts = 0) {
         static_assert(std::is_integral<T>::value &&
-            !std::is_same<T, bool>::value, "Type parameter must be integral "
-            "and not bool");
+            !std::is_same<T, bool>::value,
+            "Type parameter must be integral and not bool");
 
         if (std::is_signed<T>::value) {
           return GetOptSignedInt<T>(elem, attr_name, empty_value_name, opts);

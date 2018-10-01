@@ -171,24 +171,24 @@ namespace Dory {
       class TDuplicateProduceRequestDataLimit final : public TErrorBase {
         public:
         TDuplicateProduceRequestDataLimit()
-            : TErrorBase("Batching config contains duplicate "
-                         "produceRequestDataLimit definition") {
+            : TErrorBase(
+                  "Batching config contains duplicate produceRequestDataLimit definition") {
         }
       };  // TDuplicateProduceRequestDataLimit
 
       class TDuplicateMessageMaxBytes final : public TErrorBase {
         public:
         TDuplicateMessageMaxBytes()
-            : TErrorBase("Batching config contains duplicate messageMaxBytes "
-                         "definition") {
+            : TErrorBase(
+                  "Batching config contains duplicate messageMaxBytes definition") {
         }
       };  // TDuplicateMessageMaxBytes
 
       class TDuplicateCombinedTopicsConfig final : public TErrorBase {
         public:
         TDuplicateCombinedTopicsConfig()
-            : TErrorBase("Batching config contains duplicate combinedTopics "
-                         "definition") {
+            : TErrorBase(
+                  "Batching config contains duplicate combinedTopics definition") {
         }
       };  // TDuplicateCombinedTopicsConfig
 
@@ -205,8 +205,8 @@ namespace Dory {
       class TDuplicateDefaultTopicConfig final : public TErrorBase {
         public:
         TDuplicateDefaultTopicConfig()
-            : TErrorBase("Batching config contains duplicate defaultTopic "
-                         "definition") {
+            : TErrorBase(
+                  "Batching config contains duplicate defaultTopic definition") {
         }
       };  // TDuplicateDefaultTopicConfig
 
@@ -245,32 +245,32 @@ namespace Dory {
       class TMissingProduceRequestDataLimit final : public TErrorBase {
         public:
         TMissingProduceRequestDataLimit()
-            : TErrorBase("Batching config is missing produceRequestDataLimit "
-                         "definition") {
+            : TErrorBase(
+                  "Batching config is missing produceRequestDataLimit definition") {
         }
       };  // TMissingProduceRequestDataLimit
 
       class TMissingMessageMaxBytes final : public TErrorBase {
         public:
         TMissingMessageMaxBytes()
-            : TErrorBase("Batching config is missing messageMaxBytes "
-                         "definition") {
+            : TErrorBase(
+                  "Batching config is missing messageMaxBytes definition") {
         }
       };  // TMissingMessageMaxBytes
 
       class TMissingCombinedTopics final : public TErrorBase {
         public:
         TMissingCombinedTopics()
-            : TErrorBase("Batching config is missing combinedTopics "
-                         "definition") {
+            : TErrorBase(
+                  "Batching config is missing combinedTopics definition") {
         }
       };  // TMissingCombinedTopics
 
       class TMissingDefaultTopic final : public TErrorBase {
         public:
         TMissingDefaultTopic()
-            : TErrorBase("Batching config is missing defaultTopic "
-                         "definition") {
+            : TErrorBase(
+                  "Batching config is missing defaultTopic definition") {
         }
       };  // TMissingDefaultTopic
 

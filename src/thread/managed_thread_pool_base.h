@@ -95,8 +95,8 @@ namespace Thread {
     class TPoolNotReady final : public std::runtime_error {
       public:
       TPoolNotReady()
-          : std::runtime_error("Attempt to get thread from pool that is "
-                "either shutting down or not started") {
+          : std::runtime_error(
+                "Attempt to get thread from pool that is either shutting down or not started") {
       }
     };  // TPoolNotReady
 

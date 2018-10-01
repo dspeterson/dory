@@ -39,7 +39,8 @@ namespace Base {
       Indented
     };  // StartAt
 
-    explicit TIndent(std::string &indent_str, StartAt start_at = StartAt::Indented,
+    explicit TIndent(std::string &indent_str,
+            StartAt start_at = StartAt::Indented,
             size_t count = DEFAULT_INDENT_COUNT,
             char indent_char = DEFAULT_INDENT_CHAR)
         : IndentStr(indent_str),

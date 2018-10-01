@@ -69,8 +69,8 @@ std::string TCompressionConf::TBuilder::TDuplicateNamedConfig::CreateMsg(
 
 std::string TCompressionConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
     const std::string &config_name) {
-  std::string msg("Compression config defaultTopic definition references "
-                  "unknown named config: [");
+  std::string msg(
+      "Compression config defaultTopic definition references unknown named config: [");
   msg += config_name;
   msg += "]";
   return msg;
@@ -78,8 +78,8 @@ std::string TCompressionConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
 
 std::string TCompressionConf::TBuilder::TDuplicateTopicConfig::CreateMsg(
     const std::string &topic) {
-  std::string msg("Compression config contains duplicate specification for "
-                  "topic [");
+  std::string msg(
+      "Compression config contains duplicate specification for topic [");
   msg += topic;
   msg += "]";
   return msg;

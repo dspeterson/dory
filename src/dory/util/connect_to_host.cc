@@ -37,9 +37,9 @@ void Dory::Util::ConnectToHost(const char *host_name, in_port_t port,
 
   /* Iterate over our potential hosts. */
   for (Db::TCursor csr(host_name, nullptr, AF_INET, SOCK_STREAM, 0,
-                       AI_PASSIVE);
-       csr;
-       ++csr) {
+          AI_PASSIVE);
+      csr;
+      ++csr) {
     /* Get the address of the host we're going to try and set the port. */
     TAddress address = *csr;
     address.SetPort(port);

@@ -108,8 +108,8 @@ static int DoryMain(int argc, char *argv[]) {
   try {
     dory.reset(new TDoryServer(std::move(*dory_config)));
   } catch (const std::bad_alloc &) {
-    syslog(LOG_ERR, "Failed to allocate memory during server initialization.  "
-        "Try specifying a smaller value for the --msg_buffer_max option.");
+    syslog(LOG_ERR,
+        "Failed to allocate memory during server initialization.  Try specifying a smaller value for the --msg_buffer_max option.");
     return EXIT_FAILURE;
   }
 
@@ -121,8 +121,8 @@ static int DoryMain(int argc, char *argv[]) {
   LogConfig(dory->GetConfig());
 
   if (large_sendbuf_required) {
-    syslog(LOG_WARNING, "Clients sending maximum-sized UNIX domain datagrams "
-           "need to set SO_SNDBUF above the default value.");
+    syslog(LOG_WARNING,
+        "Clients sending maximum-sized UNIX domain datagrams need to set SO_SNDBUF above the default value.");
   }
 
   syslog(LOG_NOTICE, "Pool block size is %lu bytes",

@@ -123,14 +123,14 @@ void TSetup::GetPortsLine(std::istream &in) {
 
   if (CurrentLineTokens.size() != 3) {
     throw TFileFormatError(LineNum,
-                           "\"ports\" should be followed by exactly 2 values");
+        "\"ports\" should be followed by exactly 2 values");
   }
 
   try {
     Result.BasePort = boost::lexical_cast<in_port_t>(CurrentLineTokens[1]);
   } catch (const boost::bad_lexical_cast &x) {
     throw TFileFormatError(LineNum,
-                           "invalid port specified in \"ports\" line");
+        "invalid port specified in \"ports\" line");
   }
 
   size_t num_ports = 0;
@@ -139,7 +139,7 @@ void TSetup::GetPortsLine(std::istream &in) {
     num_ports = boost::lexical_cast<size_t>(CurrentLineTokens[2]);
   } catch (const boost::bad_lexical_cast &x) {
     throw TFileFormatError(LineNum,
-                           "invalid port count specified in \"ports\" line");
+        "invalid port count specified in \"ports\" line");
   }
 
   size_t limit = std::numeric_limits<in_port_t>::max() - Result.BasePort + 1;
@@ -202,7 +202,7 @@ void TSetup::GetPortLines(std::istream &in) {
       port = boost::lexical_cast<in_port_t>(CurrentLineTokens[1]);
     } catch (const boost::bad_lexical_cast &x) {
       throw TFileFormatError(LineNum,
-                             "invalid port specified in \"port\" line");
+          "invalid port specified in \"port\" line");
     }
 
     if ((port < min_port) || (port > max_port)) {
@@ -221,7 +221,7 @@ void TSetup::GetPortLines(std::istream &in) {
     if (!ParseDelayAndInterval(CurrentLineTokens[3], read_delay_time,
                                read_delay_interval)) {
       throw TFileFormatError(LineNum,
-                             "\"port\" line has invalid read_delay info");
+          "\"port\" line has invalid read_delay info");
     }
 
     if (CurrentLineTokens[4] != "ack_delay") {
@@ -235,7 +235,7 @@ void TSetup::GetPortLines(std::istream &in) {
     if (!ParseDelayAndInterval(CurrentLineTokens[5], ack_delay_time,
                                ack_delay_interval)) {
       throw TFileFormatError(LineNum,
-                             "\"port\" line has invalid ack_delay info");
+          "\"port\" line has invalid ack_delay info");
     }
 
     size_t port_index = port - min_port;

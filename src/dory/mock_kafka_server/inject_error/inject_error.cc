@@ -91,8 +91,9 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
   arg_vec[0] = prog_name.c_str();
 
   try {
-    CmdLine cmd("Utility for sending error injection command to mock Kafka "
-        "server.", ' ', dory_build_id);
+    CmdLine cmd(
+        "Utility for sending error injection command to mock Kafka server.",
+        ' ', dory_build_id);
     ValueArg<decltype(config.Host)> arg_host("", "host", "Host to connect to.",
         true, config.Host, "HOST");
     cmd.add(arg_host);
@@ -102,8 +103,8 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
     ValueArg<decltype(config.AckError)> arg_ack_error("", "ack_error",
         "Inject ACK error.", false, config.AckError, "ACK_ERROR");
     cmd.add(arg_ack_error);
-    SwitchArg arg_ack_disconnect("", "ack_disconnect", "Inject disconnect "
-        "before sending ACK.", cmd, config.AckDisconnect);
+    SwitchArg arg_ack_disconnect("", "ack_disconnect",
+        "Inject disconnect before sending ACK.", cmd, config.AckDisconnect);
     ValueArg<decltype(config.SingleTopicMdError)> arg_single_topic_md_error("",
         "single_topic_md_error", "Inject single topic metadata error.", false,
         config.SingleTopicMdError, "MD_ERROR");
@@ -317,8 +318,8 @@ static bool ReadCmdFile(std::istream &in,
               arg1.c_str(), client_addr_ptr)));
     } else if (cmd == "InjectDisconnectBeforeAllTopicsMetadataResponse") {
       if (line != cmd) {
-        CmdFileErr(line_num, "extra junk after "
-                   "InjectDisconnectBeforeAllTopicsMetadataResponse cmd");
+        CmdFileErr(line_num,
+            "extra junk after InjectDisconnectBeforeAllTopicsMetadataResponse cmd");
         return false;
       }
 

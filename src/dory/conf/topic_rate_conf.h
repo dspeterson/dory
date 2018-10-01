@@ -128,8 +128,8 @@ namespace Dory {
       class TDuplicateDefaultTopicConfig final : public TErrorBase {
         public:
         TDuplicateDefaultTopicConfig()
-            : TErrorBase("Topic rate limiting config contains duplicate "
-                         "defaultTopic definition") {
+            : TErrorBase(
+                  "Topic rate limiting config contains duplicate defaultTopic definition") {
         }
       };  // TDuplicateDefaultTopicConfig
 
@@ -168,8 +168,8 @@ namespace Dory {
       class TMissingDefaultTopic final : public TErrorBase {
         public:
         TMissingDefaultTopic()
-            : TErrorBase("Topic rate limiting config is missing defaultTopic "
-                         "definition") {
+            : TErrorBase(
+                  "Topic rate limiting config is missing defaultTopic definition") {
         }
       };  // TMissingDefaultTopic
 

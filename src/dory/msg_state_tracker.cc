@@ -299,7 +299,7 @@ void TMsgStateTracker::TDeltaComputer::CountAckWaitEntered(
 
       if (lim.Test()) {
         syslog(LOG_ERR,
-               "Bug: Cannot enter state 'AckWait' from 'New'");
+            "Bug: Cannot enter state 'AckWait' from 'New'");
       }
 
       assert(false);

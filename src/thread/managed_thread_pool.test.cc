@@ -106,9 +106,8 @@ namespace {
   }
 
   void HandleOutOfMemory() {
-    std::cerr << "Failed to create worker thread due to not enough memory.  "
-        "Try running the stress tests on a system with more memory, or modify "
-        "them to create fewer worker threads." << std::endl;
+    std::cerr << "Failed to create worker thread due to not enough memory.  Try running the stress tests on a system with more memory, or modify them to create fewer worker threads."
+        << std::endl;
     _exit(1);
   }
 
@@ -755,8 +754,9 @@ namespace {
   }
 
   TEST_F(TManagedThreadPoolTest, StressTest1) {
-    std::cout << "Running stress test 1.  This should take about 15-30 "
-        << "seconds." << std::endl;
+    std::cout
+        << "Running stress test 1.  This should take about 15-30 seconds."
+        << std::endl;
     const size_t initial_thread_count = 60;
     std::atomic<size_t> counter(0);
     std::atomic<size_t> working_count(initial_thread_count);
@@ -825,8 +825,9 @@ namespace {
   }
 
   TEST_F(TManagedThreadPoolTest, StressTest2) {
-    std::cout << "Running stress test 2 part 1.  This should take about 30-60 "
-        << "seconds." << std::endl;
+    std::cout
+        << "Running stress test 2 part 1.  This should take about 30-60 seconds."
+        << std::endl;
     const size_t initial_thread_count = 50;
     std::atomic<size_t> counter(0);
     std::atomic<size_t> working_count(initial_thread_count);
@@ -901,8 +902,9 @@ namespace {
     /* Rerun the above test, to make sure the pool behaves properly when
        restarted. */
 
-    std::cout << "Running stress test 2 part 2.  This should take about 30-60 "
-        << "seconds." << std::endl;
+    std::cout
+        << "Running stress test 2 part 2.  This should take about 30-60 seconds."
+        << std::endl;
     counter = 0;
     working_count = initial_thread_count;
     pool.Start();

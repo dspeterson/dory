@@ -218,8 +218,8 @@ size_t TLz4Codec::Uncompress(const void *input_buf, size_t input_buf_size,
          at least as large as the value returned by
          ComputeUncompressedResultBufSpace(). */
       Lz4Error.Increment();
-      throw TCompressionCodecApi::TError("Ran out of space in output buffer "
-          "during lz4 decompression");
+      throw TCompressionCodecApi::TError(
+          "Ran out of space in output buffer during lz4 decompression");
     }
 
     size_t saved_dst_size = dst_size;
@@ -287,8 +287,9 @@ size_t TLz4Codec::DoCompress(const void *input_buf, size_t input_buf_size,
   size_t compressed_size = output_buf_size - capacity;
 
   if (compressed_size > output_buf_size) {
-    throw std::logic_error("Compressed size exceeds output buffer size in "
-        "TLz4Codec::DoCompress()");
+    throw std::logic_error(
+        "Compressed size exceeds output buffer size in TLz4Codec::DoCompress()"
+    );
   }
 
   Lz4CompressSuccess.Increment();

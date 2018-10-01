@@ -119,8 +119,9 @@ bool TMetadataProto::TopicAutocreateWasSuccessful(const char *topic,
     static TLogRateLimiter lim(std::chrono::seconds(30));
 
     if (lim.Test()) {
-      syslog(LOG_ERR, "Autocreate for topic [%s] failed: no topic in metadata "
-          "response", topic);
+      syslog(LOG_ERR,
+          "Autocreate for topic [%s] failed: no topic in metadata response",
+          topic);
     }
 
     return false;
@@ -131,8 +132,9 @@ bool TMetadataProto::TopicAutocreateWasSuccessful(const char *topic,
 
   if (response_topic != topic) {
     TopicAutocreateUnexpectedTopicInResponse.Increment();
-    syslog(LOG_ERR, "Autocreate for topic [%s] failed: unexpected topic [%s] "
-        "in metadata response", topic, response_topic.c_str());
+    syslog(LOG_ERR,
+        "Autocreate for topic [%s] failed: unexpected topic [%s] in metadata response",
+        topic, response_topic.c_str());
     return false;
   }
 

@@ -64,40 +64,33 @@ namespace Dory {
 
     public:
     DEFINE_ERROR(TUnsupportedMetadataApiVersion, std::runtime_error,
-                 "Requested metadata API version is not supported.");
+        "Requested metadata API version is not supported.");
 
     DEFINE_ERROR(TUnsupportedProduceApiVersion, std::runtime_error,
-                 "Requested produce API version is not supported.");
+        "Requested produce API version is not supported.");
 
     DEFINE_ERROR(TBadRequiredAcks, std::runtime_error,
-                 "required_acks value must be >= -1");
+        "required_acks value must be >= -1");
 
     DEFINE_ERROR(TBadReplicationTimeout, std::runtime_error,
-                 "replication_timeout value out of range");
+        "replication_timeout value out of range");
 
     DEFINE_ERROR(TBadDiscardReportInterval, std::runtime_error,
-                 "discard_report_interval value must be positive");
+        "discard_report_interval value must be positive");
 
     DEFINE_ERROR(TMaxInputMsgSizeTooSmall, std::runtime_error,
-                 "max_input_msg_size is too small");
+        "max_input_msg_size is too small");
 
     DEFINE_ERROR(TMaxInputMsgSizeTooLarge, std::runtime_error,
-                 "max_input_msg_size is too large");
+        "max_input_msg_size is too large");
 
-    DEFINE_ERROR(TMustAllowLargeDatagrams, std::runtime_error, "You didn't "
-                 "specify allow_large_unix_datagrams, and max_input_msg_size "
-                 "is large enough that clients sending large datagrams will "
-                 "need to increase SO_SNDBUF above the default value.  Either "
-                 "decrease max_input_msg_size or specify "
-                 "allow_large_unix_datagrams.");
+    DEFINE_ERROR(TMustAllowLargeDatagrams, std::runtime_error, "You didn't specify allow_large_unix_datagrams, and max_input_msg_size is large enough that clients sending large datagrams will need to increase SO_SNDBUF above the default value.  Either decrease max_input_msg_size or specify allow_large_unix_datagrams.");
 
     DEFINE_ERROR(TBadDebugDir, std::runtime_error,
-                 "debug_dir must be an absolute path");
+        "debug_dir must be an absolute path");
 
     DEFINE_ERROR(TBadDiscardLogMaxFileSize, std::runtime_error,
-                 "discard_log_max_file_size must be at least twice the "
-                 "maximum input message size.  To disable discard logfile "
-                 "generation, leave discard_log_path unspecified.");
+        "discard_log_max_file_size must be at least twice the maximum input message size.  To disable discard logfile generation, leave discard_log_path unspecified.");
 
     class TServerConfig final {
       NO_COPY_SEMANTICS(TServerConfig);

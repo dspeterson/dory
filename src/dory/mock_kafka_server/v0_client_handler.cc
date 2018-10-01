@@ -190,15 +190,14 @@ TV0ClientHandler::SendMetadataResponse(const TMetadataRequest &request,
       break;
     }
     case TIoResult::Disconnected: {
-      Out << "Error: Got disconnected from client while sending metadata "
-             "response"
+      Out << "Error: Got disconnected from client while sending metadata response"
           << std::endl;
       return TSendMetadataResult::ClientDisconnected;
     }
     case TIoResult::UnexpectedEnd:
     case TIoResult::EmptyReadUnexpectedEnd: {
-      Out << "Error: Got disconnected unexpectedly from client while sending "
-          << "metadata response" << std::endl;
+      Out << "Error: Got disconnected unexpectedly from client while sending metadata response"
+          << std::endl;
       return TSendMetadataResult::ClientDisconnected;
     }
     case TIoResult::GotShutdownRequest: {

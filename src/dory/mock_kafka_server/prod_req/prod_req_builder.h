@@ -82,8 +82,7 @@ namespace Dory {
 
           TCompressedMsgSetNotAlone()
               : TBuildError(
-                  "Compressed message set must not be part of a message set "
-                  "containing other messages") {
+                  "Compressed message set must not be part of a message set containing other messages") {
           }
         };  // TCompressedMsgSetNotAlone
 

@@ -48,7 +48,7 @@ namespace Socket {
   class TAddress {
     public:
     DEFINE_ERROR(TPathTooLong, std::runtime_error,
-                 "UNIX domain socket path too long");
+        "UNIX domain socket path too long");
 
     /* The amount of storage space available in an address. */
     static const socklen_t MaxLen = sizeof(sockaddr_storage);

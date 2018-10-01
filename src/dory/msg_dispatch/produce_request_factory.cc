@@ -150,12 +150,13 @@ static TOpt<int> GetRealCompressionLevel(const TCompressionConf::TConf &conf) {
 
   if (conf.Level.IsKnown()) {
     if (real_level.IsUnknown()) {
-      syslog(LOG_WARNING, "Ignoring compression level of %d requested for "
-          "compression type that does not support levels: %s", *conf.Level,
-          ToString(conf.Type));
+      syslog(LOG_WARNING,
+          "Ignoring compression level of %d requested for compression type that does not support levels: %s",
+          *conf.Level, ToString(conf.Type));
     } else if (*real_level != *conf.Level) {
-      syslog(LOG_WARNING, "Ignoring invalid compression level of %d requested "
-          "for compression type: %s", *conf.Level, ToString(conf.Type));
+      syslog(LOG_WARNING,
+          "Ignoring invalid compression level of %d requested for compression type: %s",
+          *conf.Level, ToString(conf.Type));
     }
   }
 

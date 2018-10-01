@@ -62,8 +62,8 @@ TProduceResponseProcessor::ProcessResponse(TProduceRequest &request,
     static TLogRateLimiter lim(std::chrono::seconds(30));
 
     if (lim.Test()) {
-      syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting "
-          "pause due to correlation ID mismatch: expected %ld actual %ld",
+      syslog(LOG_ERR,
+          "Connector thread %d (index %lu broker %ld) starting pause due to correlation ID mismatch: expected %ld actual %ld",
           static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId,
           static_cast<long>(request.first), static_cast<long>(corr_id));
     }
@@ -87,8 +87,8 @@ void TProduceResponseProcessor::ReportBadResponseTopic(
   static TLogRateLimiter lim(std::chrono::seconds(30));
 
   if (lim.Test()) {
-    syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting "
-        "pause due to produce response with unexpected topic [%s]",
+    syslog(LOG_ERR,
+        "Connector thread %d (index %lu broker %ld) starting pause due to produce response with unexpected topic [%s]",
         static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId, topic.c_str());
   }
 
@@ -101,8 +101,8 @@ void TProduceResponseProcessor::ReportBadResponsePartition(
   static TLogRateLimiter lim(std::chrono::seconds(30));
 
   if (lim.Test()) {
-    syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting "
-        "pause due to produce response with unexpected partition: %d",
+    syslog(LOG_ERR,
+        "Connector thread %d (index %lu broker %ld) starting pause due to produce response with unexpected partition: %d",
         static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId,
         static_cast<int>(partition));
   }
@@ -116,10 +116,9 @@ void TProduceResponseProcessor::ReportShortResponsePartitionList(
   static TLogRateLimiter lim(std::chrono::seconds(30));
 
   if (lim.Test()) {
-    syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting "
-        "pause due to produce response with short partition list for topic "
-        "[%s]", static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId,
-        topic.c_str());
+    syslog(LOG_ERR,
+        "Connector thread %d (index %lu broker %ld) starting pause due to produce response with short partition list for topic [%s]",
+        static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId, topic.c_str());
   }
 
   ProduceResponseShortPartitionList.Increment();
@@ -130,8 +129,8 @@ void TProduceResponseProcessor::ReportShortResponseTopicList() const {
   static TLogRateLimiter lim(std::chrono::seconds(30));
 
   if (lim.Test()) {
-    syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting "
-        "pause due to produce response with short topic list",
+    syslog(LOG_ERR,
+        "Connector thread %d (index %lu broker %ld) starting pause due to produce response with short topic list",
         static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId);
   }
 
@@ -157,8 +156,9 @@ void TProduceResponseProcessor::CountFailedDeliveryAttempt(
         static TLogRateLimiter lim(std::chrono::seconds(30));
 
         if (lim.Test()) {
-          syslog(LOG_ERR, "Discarding message because failed delivery attempt "
-              "limit reached (topic: [%s])", msg->GetTopic().c_str());
+          syslog(LOG_ERR,
+              "Discarding message because failed delivery attempt limit reached (topic: [%s])",
+              msg->GetTopic().c_str());
         }
       }
 
@@ -180,8 +180,8 @@ void TProduceResponseProcessor::ProcessImmediateResendMsgSet(
     static TLogRateLimiter lim(std::chrono::seconds(30));
 
     if (lim.Test()) {
-      syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) queueing "
-          "msg set (topic: [%s]) for immediate resend",
+      syslog(LOG_ERR,
+          "Connector thread %d (index %lu broker %ld) queueing msg set (topic: [%s]) for immediate resend",
           static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId,
           topic.c_str());
     }
@@ -202,8 +202,8 @@ void TProduceResponseProcessor::ProcessPauseAndResendMsgSet(
     static TLogRateLimiter lim(std::chrono::seconds(30));
 
     if (lim.Test()) {
-      syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) queueing "
-          "msg set (topic: [%s]) for resend after pause",
+      syslog(LOG_ERR,
+          "Connector thread %d (index %lu broker %ld) queueing msg set (topic: [%s]) for resend after pause",
           static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId,
           topic.c_str());
     }
@@ -223,8 +223,8 @@ void TProduceResponseProcessor::ProcessNoAckMsgs(TAllTopics &all_topics) {
     static TLogRateLimiter lim(std::chrono::seconds(30));
 
     if (lim.Test()) {
-      syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) processing "
-          "msgs without ACKs after error", static_cast<int>(Gettid()),
+      syslog(LOG_ERR,
+          "Connector thread %d (index %lu broker %ld) processing msgs without ACKs after error", static_cast<int>(Gettid()),
           MyBrokerIndex, MyBrokerId);
     }
 
@@ -252,8 +252,8 @@ bool TProduceResponseProcessor::ProcessOneAck(std::list<TMsg::TPtr> &&msg_set,
       static TLogRateLimiter lim(std::chrono::seconds(30));
 
       if (lim.Test()) {
-        syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) got ACK "
-            "error that triggers immediate resend without pause",
+        syslog(LOG_ERR,
+            "Connector thread %d (index %lu broker %ld) got ACK error that triggers immediate resend without pause",
             static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId);
       }
 
@@ -271,9 +271,8 @@ bool TProduceResponseProcessor::ProcessOneAck(std::list<TMsg::TPtr> &&msg_set,
         /* Write a syslog message even if Ds.Config.NoLogDiscard is true
            because these events are always interesting enough to be worth
            logging. */
-        syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) got ACK "
-            "error that triggers discard without pause: topic [%s], %lu "
-            "messages in set with total data size %lu",
+        syslog(LOG_ERR,
+            "Connector thread %d (index %lu broker %ld) got ACK error that triggers discard without pause: topic [%s], %lu messages in set with total data size %lu",
             static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId,
             msg_set.front()->GetTopic().c_str(),
             static_cast<unsigned long>(msg_set.size()), GetDataSize(msg_set));
@@ -288,9 +287,9 @@ bool TProduceResponseProcessor::ProcessOneAck(std::list<TMsg::TPtr> &&msg_set,
       static TLogRateLimiter lim(std::chrono::seconds(30));
 
       if (lim.Test()) {
-        syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) got ACK "
-            "error that triggers deferred pause", static_cast<int>(Gettid()),
-            MyBrokerIndex, MyBrokerId);
+        syslog(LOG_ERR,
+            "Connector thread %d (index %lu broker %ld) got ACK error that triggers deferred pause",
+            static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId);
       }
 
       /* Messages may be discarded here due to the failed delivery attempt
@@ -307,8 +306,8 @@ bool TProduceResponseProcessor::ProcessOneAck(std::list<TMsg::TPtr> &&msg_set,
         /* Write a syslog message even if Ds.Config.NoLogDiscard is true
            because these events are always interesting enough to be worth
            logging. */
-        syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) got ACK "
-            "error that triggers discard and deferred pause",
+        syslog(LOG_ERR,
+            "Connector thread %d (index %lu broker %ld) got ACK error that triggers discard and deferred pause",
             static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId);
       }
 

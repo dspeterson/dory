@@ -112,12 +112,13 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
   try {
     CmdLine cmd("Utility for sending messages to Dory.", ' ', dory_build_id);
     ValueArg<decltype(config.SocketPath)> arg_socket_path("", "socket_path",
-        "Pathname of UNIX domain datagram socket for sending messages to "
-        "Dory.", false, config.SocketPath, "PATH");
+        "Pathname of UNIX domain datagram socket for sending messages to Dory.",
+        false, config.SocketPath, "PATH");
     cmd.add(arg_socket_path);
     ValueArg<decltype(config.StreamSocketPath)> arg_stream_socket_path("",
-        "stream_socket_path", "Pathname of UNIX domain stream socket for "
-        "sending messages to Dory.", false, config.StreamSocketPath, "PATH");
+        "stream_socket_path",
+        "Pathname of UNIX domain stream socket for sending messages to Dory.",
+        false, config.StreamSocketPath, "PATH");
     cmd.add(arg_stream_socket_path);
     ValueArg<std::remove_reference<decltype(*config.Port)>::type>
         arg_port("", "port", "Local TCP port for sending messages to Dory.",
@@ -139,22 +140,23 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
     cmd.add(arg_value);
     SwitchArg arg_stdin("", "stdin", "Read message value from standard input.",
         cmd, config.Stdin);
-    ValueArg<decltype(config.Count)> arg_count("", "count", "Number of "
-        "messages to send.", false, config.Count, "COUNT");
+    ValueArg<decltype(config.Count)> arg_count("", "count",
+        "Number of messages to send.", false, config.Count, "COUNT");
     cmd.add(arg_count);
-    ValueArg<decltype(config.Interval)> arg_interval("", "interval", "Message "
-        "interval in microseconds.  A value of 0 means \"send messages as "
-        "fast as possible\".", false, config.Interval, "INTERVAL");
+    ValueArg<decltype(config.Interval)> arg_interval("", "interval",
+        "Message interval in microseconds.  A value of 0 means \"send messages as fast as possible\".",
+        false, config.Interval, "INTERVAL");
     cmd.add(arg_interval);
-    SwitchArg arg_seq("", "seq", "Prepend incrementing count to message "
-        "value.", cmd, config.Seq);
-    ValueArg<decltype(config.Pad)> arg_pad("", "pad", "Pad incrementing count "
-        "with leading 0s to fill this many spaces.", false, config.Pad, "PAD");
+    SwitchArg arg_seq("", "seq",
+        "Prepend incrementing count to message value.", cmd, config.Seq);
+    ValueArg<decltype(config.Pad)> arg_pad("", "pad",
+        "Pad incrementing count with leading 0s to fill this many spaces.",
+        false, config.Pad, "PAD");
     cmd.add(arg_pad);
     SwitchArg arg_bad("", "bad", "Send a malformed message.", cmd, config.Bad);
-    ValueArg<decltype(config.Print)> arg_print("", "print", "If nonzero, "
-        "print message number every nth message.", false, config.Print,
-        "PRINT");
+    ValueArg<decltype(config.Print)> arg_print("", "print",
+        "If nonzero, print message number every nth message.", false,
+        config.Print, "PRINT");
     cmd.add(arg_print);
     cmd.parse(argc, &arg_vec[0]);
     config.SocketPath = arg_socket_path.getValue();
@@ -195,8 +197,8 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
     }
 
     if (input_type_count != 1) {
-      throw TArgParseError("Exactly one of (--socket_path, "
-          "--stream_socket_path, --port) options must be specified.");
+      throw TArgParseError(
+          "Exactly one of (--socket_path, --stream_socket_path, --port) options must be specified.");
     }
   } catch (const ArgException &x) {
     throw TArgParseError(x.error(), x.argId());

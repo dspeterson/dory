@@ -202,8 +202,8 @@ void TManagedThreadPoolBase::TWorkerBase::PutBack(
     msg += x.what();
     pool.HandleFatalError(msg.c_str());
   } catch (...) {
-    pool.HandleFatalError("Fatal unknown exception when releasing unused "
-        "thread pool worker");
+    pool.HandleFatalError(
+        "Fatal unknown exception when releasing unused thread pool worker");
   }
 }
 
@@ -357,8 +357,8 @@ void TManagedThreadPoolBase::TWorkerBase::ClearClientState() noexcept {
     msg += x.what();
     HandleFatalError(msg.c_str());
   } catch (...) {
-    HandleFatalError("Fatal unknown exception while clearing thread pool "
-        "worker state");
+    HandleFatalError(
+        "Fatal unknown exception while clearing thread pool worker state");
   }
 }
 

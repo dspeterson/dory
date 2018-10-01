@@ -145,8 +145,8 @@ TPerTopicBatcher::GetCompleteBatches(TMsg::TTimestamp now) {
 
     if (map_iter == BatchMap.end()) {
       assert(false);
-      syslog(LOG_ERR, "Bug!!! BatchMap lookup failed in "
-             "TPerTopicBatcher::GetCompleteBatches()");
+      syslog(LOG_ERR,
+          "Bug!!! BatchMap lookup failed in TPerTopicBatcher::GetCompleteBatches()");
       continue;
     }
 
@@ -154,8 +154,8 @@ TPerTopicBatcher::GetCompleteBatches(TMsg::TTimestamp now) {
 
     if (map_entry.ExpiryRef != curr) {
       assert(false);
-      syslog(LOG_ERR, "Bug!!! TBatchMapEntry ExpiryRef is incorrect in "
-             "TPerTopicBatcher::GetCompleteBatches()");
+      syslog(LOG_ERR,
+          "Bug!!! TBatchMapEntry ExpiryRef is incorrect in TPerTopicBatcher::GetCompleteBatches()");
     }
 
     assert(!map_entry.Batcher.IsEmpty());

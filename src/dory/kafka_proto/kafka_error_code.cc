@@ -28,9 +28,7 @@ using namespace Dory::KafkaProto;
 
 const TKafkaErrorInfo Dory::KafkaProto::UndocumentedKafkaErrorInfo = {
   "undocumented error",
-  "No information about this error is available.  See "
-      "https://kafka.apache.org/protocol for the latest information on Kafka "
-      "error codes."
+  "No information about this error is available.  See https://kafka.apache.org/protocol for the latest information on Kafka error codes."
 };
 
 static const TKafkaErrorInfo UnknownServerErrorInfo = {
@@ -45,13 +43,11 @@ static const TKafkaErrorInfo KafkaErrorInfoTable[] = {
   },
   {
     "offset out of range",
-    "The requested offset is not within the range of offsets maintained by "
-        "Kafka."
+    "The requested offset is not within the range of offsets maintained by Kafka."
   },
   {
     "corrupt message",
-    "This message has failed its CRC checksum, exceeds the valid size, or is "
-        "otherwise corrupt."
+    "This message has failed its CRC checksum, exceeds the valid size, or is otherwise corrupt."
   },
   {
     "unknown topic or partition",
@@ -63,8 +59,7 @@ static const TKafkaErrorInfo KafkaErrorInfoTable[] = {
   },
   {
     "leader not available",
-    "There is no leader for this topic-partition as we are in the middle of a "
-        "leadership election."
+    "There is no leader for this topic-partition as we are in the middle of a leadership election."
   },
   {
     "not leader for partition",
@@ -84,8 +79,7 @@ static const TKafkaErrorInfo KafkaErrorInfoTable[] = {
   },
   {
     "message too large",
-    "The request included a message larger than the max message size the "
-        "broker will accept."
+    "The request included a message larger than the max message size the broker will accept."
   },
   {
     "stale controller epoch",
@@ -101,8 +95,7 @@ static const TKafkaErrorInfo KafkaErrorInfoTable[] = {
   },
   {
     "group load in progress",
-    "The coordinator is loading and hence can't process requests for this "
-        "group."
+    "The coordinator is loading and hence can't process requests for this group."
   },
   {
     "group coordinator not available",
@@ -118,18 +111,15 @@ static const TKafkaErrorInfo KafkaErrorInfoTable[] = {
   },
   {
     "record list too large",
-    "The request included message batch larger than the configured segment "
-        "size on the broker."
+    "The request included message batch larger than the configured segment size on the broker."
   },
   {
     "not enough replicas",
-    "Messages are rejected since there are fewer in-sync replicas than "
-        "required."
+    "Messages are rejected since there are fewer in-sync replicas than required."
   },
   {
     "not enough replicas after append",
-    "Messages are written to the log, but to fewer in-sync replicas than "
-        "required."
+    "Messages are written to the log, but to fewer in-sync replicas than required."
   },
   {
     "invalid required ACKs",
@@ -141,8 +131,7 @@ static const TKafkaErrorInfo KafkaErrorInfoTable[] = {
   },
   {
     "inconsistent group protocol",
-    "The group member's supported protocols are incompatible with those of "
-        "existing members."
+    "The group member's supported protocols are incompatible with those of existing members."
   },
   {
     "invalid group ID",
@@ -154,9 +143,7 @@ static const TKafkaErrorInfo KafkaErrorInfoTable[] = {
   },
   {
     "invalid session timeout",
-    "The session timeout is not within the range allowed by the broker (as "
-        "configured by group.min.session.timeout.ms and "
-        "group.max.session.timeout.ms)."
+    "The session timeout is not within the range allowed by the broker (as configured by group.min.session.timeout.ms and group.max.session.timeout.ms)."
   },
   {
     "rebalance in progress",
@@ -220,9 +207,7 @@ static const TKafkaErrorInfo KafkaErrorInfoTable[] = {
   },
   {
     "invalid request",
-    "This most likely occurs because of a request being malformed by the "
-        "client library or the message was sent to an incompatible broker.  "
-        "See the broker logs for more details."
+    "This most likely occurs because of a request being malformed by the client library or the message was sent to an incompatible broker.  See the broker logs for more details."
   },
   {
     "unsupported for message format",

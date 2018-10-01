@@ -107,8 +107,7 @@ TDemangleError::TDemangleError(const TCodeLocation &code_location, int ret) {
       break;
     case -2:
       details =
-          "mangled name is not a valid name under the C++ ABI name mangling "
-          "rules";
+          "mangled name is not a valid name under the C++ ABI name mangling rules";
       break;
     case -3:
       details = "One of the arguments is invalid";

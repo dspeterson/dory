@@ -231,13 +231,14 @@ bool TRouterThread::UpdateMetadataAfterTopicAutocreate(
     }
 
     sleep_ms *= 2;
-    syslog(LOG_INFO, "Newly created topic [%s] does not yet appear in "
-           "metadata: will fetch metadata again in %d milliseconds",
+    syslog(LOG_INFO,
+        "Newly created topic [%s] does not yet appear in metadata: will fetch metadata again in %d milliseconds",
            topic.c_str(), static_cast<int>(sleep_ms));
   }
 
-  syslog(LOG_WARNING, "Newly created topic [%s] does not appear in metadata "
-         "after %d updates", topic.c_str(), static_cast<int>(NUM_ATTEMPTS));
+  syslog(LOG_WARNING,
+      "Newly created topic [%s] does not appear in metadata after %d updates",
+      topic.c_str(), static_cast<int>(NUM_ATTEMPTS));
   return true;  // keep running
 }
 
@@ -254,14 +255,14 @@ bool TRouterThread::AutocreateTopic(TMsg::TPtr &msg) {
        i < KnownBrokers.size();
        chosen = ((chosen + 1) % KnownBrokers.size()), ++i) {
     const TKafkaBroker &broker = KnownBrokers[chosen];
-    syslog(LOG_INFO, "Router thread sending autocreate request for topic [%s] "
-           "to broker %s port %d", topic.c_str(), broker.Host.c_str(),
-           static_cast<int>(broker.Port));
+    syslog(LOG_INFO,
+        "Router thread sending autocreate request for topic [%s] to broker %s port %d",
+        topic.c_str(), broker.Host.c_str(), static_cast<int>(broker.Port));
 
     if (!MetadataFetcher->Connect(broker.Host, broker.Port)) {
       ConnectFailOnTopicAutocreate.Increment();
-      syslog(LOG_ERR, "Router thread failed to connect to broker for topic "
-             "autocreate");
+      syslog(LOG_ERR,
+          "Router thread failed to connect to broker for topic autocreate");
       continue;
     }
 
@@ -270,8 +271,9 @@ bool TRouterThread::AutocreateTopic(TMsg::TPtr &msg) {
     switch (MetadataFetcher->TopicAutocreate(topic.c_str(),
         static_cast<int>(Config.KafkaSocketTimeout * 1000))) {
       case TMetadataFetcher::TTopicAutocreateResult::Success: {
-        syslog(LOG_NOTICE, "Automatic creation of topic [%s] was successful: "
-               "updating metadata", topic.c_str());
+        syslog(LOG_NOTICE,
+            "Automatic creation of topic [%s] was successful: updating metadata",
+            topic.c_str());
 
         /* Update metadata so it shows the newly created topic. */
         bool keep_running = UpdateMetadataAfterTopicAutocreate(topic);
@@ -298,8 +300,8 @@ bool TRouterThread::AutocreateTopic(TMsg::TPtr &msg) {
     }
 
     /* Try next broker. */
-    syslog(LOG_ERR, "Router thread did not get valid topic autocreate "
-           "response from broker");
+    syslog(LOG_ERR,
+        "Router thread did not get valid topic autocreate response from broker");
   }
 
   if (!Config.NoLogDiscard) {
@@ -307,8 +309,8 @@ bool TRouterThread::AutocreateTopic(TMsg::TPtr &msg) {
 
     if (lim.Test()) {
       syslog(LOG_ERR,
-             "Discarding message because topic autocreate failed: [%s]",
-             topic.c_str());
+          "Discarding message because topic autocreate failed: [%s]",
+          topic.c_str());
     }
   }
 
@@ -392,8 +394,9 @@ bool TRouterThread::ValidateNewMsg(TMsg::TPtr &msg) {
         static TLogRateLimiter lim(std::chrono::seconds(30));
 
         if (lim.Test()) {
-          syslog(LOG_ERR, "Discarding message because topic has no available "
-                 "partitions: [%s]", topic.c_str());
+          syslog(LOG_ERR,
+              "Discarding message because topic has no available partitions: [%s]",
+              topic.c_str());
         }
       }
 
@@ -430,8 +433,9 @@ void TRouterThread::ValidateBeforeReroute(std::list<TMsg::TPtr> &msg_list) {
       static TLogRateLimiter lim(std::chrono::seconds(30));
 
       if (lim.Test()) {
-        syslog(LOG_ERR, "Discarding message due to unknown topic on reroute: "
-               "[%s]", topic.c_str());
+        syslog(LOG_ERR,
+            "Discarding message due to unknown topic on reroute: [%s]",
+            topic.c_str());
       }
     }
 
@@ -455,8 +459,9 @@ void TRouterThread::ValidateBeforeReroute(std::list<TMsg::TPtr> &msg_list) {
         static TLogRateLimiter lim(std::chrono::seconds(30));
   
         if (lim.Test()) {
-          syslog(LOG_ERR, "Discarding message because topic has no available "
-                 "partitions on reroute: [%s]", topic.c_str());
+          syslog(LOG_ERR,
+              "Discarding message because topic has no available partitions on reroute: [%s]",
+              topic.c_str());
         }
       }
 
@@ -764,8 +769,8 @@ void TRouterThread::DiscardFinalMsgs() {
         static TLogRateLimiter lim(std::chrono::seconds(30));
 
         if (lim.Test()) {
-          syslog(LOG_ERR, "Discarding message queued for router thread on "
-                 "server shutdown: topic [%s]",
+          syslog(LOG_ERR,
+              "Discarding message queued for router thread on server shutdown: topic [%s]",
                  msg->GetTopic().c_str());
         }
       }
@@ -774,7 +779,7 @@ void TRouterThread::DiscardFinalMsgs() {
     } else {
       assert(false);
       syslog(LOG_ERR,
-             "Router thread got empty TMsg::TPtr in DiscardFinalMsgs()");
+          "Router thread got empty TMsg::TPtr in DiscardFinalMsgs()");
       Server::BacktraceToLog();
     }
   }
@@ -814,8 +819,8 @@ bool TRouterThread::Init() {
   meta = GetInitialMetadata();
 
   if (!meta) {
-    syslog(LOG_NOTICE, "Router thread got shutdown request while getting "
-           "initial metadata");
+    syslog(LOG_NOTICE,
+        "Router thread got shutdown request while getting initial metadata");
 
     /* Discard any remaining queued messages from the input thread.
 
@@ -829,7 +834,7 @@ bool TRouterThread::Init() {
   SetMetadata(std::move(meta));
 
   syslog(LOG_NOTICE,
-         "Router thread starting dispatcher during initialization");
+      "Router thread starting dispatcher during initialization");
   Dispatcher.Start(Metadata);
 
   PauseRateLimiter.reset(new TDoryRateLimiter(Config.PauseRateLimitInitial,
@@ -855,11 +860,11 @@ bool TRouterThread::ReplaceMetadataOnRefresh(
     std::shared_ptr<TMetadata> &&meta) {
   assert(this);
   std::shared_ptr<TMetadata> md = std::move(meta);
-  syslog(LOG_NOTICE, "Router thread starting fast dispatcher shutdown for "
-         "metadata refresh");
+  syslog(LOG_NOTICE,
+      "Router thread starting fast dispatcher shutdown for metadata refresh");
   Dispatcher.StartFastShutdown();
-  syslog(LOG_NOTICE, "Router thread started fast dispatcher shutdown for "
-         "metadata refresh");
+  syslog(LOG_NOTICE,
+      "Router thread started fast dispatcher shutdown for metadata refresh");
 
   if (!md) {
     syslog(LOG_NOTICE, "Starting metadata fetch 2");
@@ -873,8 +878,8 @@ bool TRouterThread::ReplaceMetadataOnRefresh(
 
   syslog(LOG_NOTICE, "Waiting for dispatcher shutdown to finish");
   CheckDispatcherShutdown();
-  syslog(LOG_NOTICE, "Router thread finished waiting for dispatcher shutdown "
-         "on metadata refresh");
+  syslog(LOG_NOTICE,
+      "Router thread finished waiting for dispatcher shutdown on metadata refresh");
 
   if (!md) {
     syslog(LOG_ERR, "Metadata fetch 2 cut short by shutdown delay expiration");
@@ -884,8 +889,9 @@ bool TRouterThread::ReplaceMetadataOnRefresh(
   SetMetadata(std::move(md), false);
   RefreshMetadataSuccess.Increment();
   std::list<std::list<TMsg::TPtr>> to_reroute = EmptyDispatcher();
-  syslog(LOG_NOTICE, "Router thread finished metadata fetch for refresh: "
-         "starting dispatcher");
+  syslog(LOG_NOTICE,
+      "Router thread finished metadata fetch for refresh: starting dispatcher"
+  );
   Dispatcher.Start(Metadata);
   syslog(LOG_NOTICE, "Router thread started dispatcher");
   Reroute(std::move(to_reroute));
@@ -907,7 +913,7 @@ bool TRouterThread::RefreshMetadata() {
 
     if (!meta) {
       syslog(LOG_ERR,
-             "Metadata fetch 1 cut short by shutdown delay expiration");
+          "Metadata fetch 1 cut short by shutdown delay expiration");
       return false;
     }
 
@@ -948,7 +954,7 @@ std::list<std::list<TMsg::TPtr>> TRouterThread::EmptyDispatcher() {
 
           if (lim.Test()) {
             syslog(LOG_WARNING, "Possible duplicate message (topic: [%s])",
-                   msg->GetTopic().c_str());
+                msg->GetTopic().c_str());
           }
         }
 
@@ -1010,8 +1016,8 @@ bool TRouterThread::RespondToPause() {
         static TLogRateLimiter lim(std::chrono::seconds(30));
 
         if (lim.Test()) {
-          syslog(LOG_ERR, "Router thread discarding message with topic [%s] "
-                 "on shutdown delay expiration during pause",
+          syslog(LOG_ERR,
+              "Router thread discarding message with topic [%s] on shutdown delay expiration during pause",
           msg_list.front()->GetTopic().c_str());
         }
       }
@@ -1037,8 +1043,8 @@ void TRouterThread::DiscardOnShutdownDuringMetadataUpdate(TMsg::TPtr &&msg) {
     static TLogRateLimiter lim(std::chrono::seconds(30));
 
     if (lim.Test()) {
-      syslog(LOG_ERR, "Router thread discarding message with topic [%s] on "
-             "shutdown delay expiration during metadata update",
+      syslog(LOG_ERR,
+          "Router thread discarding message with topic [%s] on shutdown delay expiration during metadata update",
       msg->GetTopic().c_str());
     }
   }
@@ -1071,8 +1077,8 @@ bool TRouterThread::HandleMetadataUpdate() {
 
   if (MetadataUpdateRequestSem.GetFd().IsReadable()) {
     MetadataUpdateRequestSem.Pop();
-    syslog(LOG_NOTICE, "Router thread responding to user-initiated metadata "
-           "update request");
+    syslog(LOG_NOTICE,
+        "Router thread responding to user-initiated metadata update request");
   }
 
   StartRefreshMetadata.Increment();
@@ -1106,10 +1112,10 @@ void TRouterThread::ContinueShutdown() {
   RouteFinalMsgs();
 
   syslog(LOG_NOTICE,
-         "Router thread forwarding shutdown request to dispatcher");
+      "Router thread forwarding shutdown request to dispatcher");
   Dispatcher.StartSlowShutdown(*ShutdownStartTime);
   syslog(LOG_NOTICE,
-         "Router thread finished forwarding shutdown request to dispatcher");
+      "Router thread finished forwarding shutdown request to dispatcher");
 }
 
 int TRouterThread::ComputeMainLoopPollTimeout() {
@@ -1129,9 +1135,10 @@ int TRouterThread::ComputeMainLoopPollTimeout() {
   uint64_t delta = expiry - now;
 
   if (delta > static_cast<uint64_t>(std::numeric_limits<int>::max())) {
-    syslog(LOG_WARNING, "Likely bug: batch timeout is ridiculously large: "
-           "expiry %llu now %llu", static_cast<unsigned long long>(expiry),
-           static_cast<unsigned long long>(now));
+    syslog(LOG_WARNING,
+        "Likely bug: batch timeout is ridiculously large: expiry %llu now %llu",
+        static_cast<unsigned long long>(expiry),
+        static_cast<unsigned long long>(now));
     OptNextBatchExpiry.Reset();
     OptNextBatchExpiry.MakeKnown(now);
     return 0;
@@ -1241,11 +1248,11 @@ void TRouterThread::HandleShutdownFinished() {
   assert(this);
 
   if (ShutdownStartTime.IsKnown()) {
-    syslog(LOG_NOTICE, "Router thread got shutdown finished notification from "
-           "dispatcher");
+    syslog(LOG_NOTICE,
+        "Router thread got shutdown finished notification from dispatcher");
   } else {
-    syslog(LOG_ERR, "Router thread got unexpected shutdown finished "
-           "notification from dispatcher");
+    syslog(LOG_ERR,
+        "Router thread got unexpected shutdown finished notification from dispatcher");
   }
 
   CheckDispatcherShutdown();
@@ -1258,8 +1265,8 @@ void TRouterThread::HandleShutdownFinished() {
       static TLogRateLimiter lim(std::chrono::seconds(30));
 
       if (lim.Test()) {
-        syslog(LOG_ERR, "Router thread discarding message with topic [%s] on "
-               "shutdown",
+        syslog(LOG_ERR,
+            "Router thread discarding message with topic [%s] on shutdown",
         msg_list.front()->GetTopic().c_str());
       }
     }
@@ -1365,8 +1372,9 @@ bool TRouterThread::HandlePause() {
      previous pause.  If something goes seriously wrong, this prevents us from
      going into a tight pause loop. */
   size_t delay = PauseRateLimiter->ComputeDelay();
-  syslog(LOG_NOTICE, "Router thread detected pause: waiting %lu milliseconds "
-         "before responding", static_cast<unsigned long>(delay));
+  syslog(LOG_NOTICE,
+      "Router thread detected pause: waiting %lu milliseconds before responding",
+      static_cast<unsigned long>(delay));
   SleepMilliseconds(delay);
   PauseRateLimiter->OnAction();
 
@@ -1384,8 +1392,8 @@ bool TRouterThread::HandlePause() {
   }
 
   SetMetadata(std::move(meta));
-  syslog(LOG_NOTICE, "Router thread got metadata in response to pause: "
-         "starting dispatcher");
+  syslog(LOG_NOTICE,
+      "Router thread got metadata in response to pause: starting dispatcher");
   std::list<std::list<TMsg::TPtr>> to_reroute = EmptyDispatcher();
   Dispatcher.Start(Metadata);
   syslog(LOG_NOTICE, "Router thread started new dispatcher");
@@ -1406,10 +1414,10 @@ bool TRouterThread::HandlePause() {
        get the original start time, and therefore set its deadline correctly.
      */
     syslog(LOG_NOTICE,
-           "Router thread resending shutdown request to restarted dispatcher");
+        "Router thread resending shutdown request to restarted dispatcher");
     Dispatcher.StartSlowShutdown(*ShutdownStartTime);
     syslog(LOG_NOTICE,
-           "Router thread resent shutdown request to restarted dispatcher");
+        "Router thread resent shutdown request to restarted dispatcher");
   }
 
   return true;
@@ -1438,13 +1446,14 @@ std::shared_ptr<TMetadata> TRouterThread::TryGetMetadata() {
        i < KnownBrokers.size();
        chosen = ((chosen + 1) % KnownBrokers.size()), ++i) {
     const TKafkaBroker &broker = KnownBrokers[chosen];
-    syslog(LOG_INFO, "Router thread getting metadata from broker %s port %d",
-           broker.Host.c_str(), static_cast<int>(broker.Port));
+    syslog(LOG_INFO,
+        "Router thread getting metadata from broker %s port %d",
+        broker.Host.c_str(), static_cast<int>(broker.Port));
 
     if (!MetadataFetcher->Connect(broker.Host, broker.Port)) {
       ConnectFailOnTryGetMetadata.Increment();
-      syslog(LOG_ERR, "Router thread failed to connect to broker for "
-             "metadata");
+      syslog(LOG_ERR,
+          "Router thread failed to connect to broker for metadata");
       continue;
     }
 
@@ -1458,8 +1467,8 @@ std::shared_ptr<TMetadata> TRouterThread::TryGetMetadata() {
     }
 
     /* Failed to get metadata: try next broker. */
-    syslog(LOG_ERR, "Router thread did not get valid metadata response from "
-           "broker");
+    syslog(LOG_ERR,
+        "Router thread did not get valid metadata response from broker");
   }
 
   bool success = false;
@@ -1507,8 +1516,8 @@ std::shared_ptr<TMetadata> TRouterThread::GetInitialMetadata() {
     }
 
     size_t delay = retry_rate_limiter.ComputeDelay();
-    syslog(LOG_ERR, "Initial metadata request failed for all known brokers, "
-           "waiting %lu milliseconds before retry",
+    syslog(LOG_ERR,
+        "Initial metadata request failed for all known brokers, waiting %lu milliseconds before retry",
            static_cast<unsigned long>(delay));
 
     if (shutdown_request_fd.IsReadable(static_cast<int>(delay))) {
@@ -1540,8 +1549,8 @@ std::shared_ptr<TMetadata> TRouterThread::GetMetadataBeforeSlowShutdown() {
     }
 
     size_t delay = retry_rate_limiter.ComputeDelay();
-    syslog(LOG_ERR, "Metadata request failed for all known brokers, waiting "
-           "%lu milliseconds before retry (1)",
+    syslog(LOG_ERR,
+        "Metadata request failed for all known brokers, waiting %lu milliseconds before retry (1)",
            static_cast<unsigned long>(delay));
 
     if (shutdown_request_fd.IsReadable(static_cast<int>(delay))) {
@@ -1586,9 +1595,9 @@ std::shared_ptr<TMetadata> TRouterThread::GetMetadataDuringSlowShutdown() {
 
     uint64_t time_left = finish_time - now;
     size_t delay = retry_rate_limiter.ComputeDelay();
-    syslog(LOG_ERR, "Metadata request failed for all known brokers, waiting "
-           "%lu milliseconds before retry (2)",
-           static_cast<unsigned long>(delay));
+    syslog(LOG_ERR,
+        "Metadata request failed for all known brokers, waiting %lu milliseconds before retry (2)",
+        static_cast<unsigned long>(delay));
     SleepMilliseconds(delay);
 
     if (time_left <= delay) {
@@ -1661,8 +1670,9 @@ void TRouterThread::UpdateBatchStateForNewMetadata(const TMetadata &old_md,
       static TLogRateLimiter lim(std::chrono::seconds(30));
 
       if (lim.Test()) {
-        syslog(LOG_ERR, "Router thread discarding message with topic [%s] "
-               "that is not present in new metadata", msg->GetTopic().c_str());
+        syslog(LOG_ERR,
+            "Router thread discarding message with topic [%s] that is not present in new metadata",
+            msg->GetTopic().c_str());
       }
     }
   }
@@ -1675,9 +1685,9 @@ void TRouterThread::UpdateBatchStateForNewMetadata(const TMetadata &old_md,
       static TLogRateLimiter lim(std::chrono::seconds(30));
 
       if (lim.Test()) {
-        syslog(LOG_ERR, "Router thread discarding message with topic [%s] "
-               "that has no available partitions in new metadata",
-               msg->GetTopic().c_str());
+        syslog(LOG_ERR,
+            "Router thread discarding message with topic [%s] that has no available partitions in new metadata",
+            msg->GetTopic().c_str());
       }
     }
   }
@@ -1743,7 +1753,7 @@ void TRouterThread::SetMetadata(std::shared_ptr<TMetadata> &&meta,
     if (topic.GetOkPartitions().empty()) {
       TopicHasNoAvailablePartitions.Increment();
       syslog(LOG_WARNING, "Topic [%s] has no available partitions",
-             item.first.c_str());
+          item.first.c_str());
     }
   }
 

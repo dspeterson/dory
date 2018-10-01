@@ -55,8 +55,8 @@ namespace Dory {
               "Invalid topic count in Kafka metadata request");
 
           DEFINE_ERROR(TWrongRequestType, std::runtime_error,
-              "Expected Kafka metadata request but got some other request "
-              "type");
+              "Expected Kafka metadata request but got some other request type"
+          );
 
           DEFINE_ERROR(TBadApiVersion, std::runtime_error,
               "Unsupported API version in Kafka metadata request");

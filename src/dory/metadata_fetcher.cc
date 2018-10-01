@@ -220,16 +220,17 @@ bool TMetadataFetcher::SendRequest(const std::vector<uint8_t> &request,
   } catch (const std::system_error &x) {
     if (LostTcpConnection(x)) {
       SendMetadataRequestLostTcpConnection.Increment();
-      syslog(LOG_ERR, "Lost TCP connection to broker while trying to send "
-             "metadata request: %s", x.what());
+      syslog(LOG_ERR,
+          "Lost TCP connection to broker while trying to send metadata request: %s",
+          x.what());
       return false;
     }
 
     throw;  // anything else is fatal
   } catch (const TUnexpectedEnd &) {
     SendMetadataRequestUnexpectedEnd.Increment();
-    syslog(LOG_ERR, "Lost TCP connection to broker while trying to send "
-           "metadata request");
+    syslog(LOG_ERR,
+        "Lost TCP connection to broker while trying to send metadata request");
     return false;
   }
 
@@ -268,8 +269,9 @@ bool TMetadataFetcher::ReadResponse(int timeout_ms) {
     } catch (const std::system_error &x) {
       if (LostTcpConnection(x)) {
         MetadataResponseReadLostTcpConnection.Increment();
-        syslog(LOG_ERR, "Lost TCP connection to broker while trying to read "
-            "metadata response: %s", x.what());
+        syslog(LOG_ERR,
+            "Lost TCP connection to broker while trying to read metadata response: %s",
+            x.what());
         return false;
       }
 

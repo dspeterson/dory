@@ -83,12 +83,11 @@ namespace Dory {
 
           DEFINE_ERROR(TNegativePartitionCaughtUpReplicaCount,
               TBadMetadataResponse,
-              "Kafka metadata response has negative partition caught up "
-              "replica count");
+              "Kafka metadata response has negative partition caught up replica count");
 
           DEFINE_ERROR(TNegativeCaughtUpReplicaNodeId, TBadMetadataResponse,
-              "Kafka metadata response has negative caught up replica node "
-              "ID");
+              "Kafka metadata response has negative caught up replica node ID"
+          );
 
           static size_t MinSize() {
             return REQUEST_OR_RESPONSE_SIZE_SIZE + THdr::CORRELATION_ID_SIZE +

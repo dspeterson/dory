@@ -610,8 +610,8 @@ bool TSingleClientHandlerBase::HandleProduceRequest() {
     }
     case TIoResult::UnexpectedEnd:
     case TIoResult::EmptyReadUnexpectedEnd: {
-      Out << "Error: Got disconnected unexpectedly from client while sending "
-          << "produce response" << std::endl;
+      Out << "Error: Got disconnected unexpectedly from client while sending produce response"
+          << std::endl;
       return false;
     }
     case TIoResult::GotShutdownRequest: {

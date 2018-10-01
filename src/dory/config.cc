@@ -369,27 +369,22 @@ static void ParseArgs(int argc, char *argv[], TConfig &config,
 
     if (!arg_receive_socket_name.isSet() &&
         !arg_receive_stream_socket_name.isSet() && !arg_input_port.isSet()) {
-      throw TArgParseError("At least one of (--receive_socket_name, "
-          "--receive_stream_socket_name, --input_port) options must be "
-          "specified.");
+      throw TArgParseError("At least one of (--receive_socket_name, --receive_stream_socket_name, --input_port) options must be specified.");
     }
 
     if (!arg_receive_socket_name.isSet()) {
       if (arg_receive_socket_mode.isSet()) {
-        throw TArgParseError("Option --receive_socket_mode is only allowed "
-            "when --receive_socket_name is specified.");
+        throw TArgParseError("Option --receive_socket_mode is only allowed when --receive_socket_name is specified.");
       }
 
       if (arg_allow_large_unix_datagrams.isSet()) {
-        throw TArgParseError("Option --allow_large_unix_datagrams is only "
-            "allowed when --receive_socket_name is specified.");
+        throw TArgParseError("Option --allow_large_unix_datagrams is only allowed when --receive_socket_name is specified.");
       }
     }
 
     if (!arg_receive_stream_socket_name.isSet() &&
         arg_receive_stream_socket_mode.isSet()) {
-      throw TArgParseError("Option --receive_stream_socket_mode is only "
-          "allowed when --receive_stream_socket_name is specified.");
+      throw TArgParseError("Option --receive_stream_socket_mode is only allowed when --receive_stream_socket_name is specified.");
     }
   } catch (const ArgException &x) {
     throw TArgParseError(x.error(), x.argId());
@@ -419,11 +414,7 @@ static std::string BuildModeString(const TOpt<mode_t> &opt_mode) {
 
 void Dory::LogConfig(const TConfig &config) {
   if (config.ClientIdWasEmpty) {
-    syslog(LOG_WARNING, "Using \"dory\" for client ID since none was "
-        "specified with --client_id option.  This is a workaround for a bug "
-        "in Kafka 0.9.0.0 that causes broker to crash on receipt of produce "
-        "request with empty client ID.  See "
-        "https://issues.apache.org/jira/browse/KAFKA-3088 for details.");
+    syslog(LOG_WARNING, "Using \"dory\" for client ID since none was specified with --client_id option.  This is a workaround for a bug in Kafka 0.9.0.0 that causes broker to crash on receipt of produce request with empty client ID.  See https://issues.apache.org/jira/browse/KAFKA-3088 for details.");
   }
 
   syslog(LOG_NOTICE, "Version: [%s]", dory_build_id);

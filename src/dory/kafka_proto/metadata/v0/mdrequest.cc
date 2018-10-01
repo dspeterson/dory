@@ -77,17 +77,18 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
   arg_vec[0] = prog_name.c_str();
 
   try {
-    CmdLine cmd("Utility for sending a metadata request to a Kafka broker and "
-        "writing the response to standard output", ' ', dory_build_id);
+    CmdLine cmd(
+        "Utility for sending a metadata request to a Kafka broker and writing the response to standard output",
+        ' ', dory_build_id);
     ValueArg<decltype(config.BrokerHost)> arg_broker_host("", "broker_host",
         "Kafka broker to connect to.", true, config.BrokerHost, "HOST");
     cmd.add(arg_broker_host);
     ValueArg<decltype(config.BrokerPort)> arg_broker_port("", "broker_port",
         "Port to connect to.", false, config.BrokerPort, "PORT");
     cmd.add(arg_broker_port);
-    ValueArg<decltype(config.Topic)> arg_topic("", "topic", "Topic to request "
-        "metadata for.  If omitted, metadata will be requested for all "
-        "topics.", false, config.Topic, "TOPIC");
+    ValueArg<decltype(config.Topic)> arg_topic("", "topic",
+        "Topic to request metadata for.  If omitted, metadata will be requested for all topics.",
+        false, config.Topic, "TOPIC");
     cmd.add(arg_topic);
     ValueArg<decltype(config.RequestCount)> arg_request_count("",
         "request_count", "Number of requests to send (for testing).", false,

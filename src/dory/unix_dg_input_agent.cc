@@ -71,8 +71,7 @@ bool TUnixDgInputAgent::SyncStart() {
   assert(this);
 
   if (IsStarted()) {
-    throw std::logic_error("Cannot call SyncStart() when UNIX datagram input "
-        "agent is already started");
+    throw std::logic_error("Cannot call SyncStart() when UNIX datagram input agent is already started");
   }
 
   SyncStartSuccess = false;
@@ -110,8 +109,7 @@ void TUnixDgInputAgent::Run() {
     SyncStartNotify->Push();
   }
 
-  syslog(LOG_NOTICE, "UNIX datagram input thread finished initialization, "
-      "forwarding messages");
+  syslog(LOG_NOTICE, "UNIX datagram input thread finished initialization, forwarding messages");
   ForwardMessages();
 }
 
@@ -173,8 +171,8 @@ void TUnixDgInputAgent::ForwardMessages() {
 
     if (shutdown_request_event.revents) {
       if (!Destroying) {
-        syslog(LOG_NOTICE, "UNIX datagram input thread got shutdown request, "
-            "closing socket");
+        syslog(LOG_NOTICE,
+            "UNIX datagram input thread got shutdown request, closing socket");
         /* We received a shutdown request from the thread that created us.
            Close the input socket and terminate. */
         InputSocket.Reset();

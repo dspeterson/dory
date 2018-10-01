@@ -46,8 +46,7 @@ void TUnixDgSender::DoPrepareToSend() {
     }
     default: {
       throw std::logic_error(
-          "Unexpected return value from UNIX domain datagram socket bind() "
-          "operation");
+          "Unexpected return value from UNIX domain datagram socket bind() operation");
     }
   }
 }

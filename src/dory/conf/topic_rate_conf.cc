@@ -31,8 +31,8 @@ using namespace Dory::Util;
 
 std::string TTopicRateConf::TBuilder::TDuplicateNamedConfig::CreateMsg(
     const std::string &config_name) {
-  std::string msg("Topic rate limiting config contains duplicate named "
-                  "config: [");
+  std::string msg(
+      "Topic rate limiting config contains duplicate named config: [");
   msg += config_name;
   msg += "]";
   return msg;
@@ -40,8 +40,8 @@ std::string TTopicRateConf::TBuilder::TDuplicateNamedConfig::CreateMsg(
 
 std::string TTopicRateConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
     const std::string &config_name) {
-  std::string msg("Topic rate limiting config defaultTopic definition "
-                  "references unknown named config: [");
+  std::string msg(
+      "Topic rate limiting config defaultTopic definition references unknown named config: [");
   msg += config_name;
   msg += "]";
   return msg;
@@ -49,8 +49,8 @@ std::string TTopicRateConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
 
 std::string TTopicRateConf::TBuilder::TDuplicateTopicConfig::CreateMsg(
     const std::string &topic) {
-  std::string msg("Topic rate limiting config contains duplicate "
-                  "specification for topic [");
+  std::string msg(
+      "Topic rate limiting config contains duplicate specification for topic [");
   msg += topic;
   msg += "]";
   return msg;
@@ -58,8 +58,8 @@ std::string TTopicRateConf::TBuilder::TDuplicateTopicConfig::CreateMsg(
 
 std::string TTopicRateConf::TBuilder::TZeroRateLimitInterval::CreateMsg(
     const std::string &topic) {
-  std::string msg("Topic rate limiting config contains interval of zero for "
-                  "topic [");
+  std::string msg(
+      "Topic rate limiting config contains interval of zero for topic [");
   msg += topic;
   msg += "]";
   return msg;

@@ -106,7 +106,7 @@ size_t TSnappyCodec::ComputeUncompressedResultBufSpace(
   CheckSnappyStatus(Lib.snappy_uncompressed_length(
       reinterpret_cast<const char *>(compressed_data), compressed_size,
       &result),
-                    "snappy_uncompressed_length()");
+      "snappy_uncompressed_length()");
   return result;
 }
 
@@ -116,7 +116,7 @@ size_t TSnappyCodec::Uncompress(const void *input_buf, size_t input_buf_size,
   CheckSnappyStatus(Lib.snappy_uncompress(
       reinterpret_cast<const char *>(input_buf), input_buf_size,
       reinterpret_cast<char *>(output_buf), &output_buf_size),
-                    "snappy_uncompress()");
+      "snappy_uncompress()");
 
   /* Return true size of uncompressed output (set by above library call). */
   return output_buf_size;
@@ -136,7 +136,7 @@ size_t TSnappyCodec::DoCompress(const void *input_buf, size_t input_buf_size,
   CheckSnappyStatus(Lib.snappy_compress(
       reinterpret_cast<const char *>(input_buf), input_buf_size,
       reinterpret_cast<char *>(output_buf), &output_buf_size),
-                    "snappy_compress()");
+      "snappy_compress()");
   SnappyCompressSuccess.Increment();
   return output_buf_size;
 }

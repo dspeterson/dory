@@ -39,17 +39,17 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
 
   try {
     CmdLine cmd("Mock Kafka server for testing Dory.", ' ', dory_build_id);
-    SwitchArg arg_log_echo("", "log_echo", "Echo syslog messages to standard "
-        "error.", cmd, config.LogEcho);
+    SwitchArg arg_log_echo("", "log_echo",
+        "Echo syslog messages to standard error.", cmd, config.LogEcho);
     ValueArg<decltype(config.ProduceApiVersion)> arg_produce_api_version("",
-        "produce_api_version", "Version of Kafka produce API to use "
-        "(currently only 0 is supported).", false, config.ProduceApiVersion,
-        "VERSION");
+        "produce_api_version",
+        "Version of Kafka produce API to use (currently only 0 is supported).",
+        false, config.ProduceApiVersion, "VERSION");
     cmd.add(arg_produce_api_version);
     ValueArg<decltype(config.MetadataApiVersion)> arg_metadata_api_version("",
-        "metadata_api_version", "Version of Kafka metadata API to use "
-        "(currently only 0 is supported).", false, config.MetadataApiVersion,
-        "VERSION");
+        "metadata_api_version",
+        "Version of Kafka metadata API to use (currently only 0 is supported).",
+        false, config.MetadataApiVersion, "VERSION");
     cmd.add(arg_metadata_api_version);
     ValueArg<decltype(config.QuietLevel)> arg_quiet_level("", "quiet_level",
         "Limit output verbosity.", false, config.QuietLevel, "LEVEL");
@@ -61,11 +61,13 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
         "Directory where server writes its output files.", true,
         config.OutputDir, "DIR");
     cmd.add(arg_output_dir);
-    ValueArg<decltype(config.CmdPort)> arg_cmd_port("", "cmd_port", "Command "
-        "port (for error injection, etc.).", false, config.CmdPort, "PORT");
+    ValueArg<decltype(config.CmdPort)> arg_cmd_port("", "cmd_port",
+        "Command port (for error injection, etc.).", false, config.CmdPort,
+        "PORT");
     cmd.add(arg_cmd_port);
-    SwitchArg arg_single_output_file("", "single_output_file", "Use single "
-        "output file for all clients", cmd, config.SingleOutputFile);
+    SwitchArg arg_single_output_file("", "single_output_file",
+        "Use single output file for all clients", cmd,
+        config.SingleOutputFile);
     cmd.parse(argc, &arg_vec[0]);
     config.LogEcho = arg_log_echo.getValue();
     config.ProduceApiVersion = arg_produce_api_version.getValue();

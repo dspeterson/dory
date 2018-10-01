@@ -152,16 +152,17 @@ void TStreamClientWorkFn::HandleClientClosed() const {
       static TLogRateLimiter lim(std::chrono::seconds(30));
 
       if (lim.Test()) {
-        syslog(LOG_WARNING, "TCP client disconnected after writing "
-            "incomplete message");
+        syslog(LOG_WARNING,
+            "TCP client disconnected after writing incomplete message");
       }
     } else {
       UnixStreamInputUncleanDisconnect.Increment();
       static TLogRateLimiter lim(std::chrono::seconds(30));
 
       if (lim.Test()) {
-        syslog(LOG_WARNING, "UNIX stream client disconnected after "
-            "writing incomplete message");
+        syslog(LOG_WARNING,
+            "UNIX stream client disconnected after writing incomplete message"
+        );
       }
     }
   }

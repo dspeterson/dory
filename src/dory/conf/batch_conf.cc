@@ -58,8 +58,8 @@ std::string TBatchConf::TBuilder::TDuplicateNamedConfig::CreateMsg(
 
 std::string TBatchConf::TBuilder::TUnknownCombinedTopicsConfig::CreateMsg(
     const std::string &config_name) {
-  std::string msg("Batching config combinedTopics definition references "
-                  "unknown named config: [");
+  std::string msg(
+      "Batching config combinedTopics definition references unknown named config: [");
   msg += config_name;
   msg += "]";
   return msg;
@@ -67,8 +67,8 @@ std::string TBatchConf::TBuilder::TUnknownCombinedTopicsConfig::CreateMsg(
 
 std::string TBatchConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
     const std::string &config_name) {
-  std::string msg("Batching config defaultTopic definition references "
-                  "unknown named config: [");
+  std::string msg(
+      "Batching config defaultTopic definition references unknown named config: [");
   msg += config_name;
   msg += "]";
   return msg;
@@ -76,8 +76,8 @@ std::string TBatchConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
 
 std::string TBatchConf::TBuilder::TDuplicateTopicConfig::CreateMsg(
     const std::string &topic) {
-  std::string msg("Batching config contains duplicate specification for "
-                  "topic [");
+  std::string msg(
+      "Batching config contains duplicate specification for topic [");
   msg += topic;
   msg += "]";
   return msg;

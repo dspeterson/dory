@@ -134,24 +134,24 @@ namespace Dory {
       class TDuplicateSizeThresholdPercent final : public TErrorBase {
         public:
         TDuplicateSizeThresholdPercent()
-            : TErrorBase("Compression config contains duplicate "
-                         "sizeThresholdPercent definition") {
+            : TErrorBase(
+                  "Compression config contains duplicate sizeThresholdPercent definition") {
         }
       };  // TDuplicateSizeThresholdPercent
 
       class TBadSizeThresholdPercent final : public TErrorBase {
         public:
         TBadSizeThresholdPercent()
-            : TErrorBase("Compression config contains bad "
-                         "sizeThresholdPercent value: must be <= 100") {
+            : TErrorBase(
+                  "Compression config contains bad sizeThresholdPercent value: must be <= 100") {
         }
       };  // TBadSizeThresholdPercent
 
       class TDuplicateDefaultTopicConfig final : public TErrorBase {
         public:
         TDuplicateDefaultTopicConfig()
-            : TErrorBase("Compression config contains duplicate defaultTopic "
-                         "definition") {
+            : TErrorBase(
+                  "Compression config contains duplicate defaultTopic definition") {
         }
       };  // TDuplicateDefaultTopicConfig
 
@@ -190,8 +190,8 @@ namespace Dory {
       class TMissingDefaultTopic final : public TErrorBase {
         public:
         TMissingDefaultTopic()
-            : TErrorBase("Compression config is missing defaultTopic "
-                         "definition") {
+            : TErrorBase(
+                  "Compression config is missing defaultTopic definition") {
         }
       };  // TMissingDefaultTopic
 

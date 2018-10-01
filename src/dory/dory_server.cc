@@ -407,8 +407,8 @@ bool TDoryServer::StartMsgHandlingThreads() {
     syslog(LOG_NOTICE, "Starting UNIX datagram input agent");
 
     if (!UnixDgInputAgent->SyncStart()) {
-      syslog(LOG_NOTICE, "Server shutting down due to error starting UNIX "
-          "datagram input agent");
+      syslog(LOG_NOTICE,
+          "Server shutting down due to error starting UNIX datagram input agent");
       return false;
     }
   }
@@ -418,8 +418,9 @@ bool TDoryServer::StartMsgHandlingThreads() {
     syslog(LOG_NOTICE, "Starting UNIX stream input agent");
 
     if (!UnixStreamInputAgent->SyncStart()) {
-      syslog(LOG_NOTICE, "Server shutting down due to error starting UNIX "
-          "stream input agent");
+      syslog(LOG_NOTICE,
+          "Server shutting down due to error starting UNIX stream input agent"
+      );
       return false;
     }
   }
@@ -429,8 +430,8 @@ bool TDoryServer::StartMsgHandlingThreads() {
     syslog(LOG_NOTICE, "Starting TCP input agent");
 
     if (!TcpInputAgent->SyncStart()) {
-      syslog(LOG_NOTICE, "Server shutting down due to error starting TCP "
-          "input agent");
+      syslog(LOG_NOTICE,
+          "Server shutting down due to error starting TCP input agent");
       return false;
     }
   }
@@ -460,16 +461,17 @@ static void ReportStreamClientWorkerErrors(
       /* TODO: Consider adding individual rate limits for different error
          types. */
       if (lim.Test()) {
-        syslog(LOG_ERR, "Stream input connection handler terminated on error: "
-            "%s", x.what());
+        syslog(LOG_ERR,
+            "Stream input connection handler terminated on error: %s",
+            x.what());
       }
     } catch (...) {
       StreamClientWorkerUnknownException.Increment();
       static TLogRateLimiter lim(std::chrono::seconds(30));
 
       if (lim.Test()) {
-        syslog(LOG_ERR, "Stream input connection handler terminated on "
-            "unknown error");
+        syslog(LOG_ERR,
+            "Stream input connection handler terminated on unknown error");
       }
     }
   }
@@ -535,28 +537,28 @@ bool TDoryServer::HandleEvents() {
 
     if (unix_dg_input_agent_error.revents) {
       assert(UnixDgInputAgent.IsKnown());
-      syslog(LOG_ERR, "Main thread detected UNIX datagram input agent "
-          "termination on fatal error");
+      syslog(LOG_ERR,
+          "Main thread detected UNIX datagram input agent termination on fatal error");
       fatal_error = true;
     }
 
     if (unix_stream_input_agent_error.revents) {
       assert(UnixStreamInputAgent.IsKnown());
-      syslog(LOG_ERR, "Main thread detected UNIX stream input agent "
-          "termination on fatal error");
+      syslog(LOG_ERR,
+          "Main thread detected UNIX stream input agent termination on fatal error");
       fatal_error = true;
     }
 
     if (tcp_input_agent_error.revents) {
       assert(TcpInputAgent.IsKnown());
-      syslog(LOG_ERR, "Main thread detected TCP input agent termination on "
-          "fatal error");
+      syslog(LOG_ERR,
+          "Main thread detected TCP input agent termination on fatal error");
       fatal_error = true;
     }
 
     if (router_thread_error.revents) {
-      syslog(LOG_ERR, "Main thread detected router thread termination on "
-          "fatal error");
+      syslog(LOG_ERR,
+          "Main thread detected router thread termination on fatal error");
       fatal_error = true;
     }
 
@@ -627,8 +629,9 @@ void TDoryServer::DiscardFinalMsgs(std::list<TMsg::TPtr> &msg_list) {
         static TLogRateLimiter lim(std::chrono::seconds(30));
 
         if (lim.Test()) {
-          syslog(LOG_ERR, "Main thread discarding queued message on server "
-              "shutdown: topic [%s]", msg->GetTopic().c_str());
+          syslog(LOG_ERR,
+              "Main thread discarding queued message on server shutdown: topic [%s]",
+              msg->GetTopic().c_str());
         }
       }
 
