@@ -48,7 +48,7 @@ namespace Base {
           }
         }
 
-     Note that deferencing an unknown TOpt<> is illegal.  You can, however,
+     Note that dereferencing an unknown TOpt<> is illegal.  You can, however,
      call MakeKnown() to force an unknown TOpt<TVal> to construct a TVal if it
      doesn't already have one.
 
