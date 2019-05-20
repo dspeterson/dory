@@ -6,3 +6,6 @@
 *~
 out
 .sconsign.dblite
+.idea
+CMakeLists.txt
+cmake-build-debug
