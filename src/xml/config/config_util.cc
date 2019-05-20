@@ -377,6 +377,16 @@ static uint32_t ExtractMultiplier(std::string &value, unsigned int opts) {
   return mult;
 }
 
+template <typename T, bool SIGNED = std::is_signed<T>::value>
+struct TConversionTraits {
+  using TInvalidIntegerError = TInvalidSignedIntegerAttr;
+};
+
+template <typename T>
+struct TConversionTraits<T, false> {
+  using TInvalidIntegerError = TInvalidUnsignedIntegerAttr;
+};
+
 template <typename T>
 static T AttrToInt(const std::string &attr, const DOMElement &elem,
     const char *attr_name, unsigned int opts) {
@@ -387,11 +397,8 @@ static T AttrToInt(const std::string &attr, const DOMElement &elem,
   try {
     value = boost::lexical_cast<T>(attr_copy);
   } catch (const boost::bad_lexical_cast &) {
-    if (std::is_signed<T>::value) {
-      throw TInvalidSignedIntegerAttr(elem, attr_name, attr.c_str());
-    } else {
-      throw TInvalidUnsignedIntegerAttr(elem, attr_name, attr.c_str());
-    }
+    throw typename TConversionTraits<T>::TInvalidIntegerError(elem, attr_name,
+        attr.c_str());
   }
 
   if ((value < (std::numeric_limits<T>::min() / mult)) ||
@@ -403,49 +410,8 @@ static T AttrToInt(const std::string &attr, const DOMElement &elem,
 }
 
 template <typename T>
-static TOpt<T> GetOpt64BitIntAttr(const DOMElement &elem,
-    const char *attr_name, const char *empty_value_name, unsigned int opts) {
-  assert(&elem);
-  assert(attr_name);
-  using TOpts = TAttrReader::TOpts;
-  assert(opts == (opts & (TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE |
-      TOpts::ALLOW_K | TOpts::ALLOW_M)));
-  TOpt<T> result;
-  TOpt<std::string> opt_s = TAttrReader::GetOptString(elem, attr_name,
-      TOpts::TRIM_WHITESPACE);
-
-  if (opt_s.IsUnknown()) {
-    if (opts & TOpts::REQUIRE_PRESENCE) {
-      throw TMissingAttrValue(elem, attr_name);
-    }
-  } else {
-    std::string s(std::move(*opt_s));
-
-    if (s.empty()) {
-      if (empty_value_name && (opts & TOpts::STRICT_EMPTY_VALUE)) {
-        throw TMissingAttrValue(elem, attr_name);
-      }
-    } else if (!empty_value_name || (s != empty_value_name)) {
-      result.MakeKnown(AttrToInt<T>(s, elem, attr_name, opts));
-    }
-  }
-
-  return result;
-}
-
-TOpt<uint64_t> TAttrReader::GetOptUint64(const DOMElement &elem,
-    const char *attr_name, const char *empty_value_name, unsigned int opts) {
-  return GetOpt64BitIntAttr<uint64_t>(elem, attr_name, empty_value_name, opts);
-}
-
-TOpt<int64_t> TAttrReader::GetOptInt64(const DOMElement &elem,
-    const char *attr_name, const char *empty_value_name, unsigned int opts) {
-  return GetOpt64BitIntAttr<int64_t>(elem, attr_name, empty_value_name, opts);
-}
-
-template <typename T>
-static T Get64BitIntAttr(const DOMElement &elem,
-    const char *attr_name, unsigned int opts) {
+static T GetIntMaxAttr(const DOMElement &elem, const char *attr_name,
+    unsigned int opts) {
   assert(&elem);
   assert(attr_name);
   using TOpts = TAttrReader::TOpts;
@@ -455,12 +421,69 @@ static T Get64BitIntAttr(const DOMElement &elem,
   return AttrToInt<T>(s, elem, attr_name, opts);
 }
 
-uint64_t TAttrReader::GetUint64(const DOMElement &elem, const char *attr_name,
-    unsigned int opts) {
-  return Get64BitIntAttr<uint64_t>(elem, attr_name, opts);
+template <>
+intmax_t TAttrReader::GetIntHelper<intmax_t>(const DOMElement &elem,
+    const char *attr_name, unsigned int opts) {
+  return GetIntMaxAttr<intmax_t>(elem, attr_name, opts);
 }
 
-int64_t TAttrReader::GetInt64(const DOMElement &elem, const char *attr_name,
-    unsigned int opts) {
-  return Get64BitIntAttr<int64_t>(elem, attr_name, opts);
+template <>
+uintmax_t TAttrReader::GetIntHelper<uintmax_t>(const DOMElement &elem,
+    const char *attr_name, unsigned int opts) {
+  return GetIntMaxAttr<uintmax_t>(elem, attr_name, opts);
+}
+
+TOpt<std::string> GetOptInAttrHelper(const DOMElement &elem,
+    const char *attr_name, const char *empty_value_name, unsigned int opts) {
+  assert(&elem);
+  assert(attr_name);
+  using TOpts = TAttrReader::TOpts;
+  assert(opts == (opts & (TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE |
+      TOpts::ALLOW_K | TOpts::ALLOW_M)));
+  TOpt<std::string> opt_s = TAttrReader::GetOptString(elem, attr_name,
+      TOpts::TRIM_WHITESPACE);
+
+  if (opt_s.IsUnknown()) {
+    if (opts & TOpts::REQUIRE_PRESENCE) {
+      throw TMissingAttrValue(elem, attr_name);
+    }
+  } else {
+    if (opt_s->empty()) {
+      if (empty_value_name && (opts & TOpts::STRICT_EMPTY_VALUE)) {
+        throw TMissingAttrValue(elem, attr_name);
+      }
+    } else if (!empty_value_name || (*opt_s != empty_value_name)) {
+      return opt_s;
+    }
+
+    opt_s.Reset();
+  }
+
+  return opt_s;
+}
+
+template <typename T>
+TOpt<T> GetOptIntMaxAttr(const DOMElement &elem, const char *attr_name,
+    const char *empty_value_name, unsigned int opts) {
+  TOpt<T> result;
+  TOpt<std::string> opt_attr_str = GetOptInAttrHelper(elem, attr_name,
+      empty_value_name, opts);
+
+  if (opt_attr_str.IsKnown()) {
+    result.MakeKnown(AttrToInt<T>(*opt_attr_str, elem, attr_name, opts));
+  }
+
+  return result;
+}
+
+template <>
+TOpt<intmax_t> TAttrReader::GetOptIntHelper<intmax_t>(const DOMElement &elem,
+    const char *attr_name, const char *empty_value_name, unsigned int opts) {
+  return GetOptIntMaxAttr<intmax_t>(elem, attr_name, empty_value_name, opts);
+}
+
+template <>
+TOpt<uintmax_t> TAttrReader::GetOptIntHelper<uintmax_t>(const DOMElement &elem,
+    const char *attr_name, const char *empty_value_name, unsigned int opts) {
+  return GetOptIntMaxAttr<uintmax_t>(elem, attr_name, empty_value_name, opts);
 }

@@ -23,6 +23,7 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
@@ -196,7 +197,7 @@ namespace Xml {
       static typename Base::TOpt<T> GetOptInt(const xercesc::DOMElement &elem,
           const char *attr_name, unsigned int opts = 0) {
         assert(opts == (opts & (REQUIRE_PRESENCE | ALLOW_K | ALLOW_M)));
-        return GetOptIntCommon<T>(elem, attr_name, nullptr, opts);
+        return GetOptIntHelper<T>(elem, attr_name, nullptr, opts);
       }
 
       /* Get an optional integer value, whose type is specified by T.
@@ -214,7 +215,7 @@ namespace Xml {
         assert(empty_value_name);
         assert(opts == (opts &
             (REQUIRE_PRESENCE | STRICT_EMPTY_VALUE | ALLOW_K | ALLOW_M)));
-        return GetOptIntCommon<T>(elem, attr_name, empty_value_name, opts);
+        return GetOptIntHelper<T>(elem, attr_name, empty_value_name, opts);
       }
 
       /* Get a required integer value, whose type is specified by T.  Throw
@@ -229,125 +230,90 @@ namespace Xml {
             !std::is_same<T, bool>::value,
             "Type parameter must be integral and not bool");
 
-        if (std::is_same<T, int64_t>::value) {
-          return GetInt64(elem, attr_name, opts);
-        }
-
-        if (std::is_same<T, uint64_t>::value) {
-          return GetUint64(elem, attr_name, opts);
-        }
-
-        if (std::is_signed<T>::value) {
-          return GetSignedInt<T>(elem, attr_name, opts);
-        }
-
-        return GetUnsignedInt<T>(elem, attr_name, opts);
+        return GetIntHelper<T>(elem, attr_name, opts);
       }
 
       private:
-      template <typename T>
-      static T GetSignedInt(const xercesc::DOMElement &elem,
-          const char *attr_name, unsigned int opts) {
-        int64_t value = GetInt64(elem, attr_name, opts);
-        T result = static_cast<T>(value);
+      template <typename T, bool SIGNED = std::is_signed<T>::value>
+      struct TIntegerTraits {
+        using TWidest = intmax_t;
+      };
 
-        if (static_cast<int64_t>(result) != value) {
+      template <typename T>
+      struct TIntegerTraits<T, false> {
+        using TWidest = uintmax_t;
+      };
+
+      template <typename NARROW, typename WIDE>
+      static NARROW narrow_cast(WIDE wide, const xercesc::DOMElement &elem,
+          const char *attr_name) {
+        NARROW result = static_cast<NARROW>(wide);
+
+        if (static_cast<WIDE>(result) != wide) {
           throw TAttrOutOfRange(elem, attr_name,
-              boost::lexical_cast<std::string>(value).c_str());
+              boost::lexical_cast<std::string>(wide).c_str());
         }
 
         return result;
       }
 
+      // Base template handles integral types other than intmax_t and
+      // uintmax_t.
       template <typename T>
-      static T GetUnsignedInt(const xercesc::DOMElement &elem,
+      static T GetIntHelper(const xercesc::DOMElement &elem,
           const char *attr_name, unsigned int opts) {
-        uint64_t value = GetUint64(elem, attr_name, opts);
-        T result = static_cast<T>(value);
+        using TWidest = typename TIntegerTraits<T>::TWidest;
 
-        if (static_cast<uint64_t>(result) != value) {
-          throw TAttrOutOfRange(elem, attr_name,
-              boost::lexical_cast<std::string>(value).c_str());
-        }
+        // This calls a specialization.  It does not recurse.
+        TWidest value = GetIntHelper<TWidest>(elem, attr_name, opts);
 
-        return result;
+        return narrow_cast<T>(value, elem, attr_name);
       }
 
-      static Base::TOpt<uint64_t> GetOptUint64(const xercesc::DOMElement &elem,
-          const char *attr_name, const char *empty_value_name,
-          unsigned int opts = 0);
-
-      static Base::TOpt<int64_t> GetOptInt64(const xercesc::DOMElement &elem,
-          const char *attr_name, const char *empty_value_name,
-          unsigned int opts = 0);
-
+      // Base template handles integral types other than intmax_t and
+      // uintmax_t.
       template <typename T>
-      static typename Base::TOpt<T> GetOptSignedInt(
-          const xercesc::DOMElement &elem, const char *attr_name,
-          const char *empty_value_name, unsigned int opts = 0) {
-        Base::TOpt<int64_t> opt_value = GetOptInt64(elem, attr_name,
-            empty_value_name, opts);
-        typename Base::TOpt<T> result;
-
-        if (opt_value.IsKnown()) {
-          int64_t value = *opt_value;
-          T narrowed = static_cast<T>(value);
-
-          if (static_cast<int64_t>(narrowed) != value) {
-            throw TAttrOutOfRange(elem, attr_name,
-                boost::lexical_cast<std::string>(value).c_str());
-          }
-
-          result.MakeKnown(narrowed);
-        }
-
-        return result;
-      }
-
-      template <typename T>
-      static typename Base::TOpt<T> GetOptUnsignedInt(
-          const xercesc::DOMElement &elem, const char *attr_name,
-          const char *empty_value_name, unsigned int opts = 0) {
-        Base::TOpt<uint64_t> opt_value = GetOptUint64(elem, attr_name,
-            empty_value_name, opts);
-        typename Base::TOpt<T> result;
-
-        if (opt_value.IsKnown()) {
-          uint64_t value = *opt_value;
-          T narrowed = static_cast<T>(value);
-
-          if (static_cast<uint64_t>(narrowed) != value) {
-            throw TAttrOutOfRange(elem, attr_name,
-                boost::lexical_cast<std::string>(value).c_str());
-          }
-
-          result.MakeKnown(narrowed);
-        }
-
-        return result;
-      }
-
-      template <typename T>
-      static typename Base::TOpt<T> GetOptIntCommon(
+      static typename Base::TOpt<T> GetOptIntHelper(
           const xercesc::DOMElement &elem, const char *attr_name,
           const char *empty_value_name, unsigned int opts = 0) {
         static_assert(std::is_integral<T>::value &&
             !std::is_same<T, bool>::value,
             "Type parameter must be integral and not bool");
+        using TWidest = typename TIntegerTraits<T>::TWidest;
 
-        if (std::is_signed<T>::value) {
-          return GetOptSignedInt<T>(elem, attr_name, empty_value_name, opts);
+        // This calls a specialization.  It does not recurse.
+        Base::TOpt<TWidest> opt_value = GetOptIntHelper<TWidest>(elem,
+            attr_name, empty_value_name, opts);
+
+        typename Base::TOpt<T> result;
+
+        if (opt_value.IsKnown()) {
+          result.MakeKnown(narrow_cast<T>(*opt_value, elem, attr_name));
         }
 
-        return GetOptUnsignedInt<T>(elem, attr_name, empty_value_name, opts);
+        return result;
       }
-
-      static uint64_t GetUint64(const xercesc::DOMElement &elem,
-          const char *attr_name, unsigned int opts = 0);
-
-      static int64_t GetInt64(const xercesc::DOMElement &elem,
-          const char *attr_name, unsigned int opts = 0);
     };  // TAttrReader
+
+    template <>
+    intmax_t TAttrReader::GetIntHelper<intmax_t>(
+        const xercesc::DOMElement &elem, const char *attr_name,
+        unsigned int opts);
+
+    template <>
+    uintmax_t TAttrReader::GetIntHelper<uintmax_t>(
+        const xercesc::DOMElement &elem, const char *attr_name,
+        unsigned int opts);
+
+    template <>
+    Base::TOpt<intmax_t> TAttrReader::GetOptIntHelper<intmax_t>(
+        const xercesc::DOMElement &elem, const char *attr_name,
+        const char *empty_value_name, unsigned int opts);
+
+    template <>
+    Base::TOpt<uintmax_t> TAttrReader::GetOptIntHelper<uintmax_t>(
+        const xercesc::DOMElement &elem, const char *attr_name,
+        const char *empty_value_name, unsigned int opts);
 
   }  // Config
 
