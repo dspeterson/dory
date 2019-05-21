@@ -434,15 +434,21 @@ bool TConnector::HandleSockWriteReady() {
      partially sent one. */
   if (!SendInProgress()) {
     std::vector<uint8_t> buf(SendBuf.TakeStorage());
-    CurrentRequest = RequestFactory.BuildRequest(buf);
 
-    if (CurrentRequest.IsUnknown()) {
+    // Assigning directly to CurrentRequest would be simpler, but causes a
+    // build error on Ubuntu 15, Ubuntu 16, and Debian 8.
+    TOpt<TProduceRequest> r = RequestFactory.BuildRequest(buf);
+
+    if (r.IsUnknown()) {
       assert(false);
       syslog(LOG_ERR, "Bug!!! Produce request is empty");
       BugProduceRequestEmpty.Increment();
+      CurrentRequest.Reset();
       return true;
     }
 
+    CurrentRequest.Reset();
+    CurrentRequest.MakeKnown(std::move(*r));
     SendBuf = std::move(buf);
     assert(!SendBuf.DataIsEmpty());
   }
