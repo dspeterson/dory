@@ -91,8 +91,8 @@ Code contributions for clients in other programming languages are much
 appreciated.  Technical details on how to send messages to Dory are provided
 [here](doc/sending_messages.md).  Support for [running Dory inside a Docker
 container](Docker) is also available.  Dory requires at least version 0.8 of
-Kafka, and has been tested on versions 0.11, 0.10, 0.9, and 0.8.  It runs on
-Linux, and has been tested on CentOS (versions 7 and 6.8), Ubuntu (versions
+Kafka, and has been tested on versions 2.2, 0.11, 0.10, 0.9, and 0.8.  It runs
+on Linux, and has been tested on CentOS (versions 7 and 6.8), Ubuntu (versions
 18.04, 17.04, 16.04 LTS, 15.04, and 14.04.1 LTS), and Debian (version 8).
 
 Dory is the successor to [Bruce](https://github.com/ifwe/bruce), and is
