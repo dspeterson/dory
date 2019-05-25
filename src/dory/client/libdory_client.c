@@ -123,8 +123,7 @@ static int init_client_addr(struct sockaddr_un *client_addr) {
   /* Create temporary filename that client will bind() its socket to.  This is
      the equivalent of an ephemeral port for UNIX domain sockets. */
   for (; ; ) {
-    strncpy(&client_path[0], client_path_template,
-            sizeof(client_path_template));
+    strncpy(&client_path[0], client_path_template, sizeof(client_path));
     tmp_fd = mkstemp(&client_path[0]);
 
     if (tmp_fd >= 0) {
