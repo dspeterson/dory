@@ -205,6 +205,7 @@ namespace {
     servaddr.sun_family = AF_LOCAL;
     assert(std::strlen(path) < sizeof(servaddr.sun_path));
     std::strncpy(servaddr.sun_path, path, sizeof(servaddr.sun_path));
+    servaddr.sun_path[sizeof(servaddr.sun_path) - 1] = '\0';
     IfLt0(connect(fd, reinterpret_cast<struct sockaddr *>(&servaddr),
         sizeof(servaddr)));
     return fd;

@@ -4084,6 +4084,16 @@ void mg_stop(struct mg_context *ctx) {
 #endif // _WIN32
 }
 
+static void * master_thread_wrapper(void *ctx) {
+  master_thread((struct mg_context *) ctx);
+  return NULL;
+}
+
+static void * worker_thread_wrapper(void *ctx) {
+  worker_thread((struct mg_context *) ctx);
+  return NULL;
+}
+
 struct mg_context *mg_start(mg_callback_t user_callback, void *user_data,
                             const char **options) {
   struct mg_context *ctx;
@@ -4153,11 +4163,11 @@ struct mg_context *mg_start(mg_callback_t user_callback, void *user_data,
   (void) pthread_cond_init(&ctx->sq_full, NULL);
 
   // Start master (listening) thread
-  start_thread(ctx, (mg_thread_func_t) master_thread, ctx);
+  start_thread(ctx, master_thread_wrapper, ctx);
 
   // Start worker threads
   for (i = 0; i < atoi(ctx->config[NUM_THREADS]); i++) {
-    if (start_thread(ctx, (mg_thread_func_t) worker_thread, ctx) != 0) {
+    if (start_thread(ctx, worker_thread_wrapper, ctx) != 0) {
       cry(fc(ctx), "Cannot start worker thread: %d", ERRNO);
     } else {
       ctx->num_threads++;
