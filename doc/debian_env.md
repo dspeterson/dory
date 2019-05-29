@@ -21,8 +21,9 @@ sudo apt-get install libboost-dev
 sudo apt-get install libsnappy-dev
 ```
 On Debian 8, you may instead have to use the `dpkg -i <some package>.deb`
-command to install the packages from the [DVD images for installing Debian]
-(https://www.debian.org/CD/http-ftp/) as follows:
+command to install the packages from the
+[DVD images for installing Debian](https://www.debian.org/CD/http-ftp/) as
+follows:
 
 * Scons.  For instance, you can install the following package from the Debian
   8.2.0 DVD #2: `pool/main/s/scons/scons_2.3.1-2_all.deb`
