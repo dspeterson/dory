@@ -17,8 +17,8 @@ Then install Scons, Boost C++ libraries, and the Snappy compression library.
 Depending on the version of Debian, you may be able to do the following:
 ```
 sudo apt-get install scons
-sudo apt-get install libsnappy-dev
 sudo apt-get install libboost-dev
+sudo apt-get install libsnappy-dev
 ```
 On Debian 8, you may instead have to use the `dpkg -i <some package>.deb`
 command to install the packages from the [DVD images for installing Debian]
