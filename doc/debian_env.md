@@ -1,4 +1,4 @@
-## Setting Up a Debian Build Environment (version 9 or 8)
+## Setting Up a Debian Build Environment (versions 9 and 8)
 
 These instructions are based on limited familiarity with Debian, and can
 probably be improved a lot.  Suggestions for improvements would be appreciated.
