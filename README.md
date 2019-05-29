@@ -111,7 +111,7 @@ To get Dory working, you need to set up a build environment.  Currently,
 instructions are available for [CentOS 7](doc/centos_7_env.md),
 [CentOS 6.8](doc/centos_6_8_env.md),
 [Ubuntu (19.04, 18.04, 17.04, 16.04 LTS, 15.04, and 14.04.1 LTS)](doc/ubuntu_env.md),
-and [Debian (version 9 or 8)](doc/debian_env.md).
+and [Debian (versions 9 and 8)](doc/debian_env.md).
 
 ## Building and Installing Dory
 
