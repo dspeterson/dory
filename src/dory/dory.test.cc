@@ -46,7 +46,6 @@
 #include <base/opt.h>
 #include <base/time_util.h>
 #include <base/tmp_file.h>
-#include <base/tmp_file_name.h>
 #include <capped/pool.h>
 #include <dory/anomaly_tracker.h>
 #include <dory/client/client_sender_base.h>
@@ -112,13 +111,15 @@ namespace {
     void UseUnixDgSocket() {
       assert(this);
       assert(!IsStarted());
-      UnixDgSocketName.MakeKnown();
+      UnixDgSocketName.MakeKnown(
+          MakeTmpFilename("/tmp/dory_test_dg_sock.XXXXXX"));
     }
 
     void UseUnixStreamSocket() {
       assert(this);
       assert(!IsStarted());
-      UnixStreamSocketName.MakeKnown();
+      UnixStreamSocketName.MakeKnown(
+          MakeTmpFilename("/tmp/dory_test_stream_sock.XXXXXX"));
     }
 
     void UseTcpInputSocket() {
@@ -128,40 +129,13 @@ namespace {
 
     const char *GetUnixDgSocketName() const {
       assert(this);
-
-      /* Warning: Don't try to shorten the code below to this:
-
-             return UnixDgSocketName.IsKnown() ?
-                 *UnixDgSocketName : nullptr;
-
-         It has been observed to cause creation and destruction of a temporary
-         TTmpFileName object, returning a pointer to the filename inside the
-         destroyed object. */
-
-      if (UnixDgSocketName.IsUnknown()) {
-        return nullptr;
-      }
-
-      return *UnixDgSocketName;
+      return UnixDgSocketName.IsKnown() ? UnixDgSocketName->c_str() : nullptr;
     }
 
     const char *GetUnixStreamSocketName() const {
       assert(this);
-
-      /* Warning: Don't try to shorten the code below to this:
-
-             return UnixStreamSocketName.IsKnown() ?
-                 *UnixStreamSocketName : nullptr;
-
-         It has been observed to cause creation and destruction of a temporary
-         TTmpFileName object, returning a pointer to the filename inside the
-         destroyed object. */
-
-      if (UnixStreamSocketName.IsUnknown()) {
-        return nullptr;
-      }
-
-      return *UnixStreamSocketName;
+      return UnixStreamSocketName.IsKnown() ?
+          UnixStreamSocketName->c_str() : nullptr;
     }
 
     in_port_t GetInputPort() const {
@@ -193,9 +167,9 @@ namespace {
     virtual void Run() override;
 
     private:
-    TOpt<TTmpFileName> UnixDgSocketName;
+    TOpt<std::string> UnixDgSocketName;
 
-    TOpt<TTmpFileName> UnixStreamSocketName;
+    TOpt<std::string> UnixStreamSocketName;
 
     bool TcpInputActive = false;
 
@@ -217,8 +191,8 @@ namespace {
 
   bool TDoryTestServer::SyncStart() {
     assert(this);
-    TTmpFile tmp_file;
-    tmp_file.SetDeleteOnDestroy(true);
+    TTmpFile tmp_file("/tmp/dory_test_server.XXXXXX",
+        true /* delete_on_destroy */);
     std::ofstream ofs(tmp_file.GetName());
     ofs << DoryConf;
     ofs.close();
@@ -227,18 +201,18 @@ namespace {
     std::vector<const char *> args;
     args.push_back("dory");
     args.push_back("--config_path");
-    args.push_back(tmp_file.GetName());
+    args.push_back(tmp_file.GetName().c_str());
     args.push_back("--msg_buffer_max");
     args.push_back(msg_buffer_max_str.c_str());
 
     if (UnixDgSocketName.IsKnown()) {
       args.push_back("--receive_socket_name");
-      args.push_back(*UnixDgSocketName);
+      args.push_back(UnixDgSocketName->c_str());
     }
 
     if (UnixStreamSocketName.IsKnown()) {
       args.push_back("--receive_stream_socket_name");
-      args.push_back(*UnixStreamSocketName);
+      args.push_back(UnixStreamSocketName->c_str());
     }
 
     if (TcpInputActive) {

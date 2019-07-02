@@ -49,8 +49,8 @@ namespace {
   };  // TSetupTest
 
   TEST_F(TSetupTest, Test1) {
-    TTmpFile tmp_file;
-    tmp_file.SetDeleteOnDestroy(true);
+    TTmpFile tmp_file("/tmp/mock_kafka_server_setup_test.XXXXXX",
+        true /* delete_on_destroy */);
     std::ofstream ofs(tmp_file.GetName());
     ofs << "   # this is a comment" << std::endl
         << std::endl
@@ -63,11 +63,10 @@ namespace {
         << "     " << std::endl;
     ofs.close();
     TSetup::TInfo info;
-    std::string filename(tmp_file.GetName());
     bool threw = false;
 
     try {
-      TSetup().Get(filename, info);
+      TSetup().Get(tmp_file.GetName(), info);
     } catch (const std::exception &x) {
       threw = true;
     }
@@ -97,8 +96,8 @@ namespace {
   }
 
   TEST_F(TSetupTest, Test2) {
-    TTmpFile tmp_file;
-    tmp_file.SetDeleteOnDestroy(true);
+    TTmpFile tmp_file("/tmp/mock_kafka_server_setup_test.XXXXXX",
+        true /* delete_on_destroy */);
     std::ofstream ofs(tmp_file.GetName());
     ofs << "   # this is a comment" << std::endl
         << std::endl
@@ -115,11 +114,10 @@ namespace {
         << "     " << std::endl;
     ofs.close();
     TSetup::TInfo info;
-    std::string filename(tmp_file.GetName());
     bool threw = false;
 
     try {
-      TSetup().Get(filename, info);
+      TSetup().Get(tmp_file.GetName(), info);
     } catch (const std::exception &x) {
       threw = true;
     }

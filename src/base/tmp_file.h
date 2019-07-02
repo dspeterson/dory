@@ -2,6 +2,7 @@
 
    ----------------------------------------------------------------------------
    Copyright 2013 if(we)
+   Copyright 2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -22,7 +23,7 @@
 #pragma once
 
 #include <cassert>
-#include <vector>
+#include <string>
 
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
@@ -33,13 +34,13 @@ namespace Base {
     NO_COPY_SEMANTICS(TTmpFile);
 
     public:
-    explicit TTmpFile(const char *name_template = "/tmp/dory_tmp.XXXXXX",
-        bool delete_on_destroy = false);
+    /* name_template must adhere to the format specified by mkstemps(). */
+    TTmpFile(const char *name_template, bool delete_on_destroy);
 
     ~TTmpFile();
 
-    const char *GetName() const {
-      return &Name[0];
+    const std::string &GetName() const {
+      return Name;
     }
 
     const TFd &GetFd() const {
@@ -51,12 +52,8 @@ namespace Base {
     }
 
     private:
-    /* Name of the temporary file. This is a std::vector<char> instead of a
-       std::string, because the data gets passed to mkstemps() call which
-       modifies the data we pass it.  std::string's data() function returns a
-       const pointer, which if we const_cast<> it away we land in undefined
-       behavior. */
-    std::vector<char> Name;
+    /* Name of the temporary file. */
+    std::string Name;
 
     /* Whether we unlink the file on destruction of the object or not. */
     bool DeleteOnDestroy;
@@ -64,5 +61,9 @@ namespace Base {
     /* Fd associated to the file. */
     TFd Fd;
   };  // TTmpFile
+
+  /* Return a unique filename but leave the file uncreated.  name_template must
+     adhere to the format specified by mkstemps(). */
+  std::string MakeTmpFilename(const char *name_template);
 
 }  // Base

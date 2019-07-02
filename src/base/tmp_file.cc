@@ -2,6 +2,7 @@
 
    ----------------------------------------------------------------------------
    Copyright 2013 if(we)
+   Copyright 2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -23,6 +24,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <vector>
 
 #include <unistd.h>
 
@@ -31,9 +33,8 @@
 using namespace Base;
 
 TTmpFile::TTmpFile(const char *name_template, bool delete_on_destroy)
-    : Name(name_template, name_template + std::strlen(name_template) + 1),
-      DeleteOnDestroy(delete_on_destroy) {
-  size_t len = std::strlen(name_template);
+    : DeleteOnDestroy(delete_on_destroy) {
+  const size_t len = std::strlen(name_template);
 
   /* Number of consecutive 'X' chars found. */
   size_t x_count = 0;
@@ -62,13 +63,20 @@ TTmpFile::TTmpFile(const char *name_template, bool delete_on_destroy)
   assert((len - i) >= 6);
 
   /* Compute # of remaining chars after "XXXXXX". */
-  size_t suffix_len = len - i - 6;
+  const size_t suffix_len = len - i - 6;
 
-  Fd = IfLt0(mkstemps(&Name[0], static_cast<int>(suffix_len)));
+  std::vector<char> name_buf(name_template, name_template + len + 1);
+  Fd = IfLt0(mkstemps(&name_buf[0], static_cast<int>(suffix_len)));
+  Name = &name_buf[0];
 }
 
 TTmpFile::~TTmpFile() {
   if (DeleteOnDestroy) {
-    unlink(&Name[0]);
+    unlink(Name.c_str());
   }
+}
+
+std::string Base::MakeTmpFilename(const char *name_template) {
+  TTmpFile tmp_file(name_template, true /* delete_on_destroy */);
+  return tmp_file.GetName();
 }

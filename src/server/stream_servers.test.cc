@@ -329,9 +329,9 @@ namespace {
 
   TEST_F(TStreamServerTest, UnixStreamTest) {
     std::list<TConnectionWorker> workers;
-    TTmpFile tmp_file;
-    tmp_file.SetDeleteOnDestroy(true);
-    TUnixStreamServer server(16, tmp_file.GetName(),
+    TTmpFile tmp_file("/tmp/stream_server_test.XXXXXX",
+        true /* delete_on_destroy */);
+    TUnixStreamServer server(16, tmp_file.GetName().c_str(),
         std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>(
             new TTestServerConnectionHandler(workers)),
         [](const char *) noexcept {
@@ -347,8 +347,8 @@ namespace {
     ASSERT_TRUE(server.IsStarted());
 
     {
-      TFd sock_1 = UnixStreamConnect(tmp_file.GetName());
-      TFd sock_2 = UnixStreamConnect(tmp_file.GetName());
+      TFd sock_1 = UnixStreamConnect(tmp_file.GetName().c_str());
+      TFd sock_2 = UnixStreamConnect(tmp_file.GetName().c_str());
       int input[2] = { 2, 3 };
       ASSERT_TRUE(TryWriteExactly(sock_1, input, sizeof(input)));
       int output = 0;

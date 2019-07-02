@@ -43,6 +43,7 @@ using namespace Base;
 using namespace Log;
 
 namespace {
+  const char name_template[] = "/tmp/log_test.XXXXXX";
 
   int Foo() {
     static int value = 0;
@@ -65,12 +66,9 @@ namespace {
   };  // TLogTest
 
   TEST_F(TLogTest, BasicLoggingTest) {
-    TTmpFile stdout_file("/tmp/dory_tmp.XXXXXX", true /* delete_on_destroy */);
-    TTmpFile stderr_file("/tmp/dory_tmp.XXXXXX", true /* delete_on_destroy */);
-    TTmpFile tmp_file("/tmp/dory_tmp.XXXXXX", true /* delete_on_destroy */);
-    std::string stdout_filename{stdout_file.GetName()};
-    std::string stderr_filename{stderr_file.GetName()};
-    std::string log_filename{tmp_file.GetName()};
+    TTmpFile stdout_file(name_template, true /* delete_on_destroy */);
+    TTmpFile stderr_file(name_template, true /* delete_on_destroy */);
+    TTmpFile tmp_file(name_template, true /* delete_on_destroy */);
     int saved_stdout = IfLt0(dup(1));
     int saved_stderr = IfLt0(dup(2));
     IfLt0(dup2(stdout_file.GetFd(), 1));
@@ -78,7 +76,7 @@ namespace {
     SetLogMask(UpTo(TPri::NOTICE));
 
     SetLogWriter(false /* enable_stdout_stderr */, false /* enable_syslog */,
-        log_filename);
+        tmp_file.GetName());
     std::string msg1("first message ");
     std::string msg2("second message ");
     std::string msg3("third message ");
@@ -99,11 +97,11 @@ namespace {
     IfLt0(close(saved_stdout));
     IfLt0(close(saved_stderr));
     std::string stdout_contents =
-        TFileReader(stdout_filename.c_str()).ReadIntoString();
+        TFileReader(stdout_file.GetName().c_str()).ReadIntoString();
     std::string stderr_contents =
-        TFileReader(stderr_filename.c_str()).ReadIntoString();
+        TFileReader(stderr_file.GetName().c_str()).ReadIntoString();
     std::string file_contents =
-        TFileReader(log_filename.c_str()).ReadIntoString();
+        TFileReader(tmp_file.GetName().c_str()).ReadIntoString();
     std::ostringstream os;
     ASSERT_EQ(stdout_contents, std::string());
     ASSERT_EQ(stderr_contents, std::string());
@@ -112,10 +110,8 @@ namespace {
   }
 
   TEST_F(TLogTest, StdoutStderrTest) {
-    TTmpFile stdout_file("/tmp/dory_tmp.XXXXXX", true /* delete_on_destroy */);
-    TTmpFile stderr_file("/tmp/dory_tmp.XXXXXX", true /* delete_on_destroy */);
-    std::string stdout_filename{stdout_file.GetName()};
-    std::string stderr_filename{stderr_file.GetName()};
+    TTmpFile stdout_file(name_template, true /* delete_on_destroy */);
+    TTmpFile stderr_file(name_template, true /* delete_on_destroy */);
     int saved_stdout = IfLt0(dup(1));
     int saved_stderr = IfLt0(dup(2));
     IfLt0(dup2(stdout_file.GetFd(), 1));
@@ -127,10 +123,9 @@ namespace {
     std::string msg2("should go to stderr");
     LOG(TPri::NOTICE) << msg1;
     LOG(TPri::WARNING) << msg2;
-    TTmpFile tmp_file("/tmp/dory_tmp.XXXXXX", true /* delete_on_destroy */);
-    std::string log_filename{tmp_file.GetName()};
+    TTmpFile tmp_file(name_template, true /* delete_on_destroy */);
     SetLogWriter(true /* enable_stdout_stderr */, false /* enable_syslog */,
-        log_filename);
+        tmp_file.GetName());
     std::string msg3("should go to stdout and file");
     std::string msg4("should go to stderr and file");
     LOG(TPri::NOTICE) << msg3;
@@ -140,9 +135,9 @@ namespace {
     IfLt0(close(saved_stdout));
     IfLt0(close(saved_stderr));
     std::string stdout_contents =
-        TFileReader(stdout_filename.c_str()).ReadIntoString();
+        TFileReader(stdout_file.GetName().c_str()).ReadIntoString();
     std::string stderr_contents =
-        TFileReader(stderr_filename.c_str()).ReadIntoString();
+        TFileReader(stderr_file.GetName().c_str()).ReadIntoString();
     std::ostringstream os1;
     os1 << msg1 << std::endl << msg3 << std::endl;
     std::ostringstream os2;
@@ -152,10 +147,8 @@ namespace {
   }
 
   TEST_F(TLogTest, NoLoggingTest) {
-    TTmpFile stdout_file("/tmp/dory_tmp.XXXXXX", true /* delete_on_destroy */);
-    TTmpFile stderr_file("/tmp/dory_tmp.XXXXXX", true /* delete_on_destroy */);
-    std::string stdout_filename{stdout_file.GetName()};
-    std::string stderr_filename{stderr_file.GetName()};
+    TTmpFile stdout_file(name_template, true /* delete_on_destroy */);
+    TTmpFile stderr_file(name_template, true /* delete_on_destroy */);
     int saved_stdout = IfLt0(dup(1));
     int saved_stderr = IfLt0(dup(2));
     IfLt0(dup2(stdout_file.GetFd(), 1));
@@ -172,19 +165,18 @@ namespace {
     IfLt0(close(saved_stdout));
     IfLt0(close(saved_stderr));
     std::string stdout_contents =
-        TFileReader(stdout_filename.c_str()).ReadIntoString();
+        TFileReader(stdout_file.GetName().c_str()).ReadIntoString();
     std::string stderr_contents =
-        TFileReader(stderr_filename.c_str()).ReadIntoString();
+        TFileReader(stderr_file.GetName().c_str()).ReadIntoString();
     ASSERT_EQ(stdout_contents, std::string());
     ASSERT_EQ(stderr_contents, std::string());
   }
 
   TEST_F(TLogTest, RateLimitTest) {
-    TTmpFile tmp_file("/tmp/dory_tmp.XXXXXX", true /* delete_on_destroy */);
-    std::string log_filename{tmp_file.GetName()};
+    TTmpFile tmp_file(name_template, true /* delete_on_destroy */);
     SetLogMask(UpTo(TPri::INFO));
     SetLogWriter(false /* enable_stdout_stderr */, false /* enable_syslog */,
-        log_filename);
+        tmp_file.GetName());
     std::cout << "This test should take about 10 seconds" << std::endl;
     auto start = std::chrono::steady_clock::now();
     decltype(start - start) limit(std::chrono::seconds(10));
@@ -194,7 +186,7 @@ namespace {
     }
 
     std::string file_contents =
-        TFileReader(log_filename.c_str()).ReadIntoString();
+        TFileReader(tmp_file.GetName().c_str()).ReadIntoString();
     size_t num_lines = std::count(file_contents.begin(), file_contents.end(),
         '\n');
 

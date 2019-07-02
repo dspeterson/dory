@@ -44,9 +44,11 @@ namespace Dory {
       bool KafkaStarted = false;
 
       public:
-      Base::TTmpFile SetupFile{"/tmp/dory_tmp.XXXXXX", true};
+      Base::TTmpFile SetupFile{"/tmp/mock_kafka_setup.XXXXXX",
+          true /* delete_on_destroy */};
 
-      Base::TTmpDir OutputDir{"/tmp/dory_tmp.XXXXXX", true};
+      Base::TTmpDir OutputDir{"/tmp/mock_kafka_output_dir.XXXXXX",
+          true /* delete_on_destroy */};
 
       std::vector<const char *> Args;
 

@@ -53,15 +53,16 @@ namespace {
     protected:
     TFileReaderTest()
         : FileContents("a bunch of junk"),
-          Reader(TmpFile.GetName()) {
-      TmpFile.SetDeleteOnDestroy(true);
+          TmpFile("/tmp/file_reader_test.XXXXXX",
+              true /* delete_on_destroy */),
+          Reader(TmpFile.GetName().c_str()) {
     }
 
     virtual ~TFileReaderTest() {
     }
 
     virtual void SetUp() {
-      std::ofstream f(TmpFile.GetName(), std::ios_base::out);
+      std::ofstream f(TmpFile.GetName().c_str(), std::ios_base::out);
       f << FileContents;
     }
 

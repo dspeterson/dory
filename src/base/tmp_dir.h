@@ -2,6 +2,7 @@
 
    ----------------------------------------------------------------------------
    Copyright 2013 if(we)
+   Copyright 2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -22,7 +23,7 @@
 #pragma once
 
 #include <cassert>
-#include <vector>
+#include <string>
 
 #include <base/no_copy_semantics.h>
 
@@ -32,14 +33,13 @@ namespace Base {
     NO_COPY_SEMANTICS(TTmpDir);
 
     public:
-    explicit TTmpDir(const char *name_template = "/tmp/dory_tmp.XXXXXX",
-        bool delete_on_destroy = false);
+    TTmpDir(const char *name_template, bool delete_on_destroy);
 
     ~TTmpDir();
 
-    const char *GetName() const {
+    const std::string &GetName() const {
       assert(this);
-      return &Name[0];
+      return Name;
     }
 
     void SetDeleteOnDestroy(bool delete_on_destroy) {
@@ -48,7 +48,7 @@ namespace Base {
     }
 
     private:
-    std::vector<char> Name;
+    std::string Name;
 
     bool DeleteOnDestroy;
   };  // TTmpDir

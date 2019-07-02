@@ -2,6 +2,7 @@
 
    ----------------------------------------------------------------------------
    Copyright 2013 if(we)
+   Copyright 2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -24,7 +25,7 @@
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
-#include <string>
+#include <vector>
 
 #include <unistd.h>
 
@@ -33,19 +34,21 @@
 using namespace Base;
 
 TTmpDir::TTmpDir(const char *name_template, bool delete_on_destroy)
-    : Name(1 + std::strlen(name_template)),
-      DeleteOnDestroy(delete_on_destroy) {
-  std::strncpy(&Name[0], name_template, Name.size());
+    : DeleteOnDestroy(delete_on_destroy) {
+  std::vector<char> name_buf(1 + std::strlen(name_template));
+  std::strncpy(&name_buf[0], name_template, name_buf.size());
 
-  if (mkdtemp(&Name[0]) == nullptr) {
+  if (mkdtemp(&name_buf[0]) == nullptr) {
     ThrowSystemError(errno);
   }
+
+  Name = &name_buf[0];
 }
 
 TTmpDir::~TTmpDir() {
   if (DeleteOnDestroy) {
     std::string cmd("/bin/rm -fr ");
-    cmd += &Name[0];
+    cmd += Name;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-result"
     std::system(cmd.c_str());

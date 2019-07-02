@@ -41,9 +41,9 @@ TMockKafkaConfig::TMockKafkaConfig(
   Args.push_back("mock_kafka_server");
   Args.push_back("--log_echo");
   Args.push_back("--output_dir");
-  Args.push_back(OutputDir.GetName());
+  Args.push_back(OutputDir.GetName().c_str());
   Args.push_back("--setup_file");
-  Args.push_back(SetupFile.GetName());
+  Args.push_back(SetupFile.GetName().c_str());
   Args.push_back(nullptr);
   Cfg.reset(new Dory::MockKafkaServer::TConfig(
       static_cast<int>(Args.size() - 1), const_cast<char **>(&Args[0])));

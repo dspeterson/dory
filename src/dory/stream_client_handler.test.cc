@@ -35,7 +35,7 @@
 #include <base/field_access.h>
 #include <base/thrower.h>
 #include <base/time_util.h>
-#include <base/tmp_file_name.h>
+#include <base/tmp_file.h>
 #include <capped/blob.h>
 #include <capped/pool.h>
 #include <capped/reader.h>
@@ -75,7 +75,7 @@ namespace {
 
     using TWorkerPool = TStreamClientHandler::TWorkerPool;
 
-    TTmpFileName UnixSocketName;
+    std::string UnixSocketName;
 
     std::vector<const char *> Args;
 
@@ -142,19 +142,21 @@ namespace {
   }
 
   TDoryConfig::TDoryConfig(size_t pool_block_size)
-      : Pool(pool_block_size, ComputeBlockCount(1, pool_block_size),
-             TPool::TSync::Mutexed),
+      : UnixSocketName(MakeTmpFilename(
+            "/tmp/stream_client_handler_test.XXXXXX")),
+        Pool(pool_block_size, ComputeBlockCount(1, pool_block_size),
+            TPool::TSync::Mutexed),
         AnomalyTracker(DiscardFileLogger, 0,
-                       std::numeric_limits<size_t>::max()),
+            std::numeric_limits<size_t>::max()),
         DebugSetup("/unused/path", TDebugSetup::MAX_LIMIT,
-                   TDebugSetup::MAX_LIMIT) {
+            TDebugSetup::MAX_LIMIT) {
     Args.push_back("dory");
     Args.push_back("--config_path");
     Args.push_back("/nonexistent/path");
     Args.push_back("--msg_buffer_max");
     Args.push_back("1");  /* this is 1 * 1024 bytes, not 1 byte */
     Args.push_back("--receive_stream_socket_name");
-    Args.push_back(UnixSocketName);
+    Args.push_back(UnixSocketName.c_str());
     Args.push_back(nullptr);
     Cfg.reset(new TConfig(static_cast<int>(Args.size() - 1),
         const_cast<char **>(&Args[0]), true));
@@ -214,7 +216,7 @@ namespace {
       ASSERT_TRUE(false);
     }
 
-    TUnixStreamSender sender(conf.UnixSocketName);
+    TUnixStreamSender sender(conf.UnixSocketName.c_str());
 
     try {
       sender.PrepareToSend();
@@ -298,7 +300,7 @@ namespace {
       ASSERT_TRUE(false);
     }
 
-    TUnixStreamSender sender(conf.UnixSocketName);
+    TUnixStreamSender sender(conf.UnixSocketName.c_str());
 
     try {
       sender.PrepareToSend();
@@ -405,7 +407,7 @@ namespace {
     std::string topic("scooby_doo");
     std::string msg_body("I like scooby snacks");
 
-    TUnixStreamSender sender(conf.UnixSocketName);
+    TUnixStreamSender sender(conf.UnixSocketName.c_str());
 
     try {
       sender.PrepareToSend();

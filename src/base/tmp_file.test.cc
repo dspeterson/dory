@@ -46,46 +46,44 @@ namespace {
   };  // TTmpFileTest
 
   TEST_F(TTmpFileTest, Test1) {
-    std::string tmpl("/tmp/dory_tmp.XXXXXX");
+    std::string tmpl("/tmp/tmp_file_test.XXXXXX");
     TTmpFile tmp_file(tmpl.c_str(), true);
-    std::string name(tmp_file.GetName());
-    ASSERT_EQ(tmpl.size(), name.size());
-    ASSERT_NE(tmpl, name);
-    const char tmpl_prefix[] = "/tmp/dory_tmp.";
+    ASSERT_EQ(tmpl.size(), tmp_file.GetName().size());
+    ASSERT_NE(tmpl, tmp_file.GetName());
+    const char tmpl_prefix[] = "/tmp/tmp_file_test.";
     size_t tmpl_prefix_len = std::strlen(tmpl_prefix);
-    ASSERT_EQ(name.substr(0, tmpl_prefix_len), std::string(tmpl_prefix));
-    ASSERT_NE(name.substr(tmpl_prefix_len, 6), std::string("XXXXXX"));
+    ASSERT_EQ(tmp_file.GetName().substr(0, tmpl_prefix_len),
+        std::string(tmpl_prefix));
+    ASSERT_NE(tmp_file.GetName().substr(tmpl_prefix_len, 6),
+        std::string("XXXXXX"));
   }
   
   TEST_F(TTmpFileTest, Test2) {
     std::string tmpl("XXXXXXburp");
     TTmpFile tmp_file(tmpl.c_str(), true);
-    std::string name(tmp_file.GetName());
-    ASSERT_EQ(tmpl.size(), name.size());
-    ASSERT_NE(tmpl, name);
-    ASSERT_NE(name.substr(0, 6), std::string("XXXXXX"));
-    ASSERT_EQ(name.substr(6, 4), std::string("burp"));
+    ASSERT_EQ(tmpl.size(), tmp_file.GetName().size());
+    ASSERT_NE(tmpl, tmp_file.GetName());
+    ASSERT_NE(tmp_file.GetName().substr(0, 6), std::string("XXXXXX"));
+    ASSERT_EQ(tmp_file.GetName().substr(6, 4), std::string("burp"));
   }
   
   TEST_F(TTmpFileTest, Test3) {
     std::string tmpl("burpXXXXXX");
     TTmpFile tmp_file(tmpl.c_str(), true);
-    std::string name(tmp_file.GetName());
-    ASSERT_EQ(tmpl.size(), name.size());
-    ASSERT_NE(tmpl, name);
-    ASSERT_EQ(name.substr(0, 4), std::string("burp"));
-    ASSERT_NE(name.substr(4, 6), std::string("XXXXXX"));
+    ASSERT_EQ(tmpl.size(), tmp_file.GetName().size());
+    ASSERT_NE(tmpl, tmp_file.GetName());
+    ASSERT_EQ(tmp_file.GetName().substr(0, 4), std::string("burp"));
+    ASSERT_NE(tmp_file.GetName().substr(4, 6), std::string("XXXXXX"));
   }
   
   TEST_F(TTmpFileTest, Test4) {
     std::string tmpl("burpXXXXXXyXXXXXbarf");
     TTmpFile tmp_file(tmpl.c_str(), true);
-    std::string name(tmp_file.GetName());
-    ASSERT_EQ(tmpl.size(), name.size());
-    ASSERT_NE(tmpl, name);
-    ASSERT_EQ(name.substr(0, 4), std::string("burp"));
-    ASSERT_NE(name.substr(4, 6), std::string("XXXXXX"));
-    ASSERT_EQ(name.substr(10, 10), std::string("yXXXXXbarf"));
+    ASSERT_EQ(tmpl.size(), tmp_file.GetName().size());
+    ASSERT_NE(tmpl, tmp_file.GetName());
+    ASSERT_EQ(tmp_file.GetName().substr(0, 4), std::string("burp"));
+    ASSERT_NE(tmp_file.GetName().substr(4, 6), std::string("XXXXXX"));
+    ASSERT_EQ(tmp_file.GetName().substr(10, 10), std::string("yXXXXXbarf"));
   }
 
 }  // namespace

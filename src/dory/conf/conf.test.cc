@@ -55,8 +55,8 @@ namespace {
   };  // TConfTest
 
   TEST_F(TConfTest, Test1) {
-    TTmpFile tmp_file;
-    tmp_file.SetDeleteOnDestroy(true);
+    TTmpFile tmp_file("/tmp/dory_conf_test.XXXXXX",
+        true /* delete_on_destroy */);
     std::ofstream ofs(tmp_file.GetName());
     ofs << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<doryConfig>" << std::endl
@@ -155,9 +155,8 @@ namespace {
         << "    </initialBrokers>" << std::endl
         << "</doryConfig>" << std::endl;
     ofs.close();
-    std::string filename(tmp_file.GetName());
     TConf::TBuilder builder(true);
-    TConf conf = builder.Build(filename.c_str());
+    TConf conf = builder.Build(tmp_file.GetName().c_str());
 
     const TBatchConf &batch_conf = conf.GetBatchConf();
     ASSERT_EQ(batch_conf.GetProduceRequestDataLimit(), 100U);

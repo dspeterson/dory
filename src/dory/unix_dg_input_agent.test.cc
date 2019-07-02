@@ -33,7 +33,7 @@
 #include <base/field_access.h>
 #include <base/thrower.h>
 #include <base/time_util.h>
-#include <base/tmp_file_name.h>
+#include <base/tmp_file.h>
 #include <capped/blob.h>
 #include <capped/pool.h>
 #include <capped/reader.h>
@@ -69,7 +69,7 @@ namespace {
     DEFINE_ERROR(TStartFailure, std::runtime_error,
         "Failed to start UNIX datagram input agent");
 
-    TTmpFileName UnixSocketName;
+    std::string UnixSocketName;
 
     std::vector<const char *> Args;
 
@@ -122,10 +122,12 @@ namespace {
   }
 
   TDoryConfig::TDoryConfig(size_t pool_block_size)
-      : Pool(pool_block_size, ComputeBlockCount(1, pool_block_size),
-             TPool::TSync::Mutexed),
+      : UnixSocketName(
+            MakeTmpFilename("/tmp/unix_dg_input_agent_test.XXXXXX")),
+        Pool(pool_block_size, ComputeBlockCount(1, pool_block_size),
+            TPool::TSync::Mutexed),
         AnomalyTracker(DiscardFileLogger, 0,
-                       std::numeric_limits<size_t>::max()),
+            std::numeric_limits<size_t>::max()),
         DebugSetup("/unused/path", TDebugSetup::MAX_LIMIT,
                    TDebugSetup::MAX_LIMIT) {
     Args.push_back("dory");
@@ -134,7 +136,7 @@ namespace {
     Args.push_back("--msg_buffer_max");
     Args.push_back("1");  /* this is 1 * 1024 bytes, not 1 byte */
     Args.push_back("--receive_socket_name");
-    Args.push_back(UnixSocketName);
+    Args.push_back(UnixSocketName.c_str());
     Args.push_back(nullptr);
     Cfg.reset(
         new TConfig(static_cast<int>(Args.size() - 1),
@@ -185,7 +187,7 @@ namespace {
     }
 
     TDoryClientSocket sock;
-    int ret = sock.Bind(conf.UnixSocketName);
+    int ret = sock.Bind(conf.UnixSocketName.c_str());
     ASSERT_EQ(ret, DORY_OK);
     std::vector<std::string> topics;
     std::vector<std::string> bodies;
@@ -256,7 +258,7 @@ namespace {
     }
 
     TDoryClientSocket sock;
-    int ret = sock.Bind(conf.UnixSocketName);
+    int ret = sock.Bind(conf.UnixSocketName.c_str());
     ASSERT_EQ(ret, DORY_OK);
     std::vector<std::string> topics;
     std::vector<std::string> bodies;
@@ -349,7 +351,7 @@ namespace {
     std::string topic("scooby_doo");
     std::string msg_body("I like scooby snacks");
     TDoryClientSocket sock;
-    int ret = sock.Bind(conf.UnixSocketName);
+    int ret = sock.Bind(conf.UnixSocketName.c_str());
     ASSERT_EQ(ret, DORY_OK);
     std::vector<uint8_t> dg_buf;
     MakeDg(dg_buf, topic, msg_body);
