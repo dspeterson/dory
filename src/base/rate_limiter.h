@@ -47,6 +47,9 @@ namespace Base {
          if (rate_limiter.Test()) {
            syslog(LOG_INFO, "Blah blah");
          }
+
+     Note that this class is not thread safe.  If you want a thread safe
+     version, see TThreadSafeRateLimiter.
    */
   template <typename TTimePoint, typename TDuration>
   class TRateLimiter final {
@@ -58,8 +61,8 @@ namespace Base {
        events to occur no more frequently than once every 'min_interval'. */
     TRateLimiter(const TClockFn &clock_fn, TDuration min_interval)
         : ClockFn(clock_fn),
-          MinInterval(min_interval)
-    {}
+          MinInterval(min_interval) {
+    }
 
     /* When you want to perform the event whose rate you want to limit, first
        call this method.  If it returns true, perform the event.  Otherwise
