@@ -1,7 +1,7 @@
 /* <log/array_streambuf.h>
 
    ----------------------------------------------------------------------------
-   Copyright 2017 Dave Peterson <dave@dspeterson.com>
+   Copyright 2017-2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -30,28 +30,25 @@
 namespace Log {
 
   /* Simple std::streambuf backed by an internal array of size 'BufSize'.  If
-     more output is written than the array can hold, the extra output is
-     discarded. */
-  template <size_t BufSize>
+     more than (BufSize - PrefixSpace - SuffixSpace) bytes of output are
+     written, the extra output is discarded.
+
+     The first PrefixSpace bytes, and last SuffixSpace bytes, of the array are
+     reserved for a prefix and suffix.  These bytes are inaccessible to the
+     std::streambuf.  The prefix space can be used for a log entry prefix, and
+     the suffix space can be used for a trailing newline and/or C string
+     terminator. */
+  template <size_t BufSize, size_t PrefixSpace, size_t SuffixSpace>
   struct TArrayStreambuf : public std::streambuf {
     NO_COPY_SEMANTICS(TArrayStreambuf);
 
-    static const size_t BUF_SIZE = BufSize;
+    static_assert(PrefixSpace < BufSize, "PrefixSpace too large");
+    static_assert((BufSize - PrefixSpace) > SuffixSpace,
+        "Not enough space for suffix");
 
-    /* 'reserve_bytes' specifies a number of bytes to reserve at the end of the
-       buffer.  The intended use is to create space for a trailing newline
-       and/or C string terminator.  This leaves (BufSize - reserve_bytes) bytes
-       available for output data. */
-    explicit TArrayStreambuf(size_t reserve_bytes) noexcept
-        : ReserveBytes(reserve_bytes) {
-      assert(ReserveBytes <= BufSize);
-      setp(Buf, Buf + BufSize - ReserveBytes);
+    TArrayStreambuf() noexcept {
+      setp(Buf + PrefixSpace, Buf + BufSize - SuffixSpace);
     }
-
-    ~TArrayStreambuf() override = default;
-
-    /* Number of bytes to reserve at end of buffer. */
-    size_t ReserveBytes;
 
     /* Output is stored here. */
     char Buf[BufSize];

@@ -1,7 +1,7 @@
 /* <log/syslog_log_writer.h>
 
    ----------------------------------------------------------------------------
-   Copyright 2017 Dave Peterson <dave@dspeterson.com>
+   Copyright 2017-2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,19 +21,34 @@
 
 #pragma once
 
-#include <base/no_copy_semantics.h>
-#include <log/log_writer_api.h>
+#include <cassert>
+
+#include <log/log_entry_access_api.h>
+#include <log/log_writer_base.h>
 
 namespace Log {
 
-  class TSyslogLogWriter : public TLogWriterApi {
-    NO_COPY_SEMANTICS(TSyslogLogWriter);
-
+  class TSyslogLogWriter final : public TLogWriterBase {
     public:
-    ~TSyslogLogWriter() override = default;
+    /* Initialize syslog facility.  Must be called before constructing any
+       TSyslogLogWriter objects.  Parameters 'ident', 'option', and 'facility'
+       are passed directly to openlog(), although LOG_PERROR must _not_ be
+       specified. */
+    static void Init(const char *ident, int option, int facility);
 
+    explicit TSyslogLogWriter(bool enabled);
+
+    bool IsEnabled() const noexcept {
+      assert(this);
+      return Enabled;
+    }
+
+    protected:
     /* Write 'entry'. */
-    void WriteEntry(TLogEntryAccessApi &entry) override;
+    void DoWriteEntry(TLogEntryAccessApi &entry) const noexcept override;
+
+    private:
+    const bool Enabled;
   };  // TSyslogLogWriter
 
 }  // Log

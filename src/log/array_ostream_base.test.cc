@@ -1,7 +1,7 @@
 /* <log/array_ostream_base.test.cc>
  
    ----------------------------------------------------------------------------
-   Copyright 2017 Dave Peterson <dave@dspeterson.com>
+   Copyright 2017-2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -28,48 +28,48 @@
 
 #include <gtest/gtest.h>
 
-#include <iostream>
-  
 using namespace Log;
  
 namespace {
 
-  template <size_t BufSize>
-  class TTestStream : public TArrayOstreamBase<BufSize> {
+  template <size_t BufSize, size_t PrefixSpace, size_t SuffixSpace>
+  class TTestStream
+      : public TArrayOstreamBase<BufSize, PrefixSpace, SuffixSpace> {
     public:
-    explicit TTestStream(size_t reserve_bytes)
-        : TArrayOstreamBase<BufSize>(reserve_bytes) {
+    TTestStream()
+        : TArrayOstreamBase<BufSize, PrefixSpace, SuffixSpace>() {
     }
 
     char *GetBuffer() noexcept {
       assert(this);
-      return TArrayOstreamBase<BufSize>::GetBuf();
+      return TArrayOstreamBase<BufSize, PrefixSpace, SuffixSpace>::GetBuf();
     }
 
     char *GetEnd() noexcept {
       assert(this);
-      return TArrayOstreamBase<BufSize>::GetPos();
+      return TArrayOstreamBase<BufSize, PrefixSpace, SuffixSpace>::GetPos();
     }
   };  // TTestStream
 
-  /* The fixture for testing class TIndent. */
+  /* The fixture for testing class TArrayOstreamBase. */
   class TArrayOstreamBaseTest : public ::testing::Test {
     protected:
-    TArrayOstreamBaseTest() = default;
-
-    ~TArrayOstreamBaseTest() override = default;
-
-    void SetUp() override {
+    TArrayOstreamBaseTest() {
     }
 
-    void TearDown() override {
+    virtual ~TArrayOstreamBaseTest() = default;
+
+    virtual void SetUp() {
+    }
+
+    virtual void TearDown() {
     }
   };  // TArrayOstreamBaseTest
 
   TEST_F(TArrayOstreamBaseTest, Test1) {
-    static const size_t BUF_SIZE = 20;
-    static const size_t reserve_bytes = 0;
-    TTestStream<BUF_SIZE> test_stream(reserve_bytes);
+    constexpr size_t BUF_SIZE = 20;
+    constexpr size_t RESERVE_BYTES = 0;
+    TTestStream<BUF_SIZE, 0, RESERVE_BYTES> test_stream;
     ASSERT_TRUE(test_stream.IsEmpty());
     std::string msg("hello world");
     test_stream << msg;
@@ -79,15 +79,15 @@ namespace {
     ASSERT_EQ(result, msg);
     test_stream << 5;
     test_stream << msg;
-    ASSERT_EQ(test_stream.Size(), BUF_SIZE - reserve_bytes);
+    ASSERT_EQ(test_stream.Size(), BUF_SIZE - RESERVE_BYTES);
     result.assign(test_stream.GetBuffer(), test_stream.GetEnd());
     ASSERT_EQ(result, "hello world5hello wo");
   }
 
   TEST_F(TArrayOstreamBaseTest, Test2) {
-    static const size_t BUF_SIZE = 20;
-    static const size_t reserve_bytes = 1;
-    TTestStream<BUF_SIZE> test_stream(reserve_bytes);
+    constexpr size_t BUF_SIZE = 20;
+    constexpr size_t RESERVE_BYTES = 1;
+    TTestStream<BUF_SIZE, 0, RESERVE_BYTES> test_stream;
     ASSERT_TRUE(test_stream.IsEmpty());
     std::string msg("hello world");
     test_stream << msg;
@@ -97,15 +97,15 @@ namespace {
     ASSERT_EQ(result, msg);
     test_stream << 5;
     test_stream << msg;
-    ASSERT_EQ(test_stream.Size(), BUF_SIZE - reserve_bytes);
+    ASSERT_EQ(test_stream.Size(), BUF_SIZE - RESERVE_BYTES);
     result.assign(test_stream.GetBuffer(), test_stream.GetEnd());
     ASSERT_EQ(result, "hello world5hello w");
   }
 
   TEST_F(TArrayOstreamBaseTest, Test3) {
-    static const size_t BUF_SIZE = 20;
-    static const size_t reserve_bytes = 2;
-    TTestStream<BUF_SIZE> test_stream(reserve_bytes);
+    constexpr size_t BUF_SIZE = 20;
+    constexpr size_t RESERVE_BYTES = 2;
+    TTestStream<BUF_SIZE, 0, RESERVE_BYTES> test_stream;
     ASSERT_TRUE(test_stream.IsEmpty());
     std::string msg("hello world");
     test_stream << msg;
@@ -115,7 +115,7 @@ namespace {
     ASSERT_EQ(result, msg);
     test_stream << 5;
     test_stream << msg;
-    ASSERT_EQ(test_stream.Size(), BUF_SIZE - reserve_bytes);
+    ASSERT_EQ(test_stream.Size(), BUF_SIZE - RESERVE_BYTES);
     result.assign(test_stream.GetBuffer(), test_stream.GetEnd());
     ASSERT_EQ(result, "hello world5hello ");
   }

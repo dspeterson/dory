@@ -1,7 +1,7 @@
 /* <log/log_entry.h>
 
    ----------------------------------------------------------------------------
-   Copyright 2017 Dave Peterson <dave@dspeterson.com>
+   Copyright 2017-2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -22,48 +22,131 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cassert>
+#include <cstddef>
+#include <cstring>
+#include <functional>
+#include <memory>
 #include <utility>
+
+#include <syslog.h>
 
 #include <base/no_copy_semantics.h>
 #include <log/array_ostream_base.h>
 #include <log/log_entry_access_api.h>
-#include <log/log_writer_api.h>
+#include <log/log_prefix_assign_api.h>
+#include <log/log_writer_base.h>
+#include <log/pri.h>
 
 namespace Log {
 
+  /* Access to the prefix writer is not protected from multithreading races, so
+     it should be set before concurrent access is possible. */
+  void SetPrefixWriter(
+      const std::function<void(TLogPrefixAssignApi &entry) noexcept> &writer);
+
+  void WritePrefix(TLogPrefixAssignApi &entry);
+
   /* A single log entry, which functions as a std::ostream backed by a fixed
-     size buffer.  If more output is written than the buffer can hold, the
-     extra output is discarded. */
-  class TLogEntry : public TArrayOstreamBase<512>,
-      public TLogEntryAccessApi {
+     size buffer of size 'BufSize'.  If more than (BufSize - PrefixSpace - 2)
+     bytes of output are written, the extra output is discarded.  Here the
+     value 2 is due to 2 bytes being reserved for a trailing newline and C
+     string terminator.
+
+     The first PrefixSpace bytes, and last 2 bytes, of the array are reserved
+     for a prefix and suffix, where the suffix is an optional trailing newline
+     followed by a mandatory C string terminator.  These bytes are inaccessible
+     to the std::ostream.  The prefix space is reserved for an optional log
+     entry prefix.  A log entry can be accessed with or without its prefix. */
+  template <size_t BufSize, size_t PrefixSpace>
+  class TLogEntry final
+      : public TArrayOstreamBase<BufSize, PrefixSpace, 2 /* SuffixSpace */>,
+        public TLogEntryAccessApi {
     NO_COPY_SEMANTICS(TLogEntry);
 
+    static_assert(PrefixSpace < BufSize, "PrefixSpace larger than BufSize");
+    static_assert((BufSize - PrefixSpace) > 2,
+        "Not enough space for trailing newline and C string terminator");
+
     public:
-    TLogEntry(TLogWriterApi &log_writer, int level);
+    TLogEntry(std::shared_ptr<TLogWriterBase> &&log_writer, TPri level)
+        : TArrayOstreamBase<BufSize, PrefixSpace, 2 /* SuffixSpace */>(),
+          LogWriter(std::move(log_writer)),
+          Level(level) {
+      assert(!!LogWriter);
+    }
 
     /* Destructor invokes LogWriter for log entry, if not already invoked at
        time of destruction. */
-    ~TLogEntry() override;
+    ~TLogEntry() override {
+      Write();
+    }
 
-    /* Return a pair of pointers, where the first pointer indicates the start
-       of the log entry, and the second pointer points one byte past the last
-       byte to be written to the log.  The log entry will _not_ have a newline
-       appended, but it will have a C string terminator. */
+    /* Facilitates expressions such as the following.
+
+           IsEnabled(TPri::INFO) &&
+               TLogEntry<K1, K2>(GetLogWriter(), TPri::INFO)
+                   << "The answer is " << ComputeAnswer();
+
+       Since TLogEntry has a bool conversion operator, the entire subexpression
+       following the && operator has a type of bool, and is not evaluated if
+       IsEnabled(TPri::INFO) returns false, avoiding an unnecessary call to
+       ComputeAnswer() if logging at level TPri::INFO is disabled.  In
+       practice, a preprocessor macro can be defined as follows.
+
+           #define LOG(p) IsEnabled(p) && TLogEntry<K1, K2>(GetLogWriter(), p)
+
+        Then the following shorter syntax achieves the same effect.
+
+            LOG(TPri::INFO) << "The answer is " << ComputeAnswer();
+       */
+    explicit operator bool() const noexcept {
+      assert(this);
+      return true;
+    }
+
+    void AssignPrefix(const char *start, size_t len) noexcept override {
+      assert(this);
+      assert(start || (len == 0));
+      PrefixLen = std::min(len, PrefixSpace);
+      std::memcpy(&this->GetBuf()[PrefixSpace - PrefixLen], start, PrefixLen);
+    }
+
+    /* This will be 0 until Get() has been called with a true value for
+       with_prefix.  In other words, the prefix is assigned on-demand. */
+    size_t PrefixSize() const noexcept override {
+      assert(this);
+      assert(PrefixLen <= PrefixSpace);
+      return PrefixLen;
+    }
+
     std::pair<const char *, const char *>
-    GetWithoutTrailingNewline() noexcept override;
+    Get(bool with_prefix, bool with_trailing_newline) noexcept override {
+      assert(this);
 
-    /* Return a pair of pointers, where the first pointer indicates the start
-       of the log entry, and the second pointer points one byte past the last
-       byte to be written to the log (which will be an appended newline).  The
-       log entry will have a newline appended, and followed by a C string
-       terminator. */
-    std::pair<const char *, const char *>
-    GetWithTrailingNewline() noexcept override;
+      if (with_prefix && !HasPrefix()) {
+        WritePrefix(*this);
+      }
 
-    int GetLevel() const noexcept override;
+      char *end_pos = this->GetPos();
 
-    void SetLevel(int level) noexcept;
+      if (with_trailing_newline) {
+        *end_pos = '\n';
+        ++end_pos;
+      }
+
+      *end_pos = '\0';  // C string terminator
+      char *start_pos = this->GetBuf() + PrefixSpace -
+          (with_prefix ? PrefixSize() : 0);
+      assert(end_pos >= start_pos);
+      return std::make_pair(start_pos, end_pos);
+    }
+
+    TPri GetLevel() const noexcept override {
+      assert(this);
+      return Level;
+    }
 
     /* True indicates that entry was written (either successfully or
        unsuccessfully). */
@@ -72,18 +155,30 @@ namespace Log {
       return Written;
     }
 
-    /* Write log entry by invoking TLogWriterApi passed to constructor.  Then
-       clear log entry.  On error, throws TLogWriterApi::TLogWriteError() and
-       leaves log entry contents intact (although further calls to Write() will
-       have no effect). */
-    void Write();
+    /* If log entry has not already been written, write it by invoking
+       TLogWriterApi passed to constructor. */
+    void Write() noexcept {
+      assert(this);
+
+      if (!Written) {
+        Written = true;
+
+        if (!this->IsEmpty()) {
+          LogWriter->WriteEntry(*this);
+        }
+      }
+    }
 
     private:
     /* Destination to write log entry to. */
-    TLogWriterApi &LogWriter;
+    std::shared_ptr<TLogWriterBase> LogWriter;
 
-    /* Log level, as defined by syslog(). */
-    int Level;
+    /* Log levels correspond to those defined by syslog(). */
+    const TPri Level;
+
+    /* Prefix can be at most PrefixSpace bytes, and starts at buffer index
+       (PrefixSpace - PrefixLen). */
+    size_t PrefixLen = 0;
 
     /* True indicates that entry has been written (either successfully or
        unsuccessfully).  In this case, destructor should _not_ attempt to write

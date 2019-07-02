@@ -1,7 +1,7 @@
 /* <log/stdout_stderr_log_writer.cc>
 
    ----------------------------------------------------------------------------
-   Copyright 2017 Dave Peterson <dave@dspeterson.com>
+   Copyright 2017-2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -23,11 +23,33 @@
 
 #include <syslog.h>
 
+#include <log/pri.h>
+#include <log/write_to_fd.h>
+
 using namespace Log;
 
-void TStdoutStderrLogWriter::WriteEntry(TLogEntryAccessApi &entry) {
+void TStdoutStderrLogWriter::SetErrorHandler(
+    std::function<void() noexcept> const &handler) {
+  ErrorHandler = handler;
+}
+
+void TStdoutStderrLogWriter::DoWriteEntry(
+    TLogEntryAccessApi &entry) const noexcept {
   assert(this);
 
-  /* Write to stdout or stderr, depending on log level. */
-  DoWriteEntry((entry.GetLevel() <= LOG_ERR) ? 2 : 1, entry);
+  if (Enabled) {
+    try {
+      /* Anything at least as severe as LOG_WARNING goes to stderr, so it
+         doesn't get lost in the noise. */
+      WriteToFd((entry.GetLevel() <= TPri::WARNING) ? 2 : 1, entry);
+    } catch (...) {
+      ErrorHandler();
+    }
+  }
 }
+
+void TStdoutStderrLogWriter::NullErrorHandler() noexcept {
+}
+
+std::function<void() noexcept> TStdoutStderrLogWriter::ErrorHandler{
+    TStdoutStderrLogWriter::NullErrorHandler};

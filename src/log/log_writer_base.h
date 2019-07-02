@@ -1,7 +1,7 @@
-/* <log/log_entry.cc>
+/* <log/log_writer_base.h>
 
    ----------------------------------------------------------------------------
-   Copyright 2019 Dave Peterson <dave@dspeterson.com>
+   Copyright 2018-2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,24 +16,33 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <log/log_entry.h>.
+   Log writer base class.
  */
 
-#include <log/log_entry.h>
+#pragma once
 
-using namespace Log;
+#include <cassert>
 
-static void NullPrefixWriter(TLogPrefixAssignApi &) noexcept {
-}
+#include <log/log_entry_access_api.h>
 
-static std::function<void(TLogPrefixAssignApi &) noexcept>
-    PrefixWriter{NullPrefixWriter};
+namespace Log {
 
-void Log::SetPrefixWriter(
-    const std::function<void(TLogPrefixAssignApi &) noexcept> &writer) {
-  PrefixWriter = writer;
-}
+  /* Log writer base class. */
+  class TLogWriterBase {
+    public:
+    virtual ~TLogWriterBase() = default;
 
-void Log::WritePrefix(TLogPrefixAssignApi &entry) {
-  PrefixWriter(entry);
-}
+    void WriteEntry(TLogEntryAccessApi &entry) const noexcept {
+      assert(this);
+      DoWriteEntry(entry);
+    }
+
+    protected:
+    TLogWriterBase() = default;
+
+    /* Subclasses must implement this to handle the details of writing the log
+       entry. */
+    virtual void DoWriteEntry(TLogEntryAccessApi &entry) const noexcept = 0;
+  };  // TLogWriterBase
+
+}  // Log

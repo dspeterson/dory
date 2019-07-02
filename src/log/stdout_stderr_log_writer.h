@@ -1,7 +1,7 @@
 /* <log/stdout_stderr_log_writer.h>
 
    ----------------------------------------------------------------------------
-   Copyright 2017 Dave Peterson <dave@dspeterson.com>
+   Copyright 2017-2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,24 +21,41 @@
 
 #pragma once
 
-#include <base/fd.h>
-#include <base/no_copy_semantics.h>
-#include <log/file_log_writer_base.h>
+#include <cassert>
+#include <functional>
+
+#include <log/log_entry_access_api.h>
+#include <log/log_writer_base.h>
 
 namespace Log {
 
-  class TStdoutStderrLogWriter : public TFileLogWriterBase {
-    NO_COPY_SEMANTICS(TStdoutStderrLogWriter);
-
+  class TStdoutStderrLogWriter final : public TLogWriterBase {
     public:
-    TStdoutStderrLogWriter() = default;
+    /* Access to the error handler is not protected from multithreading races,
+       so it should be set before concurrent access is possible. */
+    static void SetErrorHandler(std::function<void() noexcept> const &handler);
 
-    ~TStdoutStderrLogWriter() override = default;
+    explicit TStdoutStderrLogWriter(bool enabled)
+        : Enabled(enabled) {
+    }
 
+    bool IsEnabled() const noexcept {
+      assert(this);
+      return Enabled;
+    }
+
+    protected:
     /* Write 'entry' to stdout or stderr, depending on the log level (severity
        of at least LOG_ERR goes to stderr).  A trailing newline will be
        appended. */
-    void WriteEntry(TLogEntryAccessApi &entry) override;
+    void DoWriteEntry(TLogEntryAccessApi &entry) const noexcept override;
+
+    private:
+    static void NullErrorHandler() noexcept;
+
+    static std::function<void() noexcept> ErrorHandler;
+
+    const bool Enabled;
   };  // TStdoutStderrLogWriter
 
 }  // Log

@@ -1,7 +1,7 @@
 /* <log/file_log_writer.cc>
 
    ----------------------------------------------------------------------------
-   Copyright 2017 Dave Peterson <dave@dspeterson.com>
+   Copyright 2017-2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -28,22 +28,78 @@
 #include <sys/types.h>
 
 #include <base/error_utils.h>
+#include <log/write_to_fd.h>
 
 using namespace Base;
 using namespace Log;
 
-static TFd OpenLogPath(const char *path) {
-  TFd fd = open(path, O_CREAT | O_APPEND | O_WRONLY,
-      S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
-  IfLt0(fd);
-  return fd;
+static std::string MakeInvalidPathMsg(const std::string &path) {
+  std::string msg("Logfile path must be absolute: [");
+  msg += path;
+  msg += "]";
+  return std::move(msg);
 }
 
-TFileLogWriter::TFileLogWriter(const char *path)
-    : Fd(OpenLogPath(path)) {
+static std::string MakeInvalidFileModeMsg(const std::string &path) {
+  std::string msg("Invalid mode for logfile: [");
+  msg += path;
+  msg += "]";
+  return std::move(msg);
 }
 
-void TFileLogWriter::WriteEntry(TLogEntryAccessApi &entry) {
+static std::string ValidateFilePathAndMode(const std::string &path,
+    mode_t mode) {
+  if (!path.empty() && (path[0] != '/')) {
+    throw TFileLogWriter::TInvalidPath(path);
+  }
+
+  if (mode & ~(S_IRWXU | S_IRWXG | S_IRWXO)) {
+    throw TFileLogWriter::TInvalidMode(path, mode);
+  }
+
+  return path;
+}
+
+static TFd OpenLogPath(const char *path, mode_t mode) {
+  return TFd(IfLt0(open(path, O_CREAT | O_APPEND | O_WRONLY, mode)));
+}
+
+TFileLogWriter::TInvalidPath::TInvalidPath(const std::string &path)
+    : TError(MakeInvalidPathMsg(path), path) {
+}
+
+TFileLogWriter::TInvalidMode::TInvalidMode(const std::string &path,
+    mode_t mode)
+    : TError(MakeInvalidFileModeMsg(path), path),
+      Mode(mode) {
+}
+
+void TFileLogWriter::SetErrorHandler(
+    std::function<void() noexcept> const &handler) {
+  ErrorHandler = handler;
+}
+
+TFileLogWriter::TFileLogWriter(const std::string &path, mode_t open_mode)
+    : TLogWriterBase(),
+      Path(ValidateFilePathAndMode(path, open_mode)),
+      FdRef(path.empty() ?
+          new TFd() : new TFd(OpenLogPath(path.c_str(), open_mode))) {
+}
+
+void TFileLogWriter::DoWriteEntry(TLogEntryAccessApi &entry) const noexcept {
   assert(this);
-  DoWriteEntry(Fd, entry);
+
+  if (FdRef->IsOpen()) {
+    try {
+      WriteToFd(*FdRef, entry);
+    } catch (...) {
+      ErrorHandler();
+    }
+  }
 }
+
+void TFileLogWriter::NullErrorHandler() noexcept {
+}
+
+std::function<void() noexcept> TFileLogWriter::ErrorHandler{
+    TFileLogWriter::NullErrorHandler};

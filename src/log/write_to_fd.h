@@ -1,7 +1,7 @@
-/* <log/file_log_writer_base.h>
+/* <log/write_to_fd.h>
 
    ----------------------------------------------------------------------------
-   Copyright 2017 Dave Peterson <dave@dspeterson.com>
+   Copyright 2018 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,28 +16,17 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Base class for log writer that writes to file.
+   Utility function for writing a log entry to a file descriptor.
  */
 
 #pragma once
 
-#include <base/no_copy_semantics.h>
-#include <log/log_writer_api.h>
+#include <log/log_entry_access_api.h>
 
 namespace Log {
 
-  class TFileLogWriterBase : public TLogWriterApi {
-    NO_COPY_SEMANTICS(TFileLogWriterBase);
-
-    public:
-    TFileLogWriterBase() = default;
-
-    ~TFileLogWriterBase() override = default;
-
-    protected:
-    /* Write 'entry' to file descriptor 'fd'.  A trailing newline will be
-       appended. */
-    virtual void DoWriteEntry(int fd, TLogEntryAccessApi &entry);
-  };  // TFileLogWriterBase
+  /* Write 'entry' to file descriptor 'fd'.  A trailing newline will be
+     appended.  Throw std::system_error on error. */
+  void WriteToFd(int fd, TLogEntryAccessApi &entry);
 
 }  // Log

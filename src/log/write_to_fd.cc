@@ -1,7 +1,7 @@
-/* <log/file_log_writer_base.cc>
+/* <log/write_to_fd.cc>
 
    ----------------------------------------------------------------------------
-   Copyright 2017 Dave Peterson <dave@dspeterson.com>
+   Copyright 2018 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,24 +16,20 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <log/file_log_writer_base.h>.
+   Implements <log/write_to_fd.h>.
  */
 
-#include <log/file_log_writer_base.h>
-
-#include <cassert>
-#include <cstddef>
-#include <cstring>
+#include <log/write_to_fd.h>
 
 #include <unistd.h>
 
+#include <base/error_utils.h>
+
+using namespace Base;
 using namespace Log;
 
-void TFileLogWriterBase::DoWriteEntry(int fd, TLogEntryAccessApi &entry) {
-  assert(this);
-  auto ret = entry.GetWithTrailingNewline();
-
-  if (write(fd, ret.first, ret.second - ret.first) < 0) {
-    throw TLogWriteError();
-  }
+void Log::WriteToFd(int fd, TLogEntryAccessApi &entry) {
+  auto ret = entry.Get(true /* with_prefix */,
+      true /* with_trailing_newline */);
+  IfLt0(write(fd, ret.first, ret.second - ret.first));
 }

@@ -1,7 +1,7 @@
 /* <log/array_ostream_base.h>
 
    ----------------------------------------------------------------------------
-   Copyright 2017 Dave Peterson <dave@dspeterson.com>
+   Copyright 2017-2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -31,59 +31,69 @@
 namespace Log {
 
   /* Simple std::ostream backed by an internal array of size 'BufSize'.  If
-     more output is written than the array can hold, the extra output is
-     discarded. */
-  template <size_t BufSize>
+     more than (BufSize - PrefixSpace - SuffixSpace) bytes of output are
+     written, the extra output is discarded.
+
+     The first PrefixSpace bytes, and last SuffixSpace bytes, of the array are
+     reserved for a prefix and suffix.  These bytes are inaccessible to the
+     std::ostream.  The prefix space can be used for a log entry prefix, and
+     the suffix space can be used for a trailing newline and/or C string
+     terminator. */
+  template <size_t BufSize, size_t PrefixSpace, size_t SuffixSpace>
   class TArrayOstreamBase
-      : private TArrayStreambuf<BufSize>, public std::ostream {
+      : private TArrayStreambuf<BufSize, PrefixSpace, SuffixSpace>,
+        public std::ostream {
     NO_COPY_SEMANTICS(TArrayOstreamBase);
 
+    static_assert(PrefixSpace < BufSize, "PrefixSpace too large");
+    static_assert((BufSize - PrefixSpace) > SuffixSpace,
+        "Not enough space for suffix");
+
     public:
-    static const size_t BUF_SIZE = BufSize;
-
-    ~TArrayOstreamBase() override = default;
-
-    /* Return number of bytes written to stream. */
+    /* Return number of bytes written to stream.  First byte written appears at
+       Buf[PrefixSpace], and when (BufSize - PrefixSpace - SuffixSpace) bytes
+       have been written, additional written bytes are discarded. */
     size_t Size() const noexcept {
       assert(this);
       assert(GetPos() >= GetBuf());
       return GetPos() - GetBuf();
     }
 
+    /* Return true if no bytes have been written to stream. */
     bool IsEmpty() const noexcept {
       assert(this);
-      return Size() == 0;
+      return (Size() == 0);
     }
 
     protected:
-    /* 'reserve_bytes' specifies a number of bytes to reserve at the end of the
-       buffer.  The intended use is to create space for a trailing newline
-       and/or C string terminator.  This leaves (BufSize - reserve_bytes) bytes
-       available for output data. */
-    explicit TArrayOstreamBase(size_t reserve_bytes) noexcept
-        : TArrayStreambuf<BufSize>(reserve_bytes),
+    TArrayOstreamBase() noexcept
+        : TArrayStreambuf<BufSize, PrefixSpace, SuffixSpace>(),
           std::ostream(this) {
     }
 
-    /* Return pointer to start of internal array. */
+    /* Return pointer to start of internal array.  Stream output begins at
+       Buf[PrefixSpace]. */
     const char *GetBuf() const noexcept {
       assert(this);
       return this->Buf;
     }
 
-    /* Return pointer to start of internal array. */
+    /* Return pointer to start of internal array.  Stream output begins at
+       Buf[PrefixSpace]. */
     char *GetBuf() noexcept {
       assert(this);
       return this->Buf;
     }
 
-    /* Return pointer to array position one byte past last byte of output. */
+    /* Return pointer to array position one byte past last byte of stream
+       output. */
     const char *GetPos() const noexcept {
       assert(this);
       return this->pptr();
     }
 
-    /* Return pointer to array position one byte past last byte of output. */
+    /* Return pointer to array position one byte past last byte of stream
+       output. */
     char *GetPos() noexcept {
       assert(this);
       return this->pptr();

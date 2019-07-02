@@ -1,7 +1,7 @@
 /* <log/syslog_log_writer.cc>
 
    ----------------------------------------------------------------------------
-   Copyright 2017 Dave Peterson <dave@dspeterson.com>
+   Copyright 2017-2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -21,15 +21,54 @@
 
 #include <log/syslog_log_writer.h>
 
+#include <atomic>
+#include <stdexcept>
+
 #include <syslog.h>
 
 using namespace Log;
 
-void TSyslogLogWriter::WriteEntry(TLogEntryAccessApi &entry) {
+/* true indicates that syslog() has been initialized. */
+static std::atomic<bool> Initialized(false);
+
+void TSyslogLogWriter::Init(const char *ident, int option, int facility) {
+  if (option & LOG_PERROR) {
+    /* To keep things simple, we will not support echoing of log messages to
+       stderr.  If log output to stdout/stderr is desired,
+       TStdoutStderrLogWriter should be used. */
+    throw std::logic_error("Cannot initialize syslog subsystem because "
+        "LOG_PERROR is not supported");
+  }
+
+  openlog(ident, option, facility);
+
+  /* Allow logging at all levels.  We do our own level-based filtering, which
+     is applied uniformly for syslog, stdout/stderr, and logfiles. */
+  setlogmask(LOG_UPTO(LOG_DEBUG));
+
+  Initialized = true;
+}
+
+TSyslogLogWriter::TSyslogLogWriter(bool enabled)
+    : TLogWriterBase()
+    , Enabled(enabled) {
+  /* Copy constructor doesn't need to perform this check, since this
+     constructor will create the very first object. */
+  if (enabled && !Initialized) {
+    throw std::logic_error("Must call TSyslogLogWriter::Init() before "
+        "creating any enabled TSyslogLogWriter objects");
+  }
+}
+
+void TSyslogLogWriter::DoWriteEntry(TLogEntryAccessApi &entry) const noexcept {
   assert(this);
 
-  /* Using "%s" format ensures that message is written properly even if it
-     contains embedded formatting characters.  This avoids injection
-     vulnerabilities. */
-  syslog(entry.GetLevel(), "%s", entry.GetWithoutTrailingNewline().first);
+  if (Enabled) {
+    /* Pass log entry via "%s" rather than directly, since it may contain
+       formatting characters.  This avoids injection vulnerabilities. */
+    syslog(static_cast<int>(entry.GetLevel()), "%s",
+        entry.Get(false /* with_prefix */,
+            false /* with_trailing_newline */).first);
+
+  }
 }

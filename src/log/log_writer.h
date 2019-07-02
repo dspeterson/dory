@@ -1,4 +1,4 @@
-/* <log/log_entry.cc>
+/* <log/log_writer.h>
 
    ----------------------------------------------------------------------------
    Copyright 2019 Dave Peterson <dave@dspeterson.com>
@@ -16,24 +16,29 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <log/log_entry.h>.
+   Global log writer access.
  */
 
-#include <log/log_entry.h>
+#pragma once
 
-using namespace Log;
+#include <memory>
+#include <string>
 
-static void NullPrefixWriter(TLogPrefixAssignApi &) noexcept {
-}
+#include <sys/stat.h>
 
-static std::function<void(TLogPrefixAssignApi &) noexcept>
-    PrefixWriter{NullPrefixWriter};
+#include <log/file_log_writer.h>
+#include <log/log_writer_base.h>
 
-void Log::SetPrefixWriter(
-    const std::function<void(TLogPrefixAssignApi &) noexcept> &writer) {
-  PrefixWriter = writer;
-}
+namespace Log {
 
-void Log::WritePrefix(TLogPrefixAssignApi &entry) {
-  PrefixWriter(entry);
+  /* Create a log writer configured as specified and install it as the global
+     log writer.  An empty file path disables file logging.  If nonempty, the
+     file path must be absolute (i.e. it must start with '/'). */
+  void SetLogWriter(bool enable_stdout_stderr, bool enable_syslog,
+      const std::string &file_path,
+      mode_t file_mode = TFileLogWriter::default_file_mode);
+
+  /* Get a reference to the current global log writer. */
+  std::shared_ptr<TLogWriterBase> GetLogWriter();
+
 }
