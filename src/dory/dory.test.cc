@@ -111,15 +111,14 @@ namespace {
     void UseUnixDgSocket() {
       assert(this);
       assert(!IsStarted());
-      UnixDgSocketName.MakeKnown(
-          MakeTmpFilename("/tmp/dory_test_dg_sock.XXXXXX"));
+      UnixDgSocketName = MakeTmpFilename("/tmp/dory_test_dg_sock.XXXXXX");
     }
 
     void UseUnixStreamSocket() {
       assert(this);
       assert(!IsStarted());
-      UnixStreamSocketName.MakeKnown(
-          MakeTmpFilename("/tmp/dory_test_stream_sock.XXXXXX"));
+      UnixStreamSocketName =
+          MakeTmpFilename("/tmp/dory_test_stream_sock.XXXXXX");
     }
 
     void UseTcpInputSocket() {
@@ -129,13 +128,12 @@ namespace {
 
     const char *GetUnixDgSocketName() const {
       assert(this);
-      return UnixDgSocketName.IsKnown() ? UnixDgSocketName->c_str() : nullptr;
+      return UnixDgSocketName.c_str();
     }
 
     const char *GetUnixStreamSocketName() const {
       assert(this);
-      return UnixStreamSocketName.IsKnown() ?
-          UnixStreamSocketName->c_str() : nullptr;
+      return UnixStreamSocketName.c_str();
     }
 
     in_port_t GetInputPort() const {
@@ -167,9 +165,9 @@ namespace {
     virtual void Run() override;
 
     private:
-    TOpt<std::string> UnixDgSocketName;
+    std::string UnixDgSocketName;
 
-    TOpt<std::string> UnixStreamSocketName;
+    std::string UnixStreamSocketName;
 
     bool TcpInputActive = false;
 
@@ -205,14 +203,14 @@ namespace {
     args.push_back("--msg_buffer_max");
     args.push_back(msg_buffer_max_str.c_str());
 
-    if (UnixDgSocketName.IsKnown()) {
+    if (!UnixDgSocketName.empty()) {
       args.push_back("--receive_socket_name");
-      args.push_back(UnixDgSocketName->c_str());
+      args.push_back(UnixDgSocketName.c_str());
     }
 
-    if (UnixStreamSocketName.IsKnown()) {
+    if (!UnixStreamSocketName.empty()) {
       args.push_back("--receive_stream_socket_name");
-      args.push_back(UnixStreamSocketName->c_str());
+      args.push_back(UnixStreamSocketName.c_str());
     }
 
     if (TcpInputActive) {
