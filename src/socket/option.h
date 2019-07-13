@@ -42,10 +42,6 @@
    Or you can see the values for all the options for your socket:
 
       Socket::DumpAllOptions(cout, my_sock);
-
-      -- or --
-
-      Socket::LogAllOptions(LOG_INFO, my_sock);
  */
 
 #pragma once
@@ -520,10 +516,6 @@ namespace Socket {
      socket and write to the given stream in a human-readable form.  The result
      looks like this: "{ <option name>: <val>, <option name>: <val>, ... }". */
   void DumpAllOptions(std::ostream &strm, int sock);
-
-  /* Just like DumpAllOptions(), but the output is sent to the system logger at
-     the given logging level. */
-  void LogAllOptions(int log_level, int sock);
 
   /**
    *  The standard socket options.  These are drawn from the socket(7) man

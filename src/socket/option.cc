@@ -68,12 +68,6 @@ void Socket::DumpAllOptions(ostream &strm, int sock) {
   strm << (has_written ? " }" : "}");
 }
 
-void Socket::LogAllOptions(int log_level, int sock) {
-  ostringstream strm;
-  DumpAllOptions(strm, sock);
-  syslog(log_level, "%s", strm.str().c_str());
-}
-
 const TRoOption<bool> Socket::AcceptConn("accept_conn",SO_ACCEPTCONN);
 
 const TRwOption<Str<IFNAMSIZ>>
