@@ -24,19 +24,14 @@
 #include <cstddef>
 #include <string>
 
+#include <log/pri.h>
+
 namespace Dory {
 
   namespace Util {
 
-    const char *LogLevelToString(int level);
-
-    int StringToLogLevel(const char *level_string);
-
-    inline int StringToLogLevel(const std::string &level_string) {
-      return StringToLogLevel(level_string.c_str());
-    }
-
-    void InitSyslog(const char *prog_name, int max_level, bool log_echo);
+    void InitLogging(const char *prog_name, Log::TPri max_level,
+        bool log_echo);
 
     /* Result of call to TestUnixDgSize() below. */
     enum class TUnixDgSizeTestResult {

@@ -234,7 +234,7 @@ namespace {
           args.size() - 1, const_cast<char **>(&args[0]),
           large_sendbuf_required, true, true));
       const Dory::TConfig &config = dory_config->GetCmdLineConfig();
-      InitSyslog(args[0], config.LogLevel, config.LogEcho);
+      InitLogging(args[0], config.LogLevel, config.LogEcho);
       Dory.reset(new TDoryServer(std::move(*dory_config)));
       dory_config.Reset();
       Start();

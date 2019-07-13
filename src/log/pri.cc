@@ -22,6 +22,8 @@
 #include <log/pri.h>
 
 #include <atomic>
+#include <cstring>
+#include <stdexcept>
 
 #include <base/no_default_case.h>
 
@@ -69,4 +71,42 @@ const char *Log::ToString(Log::TPri p) {
   }
 
   return result;
+}
+
+TPri Log::ToPri(const char *pri_string) {
+  if (!std::strcmp(pri_string, "EMERG")) {
+    return TPri::EMERG;
+  }
+
+  if (!std::strcmp(pri_string, "ALERT")) {
+    return TPri::ALERT;
+  }
+
+  if (!std::strcmp(pri_string, "CRIT")) {
+    return TPri::CRIT;
+  }
+
+  if (!std::strcmp(pri_string, "ERR")) {
+    return TPri::ERR;
+  }
+
+  if (!std::strcmp(pri_string, "WARNING")) {
+    return TPri::WARNING;
+  }
+
+  if (!std::strcmp(pri_string, "NOTICE")) {
+    return TPri::NOTICE;
+  }
+
+  if (!std::strcmp(pri_string, "INFO")) {
+    return TPri::INFO;
+  }
+
+  if (!std::strcmp(pri_string, "DEBUG")) {
+    return TPri::DEBUG;
+  }
+
+  std::string msg("Invalid log level: ");
+  msg += pri_string;
+  throw std::range_error(msg);
 }

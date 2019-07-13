@@ -30,6 +30,7 @@
 #include <syslog.h>
 
 #include <base/opt.h>
+#include <log/pri.h>
 
 namespace Dory {
 
@@ -39,7 +40,7 @@ namespace Dory {
 
     std::string ConfigPath;
 
-    int LogLevel = LOG_NOTICE;
+    Log::TPri LogLevel = Log::TPri::NOTICE;
 
     bool LogEcho = false;
 

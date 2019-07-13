@@ -42,6 +42,7 @@
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Util;
+using namespace Log;
 
 static void ProcessModeArg(const std::string &mode_string,
     const char *opt_name, TOpt<mode_t> &result) {
@@ -68,6 +69,51 @@ static void ProcessModeArg(const std::string &mode_string,
 
     result.MakeKnown(mode);
   }
+}
+
+static const char *LogLevelToString(TPri level) {
+  switch (level) {
+    case TPri::ERR: {
+      return "LOG_ERR";
+    }
+    case TPri::WARNING: {
+      return "LOG_WARNING";
+    }
+    case TPri::NOTICE: {
+      return "LOG_NOTICE";
+    }
+    case TPri::INFO: {
+      return "LOG_INFO";
+    }
+    case TPri::DEBUG: {
+      return "LOG_DEBUG";
+    }
+    NO_DEFAULT_CASE;
+  }
+}
+
+static TPri StringToLogLevel(const char * level_string) {
+  if (!std::strcmp(level_string, "LOG_ERR")) {
+    return TPri::ERR;
+  }
+
+  if (!std::strcmp(level_string, "LOG_WARNING")) {
+    return TPri::WARNING;
+  }
+
+  if (!std::strcmp(level_string, "LOG_NOTICE")) {
+    return TPri::NOTICE;
+  }
+
+  if (!std::strcmp(level_string, "LOG_INFO")) {
+    return TPri::INFO;
+  }
+
+  if (!std::strcmp(level_string, "LOG_DEBUG")) {
+    return TPri::DEBUG;
+  }
+
+  throw std::range_error("Bad log level string");
 }
 
 static void ParseArgs(int argc, char *argv[], TConfig &config,
@@ -291,7 +337,7 @@ static void ParseArgs(int argc, char *argv[], TConfig &config,
         "configured to support this.", cmd, config.TopicAutocreate);
     cmd.parse(argc, &arg_vec[0]);
     config.ConfigPath = arg_config_path.getValue();
-    config.LogLevel = StringToLogLevel(arg_log_level.getValue());
+    config.LogLevel = StringToLogLevel(arg_log_level.getValue().c_str());
     config.LogEcho = arg_log_echo.getValue();
     config.ReceiveSocketName = arg_receive_socket_name.getValue();
     config.ReceiveStreamSocketName = arg_receive_stream_socket_name.getValue();

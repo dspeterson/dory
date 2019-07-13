@@ -22,6 +22,8 @@
 
 #pragma once
 
+#include <string>
+
 namespace Log {
 
   enum class TPri : unsigned int {
@@ -52,5 +54,11 @@ namespace Log {
   }
 
   const char *ToString(TPri p);
+
+  TPri ToPri(const char *pri_string);
+
+  inline TPri ToPri(const std::string &pri_string) {
+    return ToPri(pri_string.c_str());
+  }
 
 }
