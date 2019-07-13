@@ -23,46 +23,27 @@
 
 #include <initializer_list>
 
-#include <signal.h>
 #include <execinfo.h>
 #include <fcntl.h>
-#include <unistd.h>
-#include <syslog.h>
+#include <signal.h>
 #include <sys/stat.h>
+#include <syslog.h>
+#include <unistd.h>
 
-#include <base/os_error.h>
 #include <base/error_utils.h>
+#include <base/os_error.h>
+#include <base/zero.h>
 
-using namespace std;
 using namespace Base;
 
-/* DefendAgainstSignals installs this signal handler
-   for SIGINT, SIGTERM, and SIGHUP. */
-static void HandleSignal(int sig) {
-  switch(sig) {
-    case SIGINT: {
-      syslog(LOG_NOTICE, "[SIGINT]");
-      break;
-    }
-    case SIGTERM: {
-      syslog(LOG_NOTICE, "[SIGTERM]");
-      break;
-    }
-    case SIGHUP: {
-      syslog(LOG_NOTICE, "[SIGHUP]");
-      break;
-    }
-    default: {
-      syslog(LOG_ERR, "[unexpected signal][%d]", sig);
-    }
-  }
-}
-
 /* Install the given hander over a list of signals. */
-static void InstallSignalHandlers(initializer_list<int> signals,
+static void InstallSignalHandlers(std::initializer_list<int> signals,
     void (*handler)(int)) {
-  for (auto iter = signals.begin(); iter != signals.end(); ++iter) {
-    signal(*iter, handler);
+  for (int sig_num : signals) {
+    struct sigaction new_act;
+    Base::Zero(new_act);
+    new_act.sa_handler = handler;
+    IfLt0(sigaction(sig_num, &new_act, nullptr));
   }
 }
 
@@ -122,7 +103,7 @@ pid_t Server::Daemonize() {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 void Server::DefendAgainstSignals() {
-  InstallSignalHandlers({ SIGCHLD, SIGTSTP, SIGTTOU, SIGTTIN }, SIG_IGN);
-  InstallSignalHandlers({ SIGINT, SIGTERM, SIGHUP }, HandleSignal);
+  InstallSignalHandlers({ SIGCHLD, SIGTSTP, SIGTTOU, SIGTTIN, SIGHUP },
+      SIG_IGN);
 }
 #pragma GCC diagnostic pop
