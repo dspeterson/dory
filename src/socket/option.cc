@@ -23,8 +23,6 @@
 
 #include <sstream>
 
-#include <syslog.h>
-
 using namespace std;
 using namespace Socket;
 
