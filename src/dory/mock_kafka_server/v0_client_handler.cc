@@ -34,7 +34,6 @@
 #include <unistd.h>
 
 #include <base/crc.h>
-#include <base/debug_log.h>
 #include <base/error_utils.h>
 #include <base/field_access.h>
 #include <base/io_utils.h>

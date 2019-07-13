@@ -26,8 +26,8 @@
 
 #include <boost/lexical_cast.hpp>
 #include <sys/syscall.h>
+#include <syslog.h>
 
-#include <base/debug_log.h>
 #include <base/field_access.h>
 #include <base/gettid.h>
 #include <base/no_default_case.h>
@@ -48,7 +48,7 @@ using namespace Dory::MockKafkaServer::ProdReq;
 void TSingleClientHandlerBase::Run() {
   assert(this);
   GetSocketPeer();
-  DEBUG_LOG("got connection from %s", PeerAddressString.c_str());
+  syslog(LOG_DEBUG, "got connection from %s", PeerAddressString.c_str());
 
   if (!OpenOutputFile()) {
     return;  // failed to open output file

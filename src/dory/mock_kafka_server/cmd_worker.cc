@@ -25,7 +25,6 @@
 
 #include <syslog.h>
 
-#include <base/debug_log.h>
 #include <base/field_access.h>
 #include <base/no_default_case.h>
 #include <dory/mock_kafka_server/serialize_cmd.h>
@@ -41,7 +40,7 @@ TCmdWorker::~TCmdWorker() {
 
 void TCmdWorker::Run() {
   assert(this);
-  DEBUG_LOG("got connection on command port");
+  syslog(LOG_DEBUG, "got connection on command port");
   const TFd &shutdown_request_fd = GetShutdownRequestFd();
 
   while (!shutdown_request_fd.IsReadable() && GetCmd()) {

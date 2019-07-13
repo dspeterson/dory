@@ -29,7 +29,6 @@
 
 #include <syslog.h>
 
-#include <base/debug_log.h>
 #include <dory/util/exceptions.h>
 #include <socket/address.h>
 #include <thread/fd_managed_thread.h>

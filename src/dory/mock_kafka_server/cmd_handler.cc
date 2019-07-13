@@ -25,7 +25,6 @@
 #include <cassert>
 #include <memory>
 
-#include <base/debug_log.h>
 #include <dory/mock_kafka_server/cmd_worker.h>
 #include <socket/address.h>
 
