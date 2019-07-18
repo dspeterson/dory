@@ -26,8 +26,6 @@
 #include <memory>
 #include <string>
 
-#include <syslog.h>
-
 #include <log/log_entry_access_api.h>
 #include <log/log_writer.h>
 #include <log/log_writer_base.h>

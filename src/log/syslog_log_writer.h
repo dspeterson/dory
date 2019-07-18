@@ -33,7 +33,11 @@ namespace Log {
     /* Initialize syslog facility.  Must be called before constructing any
        TSyslogLogWriter objects.  Parameters 'ident', 'option', and 'facility'
        are passed directly to openlog(), although LOG_PERROR must _not_ be
-       specified. */
+       specified.
+
+       WARNING: The memory pointed to by paramater 'ident' must not be freed
+       for as long as the program writes to syslog.  This is because openlog()
+       internally retains the pointer. */
     static void Init(const char *ident, int option, int facility);
 
     explicit TSyslogLogWriter(bool enabled);

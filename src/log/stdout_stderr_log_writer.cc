@@ -21,8 +21,6 @@
 
 #include <log/stdout_stderr_log_writer.h>
 
-#include <syslog.h>
-
 #include <log/pri.h>
 #include <log/write_to_fd.h>
 

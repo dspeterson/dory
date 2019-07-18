@@ -75,7 +75,7 @@ namespace Log {
 
     /* Access to the error handler is not protected from multithreading races,
        so it should be set before concurrent access is possible. */
-    static void SetErrorHandler(std::function<void() noexcept> const &handler);
+    static void SetErrorHandler(const std::function<void() noexcept> &handler);
 
     static const mode_t default_file_mode =
         S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;

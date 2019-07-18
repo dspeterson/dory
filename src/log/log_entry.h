@@ -30,8 +30,6 @@
 #include <memory>
 #include <utility>
 
-#include <syslog.h>
-
 #include <base/no_copy_semantics.h>
 #include <log/array_ostream_base.h>
 #include <log/log_entry_access_api.h>
