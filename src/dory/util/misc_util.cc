@@ -25,32 +25,136 @@
 #include <cctype>
 #include <cerrno>
 #include <cstdint>
+#include <cstdio>
+#include <cstring>
+#include <ctime>
 #include <vector>
 
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <syslog.h>
+#include <time.h>
+#include <unistd.h>
 
 #include <base/basename.h>
 #include <base/error_utils.h>
 #include <base/fd.h>
 #include <base/no_default_case.h>
+#include <log/file_log_writer.h>
+#include <log/log.h>
+#include <log/log_entry.h>
+#include <log/log_writer.h>
+#include <log/stdout_stderr_log_writer.h>
+#include <log/syslog_log_writer.h>
+#include <server/counter.h>
 
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Util;
 using namespace Log;
 
+SERVER_COUNTER(LogPrefixWriteFailed);
+SERVER_COUNTER(LogToFileFailed);
+SERVER_COUNTER(LogToStdoutStderrFailed);
+
+const char *GetProgName(const char *prog_name = nullptr) {
+  static const std::string name = (prog_name == nullptr) ? "" : prog_name;
+  return name.c_str();
+}
+
+/* Assign a prefix to the given log entry.  The prefix will look something like
+   "2019-07-14 19:43:34.001 UTC dory[84828] (WARNING): ", assuming that the
+   value returned by entry.GetLevel() is TPri::WARNING. */
+static void WriteLogPrefix(TLogPrefixAssignApi &entry) {
+  struct timespec now;
+
+  if (clock_gettime(CLOCK_REALTIME, &now)) {
+    LogPrefixWriteFailed.Increment();
+    return;
+  }
+
+  std::tm t;
+
+  if (gmtime_r(&now.tv_sec, &t) == nullptr) {
+    LogPrefixWriteFailed.Increment();
+    return;
+  }
+
+  char buf[64];
+  size_t bytes_written = std::strftime(buf, sizeof(buf), "%Y-%m-%d %T", &t);
+
+  if ((bytes_written == 0) || (bytes_written >= sizeof(buf))) {
+    LogPrefixWriteFailed.Increment();
+    return;
+  }
+
+  char *pos = buf + bytes_written;
+  size_t space_left = sizeof(buf) - bytes_written;
+  size_t n_bytes = static_cast<size_t>(
+      std::snprintf(pos, space_left, ".%03d UTC %s[%d] (",
+          static_cast<int>(now.tv_nsec / 1000000), GetProgName(),
+          static_cast<int>(getpid())));
+
+  if (n_bytes >= space_left) {
+    LogPrefixWriteFailed.Increment();
+    return;
+  }
+
+  pos += n_bytes;
+  space_left -= n_bytes;
+  const char *level_string = ToString(entry.GetLevel());
+  size_t level_len = std::strlen(level_string);
+
+  if (level_len >= space_left) {
+    LogPrefixWriteFailed.Increment();
+    return;
+  }
+
+  std::strncpy(pos, level_string, space_left);
+  pos += level_len;
+  space_left -= level_len;
+
+  if (space_left < 4) {
+    LogPrefixWriteFailed.Increment();
+    return;
+  }
+
+  *pos = ')';
+  ++pos;
+  *pos = ':';
+  ++pos;
+  *pos = ' ';
+  ++pos;
+  *pos = '\0';  // C string terminator
+  entry.AssignPrefix(buf, static_cast<size_t>(pos - buf));
+}
+
+static void HandleStdoutStderrLogWriteFailure() {
+  LogToStdoutStderrFailed.Increment();
+}
+
+static void HandleFileLogWriteFailure() {
+  LogToFileFailed.Increment();
+}
+
 void Dory::Util::InitLogging(const char *prog_name, TPri max_level,
     bool log_echo) {
-  /* This is static in case syslog retains the passed in string pointer rather
-     than making a copy of the string. */
-  static const std::string prog_basename = Basename(prog_name);
+  /* The call to GetProgName() remembers the program name so WriteLogPrefix()
+     can use it.  Also, openlog() retains the passed in program name pointer so
+     we must provide something that we will not free. */
+  TSyslogLogWriter::Init(GetProgName(Basename(prog_name).c_str()), LOG_PID,
+      LOG_USER);
 
-  openlog(prog_basename.c_str(), LOG_PID | (log_echo ? LOG_PERROR : 0),
-          LOG_USER);
-  setlogmask(LOG_UPTO(int(max_level)));
-  syslog(LOG_NOTICE, "Log started");
+  TStdoutStderrLogWriter::SetErrorHandler(HandleStdoutStderrLogWriteFailure);
+  TFileLogWriter::SetErrorHandler(HandleFileLogWriteFailure);
+  SetPrefixWriter(WriteLogPrefix);
+  SetLogMask(UpTo(max_level));
+
+  /* TODO: Add config options for specifying log destination(s). */
+  SetLogWriter(log_echo /* enable_stdout_stderr */, true /* enable_syslog */,
+      std::string() /* file_path */);
+
+  LOG(TPri::NOTICE) << "Log started";
 }
 
 static bool RunUnixDgSocketTest(std::vector<uint8_t> &buf,

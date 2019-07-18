@@ -47,6 +47,8 @@
 #include <dory/metadata_timestamp.h>
 #include <dory/msg_state_tracker.h>
 #include <dory/test_util/misc_util.h>
+#include <dory/util/misc_util.h>
+#include <log/pri.h>
 #include <thread/gate.h>
 
 #include <gtest/gtest.h>
@@ -57,6 +59,8 @@ using namespace Dory;
 using namespace Dory::Client;
 using namespace Dory::Debug;
 using namespace Dory::TestUtil;
+using namespace Dory::Util;
+using namespace Log;
 using namespace Thread;
 
 namespace {
@@ -141,6 +145,7 @@ namespace {
     Cfg.reset(
         new TConfig(static_cast<int>(Args.size() - 1),
             const_cast<char **>(&Args[0]), true));
+    InitLogging("dory", TPri::INFO, false);
     OutputQueue.reset(new TGate<TMsg::TPtr>);
     UnixDgInputAgent.reset(new TUnixDgInputAgent(*Cfg, Pool, MsgStateTracker,
         AnomalyTracker, *OutputQueue));

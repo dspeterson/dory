@@ -27,14 +27,15 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/stat.h>
-#include <syslog.h>
 #include <unistd.h>
 
 #include <base/error_utils.h>
 #include <base/os_error.h>
 #include <base/zero.h>
+#include <log/log.h>
 
 using namespace Base;
+using namespace Log;
 
 /* Install the given hander over a list of signals. */
 static void InstallSignalHandlers(std::initializer_list<int> signals,
@@ -55,13 +56,14 @@ void Server::BacktraceToLog() {
 
   if (symbols) {
     for (int frame_idx = 0; frame_idx < frame_count; ++frame_idx) {
-      syslog(LOG_ERR, "[backtrace][frame %d of %d][%s]", frame_idx + 1,
-             frame_count, symbols[frame_idx]);
+      LOG(TPri::ERR) << "[backtrace][frame " << (frame_idx + 1) << " of "
+          << frame_count << "][" << symbols[frame_idx] << "]";
     }
 
     free(symbols);
   } else {
-      syslog(LOG_ERR, "[backtrace][failed to get %d frames]", frame_count);
+    LOG(TPri::ERR) << "[backtrace][failed to get " << frame_count
+        << " frames]";
   }
 }
 

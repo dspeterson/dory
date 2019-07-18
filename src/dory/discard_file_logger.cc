@@ -36,7 +36,6 @@
 #include <poll.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <syslog.h>
 #include <unistd.h>
 
 #include <base/dir_iter.h>
@@ -45,11 +44,13 @@
 #include <base/no_default_case.h>
 #include <base/time_util.h>
 #include <dory/util/msg_util.h>
+#include <log/log.h>
 #include <third_party/base64/base64.h>
 
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Util;
+using namespace Log;
 
 static std::string ComposeLogEntry(TMsg::TTimestamp timestamp,
     const char *event, const char *info, const std::string &topic,
@@ -87,7 +88,7 @@ static void CreateDir(const char *dir) {
   cmd += dir;
 
   if (std::system(cmd.c_str()) < 0) {
-    syslog(LOG_ERR, "Failed to create discard log directory [%s]", dir);
+    LOG(TPri::ERR) << "Failed to create discard log directory [" << dir << "]";
     IfLt0(-1);  // this will throw
     /* TODO: Modify implementation to keep running, with discard file logging
        disabled. */
@@ -100,13 +101,14 @@ TDiscardFileLogger::~TDiscardFileLogger() {
   try {
     Shutdown();
   } catch (const std::exception &x) {
-    syslog(LOG_ERR,
-        "Caught unexpected exception in TDiscardFileLogger destructor: %s",
-        x.what());
+    LOG(TPri::ERR)
+        << "Caught unexpected exception in TDiscardFileLogger destructor: "
+        << x.what();
     assert(false);
   } catch (...) {
-    syslog(LOG_ERR,
-        "Caught unexpected unknown exception in TDiscardFileLogger destructor");
+    LOG(TPri::ERR)
+        << "Caught unexpected unknown exception in TDiscardFileLogger "
+        << "destructor";
     assert(false);
   }
 }
@@ -402,23 +404,23 @@ TDiscardFileLogger::TArchiveCleaner::~TArchiveCleaner() {
 void TDiscardFileLogger::TArchiveCleaner::Run() {
   assert(this);
   int tid = static_cast<int>(Gettid());
-  syslog(LOG_INFO, "Discard log cleaner thread %d started", tid);
+  LOG(TPri::INFO) << "Discard log cleaner thread " << tid << " started";
   bool caught_fatal_exception = false;
 
   try {
     DoRun();
   } catch (const std::exception &x) {
     caught_fatal_exception = true;
-    syslog(LOG_ERR, "Fatal error in discard log cleaner thread %d: %s", tid,
-           x.what());
+    LOG(TPri::ERR) << "Fatal error in discard log cleaner thread " << tid
+        << ": " << x.what();
   } catch (...) {
     caught_fatal_exception = true;
-    syslog(LOG_ERR, "Fatal unknown error in discard log cleaner thread %d",
-           tid);
+    LOG(TPri::ERR) << "Fatal unknown error in discard log cleaner thread "
+        << tid;
   }
 
-  syslog(LOG_INFO, "Discard log cleaner thread %d finished %s", tid,
-         caught_fatal_exception ? "on error" : "normally");
+  LOG(TPri::INFO) << "Discard log cleaner thread " << tid << " finished "
+      << (caught_fatal_exception ? "on error" : "normally");
 }
 
 struct TOldLogFileInfo {
@@ -526,9 +528,9 @@ GetOldLogFileSizes(const char *log_dir, const char *log_filename) {
       try {
         epoch_ms = boost::lexical_cast<uint64_t>(&name[i]);
       } catch (const boost::bad_lexical_cast &) {
-        syslog(LOG_WARNING,
-            "Failed to extract timestamp from apparently valid old discard logfile name %s",
-            name);
+        LOG(TPri::WARNING)
+            << "Failed to extract timestamp from apparently valid old discard "
+            << "logfile name " << name;
         continue;
       }
     }
@@ -543,8 +545,8 @@ GetOldLogFileSizes(const char *log_dir, const char *log_filename) {
       if (errno != ENOENT) {
         char buf[256];
         Strerror(errno, buf, sizeof(buf));
-        syslog(LOG_WARNING, "Failed to stat() old discard logfile %s: %s",
-               file_path.c_str(), buf);
+        LOG(TPri::WARNING) << "Failed to stat() old discard logfile "
+            << file_path << ": " << buf;
       }
 
       continue;
@@ -570,9 +572,9 @@ bool TDiscardFileLogger::TArchiveCleaner::HandleCleanRequest() {
   try {
     old_log_files = GetOldLogFileSizes(LogDir.c_str(), LogFilename.c_str());
   } catch (const std::system_error &x) {
-    syslog(LOG_WARNING,
-        "Discard log cleaner thread got fatal error while examining log directory: %s",
-        x.what());
+    LOG(TPri::WARNING)
+        << "Discard log cleaner thread got fatal error while examining log "
+        << "directory: " << x.what();
     return false;
   }
 
@@ -599,8 +601,8 @@ bool TDiscardFileLogger::TArchiveCleaner::HandleCleanRequest() {
     if (unlink(info.AbsolutePath.c_str()) && (errno != ENOENT)) {
       char buf[256];
       Strerror(errno, buf, sizeof(buf));
-      syslog(LOG_WARNING, "Failed to unlink old discard logfile %s: %s",
-             info.AbsolutePath.c_str(), buf);
+      LOG(TPri::WARNING) << "Failed to unlink old discard logfile "
+          << info.AbsolutePath << ": " << buf;
     } else {
       total_size -= info.Size;
 
@@ -611,9 +613,9 @@ bool TDiscardFileLogger::TArchiveCleaner::HandleCleanRequest() {
   }
 
   assert(total_size > MaxArchiveSize);
-  syslog(LOG_WARNING,
-      "Discard log cleaner failed to delete old logfiles in directory %s",
-      LogDir.c_str());
+  LOG(TPri::WARNING)
+      << "Discard log cleaner failed to delete old logfiles in directory "
+      << LogDir;
   return false;
 }
 
@@ -636,23 +638,24 @@ void TDiscardFileLogger::TArchiveCleaner::DoRun() {
     assert(ret > 0);
 
     if (shutdown_request_event.revents) {
-      syslog(LOG_INFO, "Discard log cleaner thread got shutdown request");
+      LOG(TPri::INFO) << "Discard log cleaner thread got shutdown request";
       break;
     }
 
     assert(clean_request_event.revents);
-    syslog(LOG_INFO,
-           "Discard log cleaner thread start handling clean request");
+    LOG(TPri::INFO)
+        << "Discard log cleaner thread start handling clean request";
     CleanRequestSem.Pop();
 
     if (!HandleCleanRequest()) {
-      syslog(LOG_WARNING,
-          "Discard log cleaner thread shutting down due to fatal error handling clean request");
+      LOG(TPri::WARNING)
+          << "Discard log cleaner thread shutting down due to fatal error "
+          << "handling clean request";
       break;
     }
 
-    syslog(LOG_INFO,
-        "Discard log cleaner thread finish handling clean request");
+    LOG(TPri::INFO)
+        << "Discard log cleaner thread finish handling clean request";
   }
 }
 
@@ -732,9 +735,9 @@ TFd TDiscardFileLogger::OpenLogPath(const char *log_path) {
   if (!fd.IsOpen()) {
     char buf[256];
     Strerror(errno, buf, sizeof(buf));
-    syslog(LOG_WARNING,
-        "Disabling discard logfile mechanism due to failure to open discard logfile %s for append: %s",
-        log_path, buf);
+    LOG(TPri::WARNING)
+        << "Disabling discard logfile mechanism due to failure to open "
+        << "discard logfile " << log_path << " for append: " << buf;
     DisableLogging();
   }
 
@@ -759,9 +762,9 @@ bool TDiscardFileLogger::CheckMaxFileSize(uint64_t next_entry_size) {
   IfLt0(fstat(LogFd, &stat_buf));
 
   if (!S_ISREG(stat_buf.st_mode)) {
-    syslog(LOG_WARNING,
-        "Disabling discard file logging because logfile is not a regular file: mode is 0x%lx",
-        static_cast<unsigned long>(stat_buf.st_mode));
+    LOG(TPri::WARNING)
+        << "Disabling discard file logging because logfile is not a regular "
+        << "file: mode is 0x" << stat_buf.st_mode;
     DisableLogging();
     return false;
   }
@@ -781,9 +784,9 @@ bool TDiscardFileLogger::CheckMaxFileSize(uint64_t next_entry_size) {
   if (ret < 0) {
     char buf[256];
     Strerror(errno, buf, sizeof(buf));
-    syslog(LOG_WARNING,
-        "Disabling discard file logging on failure to rename logfile: %s",
-        buf);
+    LOG(TPri::WARNING)
+        << "Disabling discard file logging on failure to rename logfile: "
+        << buf;
     DisableLogging();
     return false;
   }
@@ -813,8 +816,8 @@ void TDiscardFileLogger::WriteToLog(const std::string &log_entry) {
 
   if (CheckMaxFileSize(log_entry.size())) {
     if (ArchiveCleaner->GetShutdownWaitFd().IsReadable()) {
-      syslog(LOG_WARNING,
-          "Disabling discard file logging because discard log cleaner thread shut down unexpectedly");
+      LOG(TPri::WARNING) << "Disabling discard file logging because discard "
+          << "log cleaner thread shut down unexpectedly";
       DisableLogging();
       return;
     }
@@ -825,9 +828,8 @@ void TDiscardFileLogger::WriteToLog(const std::string &log_entry) {
   ssize_t ret = IfLt0(write(LogFd, log_entry.data(), log_entry.size()));
 
   if (static_cast<size_t>(ret) < log_entry.size()) {
-    syslog(LOG_ERR,
-        "write() to discard logfile returned short count: expected %lu actual %lu",
-        static_cast<unsigned long>(log_entry.size()),
-        static_cast<unsigned long>(ret));
+    LOG(TPri::ERR)
+        << "write() to discard logfile returned short count: expected "
+        << log_entry.size() << " actual " << ret;
   }
 }

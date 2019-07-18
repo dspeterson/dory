@@ -24,15 +24,13 @@
 #include <cassert>
 #include <utility>
 
-#include <syslog.h>
-
 #include <base/error_utils.h>
-#include <dory/util/time_util.h>
+#include <log/log.h>
 
 using namespace Base;
 using namespace Capped;
 using namespace Dory;
-using namespace Dory::Util;
+using namespace Log;
 using namespace Thread;
 
 TStreamClientHandler::TStreamClientHandler(bool is_tcp, const TConfig &config,
@@ -60,13 +58,9 @@ void TStreamClientHandler::HandleConnection(Base::TFd &&sock,
 
 void TStreamClientHandler::HandleNonfatalAcceptError(int errno_value) {
   assert(this);
-  static TLogRateLimiter lim(std::chrono::seconds(30));
-
+  char buf[256];
   /* TODO: Consider implementing rate limiting on a per-errno-value basis. */
-  if (lim.Test()) {
-    char buf[256];
-    syslog(LOG_ERR, "Error accepting %s input connection: %s",
-        IsTcp ? "TCP" : "UNIX stream",
-        Strerror(errno_value, buf, sizeof(buf)));
-  }
+  LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Error accepting "
+      << (IsTcp ? "TCP" : "UNIX stream") << " input connection: "
+      << Strerror(errno_value, buf, sizeof(buf));
 }

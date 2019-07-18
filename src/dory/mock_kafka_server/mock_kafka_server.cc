@@ -24,8 +24,6 @@
 #include <iostream>
 #include <memory>
 
-#include <syslog.h>
-
 #include <dory/compress/compression_init.h>
 #include <dory/mock_kafka_server/config.h>
 #include <dory/mock_kafka_server/server.h>

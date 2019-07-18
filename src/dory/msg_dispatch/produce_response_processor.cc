@@ -22,18 +22,17 @@
 
 #include <dory/msg_dispatch/produce_response_processor.h>
 
-#include <syslog.h>
-
 #include <base/gettid.h>
 #include <base/no_default_case.h>
 #include <dory/util/msg_util.h>
-#include <dory/util/time_util.h>
+#include <log/log.h>
 #include <server/counter.h>
 
 using namespace Base;
 using namespace Dory;
 using namespace Dory::MsgDispatch;
 using namespace Dory::Util;
+using namespace Log;
 
 SERVER_COUNTER(ConnectorGotDiscardAck);
 SERVER_COUNTER(ConnectorGotDiscardAndPauseAck);
@@ -59,15 +58,10 @@ TProduceResponseProcessor::ProcessResponse(TProduceRequest &request,
   TCorrId corr_id = ResponseReader.GetCorrelationId();
 
   if (corr_id != request.first) {
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR,
-          "Connector thread %d (index %lu broker %ld) starting pause due to correlation ID mismatch: expected %ld actual %ld",
-          static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId,
-          static_cast<long>(request.first), static_cast<long>(corr_id));
-    }
-
+    LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Connector thread "
+        << Gettid() << " (index " << MyBrokerIndex << " broker " << MyBrokerId
+        << ") starting pause due to correlation ID mismatch: expected "
+        << request.first << " actual " << corr_id;
     CorrelationIdMismatch.Increment();
 
     /* The pause handling code in the router thread will reroute these messages
@@ -84,56 +78,38 @@ TProduceResponseProcessor::ProcessResponse(TProduceRequest &request,
 void TProduceResponseProcessor::ReportBadResponseTopic(
     const std::string &topic) const {
   assert(this);
-  static TLogRateLimiter lim(std::chrono::seconds(30));
-
-  if (lim.Test()) {
-    syslog(LOG_ERR,
-        "Connector thread %d (index %lu broker %ld) starting pause due to produce response with unexpected topic [%s]",
-        static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId, topic.c_str());
-  }
-
+  LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Connector thread " << Gettid()
+      << " (index " << MyBrokerIndex << " broker " << MyBrokerId
+      << ") starting pause due to produce response with unexpected topic ["
+      << topic << "]";
   ProduceResponseUnexpectedTopic.Increment();
 }
 
 void TProduceResponseProcessor::ReportBadResponsePartition(
     int32_t partition) const {
   assert(this);
-  static TLogRateLimiter lim(std::chrono::seconds(30));
-
-  if (lim.Test()) {
-    syslog(LOG_ERR,
-        "Connector thread %d (index %lu broker %ld) starting pause due to produce response with unexpected partition: %d",
-        static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId,
-        static_cast<int>(partition));
-  }
-
+  LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Connector thread " << Gettid()
+      << " (index " << MyBrokerIndex << " broker " << MyBrokerId
+      << ") starting pause due to produce response with unexpected partition: "
+      << partition;
   ProduceResponseUnexpectedPartition.Increment();
 }
 
 void TProduceResponseProcessor::ReportShortResponsePartitionList(
     const std::string &topic) const {
   assert(this);
-  static TLogRateLimiter lim(std::chrono::seconds(30));
-
-  if (lim.Test()) {
-    syslog(LOG_ERR,
-        "Connector thread %d (index %lu broker %ld) starting pause due to produce response with short partition list for topic [%s]",
-        static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId, topic.c_str());
-  }
-
+  LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Connector thread " << Gettid()
+      << " (index " << MyBrokerIndex << " broker " << MyBrokerId
+      << ") starting pause due to produce response with short partition list "
+      << "for topic [" << topic << "]";
   ProduceResponseShortPartitionList.Increment();
 }
 
 void TProduceResponseProcessor::ReportShortResponseTopicList() const {
   assert(this);
-  static TLogRateLimiter lim(std::chrono::seconds(30));
-
-  if (lim.Test()) {
-    syslog(LOG_ERR,
-        "Connector thread %d (index %lu broker %ld) starting pause due to produce response with short topic list",
-        static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId);
-  }
-
+  LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Connector thread " << Gettid()
+      << " (index " << MyBrokerIndex << " broker " << MyBrokerId
+      << ") starting pause due to produce response with short topic list";
   ProduceResponseShortTopicList.Increment();
 }
 
@@ -153,13 +129,9 @@ void TProduceResponseProcessor::CountFailedDeliveryAttempt(
       DiscardOnFailedDeliveryAttemptLimit.Increment();
 
       if (!Ds.Config.NoLogDiscard) {
-        static TLogRateLimiter lim(std::chrono::seconds(30));
-
-        if (lim.Test()) {
-          syslog(LOG_ERR,
-              "Discarding message because failed delivery attempt limit reached (topic: [%s])",
-              msg->GetTopic().c_str());
-        }
+        LOG_R(TPri::ERR, std::chrono::seconds(30))
+            << "Discarding message because failed delivery attempt limit "
+            << "reached (topic: [" << msg->GetTopic() << "])";
       }
 
       Ds.Discard(std::move(msg),
@@ -177,15 +149,10 @@ void TProduceResponseProcessor::ProcessImmediateResendMsgSet(
 
   if (!msg_set.empty()) {
     ConnectorQueueImmediateResendMsgSet.Increment();
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR,
-          "Connector thread %d (index %lu broker %ld) queueing msg set (topic: [%s]) for immediate resend",
-          static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId,
-          topic.c_str());
-    }
-
+    LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Connector thread "
+        << Gettid() << " (index " << MyBrokerIndex << " broker " << MyBrokerId
+        << ") queueing msg set (topic: [" << topic
+        << "]) for immediate resend";
     Ds.MsgStateTracker.MsgEnterSendWait(msg_set);
     ImmediateResendAckMsgs.push_back(std::move(msg_set));
   }
@@ -199,15 +166,10 @@ void TProduceResponseProcessor::ProcessPauseAndResendMsgSet(
 
   if (!msg_set.empty()) {
     ConnectorQueuePauseAndResendMsgSet.Increment();
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR,
-          "Connector thread %d (index %lu broker %ld) queueing msg set (topic: [%s]) for resend after pause",
-          static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId,
-          topic.c_str());
-    }
-
+    LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Connector thread "
+        << Gettid() << " (index " << MyBrokerIndex << " broker " << MyBrokerId
+        << ") queueing msg set (topic: [" << topic
+        << "]) for resend after pause";
     Ds.MsgStateTracker.MsgEnterSendWait(msg_set);
     PauseAndResendAckMsgs.push_back(std::move(msg_set));
   }
@@ -220,14 +182,9 @@ void TProduceResponseProcessor::ProcessNoAckMsgs(TAllTopics &all_topics) {
 
   if (!tmp.empty()) {
     ConnectorQueueNoAckMsgs.Increment();
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR,
-          "Connector thread %d (index %lu broker %ld) processing msgs without ACKs after error", static_cast<int>(Gettid()),
-          MyBrokerIndex, MyBrokerId);
-    }
-
+    LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Connector thread "
+        << Gettid() << " (index " << MyBrokerIndex << " broker " << MyBrokerId
+        << ") processing msgs without ACKs after error";
     Ds.MsgStateTracker.MsgEnterSendWait(tmp);
     MsgsWithoutAcks.splice(MsgsWithoutAcks.end(), std::move(tmp));
   }
@@ -249,13 +206,10 @@ bool TProduceResponseProcessor::ProcessOneAck(std::list<TMsg::TPtr> &&msg_set,
     }
     case TAckResultAction::Resend: {
       ConnectorGotResendAck.Increment();
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_ERR,
-            "Connector thread %d (index %lu broker %ld) got ACK error that triggers immediate resend without pause",
-            static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId);
-      }
+      LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Connector thread "
+          << Gettid() << " (index " << MyBrokerIndex << " broker "
+          << MyBrokerId
+          << ") got ACK error that triggers immediate resend without pause";
 
       /* These messages can be immediately resent without pausing and rerouting
          based on new metadata, although some may be discarded here due to the
@@ -265,18 +219,15 @@ bool TProduceResponseProcessor::ProcessOneAck(std::list<TMsg::TPtr> &&msg_set,
     }
     case TAckResultAction::Discard: {
       ConnectorGotDiscardAck.Increment();
-      static TLogRateLimiter lim(std::chrono::seconds(30));
 
-      if (lim.Test()) {
-        /* Write a syslog message even if Ds.Config.NoLogDiscard is true
-           because these events are always interesting enough to be worth
-           logging. */
-        syslog(LOG_ERR,
-            "Connector thread %d (index %lu broker %ld) got ACK error that triggers discard without pause: topic [%s], %lu messages in set with total data size %lu",
-            static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId,
-            msg_set.front()->GetTopic().c_str(),
-            static_cast<unsigned long>(msg_set.size()), GetDataSize(msg_set));
-      }
+      /* Write a log message even if Ds.Config.NoLogDiscard is true because
+         these events are always interesting enough to be worth logging. */
+      LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Connector thread "
+          << Gettid() << " (index " << MyBrokerIndex << " broker "
+          << MyBrokerId
+          << ") got ACK error that triggers discard without pause: topic ["
+          << msg_set.front()->GetTopic() << "], " << msg_set.size()
+          << " messages in set with total data size " << GetDataSize(msg_set);
 
       Ds.Discard(std::move(msg_set),
           TAnomalyTracker::TDiscardReason::KafkaErrorAck);
@@ -284,13 +235,10 @@ bool TProduceResponseProcessor::ProcessOneAck(std::list<TMsg::TPtr> &&msg_set,
     }
     case TAckResultAction::Pause: {
       ConnectorGotPauseAck.Increment();
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_ERR,
-            "Connector thread %d (index %lu broker %ld) got ACK error that triggers deferred pause",
-            static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId);
-      }
+      LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Connector thread "
+          << Gettid() << " (index " << MyBrokerIndex << " broker "
+          << MyBrokerId
+          << ") got ACK error that triggers deferred pause";
 
       /* Messages may be discarded here due to the failed delivery attempt
          limit.  Messages not discarded will be rerouted after the dispatcher
@@ -300,17 +248,10 @@ bool TProduceResponseProcessor::ProcessOneAck(std::list<TMsg::TPtr> &&msg_set,
     }
     case TAckResultAction::DiscardAndPause: {
       ConnectorGotDiscardAndPauseAck.Increment();
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        /* Write a syslog message even if Ds.Config.NoLogDiscard is true
-           because these events are always interesting enough to be worth
-           logging. */
-        syslog(LOG_ERR,
-            "Connector thread %d (index %lu broker %ld) got ACK error that triggers discard and deferred pause",
-            static_cast<int>(Gettid()), MyBrokerIndex, MyBrokerId);
-      }
-
+      LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Connector thread "
+          << Gettid() << " (index " << MyBrokerIndex << " broker "
+          << MyBrokerId
+          << ") got ACK error that triggers discard and deferred pause";
       Ds.Discard(std::move(msg_set),
           TAnomalyTracker::TDiscardReason::KafkaErrorAck);
       return false;

@@ -25,13 +25,13 @@
 #include <memory>
 #include <utility>
 
-#include <syslog.h>
-
 #include <base/time_util.h>
+#include <log/log.h>
 #include <server/counter.h>
 
 using namespace Base;
 using namespace Dory;
+using namespace Log;
 
 SERVER_COUNTER(MetadataDuplicateBrokerId);
 SERVER_COUNTER(MetadataDuplicatePartition);
@@ -66,8 +66,8 @@ void TMetadata::TBuilder::AddBroker(int32_t kafka_id, std::string &&hostname,
     Brokers.push_back(TBroker(kafka_id, std::move(hostname), port));
   } else {
     MetadataDuplicateBrokerId.Increment();
-    syslog(LOG_WARNING, "Ignoring duplicate broker ID %d in metadata response",
-        static_cast<int>(kafka_id));
+    LOG(TPri::WARNING) << "Ignoring duplicate broker ID " << kafka_id
+        << " in metadata response";
   }
 }
 
@@ -92,8 +92,8 @@ bool TMetadata::TBuilder::OpenTopic(const std::string &name) {
     CurrentTopicName = name;
   } else {
     MetadataDuplicateTopic.Increment();
-    syslog(LOG_WARNING, "Ignoring duplicate topic [%s] in metadata response",
-        name.c_str());
+    LOG(TPri::WARNING) << "Ignoring duplicate topic [" << name
+        << "] in metadata response";
   }
 
   return success;
@@ -107,21 +107,21 @@ void TMetadata::TBuilder::AddPartitionToTopic(int32_t partition_id,
 
   if (iter == BrokerMap.end()) {
     MetadataPartitionHasUnknownBroker.Increment();
-    syslog(LOG_WARNING,
-        "Ignoring partition ID %d for topic [%s] in metadata response due to unknown broker ID %d.  This can occur when a partition with only one replica resides on a broker that is currently down.",
-        static_cast<int>(partition_id), CurrentTopicName.c_str(),
-        static_cast<int>(broker_id));
+    LOG(TPri::WARNING) << "Ignoring partition ID " << partition_id
+        << " for topic [" << CurrentTopicName
+        << "] in metadata response due to unknown broker ID " << broker_id
+        << ".  This can occur when a partition with only one replica resides "
+        << "on a broker that is currently down.";
     return;
   }
 
   size_t broker_index = iter->second;
 
   if (broker_index >= Brokers.size()) {
+    LOG(TPri::ERR) << "Bug!!! broker index " << broker_index
+        << " in TMetadata::TBuilder::AddPartitionToTopic() is out of range: "
+        << "size " << Brokers.size();
     assert(false);
-    syslog(LOG_ERR,
-        "Bug!!! broker index %lu in TMetadata::TBuilder::AddPartitionToTopic() is out of range: size %lu",
-        static_cast<unsigned long>(broker_index),
-        static_cast<unsigned long>(Brokers.size()));
     return;
   }
 
@@ -129,18 +129,16 @@ void TMetadata::TBuilder::AddPartitionToTopic(int32_t partition_id,
 
   if (!ret.second) {
     MetadataDuplicatePartition.Increment();
-    syslog(LOG_WARNING,
-        "Ignoring duplicate partition ID %d for topic [%s] in metadata response",
-        static_cast<int>(partition_id), CurrentTopicName.c_str());
+    LOG(TPri::WARNING) << "Ignoring duplicate partition ID " << partition_id
+        << " for topic [" << CurrentTopicName << "] in metadata response";
     return;
   }
 
   if (CurrentTopicIndex >= Topics.size()) {
+    LOG(TPri::ERR) << "Bug!!! current topic index " << CurrentTopicIndex
+        << " in TMetadata::TBuilder::AddPartitionToTopic() is out of range: "
+        << "size " << Topics.size();
     assert(false);
-    syslog(LOG_ERR,
-        "Bug!!! current topic index %lu in TMetadata::TBuilder::AddPartitionToTopic() is out of range: size %lu",
-        static_cast<unsigned long>(CurrentTopicIndex),
-        static_cast<unsigned long>(Topics.size()));
     return;
   }
 
@@ -161,11 +159,10 @@ void TMetadata::TBuilder::CloseTopic() {
   assert(TopicNameToIndex.size() == Topics.size());
 
   if (CurrentTopicIndex >= Topics.size()) {
+    LOG(TPri::ERR) << "Bug!!! current topic index " << CurrentTopicIndex
+        << " in TMetadata::TBuilder::CloseTopic() is out of range: size "
+        << Topics.size();
     assert(false);
-    syslog(LOG_ERR,
-        "Bug!!! current topic index %lu in TMetadata::TBuilder::CloseTopic() is out of range: size %lu",
-        static_cast<unsigned long>(CurrentTopicIndex),
-        static_cast<unsigned long>(Topics.size()));
     return;
   }
 
@@ -203,11 +200,10 @@ void TMetadata::TBuilder::CloseTopic() {
     size_t broker_index = iter1->GetBrokerIndex();
 
     if (broker_index >= Brokers.size()) {
+      LOG(TPri::ERR) << "Bug!!! broker index " << broker_index
+          << " in TMetadata::TBuilder::CloseTopic() is out of range: size "
+          << Brokers.size();
       assert(false);
-      syslog(LOG_ERR,
-          "Bug!!! broker index %lu in TMetadata::TBuilder::CloseTopic() is out of range: size %lu",
-          static_cast<unsigned long>(broker_index),
-          static_cast<unsigned long>(Brokers.size()));
       return;
     }
 
@@ -354,11 +350,10 @@ int TMetadata::FindTopicIndex(const std::string &topic) const {
   size_t topic_index = iter->second;
 
   if (topic_index >= Topics.size()) {
+    LOG(TPri::ERR) << "Bug!!! Topic index " << topic_index
+        << " in metadata is out of range (size is " << Topics.size()
+        << ") in TMetadata::FindTopicIndex()";
     assert(false);
-    syslog(LOG_ERR,
-        "Bug!!! Topic index %lu in metadata is out of range (size is %lu) in TMetadata::FindTopicIndex()",
-        static_cast<unsigned long>(topic_index),
-        static_cast<unsigned long>(Topics.size()));
     return -1;
   }
 
@@ -372,10 +367,9 @@ const int32_t *TMetadata::FindPartitionChoices(const std::string &topic,
   int topic_index = FindTopicIndex(topic);
 
   if (topic_index < 0) {
+    LOG(TPri::ERR) << "Bug!!! Bad topic " << topic
+        << " passed to TMetadata::FindPartitionChoices()";
     assert(false);
-    syslog(LOG_ERR,
-        "Bug!!! Bad topic %s passed to TMetadata::FindPartitionChoices()",
-        topic.c_str());
     return nullptr;
   }
 
@@ -383,11 +377,10 @@ const int32_t *TMetadata::FindPartitionChoices(const std::string &topic,
   const TTopic &t = Topics[topic_index];
 
   if (broker_index >= Brokers.size()) {
+    LOG(TPri::ERR) << "Bug!!! Broker index " << broker_index
+        << " passed to TMetadata::FindPartitionChoices() is out of range "
+        << "(size is " << Brokers.size() << ")";
     assert(false);
-    syslog(LOG_ERR,
-        "Bug!!! Broker index %lu passed to TMetadata::FindPartitionChoices() is out of range (size is %lu)",
-        static_cast<unsigned long>(broker_index),
-        static_cast<unsigned long>(Brokers.size()));
     return nullptr;
   }
 
@@ -402,28 +395,26 @@ const int32_t *TMetadata::FindPartitionChoices(const std::string &topic,
   size_t choices_count = choices.GetTopicBrokerVecNumItems();
 
   if (choices_index >= TopicBrokerVec.size()) {
+    LOG(TPri::ERR) << "Bug!!! Choices index " << choices_index
+        << " is out of range (size is " << TopicBrokerVec.size()
+        << ") in TMetadata::FindPartitionChoices()";
     assert(false);
-    syslog(LOG_ERR,
-        "Bug!!! Choices index %lu is out of range (size is %lu) in TMetadata::FindPartitionChoices()",
-        static_cast<unsigned long>(choices_index),
-        static_cast<unsigned long>(TopicBrokerVec.size()));
     return nullptr;
   }
 
   if (choices_count > (TopicBrokerVec.size() - choices_index)) {
+    LOG(TPri::ERR) << "Bug!!! Choices count " << choices_count
+        << " is out of range (size is " << TopicBrokerVec.size()
+        << ", index is " << choices_index
+        << ") in TMetadata::FindPartitionChoices()";
     assert(false);
-    syslog(LOG_ERR,
-        "Bug!!! Choices count %lu is out of range (size is %lu, index is %lu) in TMetadata::FindPartitionChoices()",
-        static_cast<unsigned long>(choices_count),
-        static_cast<unsigned long>(TopicBrokerVec.size()),
-        static_cast<unsigned long>(choices_index));
     return nullptr;
   }
 
   if (choices_count == 0) {
+    LOG(TPri::ERR)
+        << "Bug!!! Choices count is 0 in TMetadata::FindPartitionChoices()";
     assert(false);
-    syslog(LOG_ERR,
-        "Bug!!! Choices count is 0 in TMetadata::FindPartitionChoices()");
     return nullptr;
   }
 
@@ -442,7 +433,8 @@ bool TMetadata::SanityCheckOkPartitions(const TTopic &t,
     id_set_ok.insert(p.Id);
 
     if (p.BrokerIndex >= Brokers.size()) {
-      syslog(LOG_ERR, "Bug!!! OkPartitions item has out of range BrokerIndex");
+      LOG(TPri::ERR)
+          << "Bug!!! OkPartitions item has out of range BrokerIndex";
       return false;
     }
 
@@ -458,20 +450,21 @@ bool TMetadata::SanityCheckOkPartitions(const TTopic &t,
         });
 
     if ((iter == t.AllPartitions.end()) || (iter->Id != p.Id)) {
-      syslog(LOG_ERR, "Bug!!! OkPartitions item not found in AllPartitions");
+      LOG(TPri::ERR) << "Bug!!! OkPartitions item not found in AllPartitions";
       return false;
     }
 
     if ((iter->BrokerIndex != p.BrokerIndex) ||
         (iter->ErrorCode != p.ErrorCode)) {
-      syslog(LOG_ERR,
-          "Bug!!! OkPartitions item ErrorCode does not match corresponding ErrorCode in AllPartitions");
+      LOG(TPri::ERR)
+          << "Bug!!! OkPartitions item ErrorCode does not match corresponding "
+          << "ErrorCode in AllPartitions";
       return false;
     }
   }
 
   if (id_set_ok.size() != t.OkPartitions.size()) {
-    syslog(LOG_ERR, "Bug!!! OkPartitions has duplicate IDs");
+    LOG(TPri::ERR) << "Bug!!! OkPartitions has duplicate IDs";
     return false;
   }
 
@@ -486,8 +479,8 @@ bool TMetadata::SanityCheckOutOfServicePartitions(const TTopic &t,
     id_set_bad.insert(p.Id);
 
     if (p.BrokerIndex >= Brokers.size()) {
-      syslog(LOG_ERR,
-          "Bug!!! OutOfServicePartitions item has out of range BrokerIndex");
+      LOG(TPri::ERR)
+          << "Bug!!! OutOfServicePartitions item has out of range BrokerIndex";
       return false;
     }
 
@@ -498,21 +491,22 @@ bool TMetadata::SanityCheckOutOfServicePartitions(const TTopic &t,
         });
 
     if ((iter == t.AllPartitions.end()) || (iter->Id != p.Id)) {
-      syslog(LOG_ERR,
-          "Bug!!! OutOfServicePartitions item not found in AllPartitions");
+      LOG(TPri::ERR)
+          << "Bug!!! OutOfServicePartitions item not found in AllPartitions";
       return false;
     }
 
     if ((iter->BrokerIndex != p.BrokerIndex) ||
         (iter->ErrorCode != p.ErrorCode)) {
-      syslog(LOG_ERR,
-          "Bug!!! OutOfServicePartitions item ErrorCode does not match corresponding ErrorCode in AllPartitions");
+      LOG(TPri::ERR)
+          << "Bug!!! OutOfServicePartitions item ErrorCode does not match "
+          << "corresponding ErrorCode in AllPartitions";
       return false;
     }
   }
 
   if (id_set_bad.size() != t.OutOfServicePartitions.size()) {
-    syslog(LOG_ERR, "Bug!!! OutOfServicePartitions has duplicate IDs");
+    LOG(TPri::ERR) << "Bug!!! OutOfServicePartitions has duplicate IDs";
     return false;
   }
 
@@ -529,7 +523,7 @@ bool TMetadata::SanityCheckBrokerPartitionMap(const TTopic &t,
     auto iter = t.PartitionChoiceMap.find(map_item.first);
 
     if (iter == t.PartitionChoiceMap.end()) {
-      syslog(LOG_ERR, "Bug!!! Broker index missing from PartitionChoiceMap");
+      LOG(TPri::ERR) << "Bug!!! Broker index missing from PartitionChoiceMap";
       return false;
     }
 
@@ -538,13 +532,13 @@ bool TMetadata::SanityCheckBrokerPartitionMap(const TTopic &t,
     size_t chunk_size = choices.GetTopicBrokerVecNumItems();
 
     if (chunk_index >= TopicBrokerVec.size()) {
-      syslog(LOG_ERR, "Bug!!! chunk_index >= TopicBrokerVec.size()");
+      LOG(TPri::ERR) << "Bug!!! chunk_index >= TopicBrokerVec.size()";
       return false;
     }
 
     if (chunk_size > (TopicBrokerVec.size() - chunk_index)) {
-      syslog(LOG_ERR,
-          "Bug!!! chunk_size > (TopicBrokerVec.size() - chunk_index)");
+      LOG(TPri::ERR)
+          << "Bug!!! chunk_size > (TopicBrokerVec.size() - chunk_index)";
       return false;
     }
 
@@ -553,7 +547,9 @@ bool TMetadata::SanityCheckBrokerPartitionMap(const TTopic &t,
         chunk_begin + chunk_size);
 
     if (partition_id_set != map_item.second) {
-      syslog(LOG_ERR, "Bug!!! Partition choices referenced by PartitionChoiceMap do not match partition IDs from OkPartitions");
+      LOG(TPri::ERR)
+          << "Bug!!! Partition choices referenced by PartitionChoiceMap do "
+          << "not match partition IDs from OkPartitions";
       return false;
     }
 
@@ -564,8 +560,9 @@ bool TMetadata::SanityCheckBrokerPartitionMap(const TTopic &t,
          want to send PartitionKey messages that target specific partition
          IDs. */
       if ((i > 0) && (chunk_begin[i] <= chunk_begin[i - 1])) {
-        syslog(LOG_ERR,
-            "Bug!!! Unsorted or duplicate partition IDs in TopicBrokerVec chunk");
+        LOG(TPri::ERR)
+            << "Bug!!! Unsorted or duplicate partition IDs in TopicBrokerVec "
+            << "chunk";
         return false;
       }
 
@@ -583,14 +580,16 @@ bool TMetadata::SanityCheckOneTopic(const TTopic &t,
 
   if (t.AllPartitions.size() !=
       (t.OkPartitions.size() + t.OutOfServicePartitions.size())) {
-    syslog(LOG_ERR,
-        "Bug!!! AllPartitions.size() != OkPartitions.size() + OutOfServicePartitions.size()");
+    LOG(TPri::ERR)
+        << "Bug!!! AllPartitions.size() != OkPartitions.size() + "
+        << "OutOfServicePartitions.size()";
     return false;
   }
 
   for (size_t i = 1; i < t.AllPartitions.size(); ++i) {
     if (t.AllPartitions[i].Id <= t.AllPartitions[i - 1].Id) {
-      syslog(LOG_ERR, "Bug!!! AllPartitions is unsorted or has duplicate IDs");
+      LOG(TPri::ERR)
+          << "Bug!!! AllPartitions is unsorted or has duplicate IDs";
       return false;
     }
   }
@@ -611,15 +610,16 @@ bool TMetadata::SanityCheckOneTopic(const TTopic &t,
 
   for (auto id : id_set_ok) {
     if (id_set_bad.find(id) != id_set_bad.end()) {
-      syslog(LOG_ERR,
-          "Bug!!! Same ID appears in both OkPartitions and OutOfServicePartitions");
+      LOG(TPri::ERR)
+          << "Bug!!! Same ID appears in both OkPartitions and "
+          << "OutOfServicePartitions";
       return false;
     }
   }
 
   if (broker_partition_map.size() != t.PartitionChoiceMap.size()) {
-    syslog(LOG_ERR,
-        "Bug!!! broker_partition_map.size() != t.PartitionChoiceMap.size()");
+    LOG(TPri::ERR)
+        << "Bug!!! broker_partition_map.size() != t.PartitionChoiceMap.size()";
     return false;
   }
 
@@ -634,7 +634,7 @@ bool TMetadata::SanityCheckTopics(
 
   for (const auto &map_item : TopicNameToIndex) {
     if (map_item.second >= Topics.size()) {
-      syslog(LOG_ERR, "Bug!!! Index out of range in TopicNameToIndex");
+      LOG(TPri::ERR) << "Bug!!! Index out of range in TopicNameToIndex";
       return false;
     }
 
@@ -642,8 +642,8 @@ bool TMetadata::SanityCheckTopics(
   }
 
   if (topic_indexes.size() != Topics.size()) {
-    syslog(LOG_ERR,
-        "Bug!!! TopicNameToIndex has wrong size and/or dupicate indexes");
+    LOG(TPri::ERR)
+        << "Bug!!! TopicNameToIndex has wrong size and/or dupicate indexes";
     return false;
   }
 
@@ -658,7 +658,7 @@ bool TMetadata::SanityCheckTopics(
 
   for (size_t value : topic_broker_vec_access) {
     if (value != 1) {
-      syslog(LOG_ERR, "Bug!!! TopicBrokerVec item access count is wrong");
+      LOG(TPri::ERR) << "Bug!!! TopicBrokerVec item access count is wrong";
       return false;
     }
   }
@@ -706,21 +706,23 @@ bool TMetadata::DoSanityCheck() const {
     }
 
     if (b.IsInService() != in_service) {
-      syslog(LOG_ERR,
-          "Bug!!! TBroker IsInService() method returns wrong result");
+      LOG(TPri::ERR)
+          << "Bug!!! TBroker IsInService() method returns wrong result";
       return false;
     }
   }
 
   if (NumInServiceBrokers() != in_svc_count) {
-    syslog(LOG_ERR,
-        "Bug!!! NumInServiceBrokers() does not agree with count of brokers for which IsInService() returns true");
+    LOG(TPri::ERR)
+        << "Bug!!! NumInServiceBrokers() does not agree with count of brokers "
+        << "for which IsInService() returns true";
     return false;
   }
 
   if (adjacent_in_svc_count != in_svc_count) {
-    syslog(LOG_ERR,
-        "Bug!!! In service brokers should all be grouped at start of Brokers vector");
+    LOG(TPri::ERR)
+        << "Bug!!! In service brokers should all be grouped at start of "
+        << "Brokers vector";
   }
 
   return true;

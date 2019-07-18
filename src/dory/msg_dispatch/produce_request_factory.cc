@@ -23,10 +23,8 @@
 
 #include <utility>
 
-#include <syslog.h>
-
 #include <base/no_default_case.h>
-#include <dory/util/time_util.h>
+#include <log/log.h>
 #include <server/counter.h>
 
 using namespace Base;
@@ -38,6 +36,7 @@ using namespace Dory::Debug;
 using namespace Dory::KafkaProto::Produce;
 using namespace Dory::MsgDispatch;
 using namespace Dory::Util;
+using namespace Log;
 
 SERVER_COUNTER(BugAllTopicsEmpty);
 SERVER_COUNTER(BugMsgListMultipleTopics);
@@ -103,12 +102,7 @@ TOpt<TProduceRequest> TProduceRequestFactory::BuildRequest(
 
 
     BugAllTopicsEmpty.Increment();
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR, "Bug!!! TAllTopics is empty");
-    }
-
+    LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Bug!!! TAllTopics is empty";
     return TOpt<TProduceRequest>();
   }
 
@@ -150,13 +144,13 @@ static TOpt<int> GetRealCompressionLevel(const TCompressionConf::TConf &conf) {
 
   if (conf.Level.IsKnown()) {
     if (real_level.IsUnknown()) {
-      syslog(LOG_WARNING,
-          "Ignoring compression level of %d requested for compression type that does not support levels: %s",
-          *conf.Level, ToString(conf.Type));
+      LOG(TPri::WARNING) << "Ignoring compression level of " << *conf.Level
+          << " requested for compression type that does not support levels: "
+          << ToString(conf.Type);
     } else if (*real_level != *conf.Level) {
-      syslog(LOG_WARNING,
-          "Ignoring invalid compression level of %d requested for compression type: %s",
-          *conf.Level, ToString(conf.Type));
+      LOG(TPri::WARNING) << "Ignoring invalid compression level of "
+          << *conf.Level << " requested for compression type: "
+          << ToString(conf.Type);
     }
   }
 
@@ -212,14 +206,10 @@ TProduceRequestFactory::GetTopicData(const std::string &topic) {
    mechanism in case of a bug. */
 static bool MultipleTopicBugFixup(
     std::list<std::list<TMsg::TPtr>> &input_queue) {
-  assert(false);
   BugMsgListMultipleTopics.Increment();
-  static TLogRateLimiter lim(std::chrono::seconds(30));
-
-  if (lim.Test()) {
-    syslog(LOG_ERR, "Bug!!! Msg list has multiple topics");
-  }
-
+  LOG_R(TPri::ERR, std::chrono::seconds(30))
+      << "Bug!!! Msg list has multiple topics";
+  assert(false);
   auto iter = input_queue.begin();
   assert(iter != input_queue.end());
   std::list<TMsg::TPtr> single_item_list;
@@ -252,27 +242,19 @@ static void SanityCheckRequestContents(TAllTopics &contents) {
       TMsgSet &msg_set = group_iter->second;
 
       if (msg_set.Contents.empty()) {
-        assert(false);
         BugMsgSetEmpty.Increment();
-        static TLogRateLimiter lim(std::chrono::seconds(30));
-
-        if (lim.Test()) {
-          syslog(LOG_ERR, "Bug!!! TMsgSet is empty");
-        }
-
+        LOG_R(TPri::ERR, std::chrono::seconds(30))
+            << "Bug!!! TMsgSet is empty";
+        assert(false);
         group.erase(group_iter);
       }
     }
 
     if (group.empty()) {
-      assert(false);
       BugMultiPartitionGroupEmpty.Increment();
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_ERR, "Bug!!! TMultiPartitionGroup is empty");
-      }
-
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Bug!!! TMultiPartitionGroup is empty";
+      assert(false);
       contents.erase(all_topics_iter);
     }
   }
@@ -523,11 +505,8 @@ void TProduceRequestFactory::WriteOneMsgSet(const TMsgSet &msg_set,
       MsgSetNotCompressible.Increment();
     } catch (const TCompressionCodecApi::TError &x) {
       MsgSetCompressionError.Increment();
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_ERR, "Error compressing message set: %s", x.what());
-      }
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Error compressing message set: " << x.what();
 
       if (msg_opened) {
         RequestWriter->RollbackOpenMsg();

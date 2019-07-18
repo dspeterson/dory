@@ -24,6 +24,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <ios>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
@@ -37,6 +38,7 @@
 #include <dory/build_id.h>
 #include <dory/util/arg_parse_error.h>
 #include <dory/util/misc_util.h>
+#include <log/log.h>
 #include <tclap/CmdLine.h>
 
 using namespace Base;
@@ -460,121 +462,119 @@ static std::string BuildModeString(const TOpt<mode_t> &opt_mode) {
 
 void Dory::LogConfig(const TConfig &config) {
   if (config.ClientIdWasEmpty) {
-    syslog(LOG_WARNING, "Using \"dory\" for client ID since none was specified with --client_id option.  This is a workaround for a bug in Kafka 0.9.0.0 that causes broker to crash on receipt of produce request with empty client ID.  See https://issues.apache.org/jira/browse/KAFKA-3088 for details.");
+    LOG(TPri::WARNING) << "Using \"dory\" for client ID since none was "
+        << "specified with --client_id option.  This is a workaround for a "
+        << "bug in Kafka 0.9.0.0 that causes broker to crash on receipt of "
+        << "produce request with empty client ID.  See "
+        << "https://issues.apache.org/jira/browse/KAFKA-3088 for details.";
   }
 
-  syslog(LOG_NOTICE, "Version: [%s]", dory_build_id);
-  syslog(LOG_NOTICE, "Config file: [%s]", config.ConfigPath.c_str());
+  LOG(TPri::NOTICE) << "Version: [" << dory_build_id << "]";
+  LOG(TPri::NOTICE) << "Config file: [" << config.ConfigPath << "]";
 
   if (config.ReceiveSocketName.empty()) {
-    syslog(LOG_NOTICE, "UNIX domain datagram input socket disabled");
+    LOG(TPri::NOTICE) << "UNIX domain datagram input socket disabled";
   } else {
-    syslog(LOG_NOTICE, "UNIX domain datagram input socket [%s]",
-        config.ReceiveSocketName.c_str());
+    LOG(TPri::NOTICE) << "UNIX domain datagram input socket ["
+        << config.ReceiveSocketName << "]";
   }
 
   if (config.ReceiveStreamSocketName.empty()) {
-    syslog(LOG_NOTICE, "UNIX domain stream input socket disabled");
+    LOG(TPri::NOTICE) << "UNIX domain stream input socket disabled";
   } else {
-    syslog(LOG_NOTICE, "UNIX domain stream input socket [%s]",
-        config.ReceiveStreamSocketName.c_str());
+    LOG(TPri::NOTICE) << "UNIX domain stream input socket ["
+        << config.ReceiveStreamSocketName << "]";
   }
 
   if (config.InputPort.IsKnown()) {
-    syslog(LOG_NOTICE, "Listening on input port %u",
-        static_cast<unsigned>(*config.InputPort));
+    LOG(TPri::NOTICE) << "Listening on input port " << *config.InputPort;
   } else {
-    syslog(LOG_NOTICE, "Input port disabled");
+    LOG(TPri::NOTICE) << "Input port disabled";
   }
 
   if (!config.ReceiveSocketName.empty()) {
-    syslog(LOG_NOTICE, "UNIX domain datagram input socket mode %s",
-        BuildModeString(config.ReceiveSocketMode).c_str());
+    LOG(TPri::NOTICE) << "UNIX domain datagram input socket mode "
+        << BuildModeString(config.ReceiveSocketMode);
   }
 
   if (!config.ReceiveStreamSocketName.empty()) {
-    syslog(LOG_NOTICE, "UNIX domain stream input socket mode %s",
-        BuildModeString(config.ReceiveStreamSocketMode).c_str());
+    LOG(TPri::NOTICE) << "UNIX domain stream input socket mode "
+        << BuildModeString(config.ReceiveStreamSocketMode);
   }
 
   if (config.MetadataApiVersion.IsKnown()) {
-    syslog(LOG_NOTICE, "Metadata API version is specified as %lu",
-        static_cast<unsigned long>(*config.MetadataApiVersion));
+    LOG(TPri::NOTICE) << "Metadata API version is specified as "
+        << *config.MetadataApiVersion;
   } else {
-    syslog(LOG_NOTICE, "Metadata API version is unspecified");
+    LOG(TPri::NOTICE) << "Metadata API version is unspecified";
   }
 
   if (config.ProduceApiVersion.IsKnown()) {
-    syslog(LOG_NOTICE, "Produce API version is specified as %lu",
-        static_cast<unsigned long>(*config.ProduceApiVersion));
+    LOG(TPri::NOTICE) << "Produce API version is specified as "
+        << *config.ProduceApiVersion;
   } else {
-    syslog(LOG_NOTICE, "Produce API version is unspecified");
+    LOG(TPri::NOTICE) << "Produce API version is unspecified";
   }
 
-  syslog(LOG_NOTICE, "Listening on status port %u",
-         static_cast<unsigned>(config.StatusPort));
-  syslog(LOG_NOTICE, "Web interface loopback only: %s",
-         config.StatusLoopbackOnly ? "true" : "false");
-  syslog(LOG_NOTICE, "Buffered message limit %lu kbytes",
-         static_cast<unsigned long>(config.MsgBufferMax));
-  syslog(LOG_NOTICE, "Max datagram input message size %lu bytes",
-         static_cast<unsigned long>(config.MaxInputMsgSize));
-  syslog(LOG_NOTICE, "Max stream input message size %lu bytes",
-         static_cast<unsigned long>(config.MaxStreamInputMsgSize));
+  LOG(TPri::NOTICE) << "Listening on status port " << config.StatusPort;
+  LOG(TPri::NOTICE) << "Web interface loopback only: "
+      << std::boolalpha << config.StatusLoopbackOnly;
+  LOG(TPri::NOTICE) << "Buffered message limit " << config.MsgBufferMax
+      << "kbytes";
+  LOG(TPri::NOTICE) << "Max datagram input message size "
+      << config.MaxInputMsgSize << " bytes";
+  LOG(TPri::NOTICE) << "Max stream input message size "
+      << config.MaxStreamInputMsgSize << " bytes";
 
   if (!config.ReceiveSocketName.empty()) {
-    syslog(LOG_NOTICE, "Allow large UNIX datagrams: %s",
-           config.AllowLargeUnixDatagrams ? "true" : "false");
+    LOG(TPri::NOTICE) << "Allow large UNIX datagrams: "
+        << std::boolalpha << config.AllowLargeUnixDatagrams;
   }
 
-  syslog(LOG_NOTICE, "Max failed delivery attempts %lu",
-         static_cast<unsigned long>(config.MaxFailedDeliveryAttempts));
-  syslog(LOG_NOTICE, config.Daemon ?
-         "Running as daemon" : "Not running as daemon");
-  syslog(LOG_NOTICE, "Client ID [%s]", config.ClientId.c_str());
-  syslog(LOG_NOTICE, "Required ACKs %d",
-         static_cast<int>(config.RequiredAcks));
-  syslog(LOG_NOTICE, "Replication timeout %d milliseconds",
-         static_cast<int>(config.ReplicationTimeout));
-  syslog(LOG_NOTICE, "Shutdown send grace period %lu milliseconds",
-         static_cast<unsigned long>(config.ShutdownMaxDelay));
-  syslog(LOG_NOTICE, "Kafka dispatch restart grace period %lu milliseconds",
-         static_cast<unsigned long>(config.DispatcherRestartMaxDelay));
-  syslog(LOG_NOTICE, "Metadata refresh interval %lu minutes",
-         static_cast<unsigned long>(config.MetadataRefreshInterval));
-  syslog(LOG_NOTICE, "Kafka socket timeout %lu seconds",
-         static_cast<unsigned long>(config.KafkaSocketTimeout));
-  syslog(LOG_NOTICE, "Pause rate limit initial %lu milliseconds",
-         static_cast<unsigned long>(config.PauseRateLimitInitial));
-  syslog(LOG_NOTICE, "Pause rate limit max double %lu",
-         static_cast<unsigned long>(config.PauseRateLimitMaxDouble));
-  syslog(LOG_NOTICE, "Minimum pause delay %lu milliseconds",
-         static_cast<unsigned long>(config.MinPauseDelay));
-  syslog(LOG_NOTICE, "Discard reporting interval %lu seconds",
-         static_cast<unsigned long>(config.DiscardReportInterval));
-  syslog(LOG_NOTICE, "Debug directory [%s]", config.DebugDir.c_str());
-  syslog(LOG_NOTICE, "Message debug time limit %lu seconds",
-         static_cast<unsigned long>(config.MsgDebugTimeLimit));
-  syslog(LOG_NOTICE, "Message debug byte limit %lu",
-         static_cast<unsigned long>(config.MsgDebugByteLimit));
-  syslog(LOG_NOTICE, "Skip comparing metadata on refresh: %s",
-         config.SkipCompareMetadataOnRefresh ? "true" : "false");
+  LOG(TPri::NOTICE) << "Max failed delivery attempts "
+      << config.MaxFailedDeliveryAttempts;
+  LOG(TPri::NOTICE) << "Running as daemon: " << std::boolalpha
+      << config.Daemon;
+  LOG(TPri::NOTICE) << "Client ID [" << config.ClientId << "]";
+  LOG(TPri::NOTICE) << "Required ACKs " << config.RequiredAcks;
+  LOG(TPri::NOTICE) << "Replication timeout " << config.ReplicationTimeout
+      << " ms";
+  LOG(TPri::NOTICE) << "Shutdown send grace period " << config.ShutdownMaxDelay
+      << " ms";
+  LOG(TPri::NOTICE) << "Kafka dispatch restart grace period "
+      << config.DispatcherRestartMaxDelay << " ms";
+  LOG(TPri::NOTICE) << "Metadata refresh interval "
+      << config.MetadataRefreshInterval << " min";
+  LOG(TPri::NOTICE) << "Kafka socket timeout " << config.KafkaSocketTimeout
+      << " sec";
+  LOG(TPri::NOTICE) << "Pause rate limit initial "
+      << config.PauseRateLimitInitial << " ms";
+  LOG(TPri::NOTICE) << "Pause rate limit max double "
+      << config.PauseRateLimitMaxDouble;
+  LOG(TPri::NOTICE) << "Minimum pause delay " << config.MinPauseDelay << " ms";
+  LOG(TPri::NOTICE) << "Discard reporting interval "
+      << config.DiscardReportInterval << " sec";
+  LOG(TPri::NOTICE) << "Debug directory [" << config.DebugDir << "]";
+  LOG(TPri::NOTICE) << "Message debug time limit " << config.MsgDebugTimeLimit
+      << " sec";
+  LOG(TPri::NOTICE) << "Message debug byte limit " << config.MsgDebugByteLimit;
+  LOG(TPri::NOTICE) << "Skip comparing metadata on refresh: " << std::boolalpha
+      << config.SkipCompareMetadataOnRefresh;
 
   if (config.DiscardLogPath.empty()) {
-    syslog(LOG_NOTICE, "Discard logfile creation is disabled");
+    LOG(TPri::NOTICE) << "Discard logfile creation is disabled";
   } else {
-    syslog(LOG_NOTICE, "Discard logfile: [%s]", config.DiscardLogPath.c_str());
-    syslog(LOG_NOTICE, "Discard log max file size: %lu kbytes",
-           static_cast<unsigned long>(config.DiscardLogMaxFileSize));
-    syslog(LOG_NOTICE, "Discard log max archive size: %lu kbytes",
-           static_cast<unsigned long>(config.DiscardLogMaxArchiveSize));
-    syslog(LOG_NOTICE, "Discard log bad msg prefix size: %lu bytes",
-           static_cast<unsigned long>(config.DiscardLogBadMsgPrefixSize));
+    LOG(TPri::NOTICE) << "Discard logfile: [" << config.DiscardLogPath << "]";
+    LOG(TPri::NOTICE) << "Discard log max file size: "
+        << config.DiscardLogMaxFileSize << " kb";
+    LOG(TPri::NOTICE) << "Discard log max archive size: "
+        << config.DiscardLogMaxArchiveSize << " kb";
+    LOG(TPri::NOTICE) << "Discard log bad msg prefix size: "
+        << config.DiscardLogBadMsgPrefixSize << " bytes";
   }
 
-  syslog(LOG_NOTICE, "Discard report bad msg prefix size: %lu bytes",
-         static_cast<unsigned long>(config.DiscardReportBadMsgPrefixSize));
-  syslog(LOG_NOTICE, config.TopicAutocreate ?
-         "Automatic topic creation enabled" :
-         "Automatic topic creation disabled");
+  LOG(TPri::NOTICE) << "Discard report bad msg prefix size: "
+      << config.DiscardReportBadMsgPrefixSize << " bytes";
+  LOG(TPri::NOTICE) << "Automatic topic creation enabled: " << std::boolalpha
+      << config.TopicAutocreate;
 }

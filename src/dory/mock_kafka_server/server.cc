@@ -27,9 +27,8 @@
 #include <stdexcept>
 #include <string>
 
-#include <syslog.h>
-
 #include <dory/util/exceptions.h>
+#include <log/log.h>
 #include <socket/address.h>
 #include <thread/fd_managed_thread.h>
 
@@ -38,6 +37,7 @@ using namespace Dory;
 using namespace Dory::Util;
 using namespace Dory::MockKafkaServer;
 using namespace Fiber;
+using namespace Log;
 using namespace Socket;
 using namespace Thread;
 
@@ -149,9 +149,9 @@ void TServer::ShutDownWorkers() {
       try {
         std::rethrow_exception(x.ThrownException);
       } catch (const std::exception &y) {
-        syslog(LOG_ERR, "Worker threw exception: %s", y.what());
+        LOG(TPri::ERR) << "Worker threw exception: " << y.what();
       } catch (...) {
-        syslog(LOG_ERR, "Worker threw unknown exception");
+        LOG(TPri::ERR) << "Worker threw unknown exception";
       }
     }
   }

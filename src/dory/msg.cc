@@ -23,18 +23,16 @@
 
 #include <algorithm>
 
-#include <syslog.h>
-
 #include <base/time_util.h>
 #include <capped/writer.h>
-#include <dory/util/time_util.h>
+#include <log/log.h>
 #include <server/counter.h>
 #include <server/daemonize.h>
 
 using namespace Base;
 using namespace Capped;
 using namespace Dory;
-using namespace Dory::Util;
+using namespace Log;
 
 SERVER_COUNTER(MsgCreate);
 SERVER_COUNTER(MsgDestroy);
@@ -72,14 +70,10 @@ TMsg::~TMsg() {
 
   if (State != TState::Processed) {
     MsgUnprocessedDestroy.Increment();
-    static TLogRateLimiter lim(std::chrono::seconds(5));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR,
-          "Possible bug: destroying unprocessed message with topic [%s] and timestamp %llu.  This is expected behavior if the server is exiting due to a fatal error.",
-          Topic.c_str(), static_cast<unsigned long long>(Timestamp));
-      Server::BacktraceToLog();
-    }
+    LOG_R(TPri::ERR, std::chrono::seconds(5))
+        << "Possible bug: destroying unprocessed message with topic [" << Topic
+        << "] and timestamp " << Timestamp << ".  This is expected behavior "
+        << "if the server is exiting due to a fatal error.";
   }
 }
 

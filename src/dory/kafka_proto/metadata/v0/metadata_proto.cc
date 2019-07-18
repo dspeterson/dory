@@ -26,20 +26,18 @@
 #include <cstring>
 #include <string>
 
-#include <syslog.h>
-
 #include <dory/kafka_proto/kafka_error_code.h>
 #include <dory/kafka_proto/metadata/v0/metadata_request_writer.h>
 #include <dory/kafka_proto/metadata/v0/metadata_response_reader.h>
 #include <dory/metadata.h>
-#include <dory/util/time_util.h>
+#include <log/log.h>
 #include <server/counter.h>
 
 using namespace Dory;
 using namespace Dory::KafkaProto;
 using namespace Dory::KafkaProto::Metadata;
 using namespace Dory::KafkaProto::Metadata::V0;
-using namespace Dory::Util;
+using namespace Log;
 
 SERVER_COUNTER(TopicAutocreateGotErrorResponse);
 SERVER_COUNTER(TopicAutocreateNoTopicInResponse);
@@ -116,14 +114,8 @@ bool TMetadataProto::TopicAutocreateWasSuccessful(const char *topic,
 
   if (!reader.NextTopic()) {
     TopicAutocreateNoTopicInResponse.Increment();
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR,
-          "Autocreate for topic [%s] failed: no topic in metadata response",
-          topic);
-    }
-
+    LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Autocreate for topic ["
+        << topic << "] failed: no topic in metadata response";
     return false;
   }
 
@@ -132,9 +124,9 @@ bool TMetadataProto::TopicAutocreateWasSuccessful(const char *topic,
 
   if (response_topic != topic) {
     TopicAutocreateUnexpectedTopicInResponse.Increment();
-    syslog(LOG_ERR,
-        "Autocreate for topic [%s] failed: unexpected topic [%s] in metadata response",
-        topic, response_topic.c_str());
+    LOG(TPri::ERR) << "Autocreate for topic [" << topic
+        << "] failed: unexpected topic [" << response_topic
+        << "] in metadata response";
     return false;
   }
 
@@ -147,13 +139,8 @@ bool TMetadataProto::TopicAutocreateWasSuccessful(const char *topic,
   if ((error_code != TKafkaErrorCode::None) &&
       (error_code != TKafkaErrorCode::LeaderNotAvailable)) {
     TopicAutocreateGotErrorResponse.Increment();
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR, "Autocreate for topic [%s] failed: got error code %d",
-          topic, static_cast<int>(error_code));
-    }
-
+    LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Autocreate for topic ["
+        << topic << "] failed: got error code " << error_code;
     return false;
   }
 

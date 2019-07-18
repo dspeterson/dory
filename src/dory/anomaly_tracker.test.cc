@@ -37,12 +37,16 @@
 #include <dory/msg_creator.h>
 #include <dory/msg_state_tracker.h>
 #include <dory/test_util/misc_util.h>
+#include <dory/util/misc_util.h>
+#include <log/pri.h>
 
 #include <gtest/gtest.h>
 
 using namespace Capped;
 using namespace Dory;
 using namespace Dory::TestUtil;
+using namespace Dory::Util;
+using namespace Log;
 
 namespace {
 
@@ -118,6 +122,7 @@ namespace {
         Clock(&ClockValue),
         AnomalyTracker(DiscardFileLogger, report_interval,
                        std::numeric_limits<size_t>::max(), Clock) {
+    InitLogging("dory", TPri::INFO, false);
   }
 
   /* The fixture for testing class TAnomalyTracker. */

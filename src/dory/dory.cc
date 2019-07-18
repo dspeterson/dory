@@ -29,7 +29,6 @@
 
 #include <signal.h>
 #include <sys/types.h>
-#include <syslog.h>
 #include <unistd.h>
 
 #include <base/opt.h>
@@ -40,6 +39,7 @@
 #include <dory/util/handle_xml_errors.h>
 #include <dory/util/misc_util.h>
 #include <dory/util/dory_xml_init.h>
+#include <log/log.h>
 #include <server/daemonize.h>
 
 using namespace xercesc;
@@ -47,6 +47,7 @@ using namespace xercesc;
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Util;
+using namespace Log;
 using namespace Xml;
 
 static int DoryMain(int argc, char *argv[]) {
@@ -108,8 +109,9 @@ static int DoryMain(int argc, char *argv[]) {
   try {
     dory.reset(new TDoryServer(std::move(*dory_config)));
   } catch (const std::bad_alloc &) {
-    syslog(LOG_ERR,
-        "Failed to allocate memory during server initialization.  Try specifying a smaller value for the --msg_buffer_max option.");
+    LOG(TPri::ERR)
+        << "Failed to allocate memory during server initialization.  Try "
+        << "specifying a smaller value for the --msg_buffer_max option.";
     return EXIT_FAILURE;
   }
 
@@ -121,12 +123,13 @@ static int DoryMain(int argc, char *argv[]) {
   LogConfig(dory->GetConfig());
 
   if (large_sendbuf_required) {
-    syslog(LOG_WARNING,
-        "Clients sending maximum-sized UNIX domain datagrams need to set SO_SNDBUF above the default value.");
+    LOG(TPri::WARNING)
+        << "Clients sending maximum-sized UNIX domain datagrams need to set "
+        << "SO_SNDBUF above the default value.";
   }
 
-  syslog(LOG_NOTICE, "Pool block size is %lu bytes",
-         static_cast<unsigned long>(dory->GetPoolBlockSize()));
+  LOG(TPri::NOTICE) << "Pool block size is " << dory->GetPoolBlockSize()
+      << " bytes";
   TDoryServer::TSignalHandlerInstaller handler_installer;
   return dory->Run();
 }
@@ -137,10 +140,10 @@ int main(int argc, char *argv[]) {
   try {
     ret = DoryMain(argc, argv);
   } catch (const std::exception &x) {
-    syslog(LOG_ERR, "Fatal error in main thread: %s", x.what());
+    LOG(TPri::ERR) << "Fatal error in main thread: " << x.what();
     _exit(EXIT_FAILURE);
   } catch (...) {
-    syslog(LOG_ERR, "Fatal unknown error in main thread");
+    LOG(TPri::ERR) << "Fatal unknown error in main thread";
     _exit(EXIT_FAILURE);
   }
 

@@ -26,16 +26,16 @@
 #include <sstream>
 #include <vector>
 
-#include <syslog.h>
-
 #include <base/error_utils.h>
 #include <base/no_default_case.h>
 #include <dory/web_request_handler.h>
+#include <log/log.h>
 #include <server/counter.h>
 #include <server/url_decode.h>
 
 using namespace Base;
 using namespace Dory;
+using namespace Log;
 using namespace Server;
 
 SERVER_COUNTER(MongooseEventLog);
@@ -130,8 +130,8 @@ void *TWebInterface::OnEvent(mg_event event, mg_connection *conn,
       case MG_EVENT_LOG: {
         error_blurb = "Mongoose event log";
         MongooseEventLog.Increment();
-        syslog(LOG_ERR, "Mongoose error: %s %s %s", request_info->log_message,
-               request_info->uri, request_info->query_string);
+        LOG(TPri::ERR) << "Mongoose error: " << request_info->log_message
+            << " " << request_info->uri << " " << request_info->query_string;
         is_handled = true;
         break;
       }

@@ -21,14 +21,12 @@
 
 #include <dory/msg_state_tracker.h>
 
-#include <syslog.h>
-
 #include <base/no_default_case.h>
-#include <dory/util/time_util.h>
+#include <log/log.h>
 
 using namespace Base;
 using namespace Dory;
-using namespace Dory::Util;
+using namespace Log;
 
 void TMsgStateTracker::MsgEnterNew() {
   assert(this);
@@ -209,42 +207,26 @@ void TMsgStateTracker::TDeltaComputer::CountBatchingEntered(
       break;
     }
     case TMsg::TState::Batching: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_ERR, "Bug: Cannot reenter state 'Batching'");
-      }
-
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Bug: Cannot reenter state 'Batching'";
       assert(false);
       break;
     }
     case TMsg::TState::SendWait: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_ERR, "Bug: Cannot enter state 'Batching' from 'SendWait'");
-      }
-
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Bug: Cannot enter state 'Batching' from 'SendWait'";
       assert(false);
       break;
     }
     case TMsg::TState::AckWait: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_ERR, "Bug: Cannot enter state 'Batching' from 'AckWait'");
-      }
-
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Bug: Cannot enter state 'Batching' from 'AckWait'";
       assert(false);
       break;
     }
     case TMsg::TState::Processed: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_ERR, "Bug: Cannot enter state 'Batching' from 'Processed'");
-      }
-
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Bug: Cannot enter state 'Batching' from 'Processed'";
       assert(false);
       break;
     }
@@ -276,12 +258,8 @@ void TMsgStateTracker::TDeltaComputer::CountSendWaitEntered(
       break;
     }
     case TMsg::TState::Processed: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_ERR, "Bug: Cannot enter state 'SendWait' from 'Processed'");
-      }
-
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Bug: Cannot enter state 'SendWait' from 'Processed'";
       assert(false);
       break;
     }
@@ -295,23 +273,14 @@ void TMsgStateTracker::TDeltaComputer::CountAckWaitEntered(
 
   switch (prev_state) {
     case TMsg::TState::New: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_ERR,
-            "Bug: Cannot enter state 'AckWait' from 'New'");
-      }
-
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Bug: Cannot enter state 'AckWait' from 'New'";
       assert(false);
       break;
     }
     case TMsg::TState::Batching: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_ERR, "Bug: Cannot enter state 'AckWait' from 'Batching'");
-      }
-
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Bug: Cannot enter state 'AckWait' from 'Batching'";
       assert(false);
       break;
     }
@@ -321,22 +290,14 @@ void TMsgStateTracker::TDeltaComputer::CountAckWaitEntered(
       break;
     }
     case TMsg::TState::AckWait: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_ERR, "Bug: Cannot reenter state 'AckWait'");
-      }
-
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Bug: Cannot reenter state 'AckWait'";
       assert(false);
       break;
     }
     case TMsg::TState::Processed: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_ERR, "Bug: Cannot enter state 'AckWait' from 'Processed'");
-      }
-
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Bug: Cannot enter state 'AckWait' from 'Processed'";
       assert(false);
       break;
     }
@@ -354,12 +315,8 @@ void TMsgStateTracker::TDeltaComputer::CountProcessedEntered(
       break;
     }
     case TMsg::TState::Batching: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_ERR, "Bug: Cannot enter state 'Processed' from 'Batching'");
-      }
-
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Bug: Cannot enter state 'Processed' from 'Batching'";
       assert(false);
       break;
     }
@@ -372,12 +329,8 @@ void TMsgStateTracker::TDeltaComputer::CountProcessedEntered(
       break;
     }
     case TMsg::TState::Processed: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_ERR, "Bug: Cannot reenter state 'Processed'");
-      }
-
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Bug: Cannot reenter state 'Processed'";
       assert(false);
       break;
     }

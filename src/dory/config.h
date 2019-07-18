@@ -27,7 +27,6 @@
 
 #include <netinet/in.h>
 #include <sys/stat.h>
-#include <syslog.h>
 
 #include <base/opt.h>
 #include <log/pri.h>

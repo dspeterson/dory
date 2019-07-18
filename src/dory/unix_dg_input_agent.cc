@@ -29,20 +29,19 @@
 #include <poll.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <syslog.h>
 #include <unistd.h>
 
 #include <base/error_utils.h>
 #include <base/gettid.h>
 #include <dory/input_dg/input_dg_util.h>
-#include <dory/util/time_util.h>
+#include <log/log.h>
 #include <server/counter.h>
 #include <socket/address.h>
 
 using namespace Base;
 using namespace Capped;
 using namespace Dory;
-using namespace Dory::Util;
+using namespace Log;
 using namespace Socket;
 using namespace Thread;
 
@@ -86,7 +85,7 @@ bool TUnixDgInputAgent::SyncStart() {
 void TUnixDgInputAgent::Run() {
   assert(this);
   int tid = static_cast<int>(Gettid());
-  syslog(LOG_NOTICE, "UNIX datagram input thread %d started", tid);
+  LOG(TPri::NOTICE) << "UNIX datagram input thread " << tid << " started";
 
   try {
     OpenUnixSocket();
@@ -95,8 +94,8 @@ void TUnixDgInputAgent::Run() {
       try {
         SyncStartNotify->Push();
       } catch (...) {
-        syslog(LOG_ERR,
-            "Failed to notify on error starting UNIX datagram input agent");
+        LOG(TPri::ERR)
+            << "Failed to notify on error starting UNIX datagram input agent";
         _exit(EXIT_FAILURE);
       }
     }
@@ -109,13 +108,15 @@ void TUnixDgInputAgent::Run() {
     SyncStartNotify->Push();
   }
 
-  syslog(LOG_NOTICE, "UNIX datagram input thread finished initialization, forwarding messages");
+  LOG(TPri::NOTICE)
+      << "UNIX datagram input thread finished initialization, forwarding "
+      << "messages";
   ForwardMessages();
 }
 
 void TUnixDgInputAgent::OpenUnixSocket() {
   assert(this);
-  syslog(LOG_NOTICE, "UNIX datagram input thread opening socket");
+  LOG(TPri::NOTICE) << "UNIX datagram input thread opening socket";
   TAddress input_socket_address;
   input_socket_address.SetFamily(AF_LOCAL);
   input_socket_address.SetPath(Config.ReceiveSocketName.c_str());
@@ -123,7 +124,7 @@ void TUnixDgInputAgent::OpenUnixSocket() {
   try {
     Bind(InputSocket, input_socket_address);
   } catch (const std::system_error &x) {
-    syslog(LOG_ERR, "Failed to create datagram socket file: %s", x.what());
+    LOG(TPri::ERR) << "Failed to create datagram socket file: " << x.what();
     _exit(EXIT_FAILURE);
   }
 
@@ -135,8 +136,8 @@ void TUnixDgInputAgent::OpenUnixSocket() {
       IfLt0(chmod(Config.ReceiveSocketName.c_str(),
           *Config.ReceiveSocketMode));
     } catch (const std::system_error &x) {
-      syslog(LOG_ERR, "Failed to set permissions on datagram socket file: %s",
-          x.what());
+      LOG(TPri::ERR) << "Failed to set permissions on datagram socket file: "
+          << x.what();
       _exit(EXIT_FAILURE);
     }
   }
@@ -171,8 +172,9 @@ void TUnixDgInputAgent::ForwardMessages() {
 
     if (shutdown_request_event.revents) {
       if (!Destroying) {
-        syslog(LOG_NOTICE,
-            "UNIX datagram input thread got shutdown request, closing socket");
+        LOG(TPri::NOTICE)
+            << "UNIX datagram input thread got shutdown request, closing "
+            << "socket";
         /* We received a shutdown request from the thread that created us.
            Close the input socket and terminate. */
         InputSocket.Reset();

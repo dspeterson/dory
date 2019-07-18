@@ -25,16 +25,16 @@
 #include <utility>
 #include <vector>
 
-#include <syslog.h>
-
 #include <base/error_utils.h>
 #include <capped/blob.h>
 #include <capped/reader.h>
+#include <log/log.h>
 #include <server/counter.h>
 
 using namespace Base;
 using namespace Capped;
 using namespace Dory;
+using namespace Log;
 
 SERVER_COUNTER(NoDiscardQuery);
 
@@ -284,8 +284,8 @@ void TAnomalyTracker::CheckGetInfoRate() const {
 
   if (delta > ReportInterval) {
     NoDiscardQuery.Increment();
-    syslog(LOG_WARNING, "No discard query in last %llu seconds: possible loss "
-           "of discard info", static_cast<unsigned long long>(delta));
+    LOG(TPri::WARNING) << "No discard query in last " << delta
+        << " seconds: possible loss of discard info";
   }
 }
 

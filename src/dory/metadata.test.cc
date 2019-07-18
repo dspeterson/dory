@@ -23,10 +23,14 @@
 #include <unordered_set>
 
 #include <dory/metadata.h>
+#include <dory/util/misc_util.h>
+#include <log/pri.h>
 
 #include <gtest/gtest.h>
 
 using namespace Dory;
+using namespace Dory::Util;
+using namespace Log;
 
 namespace {
 
@@ -46,7 +50,9 @@ namespace {
   /* The fixture for testing class TMetadata. */
   class TMetadataTest : public ::testing::Test {
     protected:
-    TMetadataTest() = default;
+    TMetadataTest() {
+      InitLogging("dory", TPri::INFO, false);
+    }
 
     ~TMetadataTest() override = default;
 

@@ -26,7 +26,6 @@
 #include <stdexcept>
 
 #include <poll.h>
-#include <syslog.h>
 
 #include <base/io_utils.h>
 #include <base/no_default_case.h>
@@ -35,6 +34,7 @@
 #include <dory/util/connect_to_host.h>
 #include <dory/util/poll_array.h>
 #include <dory/util/system_error_codes.h>
+#include <log/log.h>
 #include <server/counter.h>
 #include <socket/db/error.h>
 
@@ -43,6 +43,7 @@ using namespace Dory;
 using namespace Dory::KafkaProto;
 using namespace Dory::KafkaProto::Metadata;
 using namespace Dory::Util;
+using namespace Log;
 
 SERVER_COUNTER(BadMetadataResponse);
 SERVER_COUNTER(BadMetadataResponseSize);
@@ -82,13 +83,13 @@ bool TMetadataFetcher::Connect(const char *host_name, in_port_t port) {
   try {
     ConnectToHost(host_name, port, Sock);
   } catch (const std::system_error &x) {
-    syslog(LOG_ERR, "Failed to connect to host %s port %d for metadata: %s",
-           host_name, static_cast<int>(port), x.what());
+    LOG(TPri::ERR) << "Failed to connect to host " << host_name << " port "
+        << port << " for metadata: " << x.what();
     assert(!Sock.IsOpen());
     return false;
   } catch (const Socket::Db::TError &x) {
-    syslog(LOG_ERR, "Failed to connect to host %s port %d for metadata: %s",
-           host_name, static_cast<int>(port), x.what());
+    LOG(TPri::ERR) << "Failed to connect to host " << host_name << " port "
+        << port << " for metadata: " << x.what();
     assert(!Sock.IsOpen());
     return false;
   }
@@ -120,7 +121,7 @@ std::unique_ptr<TMetadata> TMetadataFetcher::Fetch(int timeout_ms) {
 
   if (response_size == 0) {
     BadMetadataResponse.Increment();
-    syslog(LOG_ERR, "Got empty metadata response while getting metadata");
+    LOG(TPri::ERR) << "Got empty metadata response while getting metadata";
     return result;
   }
 
@@ -133,7 +134,7 @@ std::unique_ptr<TMetadata> TMetadataFetcher::Fetch(int timeout_ms) {
         response_size);
   } catch (const TMetadataProtocol::TBadMetadataResponse &x) {
     BadMetadataResponse.Increment();
-    syslog(LOG_ERR, "Failed to parse metadata response: %s", x.what());
+    LOG(TPri::ERR) << "Failed to parse metadata response: " << x.what();
     return result;
   }
 
@@ -154,9 +155,9 @@ std::unique_ptr<TMetadata> TMetadataFetcher::Fetch(int timeout_ms) {
   }
 
   if (bad_metadata) {
-    syslog(LOG_ERR, "Bad metadata response: broker count %u topic count %u",
-           static_cast<unsigned>(result->GetBrokers().size()),
-           static_cast<unsigned>(result->GetTopics().size()));
+    LOG(TPri::ERR) << "Bad metadata response: broker count "
+        << result->GetBrokers().size() << " topic count "
+        << result->GetTopics().size();
     result.reset();
   }
 
@@ -184,7 +185,7 @@ TMetadataFetcher::TopicAutocreate(const char *topic, int timeout_ms) {
 
   if (response_size == 0) {
     BadMetadataResponse.Increment();
-    syslog(LOG_ERR, "Got empty metadata response during topic autocreate");
+    LOG(TPri::ERR) << "Got empty metadata response during topic autocreate";
     return TTopicAutocreateResult::Fail;
   }
 
@@ -198,7 +199,7 @@ TMetadataFetcher::TopicAutocreate(const char *topic, int timeout_ms) {
         &response[0], response_size);
   } catch (const TMetadataProtocol::TBadMetadataResponse &x) {
     BadMetadataResponse.Increment();
-    syslog(LOG_ERR, "Failed to parse metadata response: %s", x.what());
+    LOG(TPri::ERR) << "Failed to parse metadata response: " << x.what();
     return TTopicAutocreateResult::TryOtherBroker;
   }
 
@@ -214,23 +215,24 @@ bool TMetadataFetcher::SendRequest(const std::vector<uint8_t> &request,
   try {
     if (!TryWriteExactly(Sock, &request[0], request.size(), timeout_ms)) {
       SendMetadataRequestFail.Increment();
-      syslog(LOG_ERR, "Failed to send metadata request");
+      LOG(TPri::ERR) << "Failed to send metadata request";
       return false;
     }
   } catch (const std::system_error &x) {
     if (LostTcpConnection(x)) {
       SendMetadataRequestLostTcpConnection.Increment();
-      syslog(LOG_ERR,
-          "Lost TCP connection to broker while trying to send metadata request: %s",
-          x.what());
+      LOG(TPri::ERR)
+          << "Lost TCP connection to broker while trying to send metadata "
+          << "request: " << x.what();
       return false;
     }
 
     throw;  // anything else is fatal
   } catch (const TUnexpectedEnd &) {
     SendMetadataRequestUnexpectedEnd.Increment();
-    syslog(LOG_ERR,
-        "Lost TCP connection to broker while trying to send metadata request");
+    LOG(TPri::ERR)
+        << "Lost TCP connection to broker while trying to send metadata "
+        << "request";
     return false;
   }
 
@@ -269,9 +271,9 @@ bool TMetadataFetcher::ReadResponse(int timeout_ms) {
     } catch (const std::system_error &x) {
       if (LostTcpConnection(x)) {
         MetadataResponseReadLostTcpConnection.Increment();
-        syslog(LOG_ERR,
-            "Lost TCP connection to broker while trying to read metadata response: %s",
-            x.what());
+        LOG(TPri::ERR)
+            << "Lost TCP connection to broker while trying to read metadata "
+            << "response: " << x.what();
         return false;
       }
 
@@ -298,12 +300,12 @@ bool TMetadataFetcher::ReadResponse(int timeout_ms) {
     }
     case TStreamMsgReader::TState::DataInvalid: {
       BadMetadataResponseSize.Increment();
-      syslog(LOG_ERR, "Router thread got bad metadata response size");
+      LOG(TPri::ERR) << "Router thread got bad metadata response size";
       return false;
     }
     case TStreamMsgReader::TState::AtEnd: {
       ShortMetadataResponse.Increment();
-      syslog(LOG_ERR, "Router thread got short metadata response");
+      LOG(TPri::ERR) << "Router thread got short metadata response";
       return false;
     }
     NO_DEFAULT_CASE;

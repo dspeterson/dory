@@ -33,6 +33,8 @@
 #include <dory/msg.h>
 #include <dory/msg_creator.h>
 #include <dory/test_util/misc_util.h>
+#include <dory/util/misc_util.h>
+#include <log/pri.h>
 
 #include <gtest/gtest.h>
 
@@ -41,6 +43,8 @@ using namespace Capped;
 using namespace Dory;
 using namespace Dory::Batch;
 using namespace Dory::TestUtil;
+using namespace Dory::Util;
+using namespace Log;
 
 namespace {
 
@@ -80,7 +84,9 @@ namespace {
   /* The fixture for testing class TPerTopicBatcher. */
   class TPerTopicBatcherTest : public ::testing::Test {
     protected:
-    TPerTopicBatcherTest() = default;
+    TPerTopicBatcherTest() {
+      InitLogging("dory", TPri::INFO, false);
+    }
 
     ~TPerTopicBatcherTest() override = default;
 

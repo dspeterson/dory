@@ -21,18 +21,16 @@
 
 #include <cassert>
 
-#include <syslog.h>
-
 #include <dory/input_dg/any_partition/any_partition_util.h>
 #include <dory/input_dg/any_partition/v0/v0_input_dg_reader.h>
-#include <dory/util/time_util.h>
+#include <log/log.h>
 #include <server/counter.h>
 
 using namespace Capped;
 using namespace Dory;
 using namespace Dory::InputDg;
 using namespace Dory::InputDg::AnyPartition;
-using namespace Dory::Util;
+using namespace Log;
 
 SERVER_COUNTER(InputAgentDiscardAnyPartitionMsgUnsupportedApiVersion);
 SERVER_COUNTER(InputAgentProcessAnyPartitionMsg);
@@ -63,13 +61,9 @@ TMsg::TPtr Dory::InputDg::AnyPartition::BuildAnyPartitionMsgFromDg(
   InputAgentDiscardAnyPartitionMsgUnsupportedApiVersion.Increment();
 
   if (!no_log_discard) {
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR,
-          "Discarding AnyPartition message with unsupported API version: %d",
-          static_cast<int>(api_version));
-    }
+    LOG_R(TPri::ERR, std::chrono::seconds(30))
+        << "Discarding AnyPartition message with unsupported API version: "
+        << api_version;
   }
 
   return TMsg::TPtr();

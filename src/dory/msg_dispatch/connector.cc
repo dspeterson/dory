@@ -31,7 +31,6 @@
 #include <poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <syslog.h>
 #include <unistd.h>
 
 #include <base/error_utils.h>
@@ -44,7 +43,7 @@
 #include <dory/msg_state_tracker.h>
 #include <dory/util/connect_to_host.h>
 #include <dory/util/system_error_codes.h>
-#include <dory/util/time_util.h>
+#include <log/log.h>
 #include <server/counter.h>
 #include <socket/db/error.h>
 
@@ -59,6 +58,7 @@ using namespace Dory::KafkaProto;
 using namespace Dory::KafkaProto::Produce;
 using namespace Dory::MsgDispatch;
 using namespace Dory::Util;
+using namespace Log;
 
 SERVER_COUNTER(AckNotRequired);
 SERVER_COUNTER(BadProduceResponse);
@@ -120,8 +120,9 @@ void TConnector::StartSlowShutdown(uint64_t start_time) {
   assert(IsStarted());
   assert(!OptShutdownCmd.IsKnown());
   ConnectorStartSlowShutdown.Increment();
-  syslog(LOG_NOTICE, "Sending slow shutdown request to connector thread (index %lu broker %ld)",
-      static_cast<unsigned long>(MyBrokerIndex), MyBrokerId());
+  LOG(TPri::NOTICE)
+      << "Sending slow shutdown request to connector thread (index "
+      << MyBrokerIndex << " broker " << MyBrokerId() << ")";
   OptShutdownCmd.MakeKnown(start_time);
   RequestShutdown();
 }
@@ -131,8 +132,9 @@ void TConnector::StartFastShutdown() {
   assert(IsStarted());
   assert(!OptShutdownCmd.IsKnown());
   ConnectorStartFastShutdown.Increment();
-  syslog(LOG_NOTICE, "Sending fast shutdown request to connector thread (index %lu broker %ld)",
-      static_cast<unsigned long>(MyBrokerIndex), MyBrokerId());
+  LOG(TPri::NOTICE)
+      << "Sending fast shutdown request to connector thread (index "
+      << MyBrokerIndex << " broker " << MyBrokerId() << ")";
   OptShutdownCmd.MakeKnown();
   RequestShutdown();
 }
@@ -141,8 +143,9 @@ void TConnector::WaitForShutdownAck() {
   assert(this);
   ConnectorStartWaitShutdownAck.Increment();
   long broker_id = MyBrokerId();
-  syslog(LOG_NOTICE, "Waiting for shutdown ACK from connector thread (index %lu broker %ld)",
-      static_cast<unsigned long>(MyBrokerIndex), broker_id);
+  LOG(TPri::NOTICE)
+      << "Waiting for shutdown ACK from connector thread (index "
+      << MyBrokerIndex << " broker " << broker_id << ")";
 
   /* In addition to waiting for the shutdown ACK, we must wait for shutdown
      finished, since the thread may have started shutting down on its own
@@ -161,8 +164,8 @@ void TConnector::WaitForShutdownAck() {
 
   const char *blurb = poll_array[0].revents ?
       "shutdown ACK" : "shutdown finished notification";
-  syslog(LOG_NOTICE, "Got %s from connector thread (index %lu broker %ld)",
-      blurb, static_cast<unsigned long>(MyBrokerIndex), broker_id);
+  LOG(TPri::NOTICE) << "Got " << blurb << "from connector thread (index "
+      << MyBrokerIndex << " broker " << broker_id << ")";
   ConnectorFinishWaitShutdownAck.Increment();
   OptShutdownCmd.Reset();
 }
@@ -214,29 +217,25 @@ void TConnector::Run() {
     );
     assert(MyBrokerIndex < Metadata->GetBrokers().size());
     broker_id = MyBrokerId();
-    syslog(LOG_NOTICE, "Connector thread %d (index %lu broker %ld) started",
-        static_cast<int>(Gettid()), static_cast<unsigned long>(MyBrokerIndex),
-        broker_id);
+    LOG(TPri::NOTICE) << "Coonnector thread " << Gettid() << " (index "
+        << MyBrokerIndex << " broker " << broker_id << ") started";
     DoRun();
   } catch (const TShutdownOnDestroy &) {
     /* Nothing to do here. */
   } catch (const std::exception &x) {
-    syslog(LOG_ERR,
-        "Fatal error in connector thread %d (index %lu broker %ld): %s",
-        static_cast<int>(Gettid()), static_cast<unsigned long>(MyBrokerIndex),
-        broker_id, x.what());
+    LOG(TPri::ERR) << "Fatal error in connector thread " << Gettid()
+        << " (index " << MyBrokerIndex << " broker " << broker_id << "): "
+        << x.what();
     _exit(EXIT_FAILURE);
   } catch (...) {
-    syslog(LOG_ERR,
-        "Fatal unknown error in connector thread %d (index %lu broker %ld)",
-        static_cast<int>(Gettid()), static_cast<unsigned long>(MyBrokerIndex),
-        broker_id);
+    LOG(TPri::ERR) << "Fatal unknown error in connector thread " << Gettid()
+        << " (index " << MyBrokerIndex << " broker " << broker_id << ")";
     _exit(EXIT_FAILURE);
   }
 
-  syslog(LOG_NOTICE, "Connector thread %d (index %lu broker %ld) finished %s",
-      static_cast<int>(Gettid()), static_cast<unsigned long>(MyBrokerIndex),
-      broker_id, OkShutdown ? "normally" : "on error");
+  LOG(TPri::NOTICE) << "Coonnector thread " << Gettid() << " (index "
+      << MyBrokerIndex << " broker " << broker_id << ") finished "
+      << (OkShutdown ? "normally" : "on error");
   Ds.MarkThreadFinished();
   ConnectorFinishRun.Increment();
 }
@@ -248,38 +247,32 @@ bool TConnector::DoConnect() {
   const std::string &host = broker.GetHostname();
   uint16_t port = broker.GetPort();
   long broker_id = broker.GetId();
-  syslog(LOG_NOTICE,
-      "Connector thread %d (index %lu broker %ld) connecting to host %s port %u",
-      static_cast<int>(Gettid()), static_cast<unsigned long>(MyBrokerIndex),
-      broker_id, host.c_str(), static_cast<unsigned>(port));
+  LOG(TPri::NOTICE) << "Connector thread " << Gettid() << " (index "
+      << MyBrokerIndex << " broker " << broker_id << ") connecting to host "
+      << host << " port " << port;
 
   try {
     ConnectToHost(host, port, Sock);
   } catch (const std::system_error &x) {
-    syslog(LOG_ERR,
-        "Starting pause on failure to connect to broker %s port %u: %s",
-        host.c_str(), static_cast<unsigned>(port), x.what());
+    LOG(TPri::ERR) << "Starting pause on failure to connect to broker " << host
+        << " port " << port << ": " << x.what();
     assert(!Sock.IsOpen());
     return false;
   } catch (const Socket::Db::TError &x) {
-    syslog(LOG_ERR,
-        "Starting pause on failure to connect to broker %s port %u: %s",
-        host.c_str(), static_cast<unsigned>(port), x.what());
+    LOG(TPri::ERR) << "Starting pause on failure to connect to broker " << host
+        << " port " << port << ": " << x.what();
     assert(!Sock.IsOpen());
     return false;
   }
 
   if (!Sock.IsOpen()) {
-    syslog(LOG_ERR,
-        "Starting pause on failure to connect to broker %s port %u",
-        host.c_str(), static_cast<unsigned>(port));
+    LOG(TPri::ERR) << "Starting pause on failure to connect to broker " << host
+        << " port " << port;
     return false;
   }
 
-  syslog(LOG_NOTICE,
-      "Connector thread %d (index %lu broker %ld) connect successful",
-      static_cast<int>(Gettid()), static_cast<unsigned long>(MyBrokerIndex),
-      broker_id);
+  LOG(TPri::NOTICE) << "Connector thread " << Gettid() << " (index "
+      << MyBrokerIndex << " broker " << broker_id << ") connect successful";
   return true;
 }
 
@@ -306,9 +299,8 @@ static int AdjustTimeoutByDeadline(int initial_timeout, uint64_t now,
   if (full_deadline_timeout >
       static_cast<uint64_t>(std::numeric_limits<int>::max())) {
     deadline_timeout = std::numeric_limits<int>::max();
-    syslog(LOG_WARNING,
-        "Truncating ridiculously long %s timeout %lu in connector thread",
-        error_blurb, static_cast<unsigned long>(full_deadline_timeout));
+    LOG(TPri::WARNING) << "Truncating ridiculously long " << error_blurb
+        << " timeout " << full_deadline_timeout << " in connector thread";
     ConnectorTruncateLongTimeout.Increment();
   }
 
@@ -360,10 +352,9 @@ void TConnector::HandleShutdownRequest() {
     }
   }
 
-  syslog(LOG_NOTICE,
-      "Connector thread %d (index %lu broker %ld) sending ACK for %s shutdown",
-      static_cast<int>(Gettid()), static_cast<unsigned long>(MyBrokerIndex),
-      MyBrokerId(), is_fast ? "fast" : "slow");
+  LOG(TPri::NOTICE) << "Connector thread " << Gettid() << " (index "
+      << MyBrokerIndex << " broker " << MyBrokerId() << ") sending ACK for "
+      << (is_fast ? "fast" : "slow") << " shutdown";
   ShutdownAck.Push();
   ClearShutdownRequest();
 }
@@ -376,10 +367,9 @@ void TConnector::SetPauseInProgress() {
 
 void TConnector::HandlePauseDetected() {
   assert(this);
-  syslog(LOG_NOTICE,
-      "Connector thread %d (index %lu broker %ld) detected pause: starting fast shutdown",
-      static_cast<int>(Gettid()), static_cast<unsigned long>(MyBrokerIndex),
-      MyBrokerId());
+  LOG(TPri::NOTICE) << "Connector thread " << Gettid() << " (index "
+      << MyBrokerIndex << " broker " << MyBrokerId() <<
+      ") detected pause: starting fast shutdown";
   SetPauseInProgress();
 }
 
@@ -408,10 +398,10 @@ bool TConnector::TrySendProduceRequest() {
         send(Sock, SendBuf.Data(), SendBuf.DataSize(), MSG_NOSIGNAL))));
   } catch (const std::system_error &x) {
     if (LostTcpConnection(x)) {
-      syslog(LOG_ERR,
-          "Connector thread %d (index %lu broker %ld) starting pause and finishing due to lost TCP connection during send: %s",
-          static_cast<int>(Gettid()),
-          static_cast<unsigned long>(MyBrokerIndex), MyBrokerId(), x.what());
+      LOG(TPri::ERR) << "Connector thread " << Gettid() << " (index "
+          << MyBrokerIndex << " broker " << MyBrokerId()
+          << ") starting pause and finishing due to lost TCP connection "
+          << "during send: " << x.what();
       ConnectorSocketError.Increment();
       Ds.PauseButton.Push();
       return false;
@@ -441,7 +431,7 @@ bool TConnector::HandleSockWriteReady() {
 
     if (r.IsUnknown()) {
       assert(false);
-      syslog(LOG_ERR, "Bug!!! Produce request is empty");
+      LOG(TPri::ERR) << "Bug!!! Produce request is empty";
       BugProduceRequestEmpty.Increment();
       CurrentRequest.Reset();
       return true;
@@ -533,10 +523,10 @@ bool TConnector::ProcessSingleProduceResponse() {
       NO_DEFAULT_CASE;
     }
   } catch (const TProduceResponseReaderApi::TBadProduceResponse &x) {
-    syslog(LOG_ERR,
-        "Connector thread %d (index %lu broker %ld) starting pause due to unexpected response from broker: %s",
-        static_cast<int>(Gettid()), static_cast<unsigned long>(MyBrokerIndex),
-        MyBrokerId(), x.what());
+    LOG(TPri::ERR) << "Connector thread " << Gettid() << " (index "
+        << MyBrokerIndex << " broker " << MyBrokerId()
+        << ") starting pause due to unexpected response from broker: "
+        << x.what();
     BadProduceResponse.Increment();
     keep_running = false;
     pause = true;
@@ -592,10 +582,10 @@ bool TConnector::HandleSockReadReady() {
     reader_state = StreamReader.Read();
   } catch (const std::system_error &x) {
     if (LostTcpConnection(x)) {
-      syslog(LOG_ERR,
-          "Connector thread %d (index %lu broker %ld) starting pause due to lost TCP connection on attempted read: %s",
-          static_cast<int>(Gettid()),
-          static_cast<unsigned long>(MyBrokerIndex), MyBrokerId(), x.what());
+      LOG(TPri::ERR) << "Connector thread " << Gettid() << " (index "
+          << MyBrokerIndex << " broker " << MyBrokerId()
+          << ") starting pause due to lost TCP connection on attempted read: "
+          << x.what();
       ConnectorSocketError.Increment();
       Ds.PauseButton.Push();
       return false;
@@ -613,18 +603,19 @@ bool TConnector::HandleSockReadReady() {
         break;
       }
       case TStreamMsgReader::TState::DataInvalid: {
-        syslog(LOG_ERR,
-            "Connector thread %d (index %lu broker %ld) starting pause due to invalid response size response from broker",
-            static_cast<int>(Gettid()),
-            static_cast<unsigned long>(MyBrokerIndex), MyBrokerId());
+        LOG(TPri::ERR) << "Connector thread " << Gettid() << " (index "
+            << MyBrokerIndex << " broker " << MyBrokerId()
+            << ") starting pause due to invalid response size response from "
+            << "broker";
         BadProduceResponseSize.Increment();
         Ds.PauseButton.Push();
         return false;
       }
       case TStreamMsgReader::TState::AtEnd: {
-        syslog(LOG_ERR, "Connector thread %d (index %lu broker %ld) starting pause because TCP connection unexpectedly closed by broker while processing produce responses",
-            static_cast<int>(Gettid()),
-            static_cast<unsigned long>(MyBrokerIndex), MyBrokerId());
+        LOG(TPri::ERR) << "Connector thread " << Gettid() << " (index "
+            << MyBrokerIndex << " broker " << MyBrokerId()
+            << ") starting pause because TCP connection unexpectedly closed "
+            << "by broker while processing produce responses";
         ConnectorSocketBrokerClose.Increment();
         Ds.PauseButton.Push();
         return false;
@@ -641,10 +632,10 @@ bool TConnector::HandleSockReadReady() {
 
     if (AckWaitQueue.empty() &&
         (reader_state == TStreamMsgReader::TState::MsgReady)) {
-      syslog(LOG_ERR,
-          "Connector thread %d (index %lu broker %ld) starting pause due to unexpected response data from broker during response processing",
-          static_cast<int>(Gettid()),
-          static_cast<unsigned long>(MyBrokerIndex), MyBrokerId());
+      LOG(TPri::ERR) << "Connector thread " << Gettid() << " (index "
+          << MyBrokerIndex << " broker " << MyBrokerId()
+          << ") starting pause due to unexpected response data from broker "
+          << "during response processing";
       Ds.PauseButton.Push();
       break;
     }
@@ -784,10 +775,9 @@ void TConnector::DoRun() {
       if ((MainLoopPollArray[TMainLoopPollItem::SockIo].fd >= 0) &&
           ((finish_time - start_time) >=
               (Ds.Config.KafkaSocketTimeout * 1000))) {
-        syslog(LOG_ERR,
-            "Connector thread %d (index %lu broker %ld) starting pause due to socket timeout in main loop",
-            static_cast<int>(Gettid()),
-            static_cast<unsigned long>(MyBrokerIndex), broker_id);
+        LOG(TPri::ERR) << "Connector thread " << Gettid() << " (index "
+            << MyBrokerIndex << " broker " << broker_id
+            << ") starting pause due to socket timeout in main loop";
         ConnectorSocketTimeout.Increment();
         Ds.PauseButton.Push();
         break;
@@ -796,10 +786,9 @@ void TConnector::DoRun() {
       if (OptInProgressShutdown.IsKnown() &&
           (finish_time >= OptInProgressShutdown->Deadline)) {
         OkShutdown = true;
-        syslog(LOG_NOTICE,
-            "Connector thread %d (index %lu broker %ld) finishing on shutdown time limit expiration",
-            static_cast<int>(Gettid()),
-            static_cast<unsigned long>(MyBrokerIndex), broker_id);
+        LOG(TPri::NOTICE) << "Connector thread " << Gettid() << " (index "
+            << MyBrokerIndex << " broker " << broker_id
+            << ") finishing on shutdown time limit expiration";
         break;
       }
 

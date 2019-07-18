@@ -44,7 +44,6 @@
 #include <dory/router_thread.h>
 #include <dory/test_util/mock_kafka_config.h>
 #include <dory/test_util/mock_prod_mngr.h>
-#include <dory/util/time_util.h>
 
 #include <test/kit.h>
 

@@ -22,15 +22,15 @@
 #include <stdexcept>
 #include <string>
 
-#include <syslog.h>
-
 #include <dory/util/dory_xml_init.h>
+#include <log/log.h>
 #include <xml/xml_string_util.h>
 
 using namespace xercesc;
 
 using namespace Dory;
 using namespace Dory::Util;
+using namespace Log;
 using namespace Xml;
 
 bool TDoryXmlInit::HandleInitError(const XMLException &x) {
@@ -43,12 +43,12 @@ void TDoryXmlInit::HandleCleanupError(const XMLException &x) noexcept {
   try {
     std::string msg("Xerces XML library cleanup error: ");
     msg += TranscodeToString(x.getMessage());
-    syslog(LOG_ERR, "Xerces XML library cleanup error: %s", msg.c_str());
+    LOG(TPri::ERR) << "Xerces XML library cleanup error: " << msg;
   } catch (...) {
-    syslog(LOG_ERR, "Xerces XML library cleanup error");
+    LOG(TPri::ERR) << "Xerces XML library cleanup error";
   }
 }
 
 void TDoryXmlInit::HandleUnknownErrorOnCleanup() noexcept {
-  syslog(LOG_ERR, "Unknown error while doing Xerces XML library cleanup");
+  LOG(TPri::ERR) << "Unknown error while doing Xerces XML library cleanup";
 }

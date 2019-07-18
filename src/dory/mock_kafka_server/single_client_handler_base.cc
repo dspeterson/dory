@@ -26,7 +26,6 @@
 
 #include <boost/lexical_cast.hpp>
 #include <sys/syscall.h>
-#include <syslog.h>
 
 #include <base/field_access.h>
 #include <base/gettid.h>
@@ -36,6 +35,7 @@
 #include <dory/kafka_proto/produce/msg_set_reader_api.h>
 #include <dory/mock_kafka_server/cmd.h>
 #include <dory/mock_kafka_server/cmd_bucket.h>
+#include <log/log.h>
 #include <socket/address.h>
 
 using namespace Base;
@@ -44,11 +44,12 @@ using namespace Dory::Compress;
 using namespace Dory::KafkaProto::Produce;
 using namespace Dory::MockKafkaServer;
 using namespace Dory::MockKafkaServer::ProdReq;
+using namespace Log;
 
 void TSingleClientHandlerBase::Run() {
   assert(this);
   GetSocketPeer();
-  syslog(LOG_DEBUG, "got connection from %s", PeerAddressString.c_str());
+  LOG(TPri::DEBUG) << "got connection from " << PeerAddressString;
 
   if (!OpenOutputFile()) {
     return;  // failed to open output file

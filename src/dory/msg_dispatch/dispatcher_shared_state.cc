@@ -23,9 +23,8 @@
 
 #include <algorithm>
 
-#include <syslog.h>
-
 #include <dory/msg_state_tracker.h>
+#include <log/log.h>
 #include <server/counter.h>
 
 using namespace Base;
@@ -35,6 +34,7 @@ using namespace Dory::Conf;
 using namespace Dory::Debug;
 using namespace Dory::KafkaProto;
 using namespace Dory::MsgDispatch;
+using namespace Log;
 
 SERVER_COUNTER(AllDispatcherThreadsFinished);
 
@@ -104,7 +104,7 @@ void TDispatcherSharedState::MarkThreadFinished() {
 }
 
 void TDispatcherSharedState::HandleAllThreadsFinished() {
-  syslog(LOG_NOTICE, "All connector threads finished shutting down");
+  LOG(TPri::NOTICE) << "All connector threads finished shutting down";
   AllDispatcherThreadsFinished.Increment();
   ShutdownFinished.Push();
 }

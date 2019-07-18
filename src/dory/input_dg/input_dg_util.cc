@@ -24,14 +24,12 @@
 #include <cassert>
 #include <cstdint>
 
-#include <syslog.h>
-
 #include <base/field_access.h>
 #include <dory/input_dg/any_partition/any_partition_util.h>
 #include <dory/input_dg/input_dg_common.h>
 #include <dory/input_dg/input_dg_constants.h>
 #include <dory/input_dg/partition_key/partition_key_util.h>
-#include <dory/util/time_util.h>
+#include <log/log.h>
 #include <server/counter.h>
 
 using namespace Base;
@@ -39,7 +37,7 @@ using namespace Dory;
 using namespace Dory::InputDg;
 using namespace Dory::InputDg::AnyPartition;
 using namespace Dory::InputDg::PartitionKey;
-using namespace Dory::Util;
+using namespace Log;
 
 SERVER_COUNTER(InputAgentDiscardMsgUnsupportedApiKey);
 
@@ -89,12 +87,8 @@ TMsg::TPtr Dory::InputDg::BuildMsgFromDg(const void *dg, size_t dg_size,
   }
 
   if (!config.NoLogDiscard) {
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR, "Discarding message with unsupported API key: %d",
-             static_cast<int>(api_key));
-    }
+    LOG_R(TPri::ERR, std::chrono::seconds(30)) <<
+        "Discarding message with unsupported API key: " << api_key;
   }
 
   anomaly_tracker.TrackUnsupportedApiKeyDiscard(dg_bytes, dg_bytes + dg_size,

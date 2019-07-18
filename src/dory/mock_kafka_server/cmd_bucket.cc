@@ -23,15 +23,15 @@
 
 #include <cassert>
 
-#include <syslog.h>
+#include <log/log.h>
 
 using namespace Dory;
 using namespace Dory::MockKafkaServer;
+using namespace Log;
 
 void TCmdBucket::Put(const TCmd &cmd) {
   assert(this);
-  syslog(LOG_DEBUG, "append cmd to queue");
-
+  LOG(TPri::DEBUG) << "append cmd to queue";
   std::lock_guard<std::mutex> lock(Mutex);
   CmdQueue.emplace_back(std::make_pair(++SequenceNumCounter, cmd));
 }
@@ -69,7 +69,7 @@ bool TCmdBucket::Remove(size_t sequence_num) {
   }
 
   if (ret) {
-    syslog(LOG_DEBUG, "remove cmd from queue");
+    LOG(TPri::DEBUG) << "remove cmd from queue";
   }
 
   return ret;

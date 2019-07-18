@@ -28,19 +28,20 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 
 #include <base/error_utils.h>
 #include <base/no_default_case.h>
 #include <dory/util/msg_util.h>
+#include <log/log.h>
 #include <third_party/base64/base64.h>
 
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Debug;
 using namespace Dory::Util;
+using namespace Log;
 
 static const char *ToBlurb(TDebugSetup::TLogId log_id) {
   const char *result = "";
@@ -147,8 +148,8 @@ void TDebugLogger::LogMsg(const TMsg &msg) {
     /* Fail gracefully. */
     char tmp_buf[256];
     const char *err_msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
-    syslog(LOG_ERR, "Failed to write to debug logfile %s: %s", ToBlurb(LogId),
-           err_msg);
+    LOG(TPri::ERR) << "Failed to write to debug logfile " << ToBlurb(LogId)
+        << ": " << err_msg;
     DisableLogging();
   }
 }

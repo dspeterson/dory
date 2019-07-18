@@ -23,18 +23,20 @@
 
 #include <system_error>
 
-#include <syslog.h>
 #include <unistd.h>
+
+#include <log/log.h>
 
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Util;
+using namespace Log;
 
 TInitNotifier::TInitNotifier(TEventSemaphore &sem)
     : TEventSemaphoreNotifier(sem,
         [](const std::system_error &x) {
-          syslog(LOG_ERR, "Error notifying on server init finished: %s",
-              x.what());
+          LOG(TPri::ERR) << "Error notifying on server init finished: "
+              << x.what();
           _exit(1);
         }) {
 }

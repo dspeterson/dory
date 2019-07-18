@@ -40,7 +40,6 @@
 #include <base/time_util.h>
 #include <dory/discard_file_logger.h>
 #include <dory/msg.h>
-#include <dory/util/time_util.h>
 
 namespace Dory {
 

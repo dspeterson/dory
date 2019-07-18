@@ -23,15 +23,15 @@
 
 #include <cassert>
 
-#include <syslog.h>
-
 #include <base/field_access.h>
 #include <base/no_default_case.h>
 #include <dory/mock_kafka_server/serialize_cmd.h>
+#include <log/log.h>
 
 using namespace Base;
 using namespace Dory;
 using namespace Dory::MockKafkaServer;
+using namespace Log;
 
 TCmdWorker::~TCmdWorker() {
   /* This will shut down the thread if something unexpected happens. */
@@ -40,7 +40,7 @@ TCmdWorker::~TCmdWorker() {
 
 void TCmdWorker::Run() {
   assert(this);
-  syslog(LOG_DEBUG, "got connection on command port");
+  LOG(TPri::DEBUG) << "got connection on command port";
   const TFd &shutdown_request_fd = GetShutdownRequestFd();
 
   while (!shutdown_request_fd.IsReadable() && GetCmd()) {
@@ -96,7 +96,7 @@ bool TCmdWorker::GetCmd() {
   }
 
   if (!DeserializeCmd(InputBuf, Cmd)) {
-    syslog(LOG_ERR, "Mock Kafka server got unknown command");
+    LOG(TPri::ERR) << "Mock Kafka server got unknown command";
     SendReply(false);
     return false;
   }

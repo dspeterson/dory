@@ -49,6 +49,8 @@
 #include <dory/msg_state_tracker.h>
 #include <dory/stream_client_handler.h>
 #include <dory/test_util/misc_util.h>
+#include <dory/util/misc_util.h>
+#include <log/log.h>
 #include <server/unix_stream_server.h>
 #include <thread/gate.h>
 
@@ -60,6 +62,8 @@ using namespace Dory;
 using namespace Dory::Client;
 using namespace Dory::Debug;
 using namespace Dory::TestUtil;
+using namespace Dory::Util;
+using namespace Log;
 using namespace Server;
 using namespace Thread;
 
@@ -160,6 +164,7 @@ namespace {
     Args.push_back(nullptr);
     Cfg.reset(new TConfig(static_cast<int>(Args.size() - 1),
         const_cast<char **>(&Args[0]), true));
+    InitLogging("dory", TPri::INFO, false);
     OutputQueue.reset(new TGate<TMsg::TPtr>);
     StreamClientWorkerPool.reset(new TWorkerPool(
         [](const char *msg) {

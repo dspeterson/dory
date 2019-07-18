@@ -21,13 +21,15 @@
 
 #include <dory/batch/per_topic_batcher.h>
 
+#include <ios>
 #include <utility>
 
-#include <syslog.h>
+#include <log/log.h>
 
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Batch;
+using namespace Log;
 
 TPerTopicBatcher::TPerTopicBatcher(const std::shared_ptr<TConfig> &config)
     : Config(config) {
@@ -61,10 +63,9 @@ TPerTopicBatcher::AddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
 
     if (opt_nct_initial.IsKnown() !=
         (entry.ExpiryRef != ExpiryTracker.end())) {
+      LOG(TPri::ERR) << "Bug!!!  Topic batcher state out of sync with ExpiryRef: "
+          << std::boolalpha << opt_nct_initial.IsKnown();
       assert(false);
-      syslog(LOG_ERR,
-             "Bug!!!  Topic batcher state out of sync with ExpiryRef: %d",
-             static_cast<int>(opt_nct_initial.IsKnown()));
     }
 
     TMsg::TTimestamp expiry = 0;
@@ -73,14 +74,13 @@ TPerTopicBatcher::AddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
       expiry = entry.ExpiryRef->GetExpiry();
 
       if (opt_nct_initial.IsUnknown() || (*opt_nct_initial != expiry)) {
-        assert(false);
         TMsg::TTimestamp nct_initial =
             (opt_nct_initial.IsKnown()) ? *opt_nct_initial : 0;
-        syslog(LOG_ERR, "Bug!!!  Topic batcher time limit does not match "
-               "expiry tracker time limit: %lu %lu %lu",
-               static_cast<unsigned long>(opt_nct_initial.IsKnown()),
-               static_cast<unsigned long>(nct_initial),
-               static_cast<unsigned long>(expiry));
+        LOG(TPri::ERR) << "Bug!!!  Topic batcher time limit does not match "
+            << "expiry tracker time limit: " << std::boolalpha
+            << opt_nct_initial.IsKnown() << " " << nct_initial << " "
+            << expiry;
+        assert(false);
       }
     }
 
@@ -144,18 +144,18 @@ TPerTopicBatcher::GetCompleteBatches(TMsg::TTimestamp now) {
     auto map_iter = BatchMap.find(curr->GetTopic());
 
     if (map_iter == BatchMap.end()) {
+      LOG(TPri::ERR) << "Bug!!! BatchMap lookup failed in "
+          << "TPerTopicBatcher::GetCompleteBatches()";
       assert(false);
-      syslog(LOG_ERR,
-          "Bug!!! BatchMap lookup failed in TPerTopicBatcher::GetCompleteBatches()");
       continue;
     }
 
     TBatchMapEntry &map_entry = map_iter->second;
 
     if (map_entry.ExpiryRef != curr) {
+      LOG(TPri::ERR) << "Bug!!! TBatchMapEntry ExpiryRef is incorrect in "
+          << "TPerTopicBatcher::GetCompleteBatches()";
       assert(false);
-      syslog(LOG_ERR,
-          "Bug!!! TBatchMapEntry ExpiryRef is incorrect in TPerTopicBatcher::GetCompleteBatches()");
     }
 
     assert(!map_entry.Batcher.IsEmpty());

@@ -27,14 +27,15 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <syslog.h>
 #include <unistd.h>
 
 #include <base/error_utils.h>
+#include <log/log.h>
 
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Debug;
+using namespace Log;
 
 static int OpenDebugFile(const char *path, bool truncate_file) {
   int flags = O_CREAT | O_APPEND | O_WRONLY;
@@ -49,7 +50,7 @@ static int OpenDebugFile(const char *path, bool truncate_file) {
     /* Fail gracefully. */
     char tmp_buf[256];
     const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
-    syslog(LOG_ERR, "Failed to open debug logfile %s: %s", path, msg);
+    LOG(TPri::ERR) << "Failed to open debug logfile " << path << ": " << msg;
   }
 
   return fd;
@@ -151,15 +152,15 @@ void TDebugSetup::TruncateDebugFiles() {
   assert(this);
 
   if (truncate(GetLogPath(TLogId::MSG_RECEIVE).c_str(), 0) < 0) {
-    syslog(LOG_ERR, "Failed to truncate MSG_RECEIVE debug logfile");
+    LOG(TPri::ERR) << "Failed to truncate MSG_RECEIVE debug logfile";
   }
 
   if (truncate(GetLogPath(TLogId::MSG_SEND).c_str(), 0) < 0) {
-    syslog(LOG_ERR, "Failed to truncate MSG_SEND debug logfile");
+    LOG(TPri::ERR) << "Failed to truncate MSG_SEND debug logfile";
   }
 
   if (truncate(GetLogPath(TLogId::MSG_GOT_ACK).c_str(), 0) < 0) {
-    syslog(LOG_ERR, "Failed to truncate MSG_GOT_ACK debug logfile");
+    LOG(TPri::ERR) << "Failed to truncate MSG_GOT_ACK debug logfile";
   }
 }
 
@@ -169,7 +170,8 @@ void TDebugSetup::CreateDebugDir() {
   cmd += DebugDir;
 
   if (std::system(cmd.c_str()) < 0) {
-    syslog(LOG_ERR, "Failed to create debug directory [%s]", DebugDir.c_str());
+    LOG(TPri::ERR) << "Failed to create debug directory [" << DebugDir.c_str()
+        << "]";
     /* Keep running, with debug logfiles disabled. */
   }
 }
@@ -181,7 +183,7 @@ static void SettingsFtruncate(const TDebugSetup::TSettings &settings) {
     /* Fail gracefully. */
     char tmp_buf[256];
     const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
-    syslog(LOG_ERR, "Failed to truncate msg receive debug logfile: %s", msg);
+    LOG(TPri::ERR) << "Failed to truncate msg receive debug logfile: " << msg;
   }
 
   fd = settings.GetLogFileDescriptor(TDebugSetup::TLogId::MSG_SEND);
@@ -190,7 +192,7 @@ static void SettingsFtruncate(const TDebugSetup::TSettings &settings) {
     /* Fail gracefully. */
     char tmp_buf[256];
     const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
-    syslog(LOG_ERR, "Failed to truncate msg send debug logfile: %s", msg);
+    LOG(TPri::ERR) << "Failed to truncate msg send debug logfile: " << msg;
   }
 
   fd = settings.GetLogFileDescriptor(TDebugSetup::TLogId::MSG_GOT_ACK);
@@ -199,8 +201,7 @@ static void SettingsFtruncate(const TDebugSetup::TSettings &settings) {
     /* Fail gracefully. */
     char tmp_buf[256];
     const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
-    syslog(LOG_ERR, "Failed to truncate msg got ACK debug logfile: %s",
-           msg);
+    LOG(TPri::ERR) << "Failed to truncate msg got ACK debug logfile: " << msg;
   }
 }
 

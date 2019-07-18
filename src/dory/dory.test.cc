@@ -35,7 +35,6 @@
 
 #include <boost/lexical_cast.hpp>
 #include <netinet/in.h>
-#include <syslog.h>
 #include <unistd.h>
 
 #include <base/error_utils.h>

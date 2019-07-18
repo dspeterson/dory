@@ -24,15 +24,13 @@
 
 #include <cassert>
 
-#include <syslog.h>
-
 #include <base/no_default_case.h>
 #include <dory/kafka_proto/kafka_error_code.h>
 #include <dory/kafka_proto/produce/v0/msg_set_writer.h>
 #include <dory/kafka_proto/produce/v0/produce_request_constants.h>
 #include <dory/kafka_proto/produce/v0/produce_request_writer.h>
 #include <dory/kafka_proto/produce/v0/produce_response_reader.h>
-#include <dory/util/time_util.h>
+#include <log/log.h>
 #include <server/counter.h>
 
 using namespace Dory;
@@ -40,7 +38,7 @@ using namespace Dory::Compress;
 using namespace Dory::KafkaProto;
 using namespace Dory::KafkaProto::Produce;
 using namespace Dory::KafkaProto::Produce::V0;
-using namespace Dory::Util;
+using namespace Log;
 
 SERVER_COUNTER(AckErrorBrokerNotAvailable);
 SERVER_COUNTER(AckErrorClusterAuthorizationFailed);
@@ -108,15 +106,6 @@ TProduceProto::CreateProduceResponseReader() const {
       new TProduceResponseReader);
 }
 
-static void MaybeLogError(bool log_error, int16_t ack_value) {
-  if (log_error) {
-    const auto &error_info = LookupKafkaErrorCode(ack_value);
-    syslog(LOG_ERR, "Kafka ACK returned error %d (%s): %s",
-        static_cast<int>(ack_value), error_info.ErrorName,
-        error_info.ErrorDescription);
-  }
-}
-
 TProduceProtocol::TAckResultAction
 TProduceProto::ProcessAck(int16_t ack_value) const {
   assert(this);
@@ -125,8 +114,10 @@ TProduceProto::ProcessAck(int16_t ack_value) const {
      below. */
   switch (static_cast<TKafkaErrorCode>(ack_value)) {
     case TKafkaErrorCode::Unknown: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorUnknown.Increment();
       return TAckResultAction::Discard;
     }
@@ -135,20 +126,26 @@ TProduceProto::ProcessAck(int16_t ack_value) const {
       break;  // successful ACK
     }
     case TKafkaErrorCode::OffsetOutOfRange: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorOffsetOutOfRange.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::CorruptMessage: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorCorruptMessage.Increment();
       return TAckResultAction::Resend;
     }
     case TKafkaErrorCode::UnknownTopicOrPartition: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorUnknownTopicOrPartition.Increment();
 
       /* This error may occur in cases where a reconfiguration of the Kafka
@@ -160,248 +157,330 @@ TProduceProto::ProcessAck(int16_t ack_value) const {
       return TAckResultAction::Pause;
     }
     case TKafkaErrorCode::InvalidFetchSize: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorInvalidFetchSize.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::LeaderNotAvailable: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorLeaderNotAvailable.Increment();
       return TAckResultAction::Pause;
     }
     case TKafkaErrorCode::NotLeaderForPartition: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorNotLeaderForPartition.Increment();
       return TAckResultAction::Pause;
     }
     case TKafkaErrorCode::RequestTimedOut: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorRequestTimedOut.Increment();
       return TAckResultAction::Pause;
     }
     case TKafkaErrorCode::BrokerNotAvailable: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorBrokerNotAvailable.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::ReplicaNotAvailable: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorReplicaNotAvailable.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::MessageTooLarge: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorMessageTooLarge.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::StaleControllerEpoch: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorStaleControllerEpoch.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::OffsetMetadataTooLarge: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorOffsetMetadataTooLarge.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::NetworkException: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorNetworkException.Increment();
       return TAckResultAction::Pause;
     }
     case TKafkaErrorCode::GroupLoadInProgress: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorGroupLoadInProgress.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::GroupCoordinatorNotAvailable: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorGroupCoordinatorNotAvailable.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::NotCoordinatorForGroup: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorNotCoordinatorForGroup.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::InvalidTopicException: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorInvalidTopicException.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::RecordListTooLarge: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorRecordListTooLarge.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::NotEnoughReplicas: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorNotEnoughReplicas.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::NotEnoughReplicasAfterAppend: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorNotEnoughReplicasAfterAppend.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::InvalidRequiredAcks: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorInvalidRequiredAcks.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::IllegalGeneration: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorIllegalGeneration.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::InconsistentGroupProtocol: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorInconsistentGroupProtocol.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::InvalidGroupId: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorInvalidGroupId.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::UnknownMemberId: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorUnknownMemberId.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::InvalidSessionTimeout: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorInvalidSessionTimeout.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::RebalanceInProgress: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorRebalanceInProgress.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::InvalidCommitOffsetSize: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorInvalidCommitOffsetSize.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::TopicAuthorizationFailed: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorTopicAuthorizationFailed.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::GroupAuthorizationFailed: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorGroupAuthorizationFailed.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::ClusterAuthorizationFailed: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorClusterAuthorizationFailed.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::InvalidTimestamp: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorInvalidTimestamp.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::UnsupportedSaslMechanism: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorUnsupportedSaslMechanism.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::IllegalSaslState: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorIllegalSaslState.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::UnsupportedVersion: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorUnsupportedVersion.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::TopicAlreadyExists: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorTopicAlreadyExists.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::InvalidPartitions: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorInvalidPartitions.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::InvalidReplicationFactor: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorInvalidReplicationFactor.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::InvalidReplicaAssignment: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorInvalidReplicaAssignment.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::InvalidConfig: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorInvalidConfig.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::NotController: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorNotController.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::InvalidRequest: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorInvalidRequest.Increment();
       return TAckResultAction::Discard;
     }
     case TKafkaErrorCode::UnsupportedForMessageFormat: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorUnsupportedForMessageFormat.Increment();
       return TAckResultAction::Discard;
     }
     default: {
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-      MaybeLogError(lim.Test(), ack_value);
+      const auto &error_info = LookupKafkaErrorCode(ack_value);
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Kafka ACK returned error (" << error_info.ErrorName << "): "
+          << error_info.ErrorDescription;
       AckErrorUndocumented.Increment();
       return TAckResultAction::Discard;
     }

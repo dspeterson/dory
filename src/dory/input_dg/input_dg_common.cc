@@ -22,20 +22,19 @@
 #include <dory/input_dg/input_dg_common.h>
 
 #include <cerrno>
+#include <chrono>
 #include <string>
 #include <system_error>
 
-#include <syslog.h>
-
 #include <capped/memory_cap_reached.h>
 #include <dory/msg_creator.h>
-#include <dory/util/time_util.h>
+#include <log/log.h>
 #include <server/counter.h>
 
 using namespace Capped;
 using namespace Dory;
 using namespace Dory::InputDg;
-using namespace Dory::Util;
+using namespace Log;
 
 SERVER_COUNTER(InputAgentDiscardMsgMalformed);
 SERVER_COUNTER(InputAgentDiscardMsgNoMem);
@@ -43,11 +42,8 @@ SERVER_COUNTER(InputAgentDiscardMsgNoMem);
 void Dory::InputDg::DiscardMalformedMsg(const uint8_t *msg_begin,
     size_t msg_size, TAnomalyTracker &anomaly_tracker, bool no_log_discard) {
   if (!no_log_discard) {
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR, "Discarding malformed message");
-    }
+    LOG_R(TPri::ERR, std::chrono::seconds(30))
+        << "Discarding malformed message";
   }
 
   anomaly_tracker.TrackMalformedMsgDiscard(msg_begin, msg_begin + msg_size);
@@ -69,16 +65,9 @@ void Dory::InputDg::DiscardMsgNoMem(TMsg::TTimestamp timestamp,
   InputAgentDiscardMsgNoMem.Increment();
 
   if (!no_log_discard) {
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      /* Make the topic into a C string for logging. */
-      std::string topic(topic_begin, topic_end);
-
-      syslog(LOG_ERR,
-             "Discarding message due to buffer space cap (topic: [%s])",
-             topic.c_str());
-    }
+    LOG_R(TPri::ERR, std::chrono::seconds(30))
+        << "Discarding message due to buffer space cap (topic: ["
+        << std::string(topic_begin, topic_end) << "])";
   }
 }
 

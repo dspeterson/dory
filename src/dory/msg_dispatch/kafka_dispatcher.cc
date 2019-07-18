@@ -21,9 +21,7 @@
 
 #include <dory/msg_dispatch/kafka_dispatcher.h>
 
-#include <syslog.h>
-
-#include <dory/util/time_util.h>
+#include <log/log.h>
 #include <server/counter.h>
 
 using namespace Base;
@@ -34,6 +32,7 @@ using namespace Dory::Debug;
 using namespace Dory::KafkaProto::Produce;
 using namespace Dory::MsgDispatch;
 using namespace Dory::Util;
+using namespace Log;
 
 SERVER_COUNTER(BugDispatchBatchOutOfRangeIndex);
 SERVER_COUNTER(BugDispatchMsgOutOfRangeIndex);
@@ -86,10 +85,8 @@ void TKafkaDispatcher::Start(const std::shared_ptr<TMetadata> &md) {
 
   if (num_in_service > brokers.size()) {
     assert(false);
-    syslog(LOG_ERR,
-        "Bug!!! In service broker count %lu exceeds total broker count %lu",
-        static_cast<unsigned long>(num_in_service),
-        static_cast<unsigned long>(brokers.size()));
+    LOG(TPri::ERR) << "Bug!!! In service broker count " << num_in_service
+        << " exceeds total broker count " << brokers.size();
     num_in_service = brokers.size();
   }
 
@@ -107,20 +104,16 @@ void TKafkaDispatcher::Start(const std::shared_ptr<TMetadata> &md) {
     std::unique_ptr<TConnector> &broker_ptr = Connectors[i];
     assert(!broker_ptr);
     broker_ptr.reset(new TConnector(i, Ds));
-    syslog(LOG_NOTICE,
-        "Starting connector thread for broker index %lu (Kafka ID %lu)",
-        static_cast<unsigned long>(i),
-        static_cast<unsigned long>(brokers[i].GetId()));
+    LOG(TPri::NOTICE) << "Starting connector thread for broker index " << i
+        << " (Kafka ID " << brokers[i].GetId() << ")";
     broker_ptr->SetMetadata(md);
     broker_ptr->Start();
   }
 
   for (size_t i = Connectors.size(); i < brokers.size(); ++i) {
     assert(!brokers[i].IsInService());
-    syslog(LOG_NOTICE,
-        "Skipping out of service broker index %lu (Kafka ID %lu)",
-        static_cast<unsigned long>(i),
-        static_cast<unsigned long>(brokers[i].GetId()));
+    LOG(TPri::NOTICE) << "Skipping out of service broker index " << i
+        << " (Kafka ID " << brokers[i].GetId() << ")";
     SkipOutOfServiceBroker.Increment();
   }
 
@@ -135,15 +128,10 @@ void TKafkaDispatcher::Dispatch(TMsg::TPtr &&msg, size_t broker_index) {
 
   if (broker_index >= Connectors.size()) {
     assert(false);
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR,
-          "Bug!!! Cannot dispatch message because broker index is out of range: index %lu broker count %lu",
-          static_cast<unsigned long>(broker_index),
-          static_cast<unsigned long>(Connectors.size()));
-    }
-
+    LOG_R(TPri::ERR, std::chrono::seconds(30))
+        << "Bug!!! Cannot dispatch message because broker index is out of "
+        << "range: index " << broker_index << " broker count "
+        << Connectors.size();
     BugDispatchMsgOutOfRangeIndex.Increment();
     Ds.Discard(std::move(msg), TAnomalyTracker::TDiscardReason::Bug);
     return;
@@ -162,15 +150,10 @@ void TKafkaDispatcher::DispatchNow(TMsg::TPtr &&msg, size_t broker_index) {
 
   if (broker_index >= Connectors.size()) {
     assert(false);
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR,
-          "Bug!!! Cannot dispatch message because broker index is out of range: index %lu broker count %lu",
-          static_cast<unsigned long>(broker_index),
-          static_cast<unsigned long>(Connectors.size()));
-    }
-
+    LOG_R(TPri::ERR, std::chrono::seconds(30))
+        << "Bug!!! Cannot dispatch message because broker index is out of "
+        << "range: index " << broker_index << " broker count "
+        << Connectors.size();
     BugDispatchMsgOutOfRangeIndex.Increment();
     Ds.Discard(std::move(msg), TAnomalyTracker::TDiscardReason::Bug);
     return;
@@ -194,15 +177,10 @@ void TKafkaDispatcher::DispatchNow(std::list<std::list<TMsg::TPtr>> &&batch,
 
   if (broker_index >= Connectors.size()) {
     assert(false);
-    static TLogRateLimiter lim(std::chrono::seconds(30));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR,
-          "Bug!!! Cannot dispatch message batch because broker index is out of range: index %lu broker count %lu",
-          static_cast<unsigned long>(broker_index),
-          static_cast<unsigned long>(Connectors.size()));
-    }
-
+    LOG_R(TPri::ERR, std::chrono::seconds(30))
+        << "Bug!!! Cannot dispatch message batch because broker index is out "
+        << "of range: index " << broker_index << " broker count "
+        << Connectors.size();
     BugDispatchBatchOutOfRangeIndex.Increment();
     Ds.Discard(std::move(batch), TAnomalyTracker::TDiscardReason::Bug);
     return;
@@ -271,7 +249,7 @@ void TKafkaDispatcher::JoinAll() {
   assert(this);
   assert(State != TState::Stopped);
   StartDispatcherJoinAll.Increment();
-  syslog(LOG_NOTICE, "Start waiting for dispatcher shutdown status");
+  LOG(TPri::NOTICE) << "Start waiting for dispatcher shutdown status";
   bool ok_shutdown = true;
 
   for (std::unique_ptr<TConnector> &c : Connectors) {
@@ -289,7 +267,7 @@ void TKafkaDispatcher::JoinAll() {
   assert(Ds.GetShutdownWaitFd().IsReadable());
   Ds.ResetThreadFinishedState();
   FinishDispatcherJoinAll.Increment();
-  syslog(LOG_NOTICE, "Finished waiting for dispatcher shutdown status");
+  LOG(TPri::NOTICE) << "Finished waiting for dispatcher shutdown status";
   State = TState::Stopped;
 }
 
@@ -304,12 +282,11 @@ TKafkaDispatcher::GetNoAckQueueAfterShutdown(size_t broker_index) {
   assert(State == TState::Stopped);
 
   if (broker_index >= Connectors.size()) {
-    assert(false);
-    syslog(LOG_ERR,
-        "Bug!!! Cannot get ACK wait queue for out of range broker index %lu broker count %lu",
-        static_cast<unsigned long>(broker_index),
-        static_cast<unsigned long>(Connectors.size()));
+    LOG(TPri::ERR)
+        << "Bug!!! Cannot get ACK wait queue for out of range broker index "
+        << broker_index << " broker count " << Connectors.size();
     BugGetAckWaitQueueOutOfRangeIndex.Increment();
+    assert(false);
     return std::list<std::list<TMsg::TPtr>>();
   }
 
@@ -323,11 +300,10 @@ TKafkaDispatcher::GetSendWaitQueueAfterShutdown(size_t broker_index) {
   assert(State == TState::Stopped);
 
   if (broker_index >= Connectors.size()) {
+    LOG(TPri::ERR)
+        << "Bug!!! Cannot get send wait queue for out of range broker index "
+        << broker_index << " broker count " << Connectors.size();
     assert(false);
-    syslog(LOG_ERR,
-        "Bug!!! Cannot get send wait queue for out of range broker index %lu broker count %lu",
-        static_cast<unsigned long>(broker_index),
-        static_cast<unsigned long>(Connectors.size()));
     return std::list<std::list<TMsg::TPtr>>();
   }
 

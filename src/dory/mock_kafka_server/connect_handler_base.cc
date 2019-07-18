@@ -25,8 +25,7 @@
 #include <exception>
 #include <utility>
 
-#include <syslog.h>
-
+#include <log/log.h>
 #include <signal/masker.h>
 #include <signal/set.h>
 #include <thread/fd_managed_thread.h>
@@ -34,6 +33,7 @@
 using namespace Base;
 using namespace Dory;
 using namespace Dory::MockKafkaServer;
+using namespace Log;
 using namespace Signal;
 using namespace Thread;
 
@@ -115,9 +115,9 @@ void TConnectHandlerBase::DeleteThreadState(int shutdown_wait_fd) {
     try {
       std::rethrow_exception(x.ThrownException);
     } catch (const std::exception &y) {
-      syslog(LOG_ERR, "Worker threw exception: %s", y.what());
+      LOG(TPri::ERR) << "Worker threw exception: " << y.what();
     } catch (...) {
-      syslog(LOG_ERR, "Worker threw unknown exception");
+      LOG(TPri::ERR) << "Worker threw unknown exception";
     }
   }
 

@@ -33,7 +33,6 @@
 #include <arpa/inet.h>
 #include <poll.h>
 #include <signal.h>
-#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -50,8 +49,8 @@
 #include <dory/msg.h>
 #include <dory/util/init_notifier.h>
 #include <dory/util/misc_util.h>
-#include <dory/util/time_util.h>
 #include <dory/web_interface.h>
+#include <log/log.h>
 #include <server/counter.h>
 #include <server/daemonize.h>
 #include <signal/masker.h>
@@ -68,6 +67,7 @@ using namespace Dory::Conf;
 using namespace Dory::KafkaProto::Metadata;
 using namespace Dory::KafkaProto::Produce;
 using namespace Dory::Util;
+using namespace Log;
 using namespace Server;
 using namespace Signal;
 using namespace Socket;
@@ -204,17 +204,17 @@ void TDoryServer::HandleShutdownSignal(int /*signum*/) noexcept {
 }
 
 static void WorkerPoolFatalErrorHandler(const char *msg) noexcept {
-  syslog(LOG_ERR, "Fatal worker pool error: %s", msg);
+  LOG(TPri::ERR) << "Fatal worker pool error: " << msg;
   _exit(1);
 }
 
 static void UnixStreamServerFatalErrorHandler(const char *msg) noexcept {
-  syslog(LOG_ERR, "Fatal UNIX stream input agent error: %s", msg);
+  LOG(TPri::ERR) << "Fatal UNIX stream input agent error: " << msg;
   _exit(1);
 }
 
 static void TcpServerFatalErrorHandler(const char *msg) noexcept {
-  syslog(LOG_ERR, "Fatal TCP input agent error: %s", msg);
+  LOG(TPri::ERR) << "Fatal TCP input agent error: " << msg;
   _exit(1);
 }
 
@@ -321,7 +321,7 @@ int TDoryServer::Run() {
      signals. */
   TMasker block_all(*TSet(TSet::Full));
 
-  syslog(LOG_NOTICE, "Server started");
+  LOG(TPri::NOTICE) << "Server started";
 
   /* The destructor shuts down Dory's web interface if we start it below.  We
      want this to happen _after_ the message handling threads have shut down.
@@ -343,8 +343,8 @@ int TDoryServer::Run() {
     /* We can close this now, since Mongoose has the port claimed. */
     TmpStatusSocket.Reset();
 
-    syslog(LOG_NOTICE,
-        "Started web interface, waiting for signals and errors");
+    LOG(TPri::NOTICE)
+        << "Started web interface, waiting for signals and errors";
 
     init_notifier.Notify();
 
@@ -367,12 +367,12 @@ void TDoryServer::RequestShutdown() noexcept {
       ShutdownRequestSem.Push();
     }
   } catch (const std::exception &x) {
-    syslog(LOG_ERR, "Fatal exception in TDoryServer::RequestShutdown(): %s",
-        x.what());
+    LOG(TPri::ERR) << "Fatal exception in TDoryServer::RequestShutdown(): "
+        << x.what();
     _exit(EXIT_FAILURE);
   } catch (...) {
-    syslog(LOG_ERR,
-        "Fatal unknown exception in TDoryServer::RequestShutdown()");
+    LOG(TPri::ERR)
+        << "Fatal unknown exception in TDoryServer::RequestShutdown()";
     _exit(EXIT_FAILURE);
   }
 }
@@ -404,34 +404,35 @@ bool TDoryServer::StartMsgHandlingThreads() {
   }
 
   if (UnixDgInputAgent.IsKnown()) {
-    syslog(LOG_NOTICE, "Starting UNIX datagram input agent");
+    LOG(TPri::NOTICE) << "Starting UNIX datagram input agent";
 
     if (!UnixDgInputAgent->SyncStart()) {
-      syslog(LOG_NOTICE,
-          "Server shutting down due to error starting UNIX datagram input agent");
+      LOG(TPri::NOTICE)
+          << "Server shutting down due to error starting UNIX datagram input "
+          << "agent";
       return false;
     }
   }
 
   if (UnixStreamInputAgent.IsKnown()) {
     assert(StreamClientWorkerPool.IsKnown());
-    syslog(LOG_NOTICE, "Starting UNIX stream input agent");
+    LOG(TPri::NOTICE) << "Starting UNIX stream input agent";
 
     if (!UnixStreamInputAgent->SyncStart()) {
-      syslog(LOG_NOTICE,
-          "Server shutting down due to error starting UNIX stream input agent"
-      );
+      LOG(TPri::NOTICE)
+          << "Server shutting down due to error starting UNIX stream input "
+          << "agent";
       return false;
     }
   }
 
   if (TcpInputAgent.IsKnown()) {
     assert(StreamClientWorkerPool.IsKnown());
-    syslog(LOG_NOTICE, "Starting TCP input agent");
+    LOG(TPri::NOTICE) << "Starting TCP input agent";
 
     if (!TcpInputAgent->SyncStart()) {
-      syslog(LOG_NOTICE,
-          "Server shutting down due to error starting TCP input agent");
+      LOG(TPri::NOTICE)
+          << "Server shutting down due to error starting TCP input agent";
       return false;
     }
   }
@@ -444,7 +445,7 @@ bool TDoryServer::StartMsgHandlingThreads() {
      responsive so clients never block while sending messages.  If Kafka
      problems delay router thread initialization indefinitely, messages will be
      queued until we run out of buffer space and start logging discards. */
-  syslog(LOG_NOTICE, "Starting router thread");
+  LOG(TPri::NOTICE) << "Starting router thread";
   RouterThread.Start();
   return true;
 }
@@ -456,23 +457,16 @@ static void ReportStreamClientWorkerErrors(
       std::rethrow_exception(error.ThrownException);
     } catch (const std::exception &x) {
       StreamClientWorkerStdException.Increment();
-      static TLogRateLimiter lim(std::chrono::seconds(30));
 
       /* TODO: Consider adding individual rate limits for different error
          types. */
-      if (lim.Test()) {
-        syslog(LOG_ERR,
-            "Stream input connection handler terminated on error: %s",
-            x.what());
-      }
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Stream input connection handler terminated on error: "
+          << x.what();
     } catch (...) {
       StreamClientWorkerUnknownException.Increment();
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_ERR,
-            "Stream input connection handler terminated on unknown error");
-      }
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << "Stream input connection handler terminated on unknown error";
     }
   }
 }
@@ -537,34 +531,36 @@ bool TDoryServer::HandleEvents() {
 
     if (unix_dg_input_agent_error.revents) {
       assert(UnixDgInputAgent.IsKnown());
-      syslog(LOG_ERR,
-          "Main thread detected UNIX datagram input agent termination on fatal error");
+      LOG(TPri::ERR)
+          << "Main thread detected UNIX datagram input agent termination on "
+          << "fatal error";
       fatal_error = true;
     }
 
     if (unix_stream_input_agent_error.revents) {
       assert(UnixStreamInputAgent.IsKnown());
-      syslog(LOG_ERR,
-          "Main thread detected UNIX stream input agent termination on fatal error");
+      LOG(TPri::ERR)
+          << "Main thread detected UNIX stream input agent termination on "
+          << "fatal error";
       fatal_error = true;
     }
 
     if (tcp_input_agent_error.revents) {
       assert(TcpInputAgent.IsKnown());
-      syslog(LOG_ERR,
-          "Main thread detected TCP input agent termination on fatal error");
+      LOG(TPri::ERR)
+          << "Main thread detected TCP input agent termination on fatal error";
       fatal_error = true;
     }
 
     if (router_thread_error.revents) {
-      syslog(LOG_ERR,
-          "Main thread detected router thread termination on fatal error");
+      LOG(TPri::ERR)
+          << "Main thread detected router thread termination on fatal error";
       fatal_error = true;
     }
 
     if (worker_pool_fatal_error.revents) {
       assert(StreamClientWorkerPool.IsKnown());
-      syslog(LOG_ERR, "Main thread detected stream worker pool fatal error");
+      LOG(TPri::ERR) << "Main thread detected stream worker pool fatal error";
       fatal_error = true;
     }
 
@@ -584,7 +580,7 @@ bool TDoryServer::HandleEvents() {
     }
 
     if (shutdown_request.revents) {
-      syslog(LOG_NOTICE, "Got shutdown signal while server running");
+      LOG(TPri::NOTICE) << "Got shutdown signal while server running";
       break;
     }
   }
@@ -595,7 +591,7 @@ bool TDoryServer::HandleEvents() {
 static void ShutDownInputAgent(Thread::TFdManagedThread &agent,
     const char *agent_name, bool &shutdown_ok) {
   if (agent.IsStarted()) {
-    syslog(LOG_NOTICE, "Shutting down %s input agent", agent_name);
+    LOG(TPri::NOTICE) << "Shutting down " << agent_name << " input agent";
 
     /* Note: Calling RequestShutdown() is harmless if the agent has already
        shut down due to a fatal error. */
@@ -603,18 +599,18 @@ static void ShutDownInputAgent(Thread::TFdManagedThread &agent,
 
     try {
       agent.Join();
-      syslog(LOG_NOTICE, "%s input agent terminated normally", agent_name);
+      LOG(TPri::NOTICE) << agent_name << " input agent terminated normally";
     } catch (const TFdManagedThread::TWorkerError &x) {
       shutdown_ok = false;
 
       try {
         std::rethrow_exception(x.ThrownException);
       } catch (const std::exception &y) {
-        syslog(LOG_ERR, "%s input agent terminated on error: %s", agent_name,
-            y.what());
+        LOG(TPri::ERR) << agent_name << " input agent terminated on error: "
+            << y.what();
       } catch (...) {
-        syslog(LOG_ERR, "%s input agent terminated on unknown error",
-            agent_name);
+        LOG(TPri::ERR) << agent_name
+            << " input agent terminated on unknown error";
       }
     }
   }
@@ -626,13 +622,9 @@ void TDoryServer::DiscardFinalMsgs(std::list<TMsg::TPtr> &msg_list) {
   for (TMsg::TPtr &msg : msg_list) {
     if (msg) {
       if (!Config->NoLogDiscard) {
-        static TLogRateLimiter lim(std::chrono::seconds(30));
-
-        if (lim.Test()) {
-          syslog(LOG_ERR,
-              "Main thread discarding queued message on server shutdown: topic [%s]",
-              msg->GetTopic().c_str());
-        }
+        LOG_R(TPri::ERR, std::chrono::seconds(30))
+            << "Main thread discarding queued message on server shutdown: "
+            << "topic [" << msg->GetTopic() << "]";
       }
 
       AnomalyTracker.TrackDiscard(msg,
@@ -640,7 +632,7 @@ void TDoryServer::DiscardFinalMsgs(std::list<TMsg::TPtr> &msg_list) {
       MsgStateTracker.MsgEnterProcessed(*msg);
     } else {
       assert(false);
-      syslog(LOG_ERR, "Main thread got empty TMsg::TPtr during shutdown");
+      LOG(TPri::ERR) << "Main thread got empty TMsg::TPtr during shutdown";
       BacktraceToLog();
     }
   }
@@ -678,12 +670,12 @@ bool TDoryServer::Shutdown() {
   bool router_thread_started = RouterThread.IsStarted();
 
   if (router_thread_started) {
-    syslog(LOG_NOTICE, "Shutting down router thread");
+    LOG(TPri::NOTICE) << "Shutting down router thread";
     RouterThread.RequestShutdown();
     RouterThread.Join();
     bool router_thread_ok = RouterThread.ShutdownWasOk();
-    syslog(LOG_NOTICE, "Router thread terminated %s",
-              router_thread_ok ? "normally" : "on error");
+    LOG(TPri::NOTICE) << "Router thread terminated "
+        << (router_thread_ok ? "normally" : "on error");
 
     if (!router_thread_ok) {
       shutdown_ok = false;
@@ -697,7 +689,7 @@ bool TDoryServer::Shutdown() {
   assert(!router_thread_started || msg_list.empty());
   DiscardFinalMsgs(msg_list);
 
-  syslog(LOG_NOTICE, "Dory shutdown finished");
+  LOG(TPri::NOTICE) << "Dory shutdown finished";
 
   /* Let the DiscardFileLogger destructor disable discard file logging.  Then
      we know it gets disabled only after everything that may generate discards

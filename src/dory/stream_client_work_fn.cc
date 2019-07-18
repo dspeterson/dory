@@ -26,7 +26,6 @@
 #include <utility>
 
 #include <poll.h>
-#include <syslog.h>
 
 #include <base/error_utils.h>
 #include <base/no_default_case.h>
@@ -34,13 +33,14 @@
 #include <dory/msg.h>
 #include <dory/util/poll_array.h>
 #include <dory/util/system_error_codes.h>
-#include <dory/util/time_util.h>
+#include <log/log.h>
 #include <server/counter.h>
 
 using namespace Base;
 using namespace Capped;
 using namespace Dory;
 using namespace Dory::Util;
+using namespace Log;
 using namespace Thread;
 
 SERVER_COUNTER(NewTcpClient);
@@ -149,21 +149,13 @@ void TStreamClientWorkFn::HandleClientClosed() const {
 
     if (IsTcp) {
       TcpInputUncleanDisconnect.Increment();
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_WARNING,
-            "TCP client disconnected after writing incomplete message");
-      }
+      LOG_R(TPri::WARNING, std::chrono::seconds(30))
+          << "TCP client disconnected after writing incomplete message";
     } else {
       UnixStreamInputUncleanDisconnect.Increment();
-      static TLogRateLimiter lim(std::chrono::seconds(30));
-
-      if (lim.Test()) {
-        syslog(LOG_WARNING,
-            "UNIX stream client disconnected after writing incomplete message"
-        );
-      }
+      LOG_R(TPri::WARNING, std::chrono::seconds(30))
+          << "UNIX stream client disconnected after writing incomplete "
+          << "message";
     }
   }
 }
@@ -176,18 +168,12 @@ void TStreamClientWorkFn::HandleDataInvalid() {
     case TStreamMsgWithSizeReaderBase::TDataInvalidReason::InvalidSizeField: {
       if (IsTcp) {
         TcpInputInvalidSizeField.Increment();
-        static TLogRateLimiter lim(std::chrono::seconds(30));
-
-        if (lim.Test()) {
-          syslog(LOG_ERR, "Got TCP input message with invalid size");
-        }
+        LOG_R(TPri::ERR, std::chrono::seconds(30))
+            << "Got TCP input message with invalid size";
       } else {
         UnixStreamInputInvalidSizeField.Increment();
-        static TLogRateLimiter lim(std::chrono::seconds(30));
-
-        if (lim.Test()) {
-          syslog(LOG_ERR, "Got UNIX stream input message with invalid size");
-        }
+        LOG_R(TPri::ERR, std::chrono::seconds(30))
+            << "Got UNIX stream input message with invalid size";
       }
 
       break;
@@ -195,18 +181,12 @@ void TStreamClientWorkFn::HandleDataInvalid() {
     case TStreamMsgWithSizeReaderBase::TDataInvalidReason::MsgBodyTooLarge: {
       if (IsTcp) {
         TcpInputMsgBodyTooLarge.Increment();
-        static TLogRateLimiter lim(std::chrono::seconds(30));
-
-        if (lim.Test()) {
-          syslog(LOG_ERR, "Got too large TCP input message");
-        }
+        LOG_R(TPri::ERR, std::chrono::seconds(30))
+            << "Got too large TCP input message";
       } else {
         UnixStreamInputMsgBodyTooLarge.Increment();
-        static TLogRateLimiter lim(std::chrono::seconds(30));
-
-        if (lim.Test()) {
-          syslog(LOG_ERR, "Got too large UNIX stream input message");
-        }
+        LOG_R(TPri::ERR, std::chrono::seconds(30))
+            << "Got too large UNIX stream input message";
       }
 
       break;
@@ -240,8 +220,9 @@ bool TStreamClientWorkFn::HandleSockReadReady() {
         UnixStreamInputSocketError.Increment();
       }
 
-      syslog(LOG_ERR, "%s input thread lost client connection: %s",
-          IsTcp ? "TCP" : "UNIX stream", x.what());
+      LOG_R(TPri::ERR, std::chrono::seconds(30))
+          << (IsTcp ? "TCP" : "UNIX stream")
+          << " input thread lost client connection: " << x.what();
       return false;
     }
 
