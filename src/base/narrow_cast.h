@@ -30,7 +30,8 @@ namespace Base {
     NARROW result = static_cast<NARROW>(wide);
 
     if (static_cast<WIDE>(result) != wide) {
-      throw std::range_error("narrow_cast failed");
+      throw std::range_error(
+          "Destination type does not contain enough bits for result");
     }
 
     return result;
