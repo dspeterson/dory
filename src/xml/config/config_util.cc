@@ -23,7 +23,9 @@
 
 #include <cctype>
 #include <cstring>
+#include <ios>
 #include <limits>
+#include <sstream>
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -34,6 +36,8 @@
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/util/XercesDefs.hpp>
 
+#include <base/bits.h>
+#include <base/no_default_case.h>
 #include <xml/dom_document_util.h>
 #include <xml/dom_parser_with_line_info.h>
 
@@ -241,14 +245,14 @@ TOpt<std::string> TAttrReader::GetOptString(const DOMElement &elem,
     const char *attr_name, unsigned int opts) {
   assert(&elem);
   assert(attr_name);
-  assert(opts == (opts & TRIM_WHITESPACE));
+  assert(opts == (opts & TOpts::TRIM_WHITESPACE));
   TOpt<std::string> result;
   const DOMAttr *attr = elem.getAttributeNode(GetTranscoded(attr_name).get());
 
   if (attr) {
     std::string value(TranscodeToString(attr->getValue()));
 
-    if (opts & TRIM_WHITESPACE) {
+    if (opts & TOpts::TRIM_WHITESPACE) {
       boost::algorithm::trim(value);
     }
 
@@ -262,7 +266,7 @@ std::string TAttrReader::GetString(const DOMElement &elem,
     const char *attr_name, unsigned int opts) {
   assert(&elem);
   assert(attr_name);
-  assert(opts == (opts & (THROW_IF_EMPTY | TRIM_WHITESPACE)));
+  assert(opts == (opts & (TOpts::THROW_IF_EMPTY | TOpts::TRIM_WHITESPACE)));
   const DOMAttr *attr = elem.getAttributeNode(GetTranscoded(attr_name).get());
 
   if (!attr) {
@@ -271,11 +275,11 @@ std::string TAttrReader::GetString(const DOMElement &elem,
 
   std::string result(TranscodeToString(attr->getValue()));
 
-  if (opts & TRIM_WHITESPACE) {
+  if (opts & TOpts::TRIM_WHITESPACE) {
     boost::algorithm::trim(result);
   }
 
-  if ((opts & THROW_IF_EMPTY) && result.empty()) {
+  if ((opts & TOpts::THROW_IF_EMPTY) && result.empty()) {
     throw TMissingAttrValue(elem, attr_name);
   }
 
@@ -306,17 +310,18 @@ TOpt<bool> TAttrReader::GetOptNamedBool(const DOMElement &elem,
   assert(attr_name);
   assert(true_value);
   assert(false_value);
-  assert(opts == (opts & (REQUIRE_PRESENCE | CASE_SENSITIVE)));
+  assert(opts == (opts & (TOpts::REQUIRE_PRESENCE | TOpts::CASE_SENSITIVE)));
   TOpt<bool> result;
-  TOpt<std::string> opt_s = GetOptString(elem, attr_name, TRIM_WHITESPACE);
+  TOpt<std::string> opt_s = GetOptString(elem, attr_name,
+      0 | TOpts::TRIM_WHITESPACE);
 
   if (opt_s.IsUnknown()) {
-    if (opts & REQUIRE_PRESENCE) {
+    if (opts & TOpts::REQUIRE_PRESENCE) {
       throw TMissingAttrValue(elem, attr_name);
     }
   } else if (!(*opt_s).empty()) {
     result.MakeKnown(StringToBool(*opt_s, true_value, false_value,
-        (opts & CASE_SENSITIVE) != 0, elem, attr_name));
+        (opts & TOpts::CASE_SENSITIVE) != 0, elem, attr_name));
   }
 
   return result;
@@ -329,10 +334,11 @@ bool TAttrReader::GetNamedBool(const xercesc::DOMElement &elem,
   assert(attr_name);
   assert(true_value);
   assert(false_value);
-  assert(opts == (opts & CASE_SENSITIVE));
-  std::string s = GetString(elem, attr_name, TRIM_WHITESPACE | THROW_IF_EMPTY);
-  return StringToBool(s, true_value, false_value, (opts & CASE_SENSITIVE) != 0,
-      elem, attr_name);
+  assert(opts == (opts & TOpts::CASE_SENSITIVE));
+  std::string s = GetString(elem, attr_name,
+      TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
+  return StringToBool(s, true_value, false_value,
+      (opts & TOpts::CASE_SENSITIVE) != 0, elem, attr_name);
 }
 
 /* Note: On entry, leading and trailing whitespace has been trimmed from
@@ -377,71 +383,154 @@ static uint32_t ExtractMultiplier(std::string &value, unsigned int opts) {
   return mult;
 }
 
-template <typename T, bool SIGNED = std::is_signed<T>::value>
-struct TConversionTraits {
-  using TInvalidIntegerError = TInvalidSignedIntegerAttr;
-};
+static void ThrowWrongFormat(TBase found, unsigned int allowed,
+    const DOMElement &elem, const char *attr_name, const char *attr_value) {
+  std::ostringstream os;
+  os << "XML attribute value is in unsupported ";
 
-template <typename T>
-struct TConversionTraits<T, false> {
-  using TInvalidIntegerError = TInvalidUnsignedIntegerAttr;
-};
-
-template <typename T>
-static T AttrToInt(const std::string &attr, const DOMElement &elem,
-    const char *attr_name, unsigned int opts) {
-  std::string attr_copy(attr);
-  T mult = ExtractMultiplier(attr_copy, opts);
-  T value = 0;
-
-  try {
-    value = boost::lexical_cast<T>(attr_copy);
-  } catch (const boost::bad_lexical_cast &) {
-    throw typename TConversionTraits<T>::TInvalidIntegerError(elem, attr_name,
-        attr.c_str());
+  switch (found) {
+    case TBase::BIN: {
+      os << "binary";
+      break;
+    }
+    case TBase::OCT: {
+      os << "octal";
+      break;
+    }
+    case TBase::DEC: {
+      os << "decimal";
+      break;
+    }
+    case TBase::HEX: {
+      os << "hexadecimal";
+      break;
+    }
+    NO_DEFAULT_CASE;
   }
 
-  if ((value < (std::numeric_limits<T>::min() / mult)) ||
-      (value > (std::numeric_limits<T>::max() / mult))) {
+  os << " format.  Allowed formats: ";
+  bool following = false;
+
+  if (allowed & TBase::BIN) {
+    os << "binary";
+    following = true;
+  }
+
+  if (allowed & TBase::OCT) {
+    if (following) {
+      os << ", ";
+    }
+
+    os << "octal";
+    following = true;
+  }
+
+  if (allowed & TBase::DEC) {
+    if (following) {
+      os << ", ";
+    }
+
+    os << "decimal";
+    following = true;
+  }
+
+  if (allowed & TBase::HEX) {
+    if (following) {
+      os << ", ";
+    }
+
+    os << "hexadecimal";
+  }
+
+  throw TWrongUnsignedIntegerBase(elem, attr_name, attr_value,
+      os.str().c_str());
+}
+
+static intmax_t AttrToIntMax(const std::string &attr, const DOMElement &elem,
+    const char *attr_name, unsigned int opts) {
+  std::string attr_copy(attr);
+  intmax_t mult = ExtractMultiplier(attr_copy, opts);
+  intmax_t value = 0;
+
+  try {
+    value = ToSigned<intmax_t>(attr_copy);
+  } catch (const TInvalidInteger &) {
+    throw TInvalidSignedIntegerAttr(elem, attr_name, attr.c_str());
+  } catch (const std::range_error &) {
+    throw TAttrOutOfRange(elem, attr_name, attr.c_str());
+  }
+
+  if ((value < (std::numeric_limits<intmax_t>::min() / mult)) ||
+      (value > (std::numeric_limits<intmax_t>::max() / mult))) {
     throw TAttrOutOfRange(elem, attr_name, attr.c_str());
   }
 
   return value * mult;
 }
 
-template <typename T>
-static T GetIntMaxAttr(const DOMElement &elem, const char *attr_name,
+static uintmax_t AttrToUintMax(const std::string &attr, const DOMElement &elem,
+    const char *attr_name, unsigned int allowed_bases, unsigned int opts) {
+  std::string attr_copy(attr);
+  uintmax_t mult = ExtractMultiplier(attr_copy, opts);
+  uintmax_t value = 0;
+
+  try {
+    value = ToUnsigned<uintmax_t>(attr_copy, allowed_bases);
+  } catch (const TInvalidInteger &) {
+    throw TInvalidUnsignedIntegerAttr(elem, attr_name, attr.c_str());
+  } catch (const TWrongBase &x) {
+    ThrowWrongFormat(x.GetFound(), allowed_bases, elem, attr_name, attr.c_str());
+  } catch (const std::range_error &) {
+    throw TAttrOutOfRange(elem, attr_name, attr.c_str());
+  }
+
+  if (value > (std::numeric_limits<uintmax_t>::max() / mult)) {
+    throw TAttrOutOfRange(elem, attr_name, attr.c_str());
+  }
+
+  return value * mult;
+}
+
+static intmax_t GetIntMaxAttr(const DOMElement &elem, const char *attr_name,
     unsigned int opts) {
   assert(&elem);
   assert(attr_name);
   using TOpts = TAttrReader::TOpts;
-  assert(opts == (opts & (TOpts::ALLOW_K | TOpts::ALLOW_M)));
   std::string s = TAttrReader::GetString(elem, attr_name,
       TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
-  return AttrToInt<T>(s, elem, attr_name, opts);
+  return AttrToIntMax(s, elem, attr_name, opts);
+}
+
+static uintmax_t GetUintMaxAttr(const DOMElement &elem, const char *attr_name,
+    unsigned int allowed_bases, unsigned int opts) {
+  assert(&elem);
+  assert(attr_name);
+  using TOpts = TAttrReader::TOpts;
+  std::string s = TAttrReader::GetString(elem, attr_name,
+      TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
+  return AttrToUintMax(s, elem, attr_name, allowed_bases, opts);
 }
 
 template <>
 intmax_t TAttrReader::GetIntHelper<intmax_t>(const DOMElement &elem,
-    const char *attr_name, unsigned int opts) {
-  return GetIntMaxAttr<intmax_t>(elem, attr_name, opts);
+    const char *attr_name, unsigned int /* allowed_bases */,
+    unsigned int opts) {
+  return GetIntMaxAttr(elem, attr_name, opts);
 }
 
 template <>
 uintmax_t TAttrReader::GetIntHelper<uintmax_t>(const DOMElement &elem,
-    const char *attr_name, unsigned int opts) {
-  return GetIntMaxAttr<uintmax_t>(elem, attr_name, opts);
+    const char *attr_name, unsigned int allowed_bases, unsigned int opts) {
+  return GetUintMaxAttr(elem, attr_name, allowed_bases, opts);
 }
 
-TOpt<std::string> GetOptInAttrHelper(const DOMElement &elem,
+static TOpt<std::string> GetOptInAttrHelper(const DOMElement &elem,
     const char *attr_name, const char *empty_value_name, unsigned int opts) {
   assert(&elem);
   assert(attr_name);
   using TOpts = TAttrReader::TOpts;
-  assert(opts == (opts & (TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE |
-      TOpts::ALLOW_K | TOpts::ALLOW_M)));
   TOpt<std::string> opt_s = TAttrReader::GetOptString(elem, attr_name,
-      TOpts::TRIM_WHITESPACE);
+      0 | TOpts::TRIM_WHITESPACE);
 
   if (opt_s.IsUnknown()) {
     if (opts & TOpts::REQUIRE_PRESENCE) {
@@ -462,15 +551,29 @@ TOpt<std::string> GetOptInAttrHelper(const DOMElement &elem,
   return opt_s;
 }
 
-template <typename T>
-TOpt<T> GetOptIntMaxAttr(const DOMElement &elem, const char *attr_name,
-    const char *empty_value_name, unsigned int opts) {
-  TOpt<T> result;
+static TOpt<intmax_t> GetOptIntMaxAttr(const DOMElement &elem,
+    const char *attr_name, const char *empty_value_name, unsigned int opts) {
+  TOpt<intmax_t> result;
   TOpt<std::string> opt_attr_str = GetOptInAttrHelper(elem, attr_name,
       empty_value_name, opts);
 
   if (opt_attr_str.IsKnown()) {
-    result.MakeKnown(AttrToInt<T>(*opt_attr_str, elem, attr_name, opts));
+    result.MakeKnown(AttrToIntMax(*opt_attr_str, elem, attr_name, opts));
+  }
+
+  return result;
+}
+
+static TOpt<uintmax_t> GetOptUintMaxAttr(const DOMElement &elem,
+    const char *attr_name, const char *empty_value_name,
+    unsigned int allowed_bases, unsigned int opts) {
+  TOpt<uintmax_t> result;
+  TOpt<std::string> opt_attr_str = GetOptInAttrHelper(elem, attr_name,
+      empty_value_name, opts);
+
+  if (opt_attr_str.IsKnown()) {
+    result.MakeKnown(AttrToUintMax(*opt_attr_str, elem, attr_name,
+        allowed_bases, opts));
   }
 
   return result;
@@ -478,12 +581,15 @@ TOpt<T> GetOptIntMaxAttr(const DOMElement &elem, const char *attr_name,
 
 template <>
 TOpt<intmax_t> TAttrReader::GetOptIntHelper<intmax_t>(const DOMElement &elem,
-    const char *attr_name, const char *empty_value_name, unsigned int opts) {
-  return GetOptIntMaxAttr<intmax_t>(elem, attr_name, empty_value_name, opts);
+    const char *attr_name, const char *empty_value_name,
+    unsigned int /* allowed_bases */, unsigned int opts) {
+  return GetOptIntMaxAttr(elem, attr_name, empty_value_name, opts);
 }
 
 template <>
 TOpt<uintmax_t> TAttrReader::GetOptIntHelper<uintmax_t>(const DOMElement &elem,
-    const char *attr_name, const char *empty_value_name, unsigned int opts) {
-  return GetOptIntMaxAttr<uintmax_t>(elem, attr_name, empty_value_name, opts);
+    const char *attr_name, const char *empty_value_name,
+    unsigned int allowed_bases, unsigned int opts) {
+  return GetOptUintMaxAttr(elem, attr_name, empty_value_name, allowed_bases,
+      opts);
 }

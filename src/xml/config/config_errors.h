@@ -308,12 +308,6 @@ namespace Xml {
           const char *attr_name, const char *attr_value)
           : TInvalidAttr(msg, location, attr_name, attr_value) {
       }
-
-      TInvalidIntegerAttr(const xercesc::DOMElement &location,
-          const char *attr_name, const char *attr_value)
-          : TInvalidIntegerAttr("XML attribute is not a valid integer",
-              location, attr_name, attr_value) {
-      }
     };  // TInvalidIntegerAttr
 
     class TInvalidUnsignedIntegerAttr : public TInvalidIntegerAttr {
@@ -335,6 +329,14 @@ namespace Xml {
               attr_name, attr_value) {
       }
     };  // TInvalidSignedIntegerAttr
+
+    class TWrongUnsignedIntegerBase : public TInvalidIntegerAttr {
+      public:
+      TWrongUnsignedIntegerBase(const xercesc::DOMElement &location,
+          const char *attr_name, const char *attr_value, const char *msg)
+          : TInvalidIntegerAttr(msg, location, attr_name, attr_value) {
+      }
+    };
 
     class TAttrOutOfRange : public TInvalidAttr {
       public:

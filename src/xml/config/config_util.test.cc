@@ -670,7 +670,7 @@ namespace {
     ASSERT_EQ(*opt_str, "   ");
 
     opt_str = TAttrReader::GetOptString(*elem, "attr2",
-        TOpts::TRIM_WHITESPACE);
+        0 | TOpts::TRIM_WHITESPACE);
     ASSERT_TRUE(opt_str.IsKnown());
     ASSERT_EQ(*opt_str, "");
 
@@ -679,13 +679,13 @@ namespace {
     ASSERT_EQ(*opt_str, "   blah ");
 
     opt_str = TAttrReader::GetOptString(*elem, "attr3",
-        TOpts::TRIM_WHITESPACE);
+        0 | TOpts::TRIM_WHITESPACE);
     ASSERT_TRUE(opt_str.IsKnown());
     ASSERT_EQ(*opt_str, "blah");
 
     ASSERT_EQ(TAttrReader::GetString(*elem, "attr3"), "   blah ");
-    ASSERT_EQ(TAttrReader::GetString(*elem, "attr3", TOpts::TRIM_WHITESPACE),
-        "blah");
+    ASSERT_EQ(TAttrReader::GetString(*elem, "attr3",
+        0 | TOpts::TRIM_WHITESPACE), "blah");
 
     bool caught = false;
 
@@ -703,7 +703,7 @@ namespace {
     caught = false;
 
     try {
-      TAttrReader::GetString(*elem, "attr1", TOpts::THROW_IF_EMPTY);
+      TAttrReader::GetString(*elem, "attr1", 0 | TOpts::THROW_IF_EMPTY);
     } catch (const TMissingAttrValue &x) {
       caught = true;
       ASSERT_EQ(x.GetAttrName(), "attr1");
@@ -716,7 +716,7 @@ namespace {
     std::string str;
 
     try {
-      str = TAttrReader::GetString(*elem, "attr2", TOpts::THROW_IF_EMPTY);
+      str = TAttrReader::GetString(*elem, "attr2", 0 | TOpts::THROW_IF_EMPTY);
     } catch (const TMissingAttrValue &) {
       ASSERT_TRUE(false);
     }
@@ -788,12 +788,13 @@ namespace {
     ASSERT_TRUE(opt_bool.IsKnown());
     ASSERT_FALSE(*opt_bool);
     opt_bool = TAttrReader::GetOptBool(*elem, "attr1",
-        TOpts::REQUIRE_PRESENCE);
+        0 | TOpts::REQUIRE_PRESENCE);
     ASSERT_TRUE(opt_bool.IsUnknown());
     bool caught = false;
 
     try {
-      TAttrReader::GetOptBool(*elem, "wrong_attr", TOpts::REQUIRE_PRESENCE);
+      TAttrReader::GetOptBool(*elem, "wrong_attr",
+          0 | TOpts::REQUIRE_PRESENCE);
     } catch (const TMissingAttrValue &x) {
       caught = true;
       ASSERT_EQ(x.GetAttrName(), "wrong_attr");
@@ -804,14 +805,14 @@ namespace {
 
     ASSERT_TRUE(caught);
     opt_bool = TAttrReader::GetOptBool(*elem, "attr3",
-        TOpts::REQUIRE_PRESENCE);
+        0 | TOpts::REQUIRE_PRESENCE);
     ASSERT_TRUE(opt_bool.IsKnown());
     ASSERT_FALSE(*opt_bool);
     caught = false;
 
     try {
       opt_bool = TAttrReader::GetOptBool(*elem, "attr5",
-          TOpts::CASE_SENSITIVE);
+          0 | TOpts::CASE_SENSITIVE);
     } catch (const TInvalidBoolAttr &x) {
       caught = true;
       ASSERT_EQ(x.GetTrueValue(), "true");
@@ -843,7 +844,7 @@ namespace {
     caught = false;
 
     try {
-      TAttrReader::GetBool(*elem, "attr6", TOpts::CASE_SENSITIVE);
+      TAttrReader::GetBool(*elem, "attr6", 0 | TOpts::CASE_SENSITIVE);
     } catch (const TInvalidBoolAttr &x) {
       caught = true;
       ASSERT_EQ(x.GetTrueValue(), "true");
@@ -927,26 +928,27 @@ namespace {
     ASSERT_EQ(TranscodeToString(child->getNodeName()), "elem");
     const DOMElement *elem = static_cast<const DOMElement *>(child);
 
-    TOpt<int> opt_int = TAttrReader::GetOptInt<int>(*elem, "attr1");
+    TOpt<int> opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr1",
+        nullptr);
     ASSERT_TRUE(opt_int.IsUnknown());
-    opt_int = TAttrReader::GetOptInt<int>(*elem, "wrong_attr");
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "wrong_attr", nullptr);
     ASSERT_TRUE(opt_int.IsUnknown());
-    opt_int = TAttrReader::GetOptInt<int>(*elem, "attr2");
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr2", nullptr);
     ASSERT_TRUE(opt_int.IsKnown());
     ASSERT_EQ(*opt_int, 5);
 
-    opt_int = TAttrReader::GetOptInt<int>(*elem, "attr1",
-        TOpts::REQUIRE_PRESENCE);
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr1", nullptr,
+        0 | TOpts::REQUIRE_PRESENCE);
     ASSERT_TRUE(opt_int.IsUnknown());
-    opt_int = TAttrReader::GetOptInt<int>(*elem, "attr5",
-        TOpts::REQUIRE_PRESENCE);
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr5", nullptr,
+        0 | TOpts::REQUIRE_PRESENCE);
     ASSERT_TRUE(opt_int.IsKnown());
     ASSERT_EQ(*opt_int, -2);
     bool caught = false;
 
     try {
-      TAttrReader::GetOptInt<int>(*elem, "wrong_attr",
-          TOpts::REQUIRE_PRESENCE);
+      TAttrReader::GetOptSigned<int>(*elem, "wrong_attr", nullptr,
+          0 | TOpts::REQUIRE_PRESENCE);
     } catch (const TMissingAttrValue &x) {
       caught = true;
       ASSERT_EQ(x.GetAttrName(), "wrong_attr");
@@ -956,26 +958,26 @@ namespace {
     }
 
     ASSERT_TRUE(caught);
-    opt_int = TAttrReader::GetOptInt2<int>(*elem, "attr1", "unlimited");
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr1", "unlimited");
     ASSERT_TRUE(opt_int.IsUnknown());
-    opt_int = TAttrReader::GetOptInt2<int>(*elem, "wrong_attr", "unlimited");
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "wrong_attr", "unlimited");
     ASSERT_TRUE(opt_int.IsUnknown());
-    opt_int = TAttrReader::GetOptInt2<int>(*elem, "attr2", "unlimited");
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr2", "unlimited");
     ASSERT_TRUE(opt_int.IsKnown());
     ASSERT_EQ(*opt_int, 5);
 
-    opt_int = TAttrReader::GetOptInt2<int>(*elem, "attr1", "unlimited",
-        TOpts::REQUIRE_PRESENCE);
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr1", "unlimited",
+        0 | TOpts::REQUIRE_PRESENCE);
     ASSERT_TRUE(opt_int.IsUnknown());
-    opt_int = TAttrReader::GetOptInt2<int>(*elem, "attr5", "unlimited",
-        TOpts::REQUIRE_PRESENCE);
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr5", "unlimited",
+        0 | TOpts::REQUIRE_PRESENCE);
     ASSERT_TRUE(opt_int.IsKnown());
     ASSERT_EQ(*opt_int, -2);
     caught = false;
 
     try {
-      TAttrReader::GetOptInt2<int>(*elem, "wrong_attr", "unlimited",
-          TOpts::REQUIRE_PRESENCE);
+      TAttrReader::GetOptSigned<int>(*elem, "wrong_attr", "unlimited",
+          0 | TOpts::REQUIRE_PRESENCE);
     } catch (const TMissingAttrValue &x) {
       caught = true;
       ASSERT_EQ(x.GetAttrName(), "wrong_attr");
@@ -983,22 +985,22 @@ namespace {
     }
 
     ASSERT_TRUE(caught);
-    opt_int = TAttrReader::GetOptInt2<int>(*elem, "attr6", "unlimited");
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr6", "unlimited");
     ASSERT_TRUE(opt_int.IsUnknown());
-    opt_int = TAttrReader::GetOptInt2<int>(*elem, "attr6", "unlimited",
-        TOpts::STRICT_EMPTY_VALUE);
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr6", "unlimited",
+        0 | TOpts::STRICT_EMPTY_VALUE);
     ASSERT_TRUE(opt_int.IsUnknown());
-    opt_int = TAttrReader::GetOptInt2<int>(*elem, "attr6", "unlimited",
-        TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE);
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr6", "unlimited",
+        0 | TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE);
     ASSERT_TRUE(opt_int.IsUnknown());
 
-    opt_int = TAttrReader::GetOptInt2<int>(*elem, "wrong_attr", "unlimited",
-        TOpts::STRICT_EMPTY_VALUE);
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "wrong_attr", "unlimited",
+        0 | TOpts::STRICT_EMPTY_VALUE);
     ASSERT_TRUE(opt_int.IsUnknown());
     caught = false;
 
     try {
-      TAttrReader::GetOptInt2<int>(*elem, "wrong_attr", "unlimited",
+      TAttrReader::GetOptSigned<int>(*elem, "wrong_attr", "unlimited",
           TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE);
     } catch (const TMissingAttrValue &x) {
       caught = true;
@@ -1010,7 +1012,7 @@ namespace {
     caught = false;
 
     try {
-      TAttrReader::GetOptInt2<int>(*elem, "attr1", "unlimited",
+      TAttrReader::GetOptSigned<int>(*elem, "attr1", "unlimited",
           TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE);
     } catch (const TMissingAttrValue &x) {
       caught = true;
@@ -1019,27 +1021,29 @@ namespace {
     }
 
     ASSERT_TRUE(caught);
-    opt_int = TAttrReader::GetOptInt2<int>(*elem, "attr6", "unlimited");
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr6", "unlimited");
     ASSERT_TRUE(opt_int.IsUnknown());
 
-    opt_int = TAttrReader::GetOptInt<int>(*elem, "attr3", TOpts::ALLOW_K);
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr3", nullptr,
+        0 | TOpts::ALLOW_K);
     ASSERT_TRUE(opt_int.IsKnown());
     ASSERT_EQ(*opt_int, 20 * 1024);
-    opt_int = TAttrReader::GetOptInt<int>(*elem, "attr4", TOpts::ALLOW_M);
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr4", nullptr,
+        0 | TOpts::ALLOW_M);
     ASSERT_TRUE(opt_int.IsKnown());
     ASSERT_EQ(*opt_int, -5 * 1024 * 1024);
-    opt_int = TAttrReader::GetOptInt<int>(*elem, "attr3",
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr3", nullptr,
         TOpts::ALLOW_K | TOpts::ALLOW_M);
     ASSERT_TRUE(opt_int.IsKnown());
     ASSERT_EQ(*opt_int, 20 * 1024);
-    opt_int = TAttrReader::GetOptInt<int>(*elem, "attr4",
+    opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr4", nullptr,
         TOpts::ALLOW_K | TOpts::ALLOW_M);
     ASSERT_TRUE(opt_int.IsKnown());
     ASSERT_EQ(*opt_int, -5 * 1024 * 1024);
     caught = false;
 
     try {
-      TAttrReader::GetOptInt<int>(*elem, "attr3");
+      TAttrReader::GetOptSigned<int>(*elem, "attr3", nullptr);
     } catch (const TInvalidSignedIntegerAttr &x) {
       caught = true;
       ASSERT_EQ(x.GetAttrValue(), "20 k");
@@ -1051,7 +1055,8 @@ namespace {
     caught = false;
 
     try {
-      TAttrReader::GetOptInt<unsigned int>(*elem, "attr3", TOpts::ALLOW_M);
+      TAttrReader::GetOptUnsigned<unsigned int>(*elem, "attr3", nullptr,
+          0 | TBase::DEC, 0 | TOpts::ALLOW_M);
     } catch (const TInvalidUnsignedIntegerAttr &x) {
       caught = true;
       ASSERT_EQ(x.GetAttrValue(), "20 k");
@@ -1114,7 +1119,7 @@ namespace {
     bool caught = false;
 
     try {
-      TAttrReader::GetInt<int>(*elem, "wrong_attr");
+      TAttrReader::GetSigned<int>(*elem, "wrong_attr");
     } catch (const TMissingAttrValue &x) {
       caught = true;
       ASSERT_EQ(x.GetAttrName(), "wrong_attr");
@@ -1127,7 +1132,7 @@ namespace {
     caught = false;
 
     try {
-      TAttrReader::GetInt<int>(*elem, "attr1");
+      TAttrReader::GetSigned<int>(*elem, "attr1");
     } catch (const TMissingAttrValue &x) {
       caught = true;
       ASSERT_EQ(x.GetAttrName(), "attr1");
@@ -1135,25 +1140,25 @@ namespace {
     }
 
     ASSERT_TRUE(caught);
-    ASSERT_EQ(TAttrReader::GetInt<int>(*elem, "attr2"), 5);
-    ASSERT_EQ(TAttrReader::GetInt<int>(*elem, "attr3"), 60);
-    ASSERT_EQ(TAttrReader::GetInt<int>(*elem, "attr16"), -2);
-    ASSERT_EQ(TAttrReader::GetInt<int>(*elem, "attr4", TOpts::ALLOW_K),
+    ASSERT_EQ(TAttrReader::GetSigned<int>(*elem, "attr2"), 5);
+    ASSERT_EQ(TAttrReader::GetSigned<int>(*elem, "attr3"), 60);
+    ASSERT_EQ(TAttrReader::GetSigned<int>(*elem, "attr16"), -2);
+    ASSERT_EQ(TAttrReader::GetSigned<int>(*elem, "attr4", 0 | TOpts::ALLOW_K),
         20 * 1024);
-    ASSERT_EQ(TAttrReader::GetInt<unsigned int>(*elem, "attr4",
-        TOpts::ALLOW_K), 20U * 1024U);
-    ASSERT_EQ(TAttrReader::GetInt<int>(*elem, "attr5", TOpts::ALLOW_K),
+    ASSERT_EQ(TAttrReader::GetUnsigned<unsigned int>(*elem, "attr4",
+        0 | TBase::DEC, 0 | TOpts::ALLOW_K), 20U * 1024U);
+    ASSERT_EQ(TAttrReader::GetSigned<int>(*elem, "attr5", 0 | TOpts::ALLOW_K),
         16 * 1024);
-    ASSERT_EQ(TAttrReader::GetInt<int>(*elem, "attr6", TOpts::ALLOW_K),
+    ASSERT_EQ(TAttrReader::GetSigned<int>(*elem, "attr6", 0 | TOpts::ALLOW_K),
         8 * 1024);
-    ASSERT_EQ(TAttrReader::GetInt<int>(*elem, "attr7", TOpts::ALLOW_M),
+    ASSERT_EQ(TAttrReader::GetSigned<int>(*elem, "attr7", 0 | TOpts::ALLOW_M),
         2 * 1024 * 1024);
-    ASSERT_EQ(TAttrReader::GetInt<int>(*elem, "attr8", TOpts::ALLOW_M),
+    ASSERT_EQ(TAttrReader::GetSigned<int>(*elem, "attr8", 0 | TOpts::ALLOW_M),
         4 * 1024 * 1024);
     caught = false;
 
     try {
-      TAttrReader::GetInt<int>(*elem, "attr23");
+      TAttrReader::GetSigned<int>(*elem, "attr23");
     } catch (const TInvalidSignedIntegerAttr &x) {
       caught = true;
       ASSERT_EQ(x.GetAttrValue(), "12345 6789");
@@ -1165,7 +1170,8 @@ namespace {
     caught = false;
 
     try {
-      TAttrReader::GetInt<unsigned int>(*elem, "attr8", TOpts::ALLOW_K);
+      TAttrReader::GetUnsigned<unsigned int>(*elem, "attr8", 0 | TBase::DEC,
+          0 | TOpts::ALLOW_K);
     } catch (const TInvalidUnsignedIntegerAttr &x) {
       caught = true;
       ASSERT_EQ(x.GetAttrValue(), "4M");
@@ -1177,7 +1183,7 @@ namespace {
     caught = false;
 
     try {
-      TAttrReader::GetInt<int>(*elem, "attr13");
+      TAttrReader::GetSigned<int>(*elem, "attr13");
     } catch (const TInvalidSignedIntegerAttr &x) {
       caught = true;
       ASSERT_EQ(x.GetAttrValue(), "999999999999999999999999999999999999");
@@ -1186,12 +1192,12 @@ namespace {
     }
 
     ASSERT_TRUE(caught);
-    ASSERT_EQ(TAttrReader::GetInt<int8_t>(*elem, "attr17"), 127);
-    ASSERT_EQ(TAttrReader::GetInt<int8_t>(*elem, "attr19"), -128);
+    ASSERT_EQ(TAttrReader::GetSigned<int8_t>(*elem, "attr17"), 127);
+    ASSERT_EQ(TAttrReader::GetSigned<int8_t>(*elem, "attr19"), -128);
     caught = false;
 
     try {
-      TAttrReader::GetInt<int8_t>(*elem, "attr18");
+      TAttrReader::GetSigned<int8_t>(*elem, "attr18");
     } catch (const TAttrOutOfRange &x) {
       caught = true;
       ASSERT_EQ(x.GetAttrValue(), "128");
@@ -1203,7 +1209,7 @@ namespace {
     caught = false;
 
     try {
-      TAttrReader::GetInt<int8_t>(*elem, "attr20");
+      TAttrReader::GetSigned<int8_t>(*elem, "attr20");
     } catch (const TAttrOutOfRange &x) {
       caught = true;
       ASSERT_EQ(x.GetAttrValue(), "-129");
@@ -1212,11 +1218,12 @@ namespace {
     }
 
     ASSERT_TRUE(caught);
-    ASSERT_EQ(TAttrReader::GetInt<uint16_t>(*elem, "attr14"), 65535U);
+    ASSERT_EQ(TAttrReader::GetUnsigned<uint16_t>(*elem, "attr14",
+        0 | TBase::DEC), 65535U);
     caught = false;
 
     try {
-      TAttrReader::GetInt<uint16_t>(*elem, "attr15");
+      TAttrReader::GetUnsigned<uint16_t>(*elem, "attr15", 0 | TBase::DEC);
     } catch (const TAttrOutOfRange &x) {
       caught = true;
       ASSERT_EQ(x.GetAttrValue(), "65536");
@@ -1225,11 +1232,12 @@ namespace {
     }
 
     ASSERT_TRUE(caught);
-    ASSERT_EQ(TAttrReader::GetInt<uint32_t>(*elem, "attr9"), 4294967295U);
+    ASSERT_EQ(TAttrReader::GetUnsigned<uint32_t>(*elem, "attr9",
+        0 | TBase::DEC), 4294967295U);
     caught = false;
 
     try {
-      TAttrReader::GetInt<uint32_t>(*elem, "attr10");
+      TAttrReader::GetUnsigned<uint32_t>(*elem, "attr10", 0 | TBase::DEC);
     } catch (const TAttrOutOfRange &x) {
       caught = true;
       ASSERT_EQ(x.GetAttrValue(), "4294967296");
@@ -1238,12 +1246,13 @@ namespace {
     }
 
     ASSERT_TRUE(caught);
-    ASSERT_EQ(TAttrReader::GetInt<uint32_t>(*elem, "attr11", TOpts::ALLOW_K),
-        4194303U * 1024U);
+    ASSERT_EQ(TAttrReader::GetUnsigned<uint32_t>(*elem, "attr11",
+        0 | TBase::DEC, 0 | TOpts::ALLOW_K), 4194303U * 1024U);
     caught = false;
 
     try {
-      TAttrReader::GetInt<uint32_t>(*elem, "attr12", TOpts::ALLOW_K);
+      TAttrReader::GetUnsigned<uint32_t>(*elem, "attr12", 0 | TBase::DEC,
+          0 | TOpts::ALLOW_K);
     } catch (const TAttrOutOfRange &x) {
       caught = true;
       ASSERT_EQ(x.GetAttrValue(), "4294967296");
@@ -1252,12 +1261,13 @@ namespace {
     }
 
     ASSERT_TRUE(caught);
-    ASSERT_EQ(TAttrReader::GetInt<uint32_t>(*elem, "attr21", TOpts::ALLOW_M),
-        4095U * 1024U * 1024U);
+    ASSERT_EQ(TAttrReader::GetUnsigned<uint32_t>(*elem, "attr21",
+        0 | TBase::DEC, 0 | TOpts::ALLOW_M), 4095U * 1024U * 1024U);
     caught = false;
 
     try {
-      TAttrReader::GetInt<uint32_t>(*elem, "attr22", TOpts::ALLOW_M);
+      TAttrReader::GetUnsigned<uint32_t>(*elem, "attr22", 0 | TBase::DEC,
+          0 | TOpts::ALLOW_M);
     } catch (const TAttrOutOfRange &x) {
       caught = true;
       ASSERT_EQ(x.GetAttrValue(), "4294967296");

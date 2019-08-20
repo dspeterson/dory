@@ -35,7 +35,9 @@
 #include <xercesc/dom/DOMElement.hpp>
 #include <xercesc/dom/DOMText.hpp>
 
+#include <base/narrow_cast.h>
 #include <base/opt.h>
+#include <base/to_integer.h>
 #include <xml/config/config_errors.h>
 #include <xml/xml_string_util.h>
 
@@ -103,7 +105,7 @@ namespace Xml {
 
       public:
       /* Options for reading attribute values. */
-      enum TOpts {
+      enum class TOpts : unsigned int {
         /* Require the attribute to at least be present, even if its value is
            the empty string.  Throw TMissingAttrValue if attribute is not
            present. */
@@ -134,6 +136,40 @@ namespace Xml {
         /* Allow syntax like '4m' as shorthand for (4 * 1024 * 1024). */
         ALLOW_M = 1U << 6
       };  // TOpts
+
+      // The operator functions below must be either nonstatic members
+      // (implicitly taking a TAttrReader as an operand) or nonmembers.  The
+      // first option doesn't work.  We take the second option, making them
+      // friends only so they can be defined here, which allows them to be used
+      // inside the class body.
+
+      friend constexpr unsigned int operator&(TOpts a, TOpts b) {
+        return static_cast<unsigned int>(a) & static_cast<unsigned int>(b);
+      }
+
+      friend constexpr unsigned int operator&(TOpts a, unsigned int b) {
+        return static_cast<unsigned int>(a) & b;
+      }
+
+      friend constexpr unsigned int operator&(unsigned int a, TOpts b) {
+        return a & static_cast<unsigned int>(b);
+      }
+
+      friend constexpr unsigned int operator|(TOpts a, TOpts b) {
+        return static_cast<unsigned int>(a) | static_cast<unsigned int>(b);
+      }
+
+      friend constexpr unsigned int operator|(TOpts a, unsigned int b) {
+        return static_cast<unsigned int>(a) | b;
+      }
+
+      friend constexpr unsigned int operator|(unsigned int a, TOpts b) {
+        return a | static_cast<unsigned int>(b);
+      }
+
+      friend constexpr unsigned int operator!(TOpts a) {
+        return !static_cast<unsigned int>(a);
+      }
 
       /* See if 'elem' has an attribute named 'attr_name'.  If not, return the
          unknown value.  Otherwise, return the attribute value.
@@ -188,49 +224,83 @@ namespace Xml {
         return GetNamedBool(elem, attr_name, "true", "false", opts);
       }
 
-      /* Get an optional integer value, whose type is specified by T.  Throw
-         TInvalidSignedIntegerAttr or TInvalidUnsignedIntegerAttr if value is
-         not a valid integer.  Throw TAttrOutOfRange if value is out of range
-         for integer type T.
-         allowed opts: REQUIRE_PRESENCE, ALLOW_K, ALLOW_M */
-      template <typename T>
-      static typename Base::TOpt<T> GetOptInt(const xercesc::DOMElement &elem,
-          const char *attr_name, unsigned int opts = 0) {
-        assert(opts == (opts & (REQUIRE_PRESENCE | ALLOW_K | ALLOW_M)));
-        return GetOptIntHelper<T>(elem, attr_name, nullptr, opts);
-      }
-
-      /* Get an optional integer value, whose type is specified by T.
-         'empty_value_name' allows a string literal such as "unlimited" or
-         "disabled" to explicitly indicate a missing value.  Throw
-         TInvalidSignedIntegerAttr or TInvalidUnsignedIntegerAttr if value is
-         not a valid integer.  Throw TAttrOutOfRange if value is out of range
-         for integer type T.
+      /* Get an optional signed integer value, whose type is specified by T.
+         If not null, 'empty_value_name' allows a string literal such as
+         "unlimited" or "disabled" to explicitly indicate a missing value.
+         Throw TInvalidSignedIntegerAttr if value is not a valid signed
+         integer.  Throw TAttrOutOfRange if value is out of range for type T.
          allowed opts: REQUIRE_PRESENCE, STRICT_EMPTY_VALUE, ALLOW_K, ALLOW_M
        */
       template <typename T>
-      static typename Base::TOpt<T> GetOptInt2(const xercesc::DOMElement &elem,
-          const char *attr_name, const char *empty_value_name,
-          unsigned int opts = 0) {
-        assert(empty_value_name);
+      static typename Base::TOpt<T> GetOptSigned(
+          const xercesc::DOMElement &elem, const char *attr_name,
+          const char *empty_value_name, unsigned int opts = 0) {
+        static_assert(std::is_signed<T>::value,
+            "Type parameter must be a signed integer");
         assert(opts == (opts &
-            (REQUIRE_PRESENCE | STRICT_EMPTY_VALUE | ALLOW_K | ALLOW_M)));
-        return GetOptIntHelper<T>(elem, attr_name, empty_value_name, opts);
+            (TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE |
+                TOpts::ALLOW_K | TOpts::ALLOW_M)));
+        assert(empty_value_name || ((opts & TOpts::STRICT_EMPTY_VALUE) == 0));
+        return GetOptIntHelper<T>(elem, attr_name, empty_value_name, 0, opts);
       }
 
-      /* Get a required integer value, whose type is specified by T.  Throw
-         TInvalidSignedIntegerAttr or TInvalidUnsignedIntegerAttr if value is
-         not a valid integer.  Throw TAttrOutOfRange if value is out of range
-         for integer type T.  Throw TMissingAttrValue if value is missing.
+      /* Get an optional unsigned integer value, whose type is specified by T.
+         If not null, 'empty_value_name' allows a string literal such as
+         "unlimited" or "disabled" to explicitly indicate a missing value.
+         Throw TInvalidUnsignedIntegerAttr if value is not a valid unsigned
+         integer.  Throw TAttrOutOfRange if value is out of range for type T.
+         allowed_bases is a bitwise OR of the values defined by Base::TBase.
+         If value is a valid integer in a base not allowed by allowed_bases,
+         throw TWrongUnsignedIntegerBase.
+         allowed opts: REQUIRE_PRESENCE, STRICT_EMPTY_VALUE, ALLOW_K, ALLOW_M
+       */
+      template <typename T>
+      static typename Base::TOpt<T> GetOptUnsigned(
+          const xercesc::DOMElement &elem, const char *attr_name,
+          const char *empty_value_name, unsigned int allowed_bases,
+          unsigned int opts = 0) {
+        static_assert(std::is_unsigned<T>::value &&
+            !std::is_same<T, bool>::value,
+            "Type parameter must be an signed integer other than bool");
+        assert(opts == (opts &
+            (TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE |
+                TOpts::ALLOW_K | TOpts::ALLOW_M)));
+        assert(empty_value_name || ((opts & TOpts::STRICT_EMPTY_VALUE) == 0));
+        return GetOptIntHelper<T>(elem, attr_name, empty_value_name,
+            allowed_bases, opts);
+      }
+
+      /* Get a required signed integer value, whose type is specified by T.
+         Throw TInvalidSignedIntegerAttr if value is not a valid signed
+         integer.  Throw TAttrOutOfRange if value is out of range for type T.
+         Throw TMissingAttrValue if value is missing.
          allowed opts: ALLOW_K, ALLOW_M */
       template <typename T>
-      static T GetInt(const xercesc::DOMElement &elem, const char *attr_name,
-          unsigned int opts = 0) {
-        static_assert(std::is_integral<T>::value &&
-            !std::is_same<T, bool>::value,
-            "Type parameter must be integral and not bool");
+      static T GetSigned(const xercesc::DOMElement &elem,
+          const char *attr_name, unsigned int opts = 0) {
+        static_assert(std::is_signed<T>::value,
+            "Type parameter must be a signed integer");
+        assert(opts == (opts & (TOpts::ALLOW_K | TOpts::ALLOW_M)));
+        return GetIntHelper<T>(elem, attr_name, 0, opts);
+      }
 
-        return GetIntHelper<T>(elem, attr_name, opts);
+      /* Get a required unsigned integer value, whose type is specified by T.
+         Throw TInvalidUnsignedIntegerAttr if value is not a valid unsigned
+         integer.  Throw TAttrOutOfRange if value is out of range for type T.
+         allowed_bases is a bitwise OR of the values defined by Base::TBase.
+         If value is a valid integer in a base not allowed by allowed_bases,
+         throw TWrongUnsignedIntegerBase.  Throw TMissingAttrValue if value is
+         missing.
+         allowed opts: ALLOW_K, ALLOW_M */
+      template <typename T>
+      static T GetUnsigned(const xercesc::DOMElement &elem,
+          const char *attr_name, unsigned int allowed_bases,
+          unsigned int opts = 0) {
+        static_assert(std::is_unsigned<T>::value &&
+            !std::is_same<T, bool>::value,
+            "Type parameter must be an unsigned integer other than bool");
+        assert(opts == (opts & (TOpts::ALLOW_K | TOpts::ALLOW_M)));
+        return GetIntHelper<T>(elem, attr_name, allowed_bases, opts);
       }
 
       private:
@@ -245,7 +315,7 @@ namespace Xml {
       };
 
       template <typename NARROW, typename WIDE>
-      static NARROW narrow_cast(WIDE wide, const xercesc::DOMElement &elem,
+      static NARROW narrow(WIDE wide, const xercesc::DOMElement &elem,
           const char *attr_name) {
         NARROW result = static_cast<NARROW>(wide);
 
@@ -261,13 +331,15 @@ namespace Xml {
       // uintmax_t.
       template <typename T>
       static T GetIntHelper(const xercesc::DOMElement &elem,
-          const char *attr_name, unsigned int opts) {
+          const char *attr_name, unsigned int allowed_bases,
+          unsigned int opts) {
         using TWidest = typename TIntegerTraits<T>::TWidest;
 
-        // This calls a specialization.  It does not recurse.
-        TWidest value = GetIntHelper<TWidest>(elem, attr_name, opts);
+        /* This calls a specialization.  It does not recurse. */
+        TWidest value = GetIntHelper<TWidest>(elem, attr_name, allowed_bases,
+            opts);
 
-        return narrow_cast<T>(value, elem, attr_name);
+        return narrow<T>(value, elem, attr_name);
       }
 
       // Base template handles integral types other than intmax_t and
@@ -275,20 +347,18 @@ namespace Xml {
       template <typename T>
       static typename Base::TOpt<T> GetOptIntHelper(
           const xercesc::DOMElement &elem, const char *attr_name,
-          const char *empty_value_name, unsigned int opts = 0) {
-        static_assert(std::is_integral<T>::value &&
-            !std::is_same<T, bool>::value,
-            "Type parameter must be integral and not bool");
+          const char *empty_value_name, unsigned int allowed_bases,
+          unsigned int opts = 0) {
         using TWidest = typename TIntegerTraits<T>::TWidest;
 
-        // This calls a specialization.  It does not recurse.
+        /* This calls a specialization.  It does not recurse. */
         Base::TOpt<TWidest> opt_value = GetOptIntHelper<TWidest>(elem,
-            attr_name, empty_value_name, opts);
+            attr_name, empty_value_name, allowed_bases, opts);
 
         typename Base::TOpt<T> result;
 
         if (opt_value.IsKnown()) {
-          result.MakeKnown(narrow_cast<T>(*opt_value, elem, attr_name));
+          result.MakeKnown(narrow<T>(*opt_value, elem, attr_name));
         }
 
         return result;
@@ -298,22 +368,24 @@ namespace Xml {
     template <>
     intmax_t TAttrReader::GetIntHelper<intmax_t>(
         const xercesc::DOMElement &elem, const char *attr_name,
-        unsigned int opts);
+        unsigned int allowed_bases, unsigned int opts);
 
     template <>
     uintmax_t TAttrReader::GetIntHelper<uintmax_t>(
         const xercesc::DOMElement &elem, const char *attr_name,
-        unsigned int opts);
+        unsigned int allowed_bases, unsigned int opts);
 
     template <>
     Base::TOpt<intmax_t> TAttrReader::GetOptIntHelper<intmax_t>(
         const xercesc::DOMElement &elem, const char *attr_name,
-        const char *empty_value_name, unsigned int opts);
+        const char *empty_value_name, unsigned int allowed_bases,
+        unsigned int opts);
 
     template <>
     Base::TOpt<uintmax_t> TAttrReader::GetOptIntHelper<uintmax_t>(
         const xercesc::DOMElement &elem, const char *attr_name,
-        const char *empty_value_name, unsigned int opts);
+        const char *empty_value_name, unsigned int allowed_bases,
+        unsigned int opts);
 
   }  // Config
 

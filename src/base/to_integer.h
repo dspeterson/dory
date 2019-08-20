@@ -39,36 +39,32 @@ namespace Base {
     HEX = 1U << 3  // hexadecimal
   };
 
-  constexpr unsigned int Value(TBase a) {
-    return static_cast<unsigned int>(a);
-  }
-
   constexpr unsigned int operator&(TBase a, TBase b) {
-    return Value(a) & Value(b);
+    return static_cast<unsigned int>(a) & static_cast<unsigned int>(b);
   }
 
   constexpr unsigned int operator&(TBase a, unsigned int b) {
-    return Value(a) & b;
+    return static_cast<unsigned int>(a) & b;
   }
 
   constexpr unsigned int operator&(unsigned int a, TBase b) {
-    return a & Value(b);
+    return a & static_cast<unsigned int>(b);
   }
 
   constexpr unsigned int operator|(TBase a, TBase b) {
-    return Value(a) | Value(b);
+    return static_cast<unsigned int>(a) | static_cast<unsigned int>(b);
   }
 
   constexpr unsigned int operator|(TBase a, unsigned int b) {
-    return Value(a) | b;
+    return static_cast<unsigned int>(a) | b;
   }
 
   constexpr unsigned int operator|(unsigned int a, TBase b) {
-    return a | Value(b);
+    return a | static_cast<unsigned int>(b);
   }
 
-  constexpr unsigned int operator!(TBase b) {
-    return !Value(b);
+  constexpr unsigned int operator!(TBase a) {
+    return !static_cast<unsigned int>(a);
   }
 
   const unsigned int ALL_BASES =

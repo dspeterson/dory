@@ -26,6 +26,7 @@
 #include <base/file_reader.h>
 #include <base/no_default_case.h>
 #include <base/opt.h>
+#include <base/to_integer.h>
 #include <dory/compress/compression_type.h>
 #include <xml/config/config_errors.h>
 #include <xml/config/config_util.h>
@@ -93,14 +94,14 @@ void TConf::TBuilder::ProcessSingleBatchingNamedConfig(
   auto subsection_map = GetSubsectionElements(config_elem,
       {{"time", true}, {"messages", true}, {"bytes", true}}, false);
   TBatchConf::TBatchValues values;
-  values.OptTimeLimit = TAttrReader::GetOptInt2<size_t>(
-      *subsection_map["time"], "value", "disable",
+  values.OptTimeLimit = TAttrReader::GetOptUnsigned<size_t>(
+      *subsection_map["time"], "value", "disable", 0 | TBase::DEC,
       TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE);
-  values.OptMsgCount = TAttrReader::GetOptInt2<size_t>(
-      *subsection_map["messages"], "value", "disable",
+  values.OptMsgCount = TAttrReader::GetOptUnsigned<size_t>(
+      *subsection_map["messages"], "value", "disable", 0 | TBase::DEC,
       TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE | TOpts::ALLOW_K);
-  values.OptByteCount = TAttrReader::GetOptInt2<size_t>(
-      *subsection_map["bytes"], "value", "disable",
+  values.OptByteCount = TAttrReader::GetOptUnsigned<size_t>(
+      *subsection_map["bytes"], "value", "disable", 0 | TBase::DEC,
       TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE | TOpts::ALLOW_K);
 
   if (values.OptTimeLimit.IsUnknown() && values.OptMsgCount.IsUnknown() &&
@@ -126,7 +127,7 @@ void TConf::TBuilder::ProcessTopicBatchConfig(const DOMElement &topic_elem,
   }
 
   TOpt<std::string> opt_name = TAttrReader::GetOptString(topic_elem, "config",
-      TOpts::TRIM_WHITESPACE);
+      0 | TOpts::TRIM_WHITESPACE);
 
   if (opt_name.IsKnown() && opt_name->empty()) {
     opt_name.Reset();
@@ -184,14 +185,16 @@ void TConf::TBuilder::ProcessBatchingElem(const DOMElement &batching_elem) {
     const DOMElement &elem = *subsection_map["produceRequestDataLimit"];
     RequireLeaf(elem);
     BatchingConfBuilder.SetProduceRequestDataLimit(
-        TAttrReader::GetInt<size_t>(elem, "value", TOpts::ALLOW_K));
+        TAttrReader::GetUnsigned<size_t>(elem, "value", 0 | TBase::DEC,
+            0 | TOpts::ALLOW_K));
   }
 
   if (subsection_map.count("messageMaxBytes")) {
     const DOMElement &elem = *subsection_map["messageMaxBytes"];
     RequireLeaf(elem);
     BatchingConfBuilder.SetMessageMaxBytes(
-        TAttrReader::GetInt<size_t>(elem, "value", TOpts::ALLOW_K));
+        TAttrReader::GetUnsigned<size_t>(elem, "value", 0 | TBase::DEC,
+            0 | TOpts::ALLOW_K));
   }
 
   if (subsection_map.count("combinedTopics")) {
@@ -255,12 +258,12 @@ void TConf::TBuilder::ProcessSingleCompressionNamedConfig(
   size_t min_size = 0;
 
   if (type != TCompressionType::None) {
-    min_size = TAttrReader::GetInt<size_t>(config_elem, "minSize",
-        TOpts::ALLOW_K);
+    min_size = TAttrReader::GetUnsigned<size_t>(config_elem, "minSize",
+        0 | TBase::DEC, 0 | TOpts::ALLOW_K);
   }
 
   CompressionConfBuilder.AddNamedConfig(name, type, min_size,
-      TAttrReader::GetOptInt<int>(config_elem, "level"));
+      TAttrReader::GetOptSigned<int>(config_elem, "level", nullptr));
 }
 
 void TConf::TBuilder::ProcessCompressionElem(
@@ -286,7 +289,7 @@ void TConf::TBuilder::ProcessCompressionElem(
     const DOMElement &elem = *subsection_map["sizeThresholdPercent"];
     RequireLeaf(elem);
     CompressionConfBuilder.SetSizeThresholdPercent(
-        TAttrReader::GetInt<size_t>(elem, "value"));
+        TAttrReader::GetUnsigned<size_t>(elem, "value", 0 | TBase::DEC));
   }
 
   if (subsection_map.count("defaultTopic")) {
@@ -330,13 +333,14 @@ void TConf::TBuilder::ProcessTopicRateElem(const DOMElement &topic_rate_elem) {
     const DOMElement &elem = *item;
     std::string name = TAttrReader::GetString(elem, "name",
         TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
-    TOpt<size_t> opt_max_count = TAttrReader::GetOptInt2<size_t>(elem,
-        "maxCount", "unlimited",
+    TOpt<size_t> opt_max_count = TAttrReader::GetOptUnsigned<size_t>(elem,
+        "maxCount", "unlimited", 0 | TBase::DEC,
         TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE | TOpts::ALLOW_K);
 
     if (opt_max_count.IsKnown()) {
       TopicRateConfBuilder.AddBoundedNamedConfig(name,
-          TAttrReader::GetInt<size_t>(elem, "interval"), *opt_max_count);
+          TAttrReader::GetUnsigned<size_t>(elem, "interval",
+              0 | TBase::DEC), *opt_max_count);
     } else {
       TopicRateConfBuilder.AddUnlimitedNamedConfig(name);
     }
@@ -378,7 +382,8 @@ void TConf::TBuilder::ProcessInitialBrokersElem(
     const DOMElement &elem = *item;
     std::string host = TAttrReader::GetString(elem, "host",
         TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
-    TOpt<in_port_t> opt_port = TAttrReader::GetOptInt<in_port_t>(elem, "port");
+    TOpt<in_port_t> opt_port = TAttrReader::GetOptUnsigned<in_port_t>(elem,
+        "port", nullptr, 0 | TBase::DEC);
     in_port_t port = opt_port.IsKnown() ?
         *opt_port : in_port_t(DEFAULT_BROKER_PORT);
     broker_vec.emplace_back(std::move(host), port);

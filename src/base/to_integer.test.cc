@@ -108,7 +108,7 @@ void ExpectInvalidUnsignedDecimal(const char *s) {
   bool caught = false;
 
   try {
-    ToUnsigned<T>(s, Value(TBase::DEC));
+    ToUnsigned<T>(s, 0 | TBase::DEC);
   } catch (const TInvalidInteger &) {
     caught = true;
   } catch (...) {
@@ -119,7 +119,7 @@ void ExpectInvalidUnsignedDecimal(const char *s) {
   caught = false;
 
   try {
-    ToUnsigned<T>(std::string(s), Value(TBase::DEC));
+    ToUnsigned<T>(std::string(s), 0 | TBase::DEC);
   } catch (const TInvalidInteger &) {
     caught = true;
   } catch (...) {
@@ -231,7 +231,7 @@ void ExpectRangeErrorUnsignedDecimal(const char *s) {
   bool caught = false;
 
   try {
-    ToUnsigned<T>(s, Value(TBase::DEC));
+    ToUnsigned<T>(s, 0 | TBase::DEC);
   } catch (const std::range_error &) {
     caught = true;
   } catch (...) {
@@ -242,7 +242,7 @@ void ExpectRangeErrorUnsignedDecimal(const char *s) {
   caught = false;
 
   try {
-    ToUnsigned<T>(std::string(s), Value(TBase::DEC));
+    ToUnsigned<T>(std::string(s), 0 | TBase::DEC);
   } catch (const std::range_error &) {
     caught = true;
   } catch (...) {
@@ -320,8 +320,8 @@ void ExpectEqualUnsigned(const char *s, T value, unsigned int allowed_bases) {
 
 template <typename T>
 void ExpectEqualUnsignedDecimal(const char *s, T value) {
-  ASSERT_EQ(ToUnsigned<T>(s, Value(TBase::DEC)), value);
-  ASSERT_EQ(ToUnsigned<T>(std::string(s), Value(TBase::DEC)), value);
+  ASSERT_EQ(ToUnsigned<T>(s, 0 | TBase::DEC), value);
+  ASSERT_EQ(ToUnsigned<T>(std::string(s), 0 | TBase::DEC), value);
   ASSERT_EQ(DecimalStringTo<T>(s), value);
   ASSERT_EQ(DecimalStringTo<T>(std::string(s)), value);
 }
@@ -485,13 +485,13 @@ namespace {
         "1111111111111111111111111111111111111111111111111111111111111111111");
 
     // In all bases, the value 0 can be represented as "0".
-    ExpectEqualUnsigned<unsigned int>("0", 0, Value(TBase::BIN));
-    ExpectEqualUnsigned<unsigned int>("0", 0, Value(TBase::OCT));
-    ExpectEqualUnsigned<unsigned int>("0", 0, Value(TBase::DEC));
-    ExpectEqualUnsigned<unsigned int>("0", 0, Value(TBase::HEX));
+    ExpectEqualUnsigned<unsigned int>("0", 0, 0 | TBase::BIN);
+    ExpectEqualUnsigned<unsigned int>("0", 0, 0 | TBase::OCT);
+    ExpectEqualUnsigned<unsigned int>("0", 0, 0 | TBase::DEC);
+    ExpectEqualUnsigned<unsigned int>("0", 0, 0 | TBase::HEX);
 
     // 0 specified explicitly as octal
-    ExpectEqualUnsigned<unsigned int>("00", 0, Value(TBase::OCT));
+    ExpectEqualUnsigned<unsigned int>("00", 0, 0 | TBase::OCT);
 
     ExpectWrongBase<unsigned int>("0b1010",
         TBase::BIN, TBase::OCT | TBase::DEC | TBase::HEX);
