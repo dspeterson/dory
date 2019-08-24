@@ -137,11 +137,11 @@ namespace Xml {
         ALLOW_M = 1U << 6
       };  // TOpts
 
-      // The operator functions below must be either nonstatic members
-      // (implicitly taking a TAttrReader as an operand) or nonmembers.  The
-      // first option doesn't work.  We take the second option, making them
-      // friends only so they can be defined here, which allows them to be used
-      // inside the class body.
+      /* The operator functions below must be either nonstatic members
+         (implicitly taking a TAttrReader as an operand) or nonmembers.  The
+         first option doesn't work.  We take the second option, making them
+         friends only so they can be defined here, which allows them to be used
+         inside the class body. */
 
       friend constexpr unsigned int operator&(TOpts a, TOpts b) {
         return static_cast<unsigned int>(a) & static_cast<unsigned int>(b);
@@ -327,8 +327,8 @@ namespace Xml {
         return result;
       }
 
-      // Base template handles integral types other than intmax_t and
-      // uintmax_t.
+      /* Base template handles integral types other than intmax_t and
+         uintmax_t. */
       template <typename T>
       static T GetIntHelper(const xercesc::DOMElement &elem,
           const char *attr_name, unsigned int allowed_bases,
@@ -342,8 +342,8 @@ namespace Xml {
         return narrow<T>(value, elem, attr_name);
       }
 
-      // Base template handles integral types other than intmax_t and
-      // uintmax_t.
+      /* Base template handles integral types other than intmax_t and
+         uintmax_t. */
       template <typename T>
       static typename Base::TOpt<T> GetOptIntHelper(
           const xercesc::DOMElement &elem, const char *attr_name,

@@ -383,69 +383,6 @@ static uint32_t ExtractMultiplier(std::string &value, unsigned int opts) {
   return mult;
 }
 
-static void ThrowWrongFormat(TBase found, unsigned int allowed,
-    const DOMElement &elem, const char *attr_name, const char *attr_value) {
-  std::ostringstream os;
-  os << "XML attribute value is in unsupported ";
-
-  switch (found) {
-    case TBase::BIN: {
-      os << "binary";
-      break;
-    }
-    case TBase::OCT: {
-      os << "octal";
-      break;
-    }
-    case TBase::DEC: {
-      os << "decimal";
-      break;
-    }
-    case TBase::HEX: {
-      os << "hexadecimal";
-      break;
-    }
-    NO_DEFAULT_CASE;
-  }
-
-  os << " format.  Allowed formats: ";
-  bool following = false;
-
-  if (allowed & TBase::BIN) {
-    os << "binary";
-    following = true;
-  }
-
-  if (allowed & TBase::OCT) {
-    if (following) {
-      os << ", ";
-    }
-
-    os << "octal";
-    following = true;
-  }
-
-  if (allowed & TBase::DEC) {
-    if (following) {
-      os << ", ";
-    }
-
-    os << "decimal";
-    following = true;
-  }
-
-  if (allowed & TBase::HEX) {
-    if (following) {
-      os << ", ";
-    }
-
-    os << "hexadecimal";
-  }
-
-  throw TWrongUnsignedIntegerBase(elem, attr_name, attr_value,
-      os.str().c_str());
-}
-
 static intmax_t AttrToIntMax(const std::string &attr, const DOMElement &elem,
     const char *attr_name, unsigned int opts) {
   std::string attr_copy(attr);
@@ -479,7 +416,8 @@ static uintmax_t AttrToUintMax(const std::string &attr, const DOMElement &elem,
   } catch (const TInvalidInteger &) {
     throw TInvalidUnsignedIntegerAttr(elem, attr_name, attr.c_str());
   } catch (const TWrongBase &x) {
-    ThrowWrongFormat(x.GetFound(), allowed_bases, elem, attr_name, attr.c_str());
+    throw TWrongUnsignedIntegerBase(elem, attr_name, attr.c_str(),
+        x.GetFound(), x.GetAllowed());
   } catch (const std::range_error &) {
     throw TAttrOutOfRange(elem, attr_name, attr.c_str());
   }

@@ -33,6 +33,7 @@
 #include <xercesc/dom/DOMNode.hpp>
 #include <xercesc/sax/SAXParseException.hpp>
 #include <xercesc/util/XMLException.hpp>
+#include <base/to_integer.h>
 
 namespace Xml {
 
@@ -333,9 +334,30 @@ namespace Xml {
     class TWrongUnsignedIntegerBase : public TInvalidIntegerAttr {
       public:
       TWrongUnsignedIntegerBase(const xercesc::DOMElement &location,
-          const char *attr_name, const char *attr_value, const char *msg)
-          : TInvalidIntegerAttr(msg, location, attr_name, attr_value) {
+          const char *attr_name, const char *attr_value, Base::TBase found,
+          unsigned int allowed)
+          : TInvalidIntegerAttr(
+                "XML attribute unsigned integer value has unsupported base",
+                location, attr_name, attr_value),
+            Found(found),
+            Allowed(allowed) {
       }
+
+      Base::TBase GetFoundBase() const noexcept {
+        assert(this);
+        return Found;
+      }
+
+      unsigned int GetAllowedBases() const noexcept {
+        assert(this);
+        return Allowed;
+      }
+
+      private:
+      Base::TBase Found;
+
+      /* This is a bitfield of values found in Base::TBase. */
+      unsigned int Allowed;
     };
 
     class TAttrOutOfRange : public TInvalidAttr {

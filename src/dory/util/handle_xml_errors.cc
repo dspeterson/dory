@@ -24,6 +24,7 @@
 #include <sstream>
 #include <utility>
 
+#include <base/no_default_case.h>
 #include <xml/config/config_errors.h>
 
 using namespace Base;
@@ -46,6 +47,66 @@ static void AddPreamble(std::ostringstream &os,
       << x.GetColumn() << "): ";
 }
 
+static const char *ToString(TBase b) {
+  switch (b) {
+    case TBase::BIN: {
+      return "binary";
+    }
+    case TBase::OCT: {
+      return "octal";
+    }
+    case TBase ::DEC: {
+      return "decimal";
+    }
+    case TBase::HEX: {
+      break;
+    }
+    NO_DEFAULT_CASE;
+  };
+
+  return "hexadecimal";
+}
+
+static std::string BuildAllowedBasesString(unsigned int allowed) {
+  std::ostringstream os;
+  os << "{ ";
+  bool following = false;
+
+  if (allowed & TBase::BIN) {
+    os << "binary";
+    following = true;
+  }
+
+  if (allowed & TBase::OCT) {
+    if (following) {
+      os << ", ";
+    }
+
+    os << "octal";
+    following = true;
+  }
+
+  if (allowed & TBase::DEC) {
+    if (following) {
+      os << ", ";
+    }
+
+    os << "decimal";
+    following = true;
+  }
+
+  if (allowed & TBase::HEX) {
+    if (following) {
+      os << ", ";
+    }
+
+    os << "hexadecimal";
+  }
+
+  os << " }";
+  return os.str();
+}
+
 TOpt<std::string> Dory::Util::HandleXmlErrors(
     const std::function<void()> &fn) {
   TOpt<std::string> opt_msg;
@@ -57,14 +118,20 @@ TOpt<std::string> Dory::Util::HandleXmlErrors(
     AddPreamble(os, x);
     os << "Value for integer attribute [" << x.GetAttrName()
         << "] of element <" << x.GetElementName() << "> is out of range.";
+  } catch (const TInvalidUnsignedIntegerAttr &x) {
+    AddPreamble(os, x);
+    os << "Value for unsigned integer attribute [" << x.GetAttrName()
+       << "] of element <" << x.GetElementName() << "> is invalid.";
   } catch (const TInvalidSignedIntegerAttr &x) {
     AddPreamble(os, x);
     os << "Value for signed integer attribute [" << x.GetAttrName()
         << "] of element <" << x.GetElementName() << "> is invalid.";
-  } catch (const TInvalidUnsignedIntegerAttr &x) {
+  } catch (const TWrongUnsignedIntegerBase &x) {
     AddPreamble(os, x);
     os << "Value for unsigned integer attribute [" << x.GetAttrName()
-        << "] of element <" << x.GetElementName() << "> is invalid.";
+       << "] of element <" << x.GetElementName() << "> is in unsupported base "
+       << ToString(x.GetFoundBase()) << ".  Allowed bases are "
+       << BuildAllowedBasesString(x.GetAllowedBases()) << ".";
   } catch (const TInvalidBoolAttr &x) {
     AddPreamble(os, x);
     os << "Value for boolean attribute [" << x.GetAttrName()
