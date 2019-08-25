@@ -21,9 +21,11 @@
 
 #pragma once
 
+#include <cassert>
 #include <string>
 
 #include <sys/stat.h>
+#include <sys/types.h>
 
 #include <log/file_log_writer.h>
 #include <log/log_writer_base.h>
@@ -51,6 +53,32 @@ namespace Log {
         bool enable_stdout_stderr, bool enable_syslog,
         const std::string &file_path,
         mode_t file_mode = TFileLogWriter::default_file_mode);
+
+    bool StdoutStderrLoggingIsEnabled() const noexcept {
+      assert(this);
+      return StdoutStderrLogWriter.IsEnabled();
+    }
+
+    bool SyslogLoggingIsEnabled() const noexcept {
+      assert(this);
+      return SyslogLogWriter.IsEnabled();
+    }
+
+    bool FileLoggingIsEnabled() const noexcept {
+      assert(this);
+      return FileLogWriter.IsEnabled();
+    }
+
+    /* Returns empty string if no logfile is open. */
+    const std::string &GetFilePath() const noexcept {
+      assert(this);
+      return FileLogWriter.GetPath();
+    }
+
+    mode_t GetFileOpenMode() const noexcept {
+      assert(this);
+      return FileLogWriter.GetOpenMode();
+    }
 
     protected:
     void DoWriteEntry(TLogEntryAccessApi &entry) const noexcept override;

@@ -96,12 +96,9 @@ namespace {
     IfLt0(dup2(saved_stderr, 2));
     IfLt0(close(saved_stdout));
     IfLt0(close(saved_stderr));
-    std::string stdout_contents =
-        TFileReader(stdout_file.GetName().c_str()).ReadIntoString();
-    std::string stderr_contents =
-        TFileReader(stderr_file.GetName().c_str()).ReadIntoString();
-    std::string file_contents =
-        TFileReader(tmp_file.GetName().c_str()).ReadIntoString();
+    std::string stdout_contents = ReadFileIntoString(stdout_file.GetName());
+    std::string stderr_contents = ReadFileIntoString(stderr_file.GetName());
+    std::string file_contents = ReadFileIntoString(tmp_file.GetName());
     std::ostringstream os;
     ASSERT_EQ(stdout_contents, std::string());
     ASSERT_EQ(stderr_contents, std::string());
@@ -134,10 +131,8 @@ namespace {
     IfLt0(dup2(saved_stderr, 2));
     IfLt0(close(saved_stdout));
     IfLt0(close(saved_stderr));
-    std::string stdout_contents =
-        TFileReader(stdout_file.GetName().c_str()).ReadIntoString();
-    std::string stderr_contents =
-        TFileReader(stderr_file.GetName().c_str()).ReadIntoString();
+    std::string stdout_contents = ReadFileIntoString(stdout_file.GetName());
+    std::string stderr_contents = ReadFileIntoString(stderr_file.GetName());
     std::ostringstream os1;
     os1 << msg1 << std::endl << msg3 << std::endl;
     std::ostringstream os2;
@@ -164,10 +159,8 @@ namespace {
     IfLt0(dup2(saved_stderr, 2));
     IfLt0(close(saved_stdout));
     IfLt0(close(saved_stderr));
-    std::string stdout_contents =
-        TFileReader(stdout_file.GetName().c_str()).ReadIntoString();
-    std::string stderr_contents =
-        TFileReader(stderr_file.GetName().c_str()).ReadIntoString();
+    std::string stdout_contents = ReadFileIntoString(stdout_file.GetName());
+    std::string stderr_contents = ReadFileIntoString(stderr_file.GetName());
     ASSERT_EQ(stdout_contents, std::string());
     ASSERT_EQ(stderr_contents, std::string());
   }
@@ -185,8 +178,7 @@ namespace {
       LOG_R(TPri::INFO, std::chrono::seconds(1)) << "message";
     }
 
-    std::string file_contents =
-        TFileReader(tmp_file.GetName().c_str()).ReadIntoString();
+    std::string file_contents = ReadFileIntoString(tmp_file.GetName());
     size_t num_lines = std::count(file_contents.begin(), file_contents.end(),
         '\n');
 

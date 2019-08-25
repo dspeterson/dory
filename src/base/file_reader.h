@@ -50,6 +50,7 @@ namespace Base {
     public:
     explicit TFileReader(const char *filename)
         : Filename(filename) {
+      assert(filename);
     }
 
     /* Return size in bytes of file. */
@@ -110,5 +111,52 @@ namespace Base {
 
     std::ifstream Stream;
   };  // TFileReader
+
+  inline void ReadFileIntoString(const char *filename, std::string &result) {
+    TFileReader(filename).ReadIntoString(result);
+  }
+
+  inline void ReadFileIntoString(const std::string &filename,
+      std::string &result) {
+    ReadFileIntoString(filename.c_str(), result);
+  }
+
+  inline std::string ReadFileIntoString(const char *filename) {
+    return TFileReader(filename).ReadIntoString();
+  }
+
+  inline std::string ReadFileIntoString(const std::string &filename) {
+    return ReadFileIntoString(filename.c_str());
+  }
+
+  inline size_t ReadFileIntoBuf(const char *filename, void *buf,
+      size_t buf_size) {
+    return TFileReader(filename).ReadIntoBuf(buf, buf_size);
+  }
+
+  inline size_t ReadFileIntoBuf(const std::string &filename, void *buf,
+      size_t buf_size) {
+    return ReadFileIntoBuf(filename.c_str(), buf, buf_size);
+  }
+
+  template <typename T>
+  void ReadFileIntoBuf(const char *filename, std::vector<T> &dst) {
+    TFileReader(filename).ReadIntoBuf<T>(dst);
+  }
+
+  template <typename T>
+  void ReadFileIntoBuf(const std::string &filename, std::vector<T> &dst) {
+    ReadFileIntoBuf<T>(filename.c_str(), dst);
+  }
+
+  template <typename T>
+  std::vector<T> ReadFileIntoBuf(const char *filename) {
+    return TFileReader(filename).ReadIntoBuf<T>();
+  }
+
+  template <typename T>
+  std::vector<T> ReadFileIntoBuf(const std::string &filename) {
+    return ReadFileIntoBuf<T>(filename.c_str());
+  }
 
 }  // Base

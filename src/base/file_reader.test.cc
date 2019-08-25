@@ -158,11 +158,32 @@ namespace {
         0);
   }
 
+  TEST_F(TFileReaderTest, TestCallerSuppliedBuf2) {
+    char buf[2 * FileContents.size()];
+    std::fill(buf, buf + sizeof(buf), 'x');
+    size_t byte_count = ReadFileIntoBuf(TmpFile.GetName(), buf, sizeof(buf));
+    ASSERT_EQ(byte_count, FileContents.size());
+    ASSERT_EQ(std::memcmp(buf, "a bunch of junkxxxxxxxxxxxxxxx", sizeof(buf)),
+        0);
+    std::fill(buf, buf + sizeof(buf), 'x');
+    byte_count = ReadFileIntoBuf(TmpFile.GetName(), buf, 7);
+    ASSERT_EQ(byte_count, 7U);
+    ASSERT_EQ(std::memcmp(buf, "a bunchxxxxxxxxxxxxxxxxxxxxxxx", sizeof(buf)),
+        0);
+  }
+
   TEST_F(TFileReaderTest, TestReadIntoString) {
     std::string s;
     Reader.ReadIntoString(s);
     ASSERT_EQ(s, FileContents);
     ASSERT_EQ(Reader.ReadIntoString(), FileContents);
+  }
+
+  TEST_F(TFileReaderTest, TestReadIntoString2) {
+    std::string s;
+    ReadFileIntoString(TmpFile.GetName(), s);
+    ASSERT_EQ(s, FileContents);
+    ASSERT_EQ(ReadFileIntoString(TmpFile.GetName()), FileContents);
   }
 
   TEST_F(TFileReaderTest, TestReadIntoVector) {
@@ -172,6 +193,16 @@ namespace {
     ASSERT_EQ(std::memcmp(&v1[0], FileContents.data(), v1.size()), 0);
 
     std::vector<char> v2 = Reader.ReadIntoBuf<char>();
+    ASSERT_EQ(v2, v1);
+  }
+
+  TEST_F(TFileReaderTest, TestReadIntoVector2) {
+    std::vector<char> v1;
+    ReadFileIntoBuf(TmpFile.GetName(), v1);
+    ASSERT_EQ(v1.size(), FileContents.size());
+    ASSERT_EQ(std::memcmp(&v1[0], FileContents.data(), v1.size()), 0);
+
+    std::vector<char> v2 = ReadFileIntoBuf<char>(TmpFile.GetName());
     ASSERT_EQ(v2, v1);
   }
 

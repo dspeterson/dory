@@ -51,7 +51,8 @@ namespace {
   class TMetadataTest : public ::testing::Test {
     protected:
     TMetadataTest() {
-      InitLogging("dory", TPri::INFO, false);
+      InitLogging("dory", TPri::INFO, false /* log_echo */,
+          "" /* logfile_path */);
     }
 
     ~TMetadataTest() override = default;

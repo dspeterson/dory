@@ -49,7 +49,8 @@ namespace {
   class TSingleTopicBatcherTest : public ::testing::Test {
     protected:
     TSingleTopicBatcherTest() {
-      InitLogging("dory", TPri::INFO, false);
+      InitLogging("dory", TPri::INFO, false /* log_echo */,
+          "" /* logfile_path */);
     }
 
     ~TSingleTopicBatcherTest() override = default;

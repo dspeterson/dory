@@ -90,7 +90,8 @@ static int DoryMain(int argc, char *argv[]) {
       }
     }
 
-    InitLogging(argv[0], config.LogLevel, config.LogEcho);
+    InitLogging(argv[0], config.LogLevel, config.LogEcho,
+        "" /* logfile_path */);
   } catch (const TArgParseError &x) {
     /* Error parsing command line arguments. */
     std::cerr << x.what() << std::endl;

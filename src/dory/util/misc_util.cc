@@ -138,7 +138,7 @@ static void HandleFileLogWriteFailure() {
 }
 
 void Dory::Util::InitLogging(const char *prog_name, TPri max_level,
-    bool log_echo) {
+    bool log_echo, const char *logfile_path) {
   /* The call to GetProgName() remembers the program name so WriteLogPrefix()
      can use it.  Also, openlog() retains the passed in program name pointer so
      we must provide something that we will not free. */
@@ -152,7 +152,7 @@ void Dory::Util::InitLogging(const char *prog_name, TPri max_level,
 
   /* TODO: Add config options for specifying log destination(s). */
   SetLogWriter(log_echo /* enable_stdout_stderr */, true /* enable_syslog */,
-      std::string() /* file_path */);
+      std::string(logfile_path) /* file_path */);
 
   LOG(TPri::NOTICE) << "Log started";
 }

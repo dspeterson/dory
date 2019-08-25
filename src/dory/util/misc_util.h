@@ -31,7 +31,7 @@ namespace Dory {
   namespace Util {
 
     void InitLogging(const char *prog_name, Log::TPri max_level,
-        bool log_echo);
+        bool log_echo, const char *logfile_path);
 
     /* Result of call to TestUnixDgSize() below. */
     enum class TUnixDgSizeTestResult {

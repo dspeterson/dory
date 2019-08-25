@@ -85,7 +85,8 @@ namespace {
   class TPerTopicBatcherTest : public ::testing::Test {
     protected:
     TPerTopicBatcherTest() {
-      InitLogging("dory", TPri::INFO, false);
+      InitLogging("dory", TPri::INFO, false /* log_echo */,
+          "" /* logfile_path */);
     }
 
     ~TPerTopicBatcherTest() override = default;

@@ -44,6 +44,7 @@ TCombinedLogWriter::TCombinedLogWriter(const TCombinedLogWriter &old_writer,
 
 void TCombinedLogWriter::DoWriteEntry(
     Log::TLogEntryAccessApi &entry) const noexcept {
+  assert(this);
   StdoutStderrLogWriter.WriteEntry(entry);
   SyslogLogWriter.WriteEntry(entry);
   FileLogWriter.WriteEntry(entry);

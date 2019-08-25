@@ -44,6 +44,7 @@ size_t Base::TFileReader::GetSize() {
 
 size_t Base::TFileReader::ReadIntoBuf(void *buf, size_t buf_size) {
   assert(this);
+  assert(buf);
   PrepareForRead();
 
   try {

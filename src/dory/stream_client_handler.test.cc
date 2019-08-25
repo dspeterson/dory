@@ -164,7 +164,8 @@ namespace {
     Args.push_back(nullptr);
     Cfg.reset(new TConfig(static_cast<int>(Args.size() - 1),
         const_cast<char **>(&Args[0]), true));
-    InitLogging("dory", TPri::INFO, false);
+    InitLogging("dory", TPri::INFO, false /* log_echo */,
+        "" /* logfile_path */);
     OutputQueue.reset(new TGate<TMsg::TPtr>);
     StreamClientWorkerPool.reset(new TWorkerPool(
         [](const char *msg) {

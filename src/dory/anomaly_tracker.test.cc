@@ -122,7 +122,8 @@ namespace {
         Clock(&ClockValue),
         AnomalyTracker(DiscardFileLogger, report_interval,
                        std::numeric_limits<size_t>::max(), Clock) {
-    InitLogging("dory", TPri::INFO, false);
+    InitLogging("dory", TPri::INFO, false /* log_echo */,
+        "" /* logfile_path */);
   }
 
   /* The fixture for testing class TAnomalyTracker. */

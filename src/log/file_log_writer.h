@@ -88,9 +88,23 @@ namespace Log {
 
     TFileLogWriter(const TFileLogWriter &) = default;
 
+    bool IsEnabled() const noexcept {
+      assert(this);
+      const bool is_open = FdRef->IsOpen();
+      assert(Path.empty() == !is_open);
+      return is_open;
+    }
+
+    /* Returns empty string if no logfile is open. */
     const std::string &GetPath() const noexcept {
       assert(this);
+      assert(Path.empty() == !IsEnabled());
       return Path;
+    }
+
+    mode_t GetOpenMode() const noexcept {
+      assert(this);
+      return OpenMode;
     }
 
     protected:
@@ -103,6 +117,8 @@ namespace Log {
     static std::function<void() noexcept> ErrorHandler;
 
     const std::string Path;
+
+    const mode_t OpenMode;
 
     /* Holding the file descriptor by shared_ptr facilitates copy construction.
      */

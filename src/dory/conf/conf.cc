@@ -56,7 +56,7 @@ TConf TConf::TBuilder::Build(const char *config_filename) {
   Reset();
 
   {
-    std::string xml = TFileReader(config_filename).ReadIntoString();
+    std::string xml = ReadFileIntoString(config_filename);
     XmlDoc.reset(ParseXmlConfig(xml.data(), xml.size(), "US-ASCII"));
   }
 

@@ -36,10 +36,21 @@ void Log::SetLogWriter(bool enable_stdout_stderr, bool enable_syslog,
     const std::string &file_path, mode_t file_mode) {
   std::lock_guard<std::mutex> lock(LogWriterMutex);
   LogWriter = !LogWriter ?
-              std::make_shared<TCombinedLogWriter>(enable_stdout_stderr, enable_syslog,
-                  file_path, file_mode) :
-              std::make_shared<TCombinedLogWriter>(*LogWriter, enable_stdout_stderr,
-                  enable_syslog, file_path, file_mode);
+      std::make_shared<TCombinedLogWriter>(enable_stdout_stderr, enable_syslog,
+          file_path, file_mode) :
+      std::make_shared<TCombinedLogWriter>(*LogWriter, enable_stdout_stderr,
+          enable_syslog, file_path, file_mode);
+}
+
+void Log::HandleLogRotateRequest() {
+  std::lock_guard<std::mutex> lock(LogWriterMutex);
+
+  if (LogWriter && LogWriter->FileLoggingIsEnabled()) {
+    LogWriter = std::make_shared<TCombinedLogWriter>(
+        LogWriter->StdoutStderrLoggingIsEnabled(),
+        LogWriter->SyslogLoggingIsEnabled(), LogWriter->GetFilePath(),
+        LogWriter->GetFileOpenMode());
+  }
 }
 
 std::shared_ptr<TLogWriterBase> Log::GetLogWriter() {

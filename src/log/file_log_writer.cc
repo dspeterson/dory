@@ -82,6 +82,7 @@ void TFileLogWriter::SetErrorHandler(
 TFileLogWriter::TFileLogWriter(const std::string &path, mode_t open_mode)
     : TLogWriterBase(),
       Path(ValidateFilePathAndMode(path, open_mode)),
+      OpenMode(open_mode),
       FdRef(path.empty() ?
           new TFd() : new TFd(OpenLogPath(path.c_str(), open_mode))) {
 }
@@ -89,7 +90,7 @@ TFileLogWriter::TFileLogWriter(const std::string &path, mode_t open_mode)
 void TFileLogWriter::DoWriteEntry(TLogEntryAccessApi &entry) const noexcept {
   assert(this);
 
-  if (FdRef->IsOpen()) {
+  if (IsEnabled()) {
     try {
       WriteToFd(*FdRef, entry);
     } catch (...) {

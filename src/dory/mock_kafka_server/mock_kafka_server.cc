@@ -48,7 +48,7 @@ int mock_kafka_server_main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
-  InitLogging(argv[0], TPri::DEBUG, cfg->LogEcho);
+  InitLogging(argv[0], TPri::DEBUG, cfg->LogEcho, "" /* logfile_path */);
 
   /* Force all supported compression libraries to load.  We want to fail early
      if a library fails to load. */

@@ -51,7 +51,8 @@ namespace {
   class TCombinedTopicsBatcherTest : public ::testing::Test {
     protected:
     TCombinedTopicsBatcherTest() {
-      InitLogging("dory", TPri::INFO, false);
+      InitLogging("dory", TPri::INFO, false /* log_echo */,
+          "" /* logfile_path */);
     }
 
     ~TCombinedTopicsBatcherTest() override = default;
