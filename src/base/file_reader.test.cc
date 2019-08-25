@@ -21,7 +21,6 @@
 
 #include <base/file_reader.h>
 
-#include <algorithm>
 #include <cstring>
 #include <fstream>
 #include <string>

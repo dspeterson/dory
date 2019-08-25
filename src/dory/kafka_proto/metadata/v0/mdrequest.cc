@@ -43,7 +43,6 @@
 #include <base/indent.h>
 #include <base/io_utils.h>
 #include <base/no_copy_semantics.h>
-#include <base/thrower.h>
 #include <dory/build_id.h>
 #include <dory/util/arg_parse_error.h>
 #include <dory/util/connect_to_host.h>

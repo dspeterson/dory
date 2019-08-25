@@ -21,7 +21,6 @@
 
 #include <dory/web_interface.h>
 
-#include <algorithm>
 #include <cstring>
 #include <sstream>
 #include <vector>

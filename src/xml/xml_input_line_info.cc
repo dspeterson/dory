@@ -21,8 +21,6 @@
 
 #include <xml/xml_input_line_info.h>
 
-#include <memory>
-
 #include <xml/xml_string_util.h>
 
 using namespace Xml;

@@ -20,8 +20,7 @@
  */ 
 
 #include <socket/named_unix_socket.h>
-  
-#include <sys/types.h>
+
 #include <sys/stat.h>
 #include <unistd.h>
   

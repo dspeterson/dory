@@ -19,7 +19,6 @@
    Implements <dory/util/connect_to_host.h>.
  */
 
-#include <algorithm>
 #include <cassert>
 #include <cerrno>
 

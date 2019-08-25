@@ -34,7 +34,6 @@
 #include <base/thrower.h>
 #include <base/time_util.h>
 #include <base/tmp_file.h>
-#include <capped/blob.h>
 #include <capped/pool.h>
 #include <capped/reader.h>
 #include <dory/anomaly_tracker.h>

@@ -21,21 +21,9 @@
 
 #include <dory/mock_kafka_server/thread_terminate_handler.h>
 
-#include <algorithm>
 #include <cassert>
-#include <cstdlib>
-#include <exception>
-#include <iostream>
 #include <memory>
 #include <utility>
-
-#include <signal.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-
-#include <signal/masker.h>
-#include <signal/set.h>
-#include <socket/address.h>
 
 using namespace Base;
 using namespace Dory;

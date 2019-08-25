@@ -22,7 +22,6 @@
 #include <xml/dom_parser_with_line_info.h>
 
 #include <xercesc/internal/XMLScanner.hpp>
-#include <xercesc/sax/ErrorHandler.hpp>
 #include <xercesc/sax/HandlerBase.hpp>
 #include <xercesc/sax/Locator.hpp>
 

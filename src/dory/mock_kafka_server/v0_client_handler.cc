@@ -21,7 +21,6 @@
 
 #include <dory/mock_kafka_server/v0_client_handler.h>
 
-#include <cstdlib>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
@@ -30,12 +29,9 @@
 
 #include <netinet/in.h>
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <unistd.h>
 
-#include <base/crc.h>
 #include <base/error_utils.h>
-#include <base/field_access.h>
 #include <base/io_utils.h>
 #include <base/no_default_case.h>
 #include <socket/address.h>

@@ -39,7 +39,6 @@
 
 #include <arpa/inet.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 
 #include <base/error_utils.h>
 #include <base/io_utils.h>

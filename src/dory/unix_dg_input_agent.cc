@@ -21,7 +21,6 @@
 
 #include <dory/unix_dg_input_agent.h>
 
-#include <algorithm>
 #include <array>
 #include <exception>
 #include <system_error>

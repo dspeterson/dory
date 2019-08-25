@@ -21,17 +21,13 @@
 
 #include <dory/router_thread.h>
 
-#include <array>
 #include <cstdlib>
-#include <functional>
 #include <limits>
 #include <stdexcept>
-#include <system_error>
 
 #include <unistd.h>
 
 #include <base/gettid.h>
-#include <base/io_utils.h>
 #include <base/no_default_case.h>
 #include <base/time_util.h>
 #include <dory/kafka_proto/metadata/metadata_protocol.h>
@@ -39,7 +35,6 @@
 #include <dory/kafka_proto/produce/produce_protocol.h>
 #include <dory/kafka_proto/produce/version_util.h>
 #include <dory/util/connect_to_host.h>
-#include <dory/util/system_error_codes.h>
 #include <dory/util/topic_map.h>
 #include <log/log.h>
 #include <server/counter.h>

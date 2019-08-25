@@ -24,13 +24,11 @@
 #include <cstdint>
 #include <sstream>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include <xercesc/dom/DOMAttr.hpp>
 #include <xercesc/dom/DOMElement.hpp>
 #include <xercesc/dom/DOMNode.hpp>
-#include <xercesc/sax/SAXParseException.hpp>
 
 #include <base/opt.h>
 #include <xml/dom_document_util.h>

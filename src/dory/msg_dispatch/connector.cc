@@ -22,11 +22,9 @@
 
 #include <dory/msg_dispatch/connector.h>
 
-#include <cstring>
 #include <exception>
-#include <stdexcept>
 #include <string>
-#include <unordered_set>
+#include <system_error>
 
 #include <poll.h>
 #include <sys/socket.h>

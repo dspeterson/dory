@@ -20,7 +20,6 @@
    Kafka server.
  */
 
-#include <cassert>
 #include <cctype>
 #include <cstddef>
 #include <cstdint>
@@ -28,7 +27,6 @@
 #include <exception>
 #include <fstream>
 #include <iostream>
-#include <limits>
 #include <memory>
 #include <string>
 #include <vector>
@@ -37,21 +35,16 @@
 #include <netinet/in.h>
 
 #include <base/basename.h>
-#include <base/fd.h>
-#include <base/io_utils.h>
 #include <dory/build_id.h>
 #include <dory/mock_kafka_server/cmd.h>
 #include <dory/mock_kafka_server/error_injector.h>
-#include <dory/mock_kafka_server/serialize_cmd.h>
 #include <dory/util/arg_parse_error.h>
-#include <socket/address.h>
 #include <tclap/CmdLine.h>
 
 using namespace Base;
 using namespace Dory;
 using namespace Dory::MockKafkaServer;
 using namespace Dory::Util;
-using namespace Socket;
 
 using TErrorInjectCmd = Dory::MockKafkaServer::TCmd;
 

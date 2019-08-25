@@ -21,7 +21,6 @@
 
 #include <thread/managed_thread_pool_base.h>
 
-#include <algorithm>
 #include <array>
 
 #include <base/error_utils.h>

@@ -25,7 +25,6 @@
 #include <limits>
 
 #include <boost/lexical_cast.hpp>
-#include <sys/syscall.h>
 
 #include <base/field_access.h>
 #include <base/gettid.h>
@@ -34,7 +33,6 @@
 #include <dory/compress/compression_type.h>
 #include <dory/kafka_proto/produce/msg_set_reader_api.h>
 #include <dory/mock_kafka_server/cmd.h>
-#include <dory/mock_kafka_server/cmd_bucket.h>
 #include <log/log.h>
 #include <socket/address.h>
 

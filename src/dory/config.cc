@@ -31,7 +31,6 @@
 #include <vector>
 
 #include <boost/algorithm/string.hpp>
-#include <libgen.h>
 
 #include <base/basename.h>
 #include <base/no_default_case.h>

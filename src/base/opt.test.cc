@@ -26,8 +26,6 @@
 #include <string>
 #include <utility>
 
-#include <base/no_copy_semantics.h>
-
 #include <gtest/gtest.h>
 
 using namespace Base;

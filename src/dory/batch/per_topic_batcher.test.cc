@@ -21,11 +21,9 @@
 
 #include <dory/batch/per_topic_batcher.h>
 
-#include <algorithm>
 #include <memory>
 #include <string>
 
-#include <capped/blob.h>
 #include <capped/pool.h>
 #include <capped/reader.h>
 #include <dory/batch/batch_config.h>

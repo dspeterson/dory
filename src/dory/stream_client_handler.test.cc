@@ -36,7 +36,6 @@
 #include <base/thrower.h>
 #include <base/time_util.h>
 #include <base/tmp_file.h>
-#include <capped/blob.h>
 #include <capped/pool.h>
 #include <capped/reader.h>
 #include <dory/anomaly_tracker.h>
@@ -50,7 +49,7 @@
 #include <dory/stream_client_handler.h>
 #include <dory/test_util/misc_util.h>
 #include <dory/util/misc_util.h>
-#include <log/log.h>
+#include <log/pri.h>
 #include <server/unix_stream_server.h>
 #include <thread/gate.h>
 

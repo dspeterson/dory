@@ -21,7 +21,6 @@
 
 #include <dory/anomaly_tracker.h>
 
-#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -29,7 +28,6 @@
 #include <limits>
 #include <string>
 
-#include <capped/blob.h>
 #include <capped/pool.h>
 #include <capped/reader.h>
 #include <dory/discard_file_logger.h>

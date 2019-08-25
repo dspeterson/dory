@@ -23,11 +23,8 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
-#include <iomanip>
 #include <iostream>
-#include <limits>
 #include <memory>
-#include <mutex>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -35,17 +32,12 @@
 
 #include <boost/lexical_cast.hpp>
 #include <netinet/in.h>
-#include <unistd.h>
 
-#include <base/error_utils.h>
-#include <base/event_semaphore.h>
-#include <base/fd.h>
 #include <base/field_access.h>
 #include <base/no_copy_semantics.h>
 #include <base/opt.h>
 #include <base/time_util.h>
 #include <base/tmp_file.h>
-#include <capped/pool.h>
 #include <dory/anomaly_tracker.h>
 #include <dory/client/client_sender_base.h>
 #include <dory/client/dory_client.h>
@@ -56,14 +48,10 @@
 #include <dory/client/unix_stream_sender.h>
 #include <dory/compress/compression_type.h>
 #include <dory/config.h>
-#include <dory/debug/debug_setup.h>
 #include <dory/dory_server.h>
 #include <dory/kafka_proto/produce/version_util.h>
-#include <dory/metadata_timestamp.h>
 #include <dory/msg_state_tracker.h>
-#include <dory/router_thread.h>
 #include <dory/test_util/mock_kafka_config.h>
-#include <dory/unix_dg_input_agent.h>
 #include <dory/util/misc_util.h>
 #include <thread/fd_managed_thread.h>
 #include <xml/test/xml_test_initializer.h>

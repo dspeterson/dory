@@ -22,7 +22,6 @@
 #include <capped/pool.h>
 
 #include <new>
-#include <utility>
 
 #include <base/error_utils.h>
 

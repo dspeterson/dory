@@ -25,18 +25,14 @@
 #include <cstring>
 #include <ios>
 #include <limits>
-#include <sstream>
 
-#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/algorithm/string/trim.hpp>
-#include <strings.h>
 #include <xercesc/dom/DOMAttr.hpp>
 #include <xercesc/dom/DOMNode.hpp>
 #include <xercesc/framework/MemBufInputSource.hpp>
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/util/XercesDefs.hpp>
 
-#include <base/bits.h>
 #include <base/no_default_case.h>
 #include <xml/dom_document_util.h>
 #include <xml/dom_parser_with_line_info.h>

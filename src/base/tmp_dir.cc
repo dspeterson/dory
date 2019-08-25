@@ -27,8 +27,6 @@
 #include <cstring>
 #include <vector>
 
-#include <unistd.h>
-
 #include <base/error_utils.h>
 
 using namespace Base;

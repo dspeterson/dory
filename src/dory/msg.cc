@@ -21,8 +21,6 @@
 
 #include <dory/msg.h>
 
-#include <algorithm>
-
 #include <base/time_util.h>
 #include <capped/writer.h>
 #include <log/log.h>

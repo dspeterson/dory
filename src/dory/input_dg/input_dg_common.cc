@@ -24,7 +24,6 @@
 #include <cerrno>
 #include <chrono>
 #include <string>
-#include <system_error>
 
 #include <capped/memory_cap_reached.h>
 #include <dory/msg_creator.h>

@@ -21,7 +21,6 @@
 
 #include <socket/named_unix_socket.h>
 
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
 

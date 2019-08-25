@@ -19,21 +19,18 @@
    Kafka producer daemon.
  */
 
-#include <cassert>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
 #include <memory>
-#include <stdexcept>
+#include <new>
 #include <string>
 
-#include <signal.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include <base/opt.h>
 #include <dory/dory_server.h>
-#include <dory/build_id.h>
 #include <dory/config.h>
 #include <dory/util/arg_parse_error.h>
 #include <dory/util/handle_xml_errors.h>

@@ -21,8 +21,6 @@
 
 #include <dory/client/path_too_long.h>
 
-#include <utility>
-
 using namespace Dory;
 using namespace Dory::Client;
 

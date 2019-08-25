@@ -21,8 +21,6 @@
 
 #include <dory/msg_dispatch/dispatcher_shared_state.h>
 
-#include <algorithm>
-
 #include <dory/msg_state_tracker.h>
 #include <log/log.h>
 #include <server/counter.h>

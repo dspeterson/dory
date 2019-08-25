@@ -22,7 +22,6 @@
 #include <base/basename.h>
 
 #include <cassert>
-#include <cstddef>
 #include <cstring>
 #include <vector>
 
