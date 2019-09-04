@@ -54,7 +54,6 @@
 #include <server/counter.h>
 #include <server/daemonize.h>
 #include <signal/masker.h>
-#include <signal/set.h>
 #include <socket/address.h>
 #include <socket/option.h>
 
@@ -119,8 +118,8 @@ static bool CheckUnixDgSize(const TConfig &cfg) {
 }
 
 TDoryServer::TSignalHandlerInstaller::TSignalHandlerInstaller()
-    : SigintInstaller(SIGINT, &HandleShutdownSignal),
-      SigtermInstaller(SIGTERM, &HandleShutdownSignal) {
+    : SigintInstaller(SIGINT, AllHandledSignals(), &HandleShutdownSignal),
+      SigtermInstaller(SIGTERM, AllHandledSignals(), &HandleShutdownSignal) {
 }
 
 TDoryServer::TServerConfig
@@ -319,7 +318,7 @@ int TDoryServer::Run() {
      handling.  It is important that we have all signals blocked when creating
      threads, since they inherit our signal mask, and we want them to block all
      signals. */
-  TMasker block_all(*TSet(TSet::Full));
+  TMasker block_all(*TSet(TSet::TListInit::Exclude, {}));
 
   LOG(TPri::NOTICE) << "Server started";
 
@@ -375,6 +374,14 @@ void TDoryServer::RequestShutdown() noexcept {
         << "Fatal unknown exception in TDoryServer::RequestShutdown()";
     _exit(EXIT_FAILURE);
   }
+}
+
+TSet TDoryServer::AllHandledSignals() noexcept {
+  return TSet(TSet::TListInit::Include, { SIGINT, SIGTERM });
+}
+
+TSet TDoryServer::AllSignalsExceptHandled() noexcept {
+  return TSet(TSet::TListInit::Exclude, { SIGINT, SIGTERM });
 }
 
 std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>
@@ -522,7 +529,7 @@ bool TDoryServer::HandleEvents() {
     }
 
     int ret = ppoll(&events[0], events.size(), nullptr,
-        TSet(TSet::Exclude, { SIGINT, SIGTERM }).Get());
+        AllSignalsExceptHandled().Get());
     assert(ret);
 
     if ((ret < 0) && (errno != EINTR)) {

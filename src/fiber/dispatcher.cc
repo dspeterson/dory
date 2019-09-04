@@ -188,11 +188,11 @@ void TDispatcher::Run(const TTimeout &grace_period,
      won't abort the whole process.  We'll mask out all signals while we're
      running, then unmask the shutdown signal only while we're blocked in
      Dispatch().  That way arbitrary I/O won't be affected. */
-  THandlerInstaller handle_signal(shutdown_signal_number, ShutdownSigHandler);
-  TMasker masker(*TSet(TSet::Full));
+  THandlerInstaller handle_signal(shutdown_signal_number, TSet(), ShutdownSigHandler);
+  TMasker masker(*TSet(TSet::TListInit::Exclude, {}));
   GotShutdownSignal = false;
-  TSet mask_set(TSet::Exclude, {});
-  TSet shutdown_mask_set(TSet::Exclude, {});
+  TSet mask_set(TSet::TListInit::Exclude, {});
+  TSet shutdown_mask_set(TSet::TListInit::Exclude, {});
 
   for (int sig : allow_signals) {
     mask_set -= sig;

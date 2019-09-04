@@ -51,7 +51,7 @@ namespace {
   }
   
   TEST_F(TSetTest, Full) {
-    TSet a(TSet::Full);
+    TSet a(TSet::TListInit::Exclude, {});
     ASSERT_TRUE(a[SIGINT]);
     a -= SIGINT;
     ASSERT_FALSE(a[SIGINT]);
@@ -60,7 +60,7 @@ namespace {
   }
   
   TEST_F(TSetTest, Copy) {
-    TSet a(TSet::Include, { SIGINT });
+    TSet a(TSet::TListInit::Include, { SIGINT });
     ASSERT_TRUE(a[SIGINT]);
     TSet b(a);
     ASSERT_TRUE(a[SIGINT]);
@@ -68,7 +68,7 @@ namespace {
   }
   
   TEST_F(TSetTest, Assign) {
-    TSet a(TSet::Include, { SIGINT });
+    TSet a(TSet::TListInit::Include, { SIGINT });
     ASSERT_TRUE(a[SIGINT]);
     TSet b;
     ASSERT_FALSE(b[SIGINT]);
@@ -78,7 +78,7 @@ namespace {
   }
   
   TEST_F(TSetTest, Exclude) {
-    TSet a(TSet::Exclude, { SIGINT });
+    TSet a(TSet::TListInit::Exclude, { SIGINT });
     ASSERT_TRUE(a[SIGPIPE]);
     ASSERT_FALSE(a[SIGINT]);
   }

@@ -96,7 +96,7 @@ void TConnectHandlerBase::RunThread(std::unique_ptr<TMockKafkaWorker> &&w) {
        all signal handling, so worker threads spend their entire lifetimes with
        all signals blocked.  Block all signals when creating the thread, so it
        inherits the desired signal mask. */
-    TMasker masker(*TSet(TSet::Full));
+    TMasker masker(*TSet(TSet::TListInit::Exclude, {}));
     state.Worker->Start();
   }
 

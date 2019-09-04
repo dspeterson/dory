@@ -35,123 +35,117 @@ namespace Signal {
   /* A set of signals. */
   class TSet {
     public:
-
-    /* How to construct a new set. */
-    enum TOp0 {
-      /* Construct an empty set. */
-      Empty,
-
-      /* Construct a full set. */
-      Full,
-
-      /* Construct a set with the calling thread's mask in it. */
-      Mask
-    };  // TOp0
-
     /* How to construct a new set from an initializer list. */
-    enum TOp1 {
+    enum class TListInit {
       /* Include only the signals in the list. */
       Include,
 
       /* Include all signals except the ones in the list. */
       Exclude
-    };  // TOp1
+    };  // TListInit
+
+    /* In the implementation below, we assume that sigemptyset(), sigfillset(),
+       sigaddset(), sigdelset(), and sigismember() will never return an error,
+       which seems reasonable.  This avoids inconvenience. */
 
     /* See TOp0. */
-    TSet(TOp0 op = Empty) {
-      switch (op) {
-        case Empty: {
-          Base::IfLt0(sigemptyset(&OsObj));
-          break;
-        }
-        case Full: {
-          Base::IfLt0(sigfillset(&OsObj));
-          break;
-        }
-        case Mask: {
-          Base::IfNe0(pthread_sigmask(0, nullptr, &OsObj));
-          break;
-        }
-        NO_DEFAULT_CASE;
-      }
+    TSet() noexcept {
+      int result = sigemptyset(&OsObj);
+      assert(result == 0);
     }
 
     /* See TOp1.*/
-    TSet(TOp1 op, std::initializer_list<int> sigs) {
-      switch (op) {
-        case Include: {
-          Base::IfLt0(sigemptyset(&OsObj));
+    TSet(TListInit init, std::initializer_list<int> sigs) noexcept {
+      switch (init) {
+        case TListInit::Include: {
+          int result = sigemptyset(&OsObj);
+          assert(result == 0);
+
           for (int sig: sigs) {
-            Base::IfLt0(sigaddset(&OsObj, sig));
+            result = sigaddset(&OsObj, sig);
+            assert(result == 0);
           }
+
           break;
         }
-        case Exclude: {
-          Base::IfLt0(sigfillset(&OsObj));
+        case TListInit::Exclude: {
+          int result = sigfillset(&OsObj);
+          assert(result == 0);
+
           for (int sig: sigs) {
-            Base::IfLt0(sigdelset(&OsObj, sig));
+            result = sigdelset(&OsObj, sig);
+            assert(result == 0);
           }
+
           break;
         }
         NO_DEFAULT_CASE;
       }
     }
 
+    static TSet FromSigmask() {
+      TSet result;
+      Base::IfNe0(pthread_sigmask(0, nullptr, &result.OsObj));
+      return result;
+    }
+
     /* Copy constructor. */
-    TSet(const TSet &that) {
+    TSet(const TSet &that) noexcept {
       assert(&that);
-      memcpy(&OsObj, &that.OsObj, sizeof(OsObj));
+      std::memcpy(&OsObj, &that.OsObj, sizeof(OsObj));
     }
 
     /* Assignment operator. */
-    TSet &operator=(const TSet &that) {
+    TSet &operator=(const TSet &that) noexcept {
       assert(&that);
-      memcpy(&OsObj, &that.OsObj, sizeof(OsObj));
+      std::memcpy(&OsObj, &that.OsObj, sizeof(OsObj));
       return *this;
     }
 
     /* Add the signal to the set. */
-    TSet &operator+=(int sig) {
+    TSet &operator+=(int sig) noexcept {
       assert(this);
-      Base::IfLt0(sigaddset(&OsObj, sig));
+      int result = sigaddset(&OsObj, sig);
+      assert(result == 0);
       return *this;
     }
 
     /* Remove the signal from the set. */
-    TSet &operator-=(int sig) {
+    TSet &operator-=(int sig) noexcept {
       assert(this);
-      Base::IfLt0(sigdelset(&OsObj, sig));
+      int result = sigdelset(&OsObj, sig);
+      assert(result == 0);
       return *this;
     }
 
     /* Construct a new set with the signal added. */
-    TSet operator+(int sig) {
+    TSet operator+(int sig) noexcept {
       assert(this);
       return TSet(*this) += sig;
     }
 
     /* Construct a new set with the signal removed. */
-    TSet operator-(int sig) {
+    TSet operator-(int sig) noexcept {
       assert(this);
       return TSet(*this) -= sig;
     }
 
     /* True iff. the signal is in the set. */
-    bool operator[](int sig) const {
+    bool operator[](int sig) const noexcept {
       assert(this);
-      int result;
-      Base::IfLt0(result = sigismember(&OsObj, sig));
+      int result = sigismember(&OsObj, sig);
+      assert((result == 0) || (result == 1));
       return result != 0;
     }
 
     /* Access the OS object. */
-    const sigset_t &operator*() const {
+    const sigset_t &operator*() const noexcept {
       assert(this);
       return OsObj;
     }
 
     /* Access the OS object. */
-    const sigset_t *Get() const {
+    const sigset_t *Get() const noexcept {
       assert(this);
       return &OsObj;
     }

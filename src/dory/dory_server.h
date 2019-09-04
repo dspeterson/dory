@@ -55,6 +55,7 @@
 #include <server/tcp_ipv4_server.h>
 #include <server/unix_stream_server.h>
 #include <signal/handler_installer.h>
+#include <signal/set.h>
 #include <thread/managed_thread_pool.h>
 
 namespace Dory {
@@ -206,6 +207,10 @@ namespace Dory {
     /* Thread pool type for handling local TCP and UNIX domain stream client
        connections. */
     using TWorkerPool = TStreamClientHandler::TWorkerPool;
+
+    static Signal::TSet AllHandledSignals() noexcept;
+
+    static Signal::TSet AllSignalsExceptHandled() noexcept;
 
     std::unique_ptr<Server::TStreamServerBase::TConnectionHandlerApi>
     CreateStreamClientHandler(bool is_tcp);

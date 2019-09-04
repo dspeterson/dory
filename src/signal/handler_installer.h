@@ -22,12 +22,14 @@
 #pragma once
 
 #include <cassert>
+#include <cstring>
 
 #include <signal.h>
 
 #include <base/error_utils.h>
 #include <base/no_copy_semantics.h>
 #include <base/zero.h>
+#include <signal/set.h>
 
 namespace Signal {
 
@@ -37,12 +39,13 @@ namespace Signal {
 
     public:
     /* Set the mask to the given set. */
-    explicit THandlerInstaller(int sig,
+    explicit THandlerInstaller(int sig, TSet mask,
         void (*handler)(int) noexcept = DoNothing)
         : SignalNumber(sig) {
       struct sigaction new_act;
       Base::Zero(new_act);
       new_act.sa_handler = handler;
+      std::memcpy(&new_act.sa_mask, mask.Get(), sizeof(new_act.sa_mask));
       Base::IfLt0(sigaction(sig, &new_act, &OldAct));
     }
 
