@@ -83,7 +83,7 @@ namespace Thread {
 
     /* Return a file descriptor that becomes readable once the thread is about
        to terminate.  If desired, the caller can use a mechanism such as
-       select(), poll(), or epoll() to wait for the descritpor to become
+       select(), poll(), or epoll() to wait for the descriptor to become
        readable.  Once the descriptor becomes readable, the Join() method must
        still be called. */
     const Base::TFd &GetShutdownWaitFd() const noexcept;
@@ -92,8 +92,8 @@ namespace Thread {
        to terminate.  To avoid blocking for an extended period, one may test
        the file descriptor returned by GetShutdownWaitFd(), and defer calling
        this method until the descriptor becomes readable. If the thread allowed
-       an exception to escape from the Run() method, TWorkerError _after_ the
-       thread has terminated. */
+       an exception to escape from the Run() method, TWorkerError is thrown
+       _after_ the thread has terminated. */
     void Join();
 
     const std::thread &GetThread() const noexcept {
