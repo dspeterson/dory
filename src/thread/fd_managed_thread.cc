@@ -34,21 +34,7 @@ TFdManagedThread::~TFdManagedThread() {
 }
 
 void TFdManagedThread::Start() {
-  assert(this);
-
-  if (Thread.joinable()) {
-    throw std::logic_error("Worker thread is already started");
-  }
-
-  assert(!ShutdownRequestedSem.GetFd().IsReadable());
-  assert(!ShutdownFinishedSem.GetFd().IsReadable());
-  assert(!ThrownByThread);
-
-  /* Start the thread running. */
-  Thread = std::thread(
-      [this]() {
-        RunAndTerminate();
-      });
+  DoStart();
 }
 
 bool TFdManagedThread::IsStarted() const noexcept {
@@ -88,6 +74,24 @@ void TFdManagedThread::Join() {
        null value. */
     throw TWorkerError(ThrownByThread);
   }
+}
+
+void TFdManagedThread::DoStart() {
+  assert(this);
+
+  if (Thread.joinable()) {
+    throw std::logic_error("Worker thread is already started");
+  }
+
+  assert(!ShutdownRequestedSem.GetFd().IsReadable());
+  assert(!ShutdownFinishedSem.GetFd().IsReadable());
+  assert(!ThrownByThread);
+
+  /* Start the thread running. */
+  Thread = std::thread(
+      [this]() {
+        RunAndTerminate();
+      });
 }
 
 void TFdManagedThread::ShutdownOnDestroy() {

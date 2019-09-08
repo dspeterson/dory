@@ -69,8 +69,11 @@ namespace Thread {
 
     /* Launch the worker thread and return immediately while the thread runs.
        Once the thread has finished running and Join() has been called, this
-       method may be called again to start a new thread. */
-    void Start();
+       method may be called again to start a new thread.  The default
+       implementation just launches the worker thread by calling DoStart()
+       below.  Derived classes may override this to perform additional
+       actions. */
+    virtual void Start();
 
     /* Return true iff. Start() has been called and Join() has not yet been
        called. */
@@ -110,6 +113,9 @@ namespace Thread {
 
     protected:
     TFdManagedThread() = default;
+
+    /* Start the thread running.  Start() calls this. */
+    void DoStart();
 
     /* The thread immediately calls this method once it starts executing.
        Subclasses must provide an implementation to define thread-specific
