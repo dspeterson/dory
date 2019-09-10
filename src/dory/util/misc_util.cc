@@ -91,7 +91,7 @@ static void WriteLogPrefix(TLogPrefixAssignApi &entry) {
   char *pos = buf + bytes_written;
   size_t space_left = sizeof(buf) - bytes_written;
   size_t n_bytes = static_cast<size_t>(
-      std::snprintf(pos, space_left, ".%03d UTC %s[%d] (",
+      std::snprintf(pos, space_left, ".%03d UTC %s[%d] ",
           static_cast<int>(now.tv_nsec / 1000000), GetProgName(),
           static_cast<int>(getpid())));
 
@@ -114,13 +114,11 @@ static void WriteLogPrefix(TLogPrefixAssignApi &entry) {
   pos += level_len;
   space_left -= level_len;
 
-  if (space_left < 4) {
+  if (space_left < 3) {
     LogPrefixWriteFailed.Increment();
     return;
   }
 
-  *pos = ')';
-  ++pos;
   *pos = ':';
   ++pos;
   *pos = ' ';
