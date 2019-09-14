@@ -54,18 +54,6 @@ namespace Base {
     return ret;
   }
 
-  /* If the given value != 0, throw a system error based on the neagtion of the
-     return value.  Use this function to test the results of weird-assed
-     library calls. */
-  template <typename TRet>
-  TRet IfWeird(TRet &&ret) {
-    if (ret != 0) {
-      ThrowSystemError(-ret);
-    }
-
-    return ret;
-  }
-
   /* Return true iff. the error was caused by a signal. */
   inline bool WasInterrupted(const std::system_error &error) {
     /* TODO: change this to:
