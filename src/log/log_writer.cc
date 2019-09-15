@@ -53,7 +53,7 @@ void Log::HandleLogRotateRequest() {
   }
 }
 
-std::shared_ptr<TLogWriterBase> Log::GetLogWriter() {
+std::shared_ptr<TLogWriterBase> Log::GetLogWriter() noexcept {
   std::lock_guard<std::mutex> lock(LogWriterMutex);
   assert(!!LogWriter);
   return LogWriter;

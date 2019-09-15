@@ -58,6 +58,6 @@ namespace Log {
   void HandleLogRotateRequest();
 
   /* Get a reference to the current global log writer. */
-  std::shared_ptr<TLogWriterBase> GetLogWriter();
+  std::shared_ptr<TLogWriterBase> GetLogWriter() noexcept;
 
 }

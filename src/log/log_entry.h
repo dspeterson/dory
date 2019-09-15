@@ -80,7 +80,8 @@ namespace Log {
         "Not enough space for trailing newline and C string terminator");
 
     public:
-    TLogEntry(std::shared_ptr<TLogWriterBase> &&log_writer, TPri level)
+    TLogEntry(std::shared_ptr<TLogWriterBase> &&log_writer,
+        TPri level) noexcept
         : TArrayOstreamBase<BufSize, PrefixSpace, 2 /* SuffixSpace */>(),
           LogWriter(std::move(log_writer)),
           Level(level) {
