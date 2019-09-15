@@ -167,7 +167,7 @@ namespace Base {
      initialization. */
   void SetDieHandler(TDieHandler handler) noexcept;
 
-  /* Generate a stack trace, call fatal error handler specified by
+  /* Log 'msg', generate a stack trace, call fatal error handler specified by
      SetDieHandler() above, and dump core. */
   [[ noreturn ]] void Die(const char *msg) noexcept;
 
