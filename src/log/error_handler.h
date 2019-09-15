@@ -1,4 +1,4 @@
-/* <log/log_entry.cc>
+/* <log/error_handler.h>
 
    ----------------------------------------------------------------------------
    Copyright 2019 Dave Peterson <dave@dspeterson.com>
@@ -16,22 +16,26 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <log/log_entry.h>.
+   Error handler function definition.
  */
 
-#include <log/log_entry.h>
+#pragma once
 
-using namespace Log;
+#include <type_traits>
 
-static void NullPrefixWriter(TLogPrefixAssignApi &) noexcept {
-}
+namespace Log {
 
-TPrefixWriteFn PrefixWriter{NullPrefixWriter};
+  /* Pointer to error handler function with the following signature:
 
-void Log::SetPrefixWriter(TPrefixWriteFn writer) {
-  PrefixWriter = writer;
-}
+         void func() noexcept;
 
-void Log::WritePrefix(TLogPrefixAssignApi &entry) {
-  PrefixWriter(entry);
+     The handler type is defined using decltype because C++ does not allow
+     direct use of noexcept in a typedef or using declaration.
+     std::remove_reference is needed because the std::declval expression passed
+     to decltype() is a temporary (i.e. an rvalue), so the decltype(...)
+     evaluates to an rvalue reference to a function pointer.
+   */
+  using TErrorHandler = std::remove_reference<decltype(std::declval<
+      void (*)() noexcept>())>::type;
+
 }

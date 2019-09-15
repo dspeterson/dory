@@ -23,8 +23,8 @@
 
 #include <cassert>
 #include <cstddef>
-#include <functional>
 
+#include <log/error_handler.h>
 #include <log/log_entry_access_api.h>
 #include <log/log_writer_base.h>
 #include <log/pri.h>
@@ -35,7 +35,7 @@ namespace Log {
     public:
     /* Access to the error handler is not protected from multithreading races,
        so it should be set before concurrent access is possible. */
-    static void SetErrorHandler(const std::function<void() noexcept> &handler);
+    static void SetErrorHandler(TErrorHandler handler);
 
     explicit TStdoutStderrLogWriter(bool enabled)
         : Enabled(enabled) {
@@ -59,7 +59,7 @@ namespace Log {
     private:
     static void NullErrorHandler() noexcept;
 
-    static std::function<void() noexcept> ErrorHandler;
+    static TErrorHandler ErrorHandler;
 
     const bool Enabled;
   };  // TStdoutStderrLogWriter

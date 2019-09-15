@@ -26,8 +26,8 @@
 #include <cassert>
 #include <cstddef>
 #include <cstring>
-#include <functional>
 #include <memory>
+#include <type_traits>
 #include <utility>
 
 #include <base/no_copy_semantics.h>
@@ -39,10 +39,22 @@
 
 namespace Log {
 
+  /* Pointer to function with the following signature:
+
+         void func(TLogPrefixAssignApi &entry) noexcept;
+
+     The function type is defined using decltype because C++ does not allow
+     direct use of noexcept in a typedef or using declaration.
+     std::remove_reference is needed because the std::declval expression passed
+     to decltype() is a temporary (i.e. an rvalue), so the decltype(...)
+     evaluates to an rvalue reference to a function pointer.
+   */
+  using TPrefixWriteFn = std::remove_reference<decltype(std::declval<
+      void (*)(TLogPrefixAssignApi &entry) noexcept>())>::type;
+
   /* Access to the prefix writer is not protected from multithreading races, so
      it should be set before concurrent access is possible. */
-  void SetPrefixWriter(
-      const std::function<void(TLogPrefixAssignApi &entry) noexcept> &writer);
+  void SetPrefixWriter(TPrefixWriteFn writer);
 
   void WritePrefix(TLogPrefixAssignApi &entry);
 

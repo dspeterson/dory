@@ -75,8 +75,7 @@ TFileLogWriter::TInvalidMode::TInvalidMode(const std::string &path,
       Mode(mode) {
 }
 
-void TFileLogWriter::SetErrorHandler(
-    std::function<void() noexcept> const &handler) {
+void TFileLogWriter::SetErrorHandler(TErrorHandler handler) noexcept {
   ErrorHandler = handler;
 }
 
@@ -112,5 +111,4 @@ void TFileLogWriter::WriteStackTrace(TPri pri, void *const *buffer,
 void TFileLogWriter::NullErrorHandler() noexcept {
 }
 
-std::function<void() noexcept> TFileLogWriter::ErrorHandler{
-    TFileLogWriter::NullErrorHandler};
+TErrorHandler TFileLogWriter::ErrorHandler{TFileLogWriter::NullErrorHandler};

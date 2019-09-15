@@ -28,8 +28,7 @@
 
 using namespace Log;
 
-void TStdoutStderrLogWriter::SetErrorHandler(
-    std::function<void() noexcept> const &handler) {
+void TStdoutStderrLogWriter::SetErrorHandler(TErrorHandler handler) {
   ErrorHandler = handler;
 }
 
@@ -60,5 +59,5 @@ void TStdoutStderrLogWriter::WriteStackTrace(TPri pri, void *const *buffer,
 void TStdoutStderrLogWriter::NullErrorHandler() noexcept {
 }
 
-std::function<void() noexcept> TStdoutStderrLogWriter::ErrorHandler{
+TErrorHandler TStdoutStderrLogWriter::ErrorHandler{
     TStdoutStderrLogWriter::NullErrorHandler};
