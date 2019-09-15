@@ -23,6 +23,7 @@
 
 #include <cassert>
 
+#include <execinfo.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -87,7 +88,7 @@ TFileLogWriter::TFileLogWriter(const std::string &path, mode_t open_mode)
           new TFd() : new TFd(OpenLogPath(path.c_str(), open_mode))) {
 }
 
-void TFileLogWriter::DoWriteEntry(TLogEntryAccessApi &entry) const noexcept {
+void TFileLogWriter::WriteEntry(TLogEntryAccessApi &entry) const noexcept {
   assert(this);
 
   if (IsEnabled()) {
@@ -96,6 +97,15 @@ void TFileLogWriter::DoWriteEntry(TLogEntryAccessApi &entry) const noexcept {
     } catch (...) {
       ErrorHandler();
     }
+  }
+}
+
+void TFileLogWriter::WriteStackTrace(TPri pri, void *const *buffer,
+    size_t size) const noexcept {
+  assert(this);
+
+  if (IsEnabled() && Log::IsEnabled(pri)) {
+    backtrace_symbols_fd(buffer, static_cast<int>(size), *FdRef);
   }
 }
 

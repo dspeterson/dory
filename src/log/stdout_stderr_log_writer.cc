@@ -21,6 +21,8 @@
 
 #include <log/stdout_stderr_log_writer.h>
 
+#include <execinfo.h>
+
 #include <log/pri.h>
 #include <log/write_to_fd.h>
 
@@ -31,7 +33,7 @@ void TStdoutStderrLogWriter::SetErrorHandler(
   ErrorHandler = handler;
 }
 
-void TStdoutStderrLogWriter::DoWriteEntry(
+void TStdoutStderrLogWriter::WriteEntry(
     TLogEntryAccessApi &entry) const noexcept {
   assert(this);
 
@@ -43,6 +45,15 @@ void TStdoutStderrLogWriter::DoWriteEntry(
     } catch (...) {
       ErrorHandler();
     }
+  }
+}
+
+void TStdoutStderrLogWriter::WriteStackTrace(TPri pri, void *const *buffer,
+    size_t size) const noexcept {
+  assert(this);
+
+  if (Enabled && Log::IsEnabled(pri)) {
+    backtrace_symbols_fd(buffer, static_cast<int>(size), 2 /* stderr */);
   }
 }
 

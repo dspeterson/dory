@@ -21,34 +21,61 @@
 
 #include <base/error_utils.h>
 
-#include <cassert>
+#include <cstdlib>
 #include <cstring>
 
-namespace Base {
+using namespace Base;
 
-  const char *Strerror(int errno_value, char *buf, size_t buf_size) {
-    assert(buf);
-    assert(buf_size);
+const char *Base::Strerror(int errno_value, char *buf, size_t buf_size) {
+  assert(buf);
+  assert(buf_size);
 
-    /* The man page for strerror_r explains all of this ugliness. */
+  /* The man page for strerror_r explains all of this ugliness. */
 
 #if ((_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && ! _GNU_SOURCE)
-    /* This is the XSI-compliant version of strerror_r(). */
-    int err = strerror_r(errno_value, buf, buf_size);
+  /* This is the XSI-compliant version of strerror_r(). */
+  int err = strerror_r(errno_value, buf, buf_size);
 
-    if (err) {
-      /* In the unlikely event that something went wrong, make the buffer
-         contain the empty string, in case it would otherwise be left with
-         arbitrary junk. */
-      buf[0] = '\0';
-    }
-
-    return buf;
-#else
-    /* This is the GNU-specific version of strerror_r().  Its return type is
-       'char *'. */
-    return strerror_r(errno_value, buf, buf_size);
-#endif
+  if (err) {
+    /* In the unlikely event that something went wrong, make the buffer
+       contain the empty string, in case it would otherwise be left with
+       arbitrary junk. */
+    buf[0] = '\0';
   }
 
-}  // Base
+  return buf;
+#else
+  /* This is the GNU-specific version of strerror_r().  Its return type is
+     'char *'. */
+  return strerror_r(errno_value, buf, buf_size);
+#endif
+}
+
+static void DefaultDieHandler(const char * /* msg */,
+    void *const * /* stack_trace_buffer */, size_t /* stack_trace_size */) noexcept {
+}
+
+static TDieHandler DieHandler = DefaultDieHandler;
+
+void Base::SetDieHandler(Base::TDieHandler handler) noexcept {
+  assert(handler);
+  DieHandler = handler;
+}
+
+static const size_t STACK_TRACE_SIZE = 128;
+
+[[ noreturn ]] void Base::Die(const char *msg) noexcept {
+  /* Ideally, we should use an off-stack location for the stack trace buffer.
+     This would allow preservation of memory contents beyond the end of the
+     stack, which can potentially be useful to examine in the core file.  For
+     now, this is good enough. */
+  void *trace_buf[STACK_TRACE_SIZE];
+  const int trace_size = backtrace(trace_buf,
+      static_cast<int>(STACK_TRACE_SIZE));
+  assert(static_cast<size_t>(trace_size) <= STACK_TRACE_SIZE);
+
+  /* Log error message and stack trace. */
+  DieHandler(msg, trace_buf, static_cast<size_t>(trace_size));
+
+  abort();  // force core dump
+}

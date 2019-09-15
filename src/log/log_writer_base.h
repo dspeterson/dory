@@ -22,8 +22,10 @@
 #pragma once
 
 #include <cassert>
+#include <cstddef>
 
 #include <log/log_entry_access_api.h>
+#include <log/pri.h>
 
 namespace Log {
 
@@ -32,17 +34,23 @@ namespace Log {
     public:
     virtual ~TLogWriterBase() = default;
 
-    void WriteEntry(TLogEntryAccessApi &entry) const noexcept {
-      assert(this);
-      DoWriteEntry(entry);
-    }
+    /* Write log entry. */
+    virtual void WriteEntry(TLogEntryAccessApi &entry) const noexcept = 0;
+
+    /* Log stack trace.
+
+       The last two parameters represent the results from a call to
+       backtrace().  If possible, the implementation should write the output
+       directly to a file descriptor by calling backtrace_symbols_fd() for
+       maximum reliability.  Output is not expected to include the usual log
+       entry prefix.  The goal is to just write the stack trace in the
+       simplest, least error-prone manner.
+     */
+    virtual void WriteStackTrace(TPri pri, void *const *buffer,
+        size_t size) const noexcept = 0;
 
     protected:
     TLogWriterBase() = default;
-
-    /* Subclasses must implement this to handle the details of writing the log
-       entry. */
-    virtual void DoWriteEntry(TLogEntryAccessApi &entry) const noexcept = 0;
   };  // TLogWriterBase
 
 }  // Log

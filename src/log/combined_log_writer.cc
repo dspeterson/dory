@@ -27,8 +27,8 @@ TCombinedLogWriter::TCombinedLogWriter(bool enable_stdout_stderr,
     bool enable_syslog, const std::string &file_path, mode_t file_mode)
     : TLogWriterBase(),
       StdoutStderrLogWriter(enable_stdout_stderr),
-      SyslogLogWriter(enable_syslog),
-      FileLogWriter(file_path, file_mode) {
+      FileLogWriter(file_path, file_mode),
+      SyslogLogWriter(enable_syslog) {
 }
 
 TCombinedLogWriter::TCombinedLogWriter(const TCombinedLogWriter &old_writer,
@@ -36,16 +36,24 @@ TCombinedLogWriter::TCombinedLogWriter(const TCombinedLogWriter &old_writer,
     const std::string &file_path, mode_t file_mode)
     : TLogWriterBase(),
       StdoutStderrLogWriter(enable_stdout_stderr),
-      SyslogLogWriter(enable_syslog),
       FileLogWriter((file_path == old_writer.FileLogWriter.GetPath()) ?
           old_writer.FileLogWriter :
-          TFileLogWriter(file_path, file_mode)) {
+          TFileLogWriter(file_path, file_mode)),
+      SyslogLogWriter(enable_syslog) {
 }
 
-void TCombinedLogWriter::DoWriteEntry(
+void TCombinedLogWriter::WriteEntry(
     Log::TLogEntryAccessApi &entry) const noexcept {
   assert(this);
   StdoutStderrLogWriter.WriteEntry(entry);
-  SyslogLogWriter.WriteEntry(entry);
   FileLogWriter.WriteEntry(entry);
+  SyslogLogWriter.WriteEntry(entry);
+}
+
+void TCombinedLogWriter::WriteStackTrace(Log::TPri pri, void *const *buffer,
+    size_t size) const noexcept {
+  assert(this);
+  StdoutStderrLogWriter.WriteStackTrace(pri, buffer, size);
+  FileLogWriter.WriteStackTrace(pri, buffer, size);
+  SyslogLogWriter.WriteStackTrace(pri, buffer, size);
 }

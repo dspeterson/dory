@@ -22,10 +22,12 @@
 #pragma once
 
 #include <cassert>
+#include <cstddef>
 #include <functional>
 
 #include <log/log_entry_access_api.h>
 #include <log/log_writer_base.h>
+#include <log/pri.h>
 
 namespace Log {
 
@@ -44,11 +46,15 @@ namespace Log {
       return Enabled;
     }
 
-    protected:
     /* Write 'entry' to stdout or stderr, depending on the log level (severity
        of at least LOG_ERR goes to stderr).  A trailing newline will be
        appended. */
-    void DoWriteEntry(TLogEntryAccessApi &entry) const noexcept override;
+    void WriteEntry(TLogEntryAccessApi &entry) const noexcept override;
+
+    /* The parameters represent the results from a call to backtrace().  Write
+       a stack trace to the log. */
+    void WriteStackTrace(TPri pri, void *const *buffer,
+        size_t size) const noexcept override;
 
     private:
     static void NullErrorHandler() noexcept;

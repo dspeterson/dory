@@ -24,8 +24,12 @@
 #include <atomic>
 #include <stdexcept>
 
+#include <execinfo.h>
 #include <syslog.h>
 
+#include <base/error_utils.h>
+
+using namespace Base;
 using namespace Log;
 
 /* true indicates that syslog() has been initialized. */
@@ -60,7 +64,7 @@ TSyslogLogWriter::TSyslogLogWriter(bool enabled)
   }
 }
 
-void TSyslogLogWriter::DoWriteEntry(TLogEntryAccessApi &entry) const noexcept {
+void TSyslogLogWriter::WriteEntry(TLogEntryAccessApi &entry) const noexcept {
   assert(this);
 
   if (Enabled) {
@@ -70,5 +74,20 @@ void TSyslogLogWriter::DoWriteEntry(TLogEntryAccessApi &entry) const noexcept {
         entry.Get(false /* with_prefix */,
             false /* with_trailing_newline */).first);
 
+  }
+}
+
+void TSyslogLogWriter::WriteStackTrace(TPri pri, void *const *buffer,
+    size_t size) const noexcept {
+  assert(this);
+
+  if (Enabled && Log::IsEnabled(pri)) {
+    TBacktraceSymbols symbols(buffer, size);
+
+    for (size_t i = 0; i < symbols.Size(); ++i) {
+      /* Pass log entry via "%s" rather than directly, in case it contains
+         formatting characters. */
+      syslog(static_cast<int>(pri), "%s", symbols[i]);
+    }
   }
 }

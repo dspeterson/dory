@@ -22,6 +22,7 @@
 #pragma once
 
 #include <cassert>
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -33,6 +34,7 @@
 #include <base/fd.h>
 #include <log/log_entry_access_api.h>
 #include <log/log_writer_base.h>
+#include <log/pri.h>
 
 namespace Log {
 
@@ -107,9 +109,13 @@ namespace Log {
       return OpenMode;
     }
 
-    protected:
     /* Write 'entry' to file.  A trailing newline will be appended. */
-    void DoWriteEntry(TLogEntryAccessApi &entry) const noexcept override;
+    void WriteEntry(TLogEntryAccessApi &entry) const noexcept override;
+
+    /* The parameters represent the results from a call to backtrace().  Write
+       a stack trace to the log. */
+    void WriteStackTrace(TPri pri, void *const *buffer,
+        size_t size) const noexcept override;
 
     private:
     static void NullErrorHandler() noexcept;

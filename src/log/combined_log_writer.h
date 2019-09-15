@@ -29,6 +29,7 @@
 
 #include <log/file_log_writer.h>
 #include <log/log_writer_base.h>
+#include <log/pri.h>
 #include <log/stdout_stderr_log_writer.h>
 #include <log/syslog_log_writer.h>
 
@@ -80,15 +81,19 @@ namespace Log {
       return FileLogWriter.GetOpenMode();
     }
 
-    protected:
-    void DoWriteEntry(TLogEntryAccessApi &entry) const noexcept override;
+    void WriteEntry(TLogEntryAccessApi &entry) const noexcept override;
+
+    /* The parameters represent the results from a call to backtrace().  Write
+       a stack trace to the log. */
+    void WriteStackTrace(TPri pri, void *const *buffer,
+        size_t size) const noexcept override;
 
     private:
     const TStdoutStderrLogWriter StdoutStderrLogWriter;
 
-    const TSyslogLogWriter SyslogLogWriter;
-
     const TFileLogWriter FileLogWriter;
+
+    const TSyslogLogWriter SyslogLogWriter;
   };  // TCombinedLogWriter
 
 }  // Log

@@ -21,9 +21,16 @@
 
 #pragma once
 
+#include <cassert>
 #include <cerrno>
 #include <cstddef>
+#include <cstdlib>
 #include <system_error>
+#include <type_traits>
+
+#include <execinfo.h>
+
+#include <base/no_copy_semantics.h>
 
 namespace Base {
 
@@ -70,4 +77,98 @@ namespace Base {
      return value must be assumed to not exceed the lifetime of 'buf'. */
   const char *Strerror(int errno_value, char *buf, size_t buf_size);
 
-}  // Base
+  /* RAII container for result of backtrace_symbols() library call. */
+  class TBacktraceSymbols final {
+    NO_COPY_SEMANTICS(TBacktraceSymbols);
+
+    public:
+    TBacktraceSymbols() noexcept = default;
+
+    /* Parameters are result of call to backtrace(). */
+    TBacktraceSymbols(void *const *buf, size_t buf_size) noexcept
+        : Buf(buf ?
+              backtrace_symbols(buf, static_cast<int>(buf_size)) : nullptr),
+          BufSize(Buf ? buf_size : 0) {
+    }
+
+    TBacktraceSymbols(TBacktraceSymbols &&other) noexcept
+        : Buf(other.Buf),
+          BufSize(other.BufSize) {
+      other.Buf = nullptr;
+      other.BufSize = 0;
+    }
+
+    ~TBacktraceSymbols() {
+      Clear();
+    }
+
+    TBacktraceSymbols &operator=(TBacktraceSymbols &&other) noexcept {
+      assert(this);
+
+      if (&other != this) {
+        Clear();
+        Buf = other.Buf;
+        BufSize = other.BufSize;
+        other.Buf = nullptr;
+        other.BufSize = 0;
+      }
+
+      return *this;
+    }
+
+    void Clear() noexcept {
+      /* As specified by the man page for backtrace_symbols(), free Buf, but
+         not the individual pointers in the array it points to. */
+      assert(this);
+      free(Buf);
+      Buf = nullptr;
+      BufSize = 0;
+    }
+
+    size_t Size() const noexcept {
+      assert(this);
+      return BufSize;
+    }
+
+    const char *operator[](size_t index) const noexcept {
+      assert(this);
+      assert(index < BufSize);
+      return Buf[index];
+    }
+
+    private:
+    char **Buf = nullptr;
+
+    size_t BufSize = 0;
+  };
+
+  /* Pointer to function with the following signature:
+
+         void func(const char *msg, void *const *stack_trace_buffer,
+             size_t stack_trace_size) noexcept;
+
+     The handler type is defined using decltype because C++ does not allow
+     direct use of noexcept in a typedef or using declaration.
+     std::remove_reference is needed because the std::declval expression
+     passed to decltype() is a temporary (i.e. an rvalue), so the
+     decltype(...) evaluates to an rvalue reference to a function pointer.
+
+     Function is called when a fatal error has occurred.  Parameter 'msg' is an
+     error message.  Parameters 'stack_trace_buffer' and 'stack_trace_size' are
+     the results of a call to backtrace().  The implementation should log 'msg'
+     along with a stack trace.  If possible, the stack trace should be logged
+     by calling backtrace_symbols_fd() for maximum reliability.
+   */
+  using TDieHandler = std::remove_reference<decltype(std::declval<
+      void (*)(const char *msg, void *const *stack_trace_buffer,
+          size_t stack_trace_size) noexcept>())>::type;
+
+  /* Specify a fatal error handler.  This should be called early during program
+     initialization. */
+  void SetDieHandler(TDieHandler handler) noexcept;
+
+  /* Generate a stack trace, call fatal error handler specified by
+     SetDieHandler() above, and dump core. */
+  [[ noreturn ]] void Die(const char *msg) noexcept;
+
+};  // Base
