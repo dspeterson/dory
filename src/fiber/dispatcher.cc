@@ -23,7 +23,7 @@
 
 #include <sys/resource.h>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 #include <signal/handler_installer.h>
 #include <signal/masker.h>
 #include <signal/set.h>

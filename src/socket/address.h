@@ -34,7 +34,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 #include <base/thrower.h>
 #include <socket/db/error.h>
 

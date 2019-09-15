@@ -22,8 +22,6 @@
 
    The entries are in the order in which they appear in the directory stucture,
    which isn't something you should rely on.
-
-   See <base/path_utils.test.cc> for tests of this unit.
  */
 
 #pragma once

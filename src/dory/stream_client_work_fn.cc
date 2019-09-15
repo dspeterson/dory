@@ -27,7 +27,7 @@
 
 #include <poll.h>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 #include <base/no_default_case.h>
 #include <dory/input_dg/input_dg_util.h>
 #include <dory/msg.h>

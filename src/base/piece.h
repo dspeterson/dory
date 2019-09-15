@@ -73,7 +73,7 @@
 #include <base/not_found_error.h>
 #include <base/safe_global.h>
 #include <base/slice.h>
-#include <base/stl_utils.h>
+#include <base/stl_util.h>
 
 namespace Base {
 

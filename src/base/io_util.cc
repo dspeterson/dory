@@ -1,4 +1,4 @@
-/* <base/io_utils.cc>
+/* <base/io_util.cc>
 
    ----------------------------------------------------------------------------
    Copyright 2010-2013 if(we)
@@ -16,10 +16,10 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <base/io_utils.h>.
+   Implements <base/io_util.h>.
  */
 
-#include <base/io_utils.h>
+#include <base/io_util.h>
 
 #include <cassert>
 #include <cerrno>
@@ -30,7 +30,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 #include <base/time.h>
 
 using namespace std;

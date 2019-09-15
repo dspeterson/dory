@@ -37,7 +37,7 @@
 #include <unistd.h>
 
 #include <base/basename.h>
-#include <base/error_utils.h>
+#include <base/error_util.h>
 #include <base/fd.h>
 #include <base/no_default_case.h>
 #include <log/file_log_writer.h>

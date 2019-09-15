@@ -23,7 +23,7 @@
 
 #include <cstring>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 
 using namespace std;
 using namespace Base;

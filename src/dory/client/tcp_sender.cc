@@ -28,7 +28,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 
 using namespace Base;
 using namespace Dory;

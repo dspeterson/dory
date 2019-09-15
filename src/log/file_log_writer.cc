@@ -28,7 +28,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 #include <log/write_to_fd.h>
 
 using namespace Base;
@@ -99,11 +99,11 @@ void TFileLogWriter::WriteEntry(TLogEntryAccessApi &entry) const noexcept {
   }
 }
 
-void TFileLogWriter::WriteStackTrace(TPri pri, void *const *buffer,
+void TFileLogWriter::WriteStackTrace(TPri /* pri */, void *const *buffer,
     size_t size) const noexcept {
   assert(this);
 
-  if (IsEnabled() && Log::IsEnabled(pri)) {
+  if (IsEnabled()) {
     backtrace_symbols_fd(buffer, static_cast<int>(size), *FdRef);
   }
 }

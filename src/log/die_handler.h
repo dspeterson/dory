@@ -1,7 +1,7 @@
-/* <log/write_to_fd.cc>
+/* <log/die_handler.h>
 
    ----------------------------------------------------------------------------
-   Copyright 2018 Dave Peterson <dave@dspeterson.com>
+   Copyright 2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,20 +16,25 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <log/write_to_fd.h>.
+   Fatal error handler to pass to Base::SetDieHandler().
  */
 
-#include <log/write_to_fd.h>
+#pragma once
 
-#include <unistd.h>
+#include <cstddef>
 
-#include <base/error_util.h>
+#include <log/pri.h>
 
-using namespace Base;
-using namespace Log;
+namespace Log {
 
-void Log::WriteToFd(int fd, TLogEntryAccessApi &entry) {
-  auto ret = entry.Get(true /* with_prefix */,
-      true /* with_trailing_newline */);
-  IfLt0(write(fd, ret.first, ret.second - ret.first));
-}
+  /* Log fatal error message and stack trace. */
+  void DieHandler(TPri pri, const char *msg, void *const *stack_trace_buffer,
+                  size_t stack_trace_size) noexcept;
+
+  template <TPri pri>
+  void DieHandler(const char *msg, void *const *stack_trace_buffer,
+      size_t stack_trace_size) noexcept {
+    DieHandler(pri, msg, stack_trace_buffer, stack_trace_size);
+  }
+
+}  // Log

@@ -1,4 +1,4 @@
-/* <base/io_utils.test.cc>
+/* <base/io_util.test.cc>
  
    ----------------------------------------------------------------------------
    Copyright 2010-2013 if(we)
@@ -16,10 +16,10 @@
    limitations under the License.
    ----------------------------------------------------------------------------
  
-   Unit test for <base/io_utils.h>.
+   Unit test for <base/io_util.h>.
  */
 
-#include <base/io_utils.h>
+#include <base/io_util.h>
   
 #include <cerrno>
 #include <cstring>

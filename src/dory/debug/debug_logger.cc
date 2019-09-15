@@ -31,7 +31,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 #include <base/no_default_case.h>
 #include <dory/util/msg_util.h>
 #include <log/log.h>

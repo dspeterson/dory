@@ -23,7 +23,7 @@
 
 #include <array>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 #include <base/time_util.h>
 
 #include <poll.h>

@@ -47,11 +47,11 @@ void TStdoutStderrLogWriter::WriteEntry(
   }
 }
 
-void TStdoutStderrLogWriter::WriteStackTrace(TPri pri, void *const *buffer,
+void TStdoutStderrLogWriter::WriteStackTrace(TPri /* pri */, void *const *buffer,
     size_t size) const noexcept {
   assert(this);
 
-  if (Enabled && Log::IsEnabled(pri)) {
+  if (Enabled) {
     backtrace_symbols_fd(buffer, static_cast<int>(size), 2 /* stderr */);
   }
 }

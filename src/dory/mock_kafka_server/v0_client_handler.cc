@@ -31,8 +31,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <base/error_utils.h>
-#include <base/io_utils.h>
+#include <base/error_util.h>
+#include <base/io_util.h>
 #include <base/no_default_case.h>
 #include <socket/address.h>
 

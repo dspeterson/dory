@@ -1,7 +1,8 @@
-/* <base/error_utils.cc>
+/* <base/error_util.cc>
 
    ----------------------------------------------------------------------------
    Copyright 2010-2013 if(we)
+   Copyright 2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,10 +17,10 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <base/error_utils.h>.
+   Implements <base/error_util.h>.
  */
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 
 #include <cstdlib>
 #include <cstring>

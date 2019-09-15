@@ -1,4 +1,4 @@
-/* <base/stl_utils.test.cc>
+/* <base/stl_util.test.cc>
  
    ----------------------------------------------------------------------------
    Copyright 2010-2013 if(we)
@@ -16,10 +16,10 @@
    limitations under the License.
    ----------------------------------------------------------------------------
  
-   Unit test for <base/stl_utils.h>.
+   Unit test for <base/stl_util.h>.
  */
 
-#include <base/stl_utils.h>
+#include <base/stl_util.h>
   
 #include <unordered_map>
 #include <unordered_set>

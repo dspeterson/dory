@@ -25,7 +25,7 @@
 #include <utility>
 #include <vector>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 #include <capped/blob.h>
 #include <capped/reader.h>
 #include <log/log.h>

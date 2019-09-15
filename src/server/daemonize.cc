@@ -29,7 +29,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 #include <base/os_error.h>
 #include <base/zero.h>
 #include <log/log.h>

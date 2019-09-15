@@ -60,7 +60,7 @@
 #include <base/opt.h>
 #include <base/no_construction.h>
 #include <base/no_copy_semantics.h>
-#include <base/error_utils.h>
+#include <base/error_util.h>
 
 namespace Socket {
 

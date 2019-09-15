@@ -24,7 +24,7 @@
 #include <cassert>
 #include <utility>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 #include <log/log.h>
 
 using namespace Base;

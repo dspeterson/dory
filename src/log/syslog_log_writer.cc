@@ -27,7 +27,7 @@
 #include <execinfo.h>
 #include <syslog.h>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 
 using namespace Base;
 using namespace Log;
@@ -81,7 +81,7 @@ void TSyslogLogWriter::WriteStackTrace(TPri pri, void *const *buffer,
     size_t size) const noexcept {
   assert(this);
 
-  if (Enabled && Log::IsEnabled(pri)) {
+  if (Enabled) {
     TBacktraceSymbols symbols(buffer, size);
 
     for (size_t i = 0; i < symbols.Size(); ++i) {

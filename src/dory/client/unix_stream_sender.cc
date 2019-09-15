@@ -28,7 +28,7 @@
 #include <sys/types.h>
 #include <sys/un.h>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 #include <dory/client/path_too_long.h>
 
 using namespace Base;

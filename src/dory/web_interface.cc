@@ -25,7 +25,7 @@
 #include <sstream>
 #include <vector>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 #include <base/no_default_case.h>
 #include <dory/web_request_handler.h>
 #include <log/log.h>

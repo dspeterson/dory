@@ -24,7 +24,7 @@
 #include <cassert>
 #include <stdexcept>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 #include <dory/client/path_too_long.h>
 
 using namespace Base;

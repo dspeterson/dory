@@ -41,7 +41,7 @@
 #include <base/basename.h>
 #include <base/fd.h>
 #include <base/indent.h>
-#include <base/io_utils.h>
+#include <base/io_util.h>
 #include <base/no_copy_semantics.h>
 #include <dory/build_id.h>
 #include <dory/util/arg_parse_error.h>

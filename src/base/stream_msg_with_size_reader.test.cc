@@ -28,7 +28,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 #include <base/field_access.h>
 
 #include <gtest/gtest.h>

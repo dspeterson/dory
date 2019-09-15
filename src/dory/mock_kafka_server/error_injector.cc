@@ -23,7 +23,7 @@
 
 #include <iostream>
 
-#include <base/io_utils.h>
+#include <base/io_util.h>
 #include <dory/mock_kafka_server/cmd.h>
 #include <dory/mock_kafka_server/serialize_cmd.h>
 #include <dory/util/connect_to_host.h>

@@ -1,4 +1,4 @@
-/* <base/error_utils.test.cc>
+/* <base/error_util.test.cc>
  
    ----------------------------------------------------------------------------
    Copyright 2010-2013 if(we)
@@ -16,10 +16,10 @@
    limitations under the License.
    ----------------------------------------------------------------------------
  
-   Unit test for <base/error_utils.h>.
+   Unit test for <base/error_util.h>.
  */
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
   
 #include <condition_variable>
 #include <mutex>

@@ -22,7 +22,7 @@
 #include <cassert>
 #include <cerrno>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 #include <dory/util/connect_to_host.h>
 #include <socket/db/cursor.h>
 

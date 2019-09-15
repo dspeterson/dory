@@ -25,7 +25,7 @@
 #include <cstdlib>
 #include <new>
 
-#include <base/error_utils.h>
+#include <base/error_util.h>
 #include <base/zero.h>
 
 using namespace std;

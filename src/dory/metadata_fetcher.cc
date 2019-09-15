@@ -27,7 +27,7 @@
 
 #include <poll.h>
 
-#include <base/io_utils.h>
+#include <base/io_util.h>
 #include <base/no_default_case.h>
 #include <base/time_util.h>
 #include <dory/kafka_proto/request_response.h>
