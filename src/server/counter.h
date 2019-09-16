@@ -27,8 +27,8 @@
 
 #include <base/code_location.h>
 #include <base/no_copy_semantics.h>
-#include <server/blocking_asset.h>
-#include <server/shared_lock.h>
+#include <base/blocking_asset.h>
+#include <base/shared_lock.h>
 
 /* A macro to simplify declaring counters. */
 #define SERVER_COUNTER(name) static ::Server::TCounter name(HERE, #name);
@@ -126,7 +126,7 @@ namespace Server {
        but will be reflected in the next frozen value. */
     void Increment(uint32_t delta = 1) {
       assert(this);
-      TSharedLock<TBlockingAsset> lock(Asset);
+      Base::TSharedLock<Base::TBlockingAsset> lock(Asset);
       __sync_add_and_fetch(&UnsampledCount, delta);
     }
 
@@ -184,7 +184,7 @@ namespace Server {
        asset is acquired exclusively, temporarily blocking all increments while
        the frozen values are copied.  This allows us to get a consistent
        snapshot of all counters at a single moment in time. */
-    static TBlockingAsset Asset;
+    static Base::TBlockingAsset Asset;
 
     /* See accessor. */
     static TCounter *FirstCounter;

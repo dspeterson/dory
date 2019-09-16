@@ -1,4 +1,4 @@
-/* <server/exclusive_lock.h>
+/* <base/shared_lock.h>
 
    ----------------------------------------------------------------------------
    Copyright 2010-2013 if(we)
@@ -16,7 +16,7 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   An RAII object for holding a exclusive lock on an asset.
+   An RAII object for holding a shared lock on an asset.
  */
 
 #pragma once
@@ -25,30 +25,30 @@
 
 #include <base/no_copy_semantics.h>
 
-namespace Server {
+namespace Base {
 
-  /* An RAII object for holding a exclusive lock on an asset. */
+  /* An RAII object for holding a shared lock on an asset. */
   template <typename TAsset>
-  class TExclusiveLock {
-    NO_COPY_SEMANTICS(TExclusiveLock);
+  class TSharedLock {
+    NO_COPY_SEMANTICS(TSharedLock);
 
     public:
     /* Will not return until the lock is granted. */
-    TExclusiveLock(const TAsset &asset)
+    TSharedLock(const TAsset &asset)
         : Asset(asset) {
       assert(&asset);
-      asset.AcquireExclusive();
+      asset.AcquireShared();
     }
 
     /* Releases the lock. */
-    ~TExclusiveLock() {
+    ~TSharedLock() {
       assert(this);
-      Asset.ReleaseExclusive();
+      Asset.ReleaseShared();
     }
 
     private:
     /* The asset we're locking. */
     const TAsset &Asset;
-  };  // TExclusiveLock
+  };  // TSharedLock
 
-}  // Server
+}  // Base

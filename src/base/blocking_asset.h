@@ -1,4 +1,4 @@
-/* <server/blocking_asset.h>
+/* <base/blocking_asset.h>
 
    ----------------------------------------------------------------------------
    Copyright 2010-2013 if(we)
@@ -28,7 +28,7 @@
 #include <base/no_copy_semantics.h>
 #include <base/os_error.h>
 
-namespace Server {
+namespace Base {
 
   /* A non-reentrant target for read-write synchronization. */
   class TBlockingAsset {
@@ -74,4 +74,4 @@ namespace Server {
     mutable pthread_rwlock_t RwLock;
   };  // TBlockingAsset
 
-}  // Server
+}  // Base

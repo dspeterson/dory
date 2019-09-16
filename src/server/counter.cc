@@ -21,7 +21,7 @@
 
 #include <server/counter.h>
 
-#include <server/exclusive_lock.h>
+#include <base/exclusive_lock.h>
 
 using namespace Base;
 using namespace Server;
