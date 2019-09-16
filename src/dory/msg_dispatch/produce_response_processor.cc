@@ -34,21 +34,21 @@ using namespace Dory::MsgDispatch;
 using namespace Dory::Util;
 using namespace Log;
 
-SERVER_COUNTER(ConnectorGotDiscardAck);
-SERVER_COUNTER(ConnectorGotDiscardAndPauseAck);
-SERVER_COUNTER(ConnectorGotOkProduceResponse);
-SERVER_COUNTER(ConnectorGotPauseAck);
-SERVER_COUNTER(ConnectorGotResendAck);
-SERVER_COUNTER(ConnectorGotSuccessfulAck);
-SERVER_COUNTER(ConnectorQueueImmediateResendMsgSet);
-SERVER_COUNTER(ConnectorQueueNoAckMsgs);
-SERVER_COUNTER(ConnectorQueuePauseAndResendMsgSet);
-SERVER_COUNTER(CorrelationIdMismatch);
-SERVER_COUNTER(DiscardOnFailedDeliveryAttemptLimit);
-SERVER_COUNTER(ProduceResponseShortPartitionList);
-SERVER_COUNTER(ProduceResponseShortTopicList);
-SERVER_COUNTER(ProduceResponseUnexpectedPartition);
-SERVER_COUNTER(ProduceResponseUnexpectedTopic);
+DEFINE_COUNTER(ConnectorGotDiscardAck);
+DEFINE_COUNTER(ConnectorGotDiscardAndPauseAck);
+DEFINE_COUNTER(ConnectorGotOkProduceResponse);
+DEFINE_COUNTER(ConnectorGotPauseAck);
+DEFINE_COUNTER(ConnectorGotResendAck);
+DEFINE_COUNTER(ConnectorGotSuccessfulAck);
+DEFINE_COUNTER(ConnectorQueueImmediateResendMsgSet);
+DEFINE_COUNTER(ConnectorQueueNoAckMsgs);
+DEFINE_COUNTER(ConnectorQueuePauseAndResendMsgSet);
+DEFINE_COUNTER(CorrelationIdMismatch);
+DEFINE_COUNTER(DiscardOnFailedDeliveryAttemptLimit);
+DEFINE_COUNTER(ProduceResponseShortPartitionList);
+DEFINE_COUNTER(ProduceResponseShortTopicList);
+DEFINE_COUNTER(ProduceResponseUnexpectedPartition);
+DEFINE_COUNTER(ProduceResponseUnexpectedTopic);
 
 TProduceResponseProcessor::TAction
 TProduceResponseProcessor::ProcessResponse(TProduceRequest &request,

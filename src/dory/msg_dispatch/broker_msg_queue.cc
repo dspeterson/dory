@@ -29,13 +29,13 @@ using namespace Dory;
 using namespace Dory::Batch;
 using namespace Dory::MsgDispatch;
 
-SERVER_COUNTER(BrokerMsgQueueNotify);
-SERVER_COUNTER(BrokerMsgQueueSkipNotify);
-SERVER_COUNTER(CombinedTopicsBatchAnyPartition);
-SERVER_COUNTER(CombinedTopicsBatchPartitionKey);
-SERVER_COUNTER(NoBatchAnyPartition);
-SERVER_COUNTER(NoBatchPartitionKey);
-SERVER_COUNTER(PerTopicBatchPartitionKey);
+DEFINE_COUNTER(BrokerMsgQueueNotify);
+DEFINE_COUNTER(BrokerMsgQueueSkipNotify);
+DEFINE_COUNTER(CombinedTopicsBatchAnyPartition);
+DEFINE_COUNTER(CombinedTopicsBatchPartitionKey);
+DEFINE_COUNTER(NoBatchAnyPartition);
+DEFINE_COUNTER(NoBatchPartitionKey);
+DEFINE_COUNTER(PerTopicBatchPartitionKey);
 
 static TOpt<TMsg::TTimestamp>
 min_opt_ts(const TOpt<TMsg::TTimestamp> &t1,

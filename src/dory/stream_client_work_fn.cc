@@ -43,24 +43,24 @@ using namespace Dory::Util;
 using namespace Log;
 using namespace Thread;
 
-SERVER_COUNTER(NewTcpClient);
-SERVER_COUNTER(NewUnixClient);
-SERVER_COUNTER(TcpInputCleanDisconnect);
-SERVER_COUNTER(TcpInputForwardMsg);
-SERVER_COUNTER(TcpInputInvalidSizeField);
-SERVER_COUNTER(TcpInputMsgBodyTooLarge);
-SERVER_COUNTER(TcpInputSocketError);
-SERVER_COUNTER(TcpInputSocketGotData);
-SERVER_COUNTER(TcpInputSocketRead);
-SERVER_COUNTER(TcpInputUncleanDisconnect);
-SERVER_COUNTER(UnixStreamInputCleanDisconnect);
-SERVER_COUNTER(UnixStreamInputForwardMsg);
-SERVER_COUNTER(UnixStreamInputInvalidSizeField);
-SERVER_COUNTER(UnixStreamInputMsgBodyTooLarge);
-SERVER_COUNTER(UnixStreamInputSocketError);
-SERVER_COUNTER(UnixStreamInputSocketGotData);
-SERVER_COUNTER(UnixStreamInputSocketRead);
-SERVER_COUNTER(UnixStreamInputUncleanDisconnect);
+DEFINE_COUNTER(NewTcpClient);
+DEFINE_COUNTER(NewUnixClient);
+DEFINE_COUNTER(TcpInputCleanDisconnect);
+DEFINE_COUNTER(TcpInputForwardMsg);
+DEFINE_COUNTER(TcpInputInvalidSizeField);
+DEFINE_COUNTER(TcpInputMsgBodyTooLarge);
+DEFINE_COUNTER(TcpInputSocketError);
+DEFINE_COUNTER(TcpInputSocketGotData);
+DEFINE_COUNTER(TcpInputSocketRead);
+DEFINE_COUNTER(TcpInputUncleanDisconnect);
+DEFINE_COUNTER(UnixStreamInputCleanDisconnect);
+DEFINE_COUNTER(UnixStreamInputForwardMsg);
+DEFINE_COUNTER(UnixStreamInputInvalidSizeField);
+DEFINE_COUNTER(UnixStreamInputMsgBodyTooLarge);
+DEFINE_COUNTER(UnixStreamInputSocketError);
+DEFINE_COUNTER(UnixStreamInputSocketGotData);
+DEFINE_COUNTER(UnixStreamInputSocketRead);
+DEFINE_COUNTER(UnixStreamInputUncleanDisconnect);
 
 TStreamClientWorkFn &TStreamClientWorkFn::TStreamClientWorkFn::operator=(
     nullptr_t) noexcept {

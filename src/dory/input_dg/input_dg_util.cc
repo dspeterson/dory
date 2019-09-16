@@ -39,7 +39,7 @@ using namespace Dory::InputDg::AnyPartition;
 using namespace Dory::InputDg::PartitionKey;
 using namespace Log;
 
-SERVER_COUNTER(InputAgentDiscardMsgUnsupportedApiKey);
+DEFINE_COUNTER(InputAgentDiscardMsgUnsupportedApiKey);
 
 TMsg::TPtr Dory::InputDg::BuildMsgFromDg(const void *dg, size_t dg_size,
     const TConfig &config, Capped::TPool &pool,

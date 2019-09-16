@@ -32,8 +32,8 @@ using namespace Dory::InputDg;
 using namespace Dory::InputDg::AnyPartition;
 using namespace Log;
 
-SERVER_COUNTER(InputAgentDiscardAnyPartitionMsgUnsupportedApiVersion);
-SERVER_COUNTER(InputAgentProcessAnyPartitionMsg);
+DEFINE_COUNTER(InputAgentDiscardAnyPartitionMsgUnsupportedApiVersion);
+DEFINE_COUNTER(InputAgentProcessAnyPartitionMsg);
 
 TMsg::TPtr Dory::InputDg::AnyPartition::BuildAnyPartitionMsgFromDg(
     const uint8_t *dg_bytes, size_t dg_size, int16_t api_version,

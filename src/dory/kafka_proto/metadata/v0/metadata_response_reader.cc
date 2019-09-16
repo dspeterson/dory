@@ -30,29 +30,29 @@
 using namespace Dory;
 using namespace Dory::KafkaProto::Metadata::V0;
 
-SERVER_COUNTER(MetadataResponseBadBrokerHostLen);
-SERVER_COUNTER(MetadataResponseBadBrokerPort);
-SERVER_COUNTER(MetadataResponseBadTopicNameLen);
-SERVER_COUNTER(MetadataResponseIncomplete1);
-SERVER_COUNTER(MetadataResponseIncomplete2);
-SERVER_COUNTER(MetadataResponseIncomplete3);
-SERVER_COUNTER(MetadataResponseIncomplete4);
-SERVER_COUNTER(MetadataResponseIncomplete5);
-SERVER_COUNTER(MetadataResponseIncomplete6);
-SERVER_COUNTER(MetadataResponseIncomplete7);
-SERVER_COUNTER(MetadataResponseIncomplete8);
-SERVER_COUNTER(MetadataResponseIncomplete9);
-SERVER_COUNTER(MetadataResponseIncomplete10);
-SERVER_COUNTER(MetadataResponseInvalidLeaderNodeId);
-SERVER_COUNTER(MetadataResponseNegativeBrokerCount);
-SERVER_COUNTER(MetadataResponseNegativeBrokerNodeId);
-SERVER_COUNTER(MetadataResponseNegativeCaughtUpReplicaNodeId);
-SERVER_COUNTER(MetadataResponseNegativePartitionCaughtUpReplicaCount);
-SERVER_COUNTER(MetadataResponseNegativePartitionCount);
-SERVER_COUNTER(MetadataResponseNegativePartitionId);
-SERVER_COUNTER(MetadataResponseNegativePartitionReplicaCount);
-SERVER_COUNTER(MetadataResponseNegativeReplicaNodeId);
-SERVER_COUNTER(MetadataResponseNegativeTopicCount);
+DEFINE_COUNTER(MetadataResponseBadBrokerHostLen);
+DEFINE_COUNTER(MetadataResponseBadBrokerPort);
+DEFINE_COUNTER(MetadataResponseBadTopicNameLen);
+DEFINE_COUNTER(MetadataResponseIncomplete1);
+DEFINE_COUNTER(MetadataResponseIncomplete2);
+DEFINE_COUNTER(MetadataResponseIncomplete3);
+DEFINE_COUNTER(MetadataResponseIncomplete4);
+DEFINE_COUNTER(MetadataResponseIncomplete5);
+DEFINE_COUNTER(MetadataResponseIncomplete6);
+DEFINE_COUNTER(MetadataResponseIncomplete7);
+DEFINE_COUNTER(MetadataResponseIncomplete8);
+DEFINE_COUNTER(MetadataResponseIncomplete9);
+DEFINE_COUNTER(MetadataResponseIncomplete10);
+DEFINE_COUNTER(MetadataResponseInvalidLeaderNodeId);
+DEFINE_COUNTER(MetadataResponseNegativeBrokerCount);
+DEFINE_COUNTER(MetadataResponseNegativeBrokerNodeId);
+DEFINE_COUNTER(MetadataResponseNegativeCaughtUpReplicaNodeId);
+DEFINE_COUNTER(MetadataResponseNegativePartitionCaughtUpReplicaCount);
+DEFINE_COUNTER(MetadataResponseNegativePartitionCount);
+DEFINE_COUNTER(MetadataResponseNegativePartitionId);
+DEFINE_COUNTER(MetadataResponseNegativePartitionReplicaCount);
+DEFINE_COUNTER(MetadataResponseNegativeReplicaNodeId);
+DEFINE_COUNTER(MetadataResponseNegativeTopicCount);
 
 TMetadataResponseReader::TMetadataResponseReader(const void *buf,
     size_t buf_size)

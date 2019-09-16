@@ -44,7 +44,7 @@ using namespace Log;
 using namespace Socket;
 using namespace Thread;
 
-SERVER_COUNTER(UnixDgInputAgentForwardMsg);
+DEFINE_COUNTER(UnixDgInputAgentForwardMsg);
 
 TUnixDgInputAgent::TUnixDgInputAgent(const TConfig &config, TPool &pool,
     TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,

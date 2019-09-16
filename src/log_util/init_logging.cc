@@ -42,9 +42,9 @@ using namespace Base;
 using namespace Log;
 using namespace LogUtil;
 
-SERVER_COUNTER(LogPrefixWriteFailed);
-SERVER_COUNTER(LogToFileFailed);
-SERVER_COUNTER(LogToStdoutStderrFailed);
+DEFINE_COUNTER(LogPrefixWriteFailed);
+DEFINE_COUNTER(LogToFileFailed);
+DEFINE_COUNTER(LogToStdoutStderrFailed);
 
 static const char *GetProgName(const char *prog_name = nullptr) {
   static const std::string name = (prog_name == nullptr) ? "" : prog_name;

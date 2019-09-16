@@ -35,8 +35,8 @@ using namespace Dory;
 using namespace Dory::InputDg;
 using namespace Log;
 
-SERVER_COUNTER(InputAgentDiscardMsgMalformed);
-SERVER_COUNTER(InputAgentDiscardMsgNoMem);
+DEFINE_COUNTER(InputAgentDiscardMsgMalformed);
+DEFINE_COUNTER(InputAgentDiscardMsgNoMem);
 
 void Dory::InputDg::DiscardMalformedMsg(const uint8_t *msg_begin,
     size_t msg_size, TAnomalyTracker &anomaly_tracker, bool no_log_discard) {

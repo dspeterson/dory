@@ -33,12 +33,12 @@ using namespace Base;
 using namespace Dory;
 using namespace Log;
 
-SERVER_COUNTER(MetadataDuplicateBrokerId);
-SERVER_COUNTER(MetadataDuplicatePartition);
-SERVER_COUNTER(MetadataDuplicateTopic);
-SERVER_COUNTER(MetadataPartitionHasUnknownBroker);
-SERVER_COUNTER(MetadataSanityCheckFail);
-SERVER_COUNTER(MetadataSanityCheckSuccess);
+DEFINE_COUNTER(MetadataDuplicateBrokerId);
+DEFINE_COUNTER(MetadataDuplicatePartition);
+DEFINE_COUNTER(MetadataDuplicateTopic);
+DEFINE_COUNTER(MetadataPartitionHasUnknownBroker);
+DEFINE_COUNTER(MetadataSanityCheckFail);
+DEFINE_COUNTER(MetadataSanityCheckSuccess);
 
 bool TMetadata::TBroker::operator==(const TBroker &that) const {
   assert(this);

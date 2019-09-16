@@ -30,14 +30,14 @@ using namespace Dory;
 using namespace Dory::KafkaProto;
 using namespace Dory::KafkaProto::Produce::V0;
 
-SERVER_COUNTER(ProduceResponseBadPartitionCount);
-SERVER_COUNTER(ProduceResponseBadTopicCount);
-SERVER_COUNTER(ProduceResponseBadTopicNameLength);
-SERVER_COUNTER(ProduceResponseTruncated1);
-SERVER_COUNTER(ProduceResponseTruncated2);
-SERVER_COUNTER(ProduceResponseTruncated3);
-SERVER_COUNTER(ProduceResponseTruncated4);
-SERVER_COUNTER(ProduceResponseTruncated5);
+DEFINE_COUNTER(ProduceResponseBadPartitionCount);
+DEFINE_COUNTER(ProduceResponseBadTopicCount);
+DEFINE_COUNTER(ProduceResponseBadTopicNameLength);
+DEFINE_COUNTER(ProduceResponseTruncated1);
+DEFINE_COUNTER(ProduceResponseTruncated2);
+DEFINE_COUNTER(ProduceResponseTruncated3);
+DEFINE_COUNTER(ProduceResponseTruncated4);
+DEFINE_COUNTER(ProduceResponseTruncated5);
 
 TProduceResponseReader::TProduceResponseReader() {
   Clear();

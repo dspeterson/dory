@@ -37,16 +37,16 @@ using namespace Dory;
 using namespace Log;
 using namespace Server;
 
-SERVER_COUNTER(MongooseEventLog);
-SERVER_COUNTER(MongooseGetServerInfoRequest);
-SERVER_COUNTER(MongooseGetCountersRequest);
-SERVER_COUNTER(MongooseGetDiscardsRequest);
-SERVER_COUNTER(MongooseGetMetadataFetchTimeRequest);
-SERVER_COUNTER(MongooseGetQueueStatsRequest);
-SERVER_COUNTER(MongooseHttpRequest);
-SERVER_COUNTER(MongooseStdException);
-SERVER_COUNTER(MongooseUnknownException);
-SERVER_COUNTER(MongooseUrlDecodeError);
+DEFINE_COUNTER(MongooseEventLog);
+DEFINE_COUNTER(MongooseGetServerInfoRequest);
+DEFINE_COUNTER(MongooseGetCountersRequest);
+DEFINE_COUNTER(MongooseGetDiscardsRequest);
+DEFINE_COUNTER(MongooseGetMetadataFetchTimeRequest);
+DEFINE_COUNTER(MongooseGetQueueStatsRequest);
+DEFINE_COUNTER(MongooseHttpRequest);
+DEFINE_COUNTER(MongooseStdException);
+DEFINE_COUNTER(MongooseUnknownException);
+DEFINE_COUNTER(MongooseUrlDecodeError);
 
 const char *TWebInterface::ToErrorBlurb(TRequestType request_type) {
   switch (request_type) {

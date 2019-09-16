@@ -36,7 +36,7 @@ using namespace Capped;
 using namespace Dory;
 using namespace Log;
 
-SERVER_COUNTER(NoDiscardQuery);
+DEFINE_COUNTER(NoDiscardQuery);
 
 /* 's' is the most recently seen item in 'lru_list' (maintained in LRU order).
    Update 'lru_list' accordingly, deleting the least recently seen item as

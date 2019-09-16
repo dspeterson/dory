@@ -45,19 +45,19 @@ using namespace Dory::KafkaProto::Metadata;
 using namespace Dory::Util;
 using namespace Log;
 
-SERVER_COUNTER(BadMetadataResponse);
-SERVER_COUNTER(BadMetadataResponseSize);
-SERVER_COUNTER(MetadataHasEmptyBrokerList);
-SERVER_COUNTER(MetadataHasEmptyTopicList);
-SERVER_COUNTER(MetadataResponseReadLostTcpConnection);
-SERVER_COUNTER(MetadataResponseReadSuccess);
-SERVER_COUNTER(MetadataResponseReadTimeout);
-SERVER_COUNTER(SendMetadataRequestFail);
-SERVER_COUNTER(SendMetadataRequestLostTcpConnection);
-SERVER_COUNTER(SendMetadataRequestSuccess);
-SERVER_COUNTER(SendMetadataRequestUnexpectedEnd);
-SERVER_COUNTER(ShortMetadataResponse);
-SERVER_COUNTER(StartSendMetadataRequest);
+DEFINE_COUNTER(BadMetadataResponse);
+DEFINE_COUNTER(BadMetadataResponseSize);
+DEFINE_COUNTER(MetadataHasEmptyBrokerList);
+DEFINE_COUNTER(MetadataHasEmptyTopicList);
+DEFINE_COUNTER(MetadataResponseReadLostTcpConnection);
+DEFINE_COUNTER(MetadataResponseReadSuccess);
+DEFINE_COUNTER(MetadataResponseReadTimeout);
+DEFINE_COUNTER(SendMetadataRequestFail);
+DEFINE_COUNTER(SendMetadataRequestLostTcpConnection);
+DEFINE_COUNTER(SendMetadataRequestSuccess);
+DEFINE_COUNTER(SendMetadataRequestUnexpectedEnd);
+DEFINE_COUNTER(ShortMetadataResponse);
+DEFINE_COUNTER(StartSendMetadataRequest);
 
 static std::vector<uint8_t>
 CreateMetadataRequest(const TMetadataProtocol &metadata_protocol) {

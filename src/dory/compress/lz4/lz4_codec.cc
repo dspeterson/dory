@@ -40,8 +40,8 @@ using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::Compress::Lz4;
 
-SERVER_COUNTER(Lz4CompressSuccess);
-SERVER_COUNTER(Lz4Error);
+DEFINE_COUNTER(Lz4CompressSuccess);
+DEFINE_COUNTER(Lz4Error);
 
 static size_t CheckLz4Status(size_t status, const char *lz4_function_name) {
   assert(lz4_function_name);

@@ -72,9 +72,9 @@ using namespace Signal;
 using namespace Socket;
 using namespace Thread;
 
-SERVER_COUNTER(GotShutdownSignal);
-SERVER_COUNTER(StreamClientWorkerStdException);
-SERVER_COUNTER(StreamClientWorkerUnknownException);
+DEFINE_COUNTER(GotShutdownSignal);
+DEFINE_COUNTER(StreamClientWorkerStdException);
+DEFINE_COUNTER(StreamClientWorkerUnknownException);
 
 static void LoadCompressionLibraries(const TCompressionConf &conf) {
   std::set<TCompressionType> in_use;

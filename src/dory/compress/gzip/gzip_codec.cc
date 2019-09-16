@@ -41,16 +41,16 @@ using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::Compress::Gzip;
 
-SERVER_COUNTER(ZlibBufError);
-SERVER_COUNTER(ZlibCompressSuccess);
-SERVER_COUNTER(ZlibDataError);
-SERVER_COUNTER(ZlibDecompressOutOfSpace);
-SERVER_COUNTER(ZlibNeedDictError);
-SERVER_COUNTER(ZlibNotAtEndAfterCompress);
-SERVER_COUNTER(ZlibOverflowComputingCompressBufSize);
-SERVER_COUNTER(ZlibStreamError);
-SERVER_COUNTER(ZlibUnknownError);
-SERVER_COUNTER(ZlibVersionError);
+DEFINE_COUNTER(ZlibBufError);
+DEFINE_COUNTER(ZlibCompressSuccess);
+DEFINE_COUNTER(ZlibDataError);
+DEFINE_COUNTER(ZlibDecompressOutOfSpace);
+DEFINE_COUNTER(ZlibNeedDictError);
+DEFINE_COUNTER(ZlibNotAtEndAfterCompress);
+DEFINE_COUNTER(ZlibOverflowComputingCompressBufSize);
+DEFINE_COUNTER(ZlibStreamError);
+DEFINE_COUNTER(ZlibUnknownError);
+DEFINE_COUNTER(ZlibVersionError);
 
 static void ThrowZlibError(const z_stream &strm,
     const char *zlib_function_name, const char *blurb) {

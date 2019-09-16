@@ -32,8 +32,8 @@ using namespace Dory::InputDg;
 using namespace Dory::InputDg::PartitionKey;
 using namespace Log;
 
-SERVER_COUNTER(InputAgentDiscardPartitionKeyMsgUnsupportedApiVersion);
-SERVER_COUNTER(InputAgentProcessPartitionKeyMsg);
+DEFINE_COUNTER(InputAgentDiscardPartitionKeyMsgUnsupportedApiVersion);
+DEFINE_COUNTER(InputAgentProcessPartitionKeyMsg);
 
 TMsg::TPtr Dory::InputDg::PartitionKey::BuildPartitionKeyMsgFromDg(
     const uint8_t *dg_bytes, size_t dg_size, int16_t api_version,

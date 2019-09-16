@@ -32,9 +32,9 @@ using namespace Capped;
 using namespace Dory;
 using namespace Log;
 
-SERVER_COUNTER(MsgCreate);
-SERVER_COUNTER(MsgDestroy);
-SERVER_COUNTER(MsgUnprocessedDestroy);
+DEFINE_COUNTER(MsgCreate);
+DEFINE_COUNTER(MsgDestroy);
+DEFINE_COUNTER(MsgUnprocessedDestroy);
 
 /* Create a key and value for a message.  Used by constructor. */
 static TBlob MakeKeyAndValue(const void *key, size_t key_size,

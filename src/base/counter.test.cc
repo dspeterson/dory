@@ -42,8 +42,8 @@ using namespace Base;
 
 namespace {
 
-  SERVER_COUNTER(Connections);
-  SERVER_COUNTER(Requests);
+  DEFINE_COUNTER(Connections);
+  DEFINE_COUNTER(Requests);
 
   const size_t BufSize = 1024;
 

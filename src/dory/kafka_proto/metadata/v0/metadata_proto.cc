@@ -39,10 +39,10 @@ using namespace Dory::KafkaProto::Metadata;
 using namespace Dory::KafkaProto::Metadata::V0;
 using namespace Log;
 
-SERVER_COUNTER(TopicAutocreateGotErrorResponse);
-SERVER_COUNTER(TopicAutocreateNoTopicInResponse);
-SERVER_COUNTER(TopicAutocreateSuccess);
-SERVER_COUNTER(TopicAutocreateUnexpectedTopicInResponse);
+DEFINE_COUNTER(TopicAutocreateGotErrorResponse);
+DEFINE_COUNTER(TopicAutocreateNoTopicInResponse);
+DEFINE_COUNTER(TopicAutocreateSuccess);
+DEFINE_COUNTER(TopicAutocreateUnexpectedTopicInResponse);
 
 void TMetadataProto::WriteAllTopicsMetadataRequest(
     std::vector<uint8_t> &result, int32_t correlation_id) const {

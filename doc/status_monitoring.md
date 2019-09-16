@@ -59,9 +59,9 @@ instance, near the top of [src/dory/msg.cc](../src/dory/msg.cc) you will see
 the following definitions:
 
 ```C++
-SERVER_COUNTER(MsgCreate);
-SERVER_COUNTER(MsgDestroy);
-SERVER_COUNTER(MsgUnprocessedDestroy);
+DEFINE_COUNTER(MsgCreate);
+DEFINE_COUNTER(MsgDestroy);
+DEFINE_COUNTER(MsgUnprocessedDestroy);
 ```
 
 These create the counters of the same names shown above.  Then you can look for

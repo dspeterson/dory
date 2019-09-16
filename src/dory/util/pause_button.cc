@@ -26,7 +26,7 @@
 using namespace Dory;
 using namespace Dory::Util;
 
-SERVER_COUNTER(PauseStarted);
+DEFINE_COUNTER(PauseStarted);
 
 void TPauseButton::Push() {
   assert(this);

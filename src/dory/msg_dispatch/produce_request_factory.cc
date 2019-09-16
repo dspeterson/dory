@@ -38,18 +38,18 @@ using namespace Dory::MsgDispatch;
 using namespace Dory::Util;
 using namespace Log;
 
-SERVER_COUNTER(BugAllTopicsEmpty);
-SERVER_COUNTER(BugMsgListMultipleTopics);
-SERVER_COUNTER(BugMsgSetEmpty);
-SERVER_COUNTER(BugMultiPartitionGroupEmpty);
-SERVER_COUNTER(MsgSetCompressionError);
-SERVER_COUNTER(MsgSetCompressionNo);
-SERVER_COUNTER(MsgSetCompressionYes);
-SERVER_COUNTER(MsgSetNotCompressible);
-SERVER_COUNTER(SerializeMsg);
-SERVER_COUNTER(SerializeMsgSet);
-SERVER_COUNTER(SerializeProduceRequest);
-SERVER_COUNTER(SerializeTopicGroup);
+DEFINE_COUNTER(BugAllTopicsEmpty);
+DEFINE_COUNTER(BugMsgListMultipleTopics);
+DEFINE_COUNTER(BugMsgSetEmpty);
+DEFINE_COUNTER(BugMultiPartitionGroupEmpty);
+DEFINE_COUNTER(MsgSetCompressionError);
+DEFINE_COUNTER(MsgSetCompressionNo);
+DEFINE_COUNTER(MsgSetCompressionYes);
+DEFINE_COUNTER(MsgSetNotCompressible);
+DEFINE_COUNTER(SerializeMsg);
+DEFINE_COUNTER(SerializeMsgSet);
+DEFINE_COUNTER(SerializeProduceRequest);
+DEFINE_COUNTER(SerializeTopicGroup);
 
 TProduceRequestFactory::TProduceRequestFactory(const TConfig &config,
     const TGlobalBatchConfig &batch_config,

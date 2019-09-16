@@ -36,10 +36,10 @@ using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::Compress::Snappy;
 
-SERVER_COUNTER(SnappyBufferTooSmallError);
-SERVER_COUNTER(SnappyCompressSuccess);
-SERVER_COUNTER(SnappyInvalidInputError);
-SERVER_COUNTER(SnappyUnknownError);
+DEFINE_COUNTER(SnappyBufferTooSmallError);
+DEFINE_COUNTER(SnappyCompressSuccess);
+DEFINE_COUNTER(SnappyInvalidInputError);
+DEFINE_COUNTER(SnappyUnknownError);
 
 static void CheckSnappyStatus(snappy_status status,
     const char *snappy_function_name) {

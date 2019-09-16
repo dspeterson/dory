@@ -31,7 +31,7 @@
 #include <base/shared_lock.h>
 
 /* A macro to simplify declaring counters. */
-#define SERVER_COUNTER(name) static ::Base::TCounter name(HERE, #name);
+#define DEFINE_COUNTER(name) static ::Base::TCounter name(HERE, #name);
 
 namespace Base {
 
@@ -57,7 +57,7 @@ namespace Base {
 
      You may also use the COUNTER() macro to simplify the above declaration:
 
-        SERVER_COUNTER(Connections);
+        DEFINE_COUNTER(Connections);
 
      When you want to query your counters, you must first call Sample().  This
      will copy all of the counters' values, adding them to the sampled values.

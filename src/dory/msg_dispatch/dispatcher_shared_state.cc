@@ -34,7 +34,7 @@ using namespace Dory::KafkaProto;
 using namespace Dory::MsgDispatch;
 using namespace Log;
 
-SERVER_COUNTER(AllDispatcherThreadsFinished);
+DEFINE_COUNTER(AllDispatcherThreadsFinished);
 
 TDispatcherSharedState::TDispatcherSharedState(const TConfig &config,
      const TCompressionConf &compression_conf,

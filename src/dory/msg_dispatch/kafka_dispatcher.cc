@@ -34,17 +34,17 @@ using namespace Dory::MsgDispatch;
 using namespace Dory::Util;
 using namespace Log;
 
-SERVER_COUNTER(BugDispatchBatchOutOfRangeIndex);
-SERVER_COUNTER(BugDispatchMsgOutOfRangeIndex);
-SERVER_COUNTER(BugGetAckWaitQueueOutOfRangeIndex);
-SERVER_COUNTER(DispatchOneBatch);
-SERVER_COUNTER(DispatchOneMsg);
-SERVER_COUNTER(FinishDispatcherJoinAll);
-SERVER_COUNTER(SkipOutOfServiceBroker);
-SERVER_COUNTER(StartDispatcherFastShutdown);
-SERVER_COUNTER(StartDispatcherJoinAll);
-SERVER_COUNTER(StartDispatcherSlowShutdown);
-SERVER_COUNTER(StartKafkaDispatcher);
+DEFINE_COUNTER(BugDispatchBatchOutOfRangeIndex);
+DEFINE_COUNTER(BugDispatchMsgOutOfRangeIndex);
+DEFINE_COUNTER(BugGetAckWaitQueueOutOfRangeIndex);
+DEFINE_COUNTER(DispatchOneBatch);
+DEFINE_COUNTER(DispatchOneMsg);
+DEFINE_COUNTER(FinishDispatcherJoinAll);
+DEFINE_COUNTER(SkipOutOfServiceBroker);
+DEFINE_COUNTER(StartDispatcherFastShutdown);
+DEFINE_COUNTER(StartDispatcherJoinAll);
+DEFINE_COUNTER(StartDispatcherSlowShutdown);
+DEFINE_COUNTER(StartKafkaDispatcher);
 
 TKafkaDispatcher::TKafkaDispatcher(const TConfig &config,
     const TCompressionConf &compression_conf,

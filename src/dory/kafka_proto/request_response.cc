@@ -30,7 +30,7 @@
 using namespace Dory;
 using namespace Dory::KafkaProto;
 
-SERVER_COUNTER(BadKafkaResponseSize);
+DEFINE_COUNTER(BadKafkaResponseSize);
 
 size_t Dory::KafkaProto::GetRequestOrResponseSize(
     const void *data_begin) {
