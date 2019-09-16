@@ -21,39 +21,30 @@
 
 #include <dory/batch/combined_topics_batcher.h>
 
-#include <algorithm>
-#include <memory>
 #include <string>
 
-#include <capped/blob.h>
-#include <capped/pool.h>
-#include <capped/reader.h>
+#include <base/opt.h>
 #include <dory/batch/batch_config.h>
 #include <dory/msg.h>
 #include <dory/msg_creator.h>
 #include <dory/test_util/misc_util.h>
-#include <dory/util/misc_util.h>
-#include <log/pri.h>
+#include <log_util/init_logging.h>
 
 #include <gtest/gtest.h>
 
 using namespace Base;
-using namespace Capped;
 using namespace Dory;
 using namespace Dory::Batch;
 using namespace Dory::TestUtil;
-using namespace Dory::Util;
 using namespace Log;
+using namespace LogUtil;
 
 namespace {
 
   /* The fixture for testing class TCombinedTopicsBatcher. */
   class TCombinedTopicsBatcherTest : public ::testing::Test {
     protected:
-    TCombinedTopicsBatcherTest() {
-      InitLogging("dory", TPri::INFO, false /* log_echo */,
-          "" /* logfile_path */);
-    }
+    TCombinedTopicsBatcherTest() = default;
 
     ~TCombinedTopicsBatcherTest() override = default;
 
@@ -370,6 +361,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
+  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

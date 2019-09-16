@@ -24,13 +24,13 @@
 
 #include <dory/metadata.h>
 #include <dory/util/misc_util.h>
-#include <log/pri.h>
+#include <log_util/init_logging.h>
 
 #include <gtest/gtest.h>
 
 using namespace Dory;
 using namespace Dory::Util;
-using namespace Log;
+using namespace LogUtil;
 
 namespace {
 
@@ -50,10 +50,7 @@ namespace {
   /* The fixture for testing class TMetadata. */
   class TMetadataTest : public ::testing::Test {
     protected:
-    TMetadataTest() {
-      InitLogging("dory", TPri::INFO, false /* log_echo */,
-          "" /* logfile_path */);
-    }
+    TMetadataTest() = default;
 
     ~TMetadataTest() override = default;
 
@@ -283,7 +280,8 @@ namespace {
     index = FindBrokerIndex(brokers, 3);
     ASSERT_GE(index, 0);
     num_choices = 100;
-    choices = md->FindPartitionChoices("topic3", static_cast<size_t>(index), num_choices);
+    choices = md->FindPartitionChoices("topic3", static_cast<size_t>(index),
+        num_choices);
     ASSERT_TRUE(choices != nullptr);
     ASSERT_EQ(num_choices, 2U);
     choice_set.clear();
@@ -592,6 +590,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
+  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

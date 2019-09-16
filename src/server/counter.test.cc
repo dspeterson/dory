@@ -20,20 +20,20 @@
  */
 
 #include <server/counter.h>
-  
+
 #include <cstdio>
 #include <cstring>
 #include <thread>
 #include <unistd.h>
 #include <sys/epoll.h>
-  
+
 #include <base/fd.h>
 #include <base/os_error.h>
 #include <base/zero.h>
 #include <socket/address.h>
-  
+
 #include <gtest/gtest.h>
-  
+
 using namespace std;
 using namespace Base;
 using namespace Server;
@@ -43,9 +43,9 @@ namespace {
 
   SERVER_COUNTER(Connections);
   SERVER_COUNTER(Requests);
-  
+
   const size_t BufSize = 1024;
-  
+
   void ServerMain(int die, int sock, bool &success) {
     try {
       success = true;
@@ -88,7 +88,7 @@ namespace {
       success = false;
     }
   }
-  
+
   static void ClientMain(int id, const TAddress &address,
       uint32_t request_count, bool &success) {
     try {

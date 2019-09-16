@@ -34,9 +34,9 @@
 #include <dory/config.h>
 #include <dory/util/arg_parse_error.h>
 #include <dory/util/handle_xml_errors.h>
-#include <dory/util/misc_util.h>
 #include <dory/util/dory_xml_init.h>
 #include <log/log.h>
+#include <log_util/init_logging.h>
 #include <server/daemonize.h>
 
 using namespace xercesc;
@@ -45,6 +45,7 @@ using namespace Base;
 using namespace Dory;
 using namespace Dory::Util;
 using namespace Log;
+using namespace LogUtil;
 using namespace Xml;
 
 static int DoryMain(int argc, char *argv[]) {
@@ -87,8 +88,9 @@ static int DoryMain(int argc, char *argv[]) {
       }
     }
 
-    InitLogging(argv[0], config.LogLevel, config.LogEcho,
-        "" /* logfile_path */);
+    InitLogging(argv[0], config.LogLevel,
+        config.LogEcho /* enable_stdout_stderr */, true /* enable_syslog */,
+        std::string() /* file_path */);
   } catch (const TArgParseError &x) {
     /* Error parsing command line arguments. */
     std::cerr << x.what() << std::endl;

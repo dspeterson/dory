@@ -53,6 +53,7 @@
 #include <dory/msg_state_tracker.h>
 #include <dory/test_util/mock_kafka_config.h>
 #include <dory/util/misc_util.h>
+#include <log_util/init_logging.h>
 #include <thread/fd_managed_thread.h>
 #include <xml/test/xml_test_initializer.h>
 
@@ -69,6 +70,7 @@ using namespace Dory::KafkaProto::Produce;
 using namespace Dory::MockKafkaServer;
 using namespace Dory::TestUtil;
 using namespace Dory::Util;
+using namespace LogUtil;
 using namespace Thread;
 using namespace Xml;
 using namespace Xml::Test;
@@ -208,9 +210,6 @@ namespace {
     args.push_back("--client_id");
     args.push_back("dory");
     args.push_back("--status_loopback_only");
-    args.push_back("--log_level");
-    args.push_back("LOG_INFO");
-    // args.push_back("--log_echo");
     args.push_back(nullptr);
 
     TOpt<TDoryServer::TServerConfig> dory_config;
@@ -220,9 +219,6 @@ namespace {
       dory_config.MakeKnown(TDoryServer::CreateConfig(
           args.size() - 1, const_cast<char **>(&args[0]),
           large_sendbuf_required, true, true));
-      const Dory::TConfig &config = dory_config->GetCmdLineConfig();
-      InitLogging(args[0], config.LogLevel, config.LogEcho,
-          "" /* logfile_path */);
       Dory.reset(new TDoryServer(std::move(*dory_config)));
       dory_config.Reset();
       Start();
@@ -1810,6 +1806,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
+  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

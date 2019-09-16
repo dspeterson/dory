@@ -27,7 +27,11 @@
 
 namespace Log {
 
-  /* Log fatal error message and stack trace. */
+  /* Log fatal error message and stack trace.  Parameter 'pri' specifies the
+     log level at which the output is logged, which will be passed to syslog()
+     if syslog logging is enabled.  The output is written regardless of what
+     IsEnabled(pri) would return, since a fatal error is always interesting
+     enough to log. */
   void DieHandler(TPri pri, const char *msg, void *const *stack_trace_buffer,
                   size_t stack_trace_size) noexcept;
 

@@ -48,8 +48,7 @@
 #include <dory/msg_state_tracker.h>
 #include <dory/stream_client_handler.h>
 #include <dory/test_util/misc_util.h>
-#include <dory/util/misc_util.h>
-#include <log/pri.h>
+#include <log_util/init_logging.h>
 #include <server/unix_stream_server.h>
 #include <thread/gate.h>
 
@@ -61,8 +60,7 @@ using namespace Dory;
 using namespace Dory::Client;
 using namespace Dory::Debug;
 using namespace Dory::TestUtil;
-using namespace Dory::Util;
-using namespace Log;
+using namespace LogUtil;
 using namespace Server;
 using namespace Thread;
 
@@ -163,8 +161,6 @@ namespace {
     Args.push_back(nullptr);
     Cfg.reset(new TConfig(static_cast<int>(Args.size() - 1),
         const_cast<char **>(&Args[0]), true));
-    InitLogging("dory", TPri::INFO, false /* log_echo */,
-        "" /* logfile_path */);
     OutputQueue.reset(new TGate<TMsg::TPtr>);
     StreamClientWorkerPool.reset(new TWorkerPool(
         [](const char *msg) {
@@ -460,3 +456,9 @@ namespace {
   }
 
 }  // namespace
+
+int main(int argc, char **argv) {
+  InitTestLogging(argv[0], std::string() /* file_path */);
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

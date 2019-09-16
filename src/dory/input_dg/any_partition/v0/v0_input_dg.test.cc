@@ -38,6 +38,7 @@
 #include <dory/msg.h>
 #include <dory/msg_state_tracker.h>
 #include <dory/test_util/misc_util.h>
+#include <log_util/init_logging.h>
 
 #include <gtest/gtest.h>
 
@@ -45,6 +46,7 @@ using namespace Capped;
 using namespace Dory;
 using namespace Dory::InputDg;
 using namespace Dory::TestUtil;
+using namespace LogUtil;
 
 namespace {
 
@@ -123,6 +125,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
+  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

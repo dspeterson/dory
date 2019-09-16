@@ -26,6 +26,7 @@
 #include <string>
 
 #include <dory/kafka_proto/request_response.h>
+#include <log_util/init_logging.h>
 
 #include <gtest/gtest.h>
 
@@ -33,6 +34,7 @@ using namespace Base;
 using namespace Dory;
 using namespace Dory::KafkaProto;
 using namespace Dory::KafkaProto::Metadata::V0;
+using namespace LogUtil;
 
 namespace {
 
@@ -227,6 +229,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
+  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

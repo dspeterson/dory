@@ -28,14 +28,16 @@
 #include <dory/mock_kafka_server/config.h>
 #include <dory/mock_kafka_server/server.h>
 #include <dory/util/arg_parse_error.h>
-#include <dory/util/misc_util.h>
 #include <log/pri.h>
+#include <log_util/init_logging.h>
 
+using namespace Base;
 using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::MockKafkaServer;
 using namespace Dory::Util;
 using namespace Log;
+using namespace LogUtil;
 
 int mock_kafka_server_main(int argc, char **argv) {
   std::unique_ptr<TConfig> cfg;
@@ -48,7 +50,8 @@ int mock_kafka_server_main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
-  InitLogging(argv[0], TPri::DEBUG, cfg->LogEcho, "" /* logfile_path */);
+  InitLogging(argv[0], TPri::DEBUG, cfg->LogEcho /* enable_stdout_stderr */,
+      true /* enable_syslog */, std::string() /* file_path */);
 
   /* Force all supported compression libraries to load.  We want to fail early
      if a library fails to load. */
