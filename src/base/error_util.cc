@@ -25,6 +25,8 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <unistd.h>
+
 using namespace Base;
 
 const char *Base::Strerror(int errno_value, char *buf, size_t buf_size) {
@@ -52,8 +54,15 @@ const char *Base::Strerror(int errno_value, char *buf, size_t buf_size) {
 #endif
 }
 
-static void DefaultDieHandler(const char * /* msg */,
-    void *const * /* stack_trace_buffer */, size_t /* stack_trace_size */) noexcept {
+static void DefaultDieHandler(const char *msg,
+    void *const *stack_trace_buffer, size_t stack_trace_size) noexcept {
+  /* Default behavior is to write 'msg' and stack trace to stderr.  If write()
+     fails here, there is nothing we can do about it. */
+  static const int out_fd = 2;  // stderr
+  write(out_fd, msg, std::strlen(msg));
+  static const char newline = '\n';
+  write(out_fd, &newline, sizeof(newline));
+  backtrace_symbols_fd(stack_trace_buffer, stack_trace_size, out_fd);
 }
 
 static TDieHandler DieHandler = DefaultDieHandler;
