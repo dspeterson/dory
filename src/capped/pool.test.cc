@@ -20,15 +20,18 @@
  */
 
 #include <capped/pool.h>
-  
+
 #include <cstdint>
 #include <memory>
-  
+
+#include <log_util/init_logging.h>
+
 #include <gtest/gtest.h>
-  
+
 using namespace std;
 using namespace Base;
 using namespace Capped;
+using namespace LogUtil;
 
 namespace {
 
@@ -36,27 +39,27 @@ namespace {
   class TPoint {
     public:
     TPoint() = default;
-  
+
     /* Our coordinates.  Default to the origin. */
     int64_t X = 0, Y = 0, Z = 0;
-  
+
     /* Allocate memory from our pool. */
     static void *operator new(size_t) {
       return Pool.Alloc();
     }
-  
+
     /* Return memory to our pool. */
     static void operator delete(void *ptr, size_t) {
       Pool.Free(ptr);
     }
-  
+
     /* The storage pool for points. */
     static TPool Pool;
   };  // TPoint
 
   /* A very constrained pool from which to allocate. */
   TPool TPoint::Pool(sizeof(TPoint), 3, TPool::TSync::Unguarded);
-  
+
   /* Try to construct a new point on the heap and return success/failure.
      Either way, don't bother to keep the point around. */
   bool TryNewPoint() {
@@ -101,6 +104,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
+  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

@@ -24,10 +24,12 @@
 #include <sys/stat.h>
 #include <unistd.h>
   
+#include <log_util/init_logging.h>
 #include <socket/address.h>
   
 #include <gtest/gtest.h>
   
+using namespace LogUtil;
 using namespace Socket;
 
 namespace {
@@ -91,6 +93,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
+  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

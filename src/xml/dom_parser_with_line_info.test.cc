@@ -30,6 +30,7 @@
 #include <xercesc/framework/MemBufInputSource.hpp>
 #include <xercesc/sax/SAXParseException.hpp>
 
+#include <log_util/init_logging.h>
 #include <xml/dom_document_util.h>
 #include <xml/test/xml_test_initializer.h>
 #include <xml/xml_input_line_info.h>
@@ -39,6 +40,7 @@
 
 using namespace xercesc;
 
+using namespace LogUtil;
 using namespace Xml;
 using namespace Xml::Test;
 
@@ -155,6 +157,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
+  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

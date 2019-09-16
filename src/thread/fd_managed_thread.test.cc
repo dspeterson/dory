@@ -27,9 +27,12 @@
 
 #include <unistd.h>
 
+#include <log_util/init_logging.h>
+
 #include <gtest/gtest.h>
 
 using namespace Base;
+using namespace LogUtil;
 using namespace Thread;
 
 namespace {
@@ -334,6 +337,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
+  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

@@ -20,6 +20,8 @@
  */
   
 #include <thread/managed_thread_pool.h>
+#include <thread/managed_thread_pool_config.h>
+#include <thread/managed_thread_pool_stats.h>
 
 #include <atomic>
 #include <cassert>
@@ -34,13 +36,12 @@
 #include <unistd.h>
 
 #include <base/time_util.h>
+#include <log_util/init_logging.h>
 
 #include <gtest/gtest.h>
 
-#include <thread/managed_thread_pool_config.h>
-#include <thread/managed_thread_pool_stats.h>
-
 using namespace Base;
+using namespace LogUtil;
 using namespace Thread;
 
 using TManagedThreadStdFnPool = TManagedThreadPool<std::function<void()>>;
@@ -106,7 +107,9 @@ namespace {
   }
 
   void HandleOutOfMemory() {
-    std::cerr << "Failed to create worker thread due to not enough memory.  Try running the stress tests on a system with more memory, or modify them to create fewer worker threads."
+    std::cerr << "Failed to create worker thread due to not enough memory.  "
+              << "Try running the stress tests on a system with more memory, "
+              << "or modify them to create fewer worker threads."
         << std::endl;
     _exit(1);
   }
@@ -826,8 +829,8 @@ namespace {
 
   TEST_F(TManagedThreadPoolTest, StressTest2) {
     std::cout
-        << "Running stress test 2 part 1.  This should take about 30-60 seconds."
-        << std::endl;
+        << "Running stress test 2 part 1.  This should take about 30-60 "
+        << "seconds." << std::endl;
     const size_t initial_thread_count = 50;
     std::atomic<size_t> counter(0);
     std::atomic<size_t> working_count(initial_thread_count);
@@ -903,7 +906,8 @@ namespace {
        restarted. */
 
     std::cout
-        << "Running stress test 2 part 2.  This should take about 30-60 seconds."
+        << "Running stress test 2 part 2.  This should take about 30-60 "
+        << "seconds."
         << std::endl;
     counter = 0;
     working_count = initial_thread_count;
@@ -969,6 +973,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
+  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

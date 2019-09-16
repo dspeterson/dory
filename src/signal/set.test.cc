@@ -20,9 +20,12 @@
  */
 
 #include <signal/set.h>
-  
+
+#include <log_util/init_logging.h>
+
 #include <gtest/gtest.h>
-  
+
+using namespace LogUtil;
 using namespace Signal;
 
 namespace {
@@ -49,7 +52,7 @@ namespace {
     a -= SIGINT;
     ASSERT_FALSE(a[SIGINT]);
   }
-  
+
   TEST_F(TSetTest, Full) {
     TSet a(TSet::TListInit::Exclude, {});
     ASSERT_TRUE(a[SIGINT]);
@@ -58,7 +61,7 @@ namespace {
     a += SIGINT;
     ASSERT_TRUE(a[SIGINT]);
   }
-  
+
   TEST_F(TSetTest, Copy) {
     TSet a(TSet::TListInit::Include, { SIGINT });
     ASSERT_TRUE(a[SIGINT]);
@@ -66,7 +69,7 @@ namespace {
     ASSERT_TRUE(a[SIGINT]);
     ASSERT_TRUE(b[SIGINT]);
   }
-  
+
   TEST_F(TSetTest, Assign) {
     TSet a(TSet::TListInit::Include, { SIGINT });
     ASSERT_TRUE(a[SIGINT]);
@@ -76,7 +79,7 @@ namespace {
     ASSERT_TRUE(a[SIGINT]);
     ASSERT_TRUE(b[SIGINT]);
   }
-  
+
   TEST_F(TSetTest, Exclude) {
     TSet a(TSet::TListInit::Exclude, { SIGINT });
     ASSERT_TRUE(a[SIGPIPE]);
@@ -86,6 +89,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
+  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

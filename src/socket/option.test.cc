@@ -20,16 +20,17 @@
  */
 
 #include <socket/option.h>
-  
+
+#include <string>
 #include <sstream>
-  
+
 #include <base/fd.h>
-  
+#include <log_util/init_logging.h>
+
 #include <gtest/gtest.h>
-  
-using namespace std;
-using namespace chrono;
+
 using namespace Base;
+using namespace LogUtil;
 using namespace Socket;
 
 namespace {
@@ -61,7 +62,7 @@ namespace {
     GetSockOpt(sock, SO_REUSEADDR, arg);
     ASSERT_EQ(arg, 0);
   }
-  
+
   TEST_F(TSocketOptionTest, ConvBool) {
     TFd sock(socket(AF_INET, SOCK_STREAM, 0));
     bool val;
@@ -74,7 +75,7 @@ namespace {
     Conv<bool>::GetSockOpt(sock, SO_REUSEADDR, val);
     ASSERT_FALSE(val);
   }
-  
+
   TEST_F(TSocketOptionTest, ConvInt) {
     TFd sock(socket(AF_INET, SOCK_STREAM, 0));
     int val;
@@ -87,19 +88,20 @@ namespace {
     Conv<int>::GetSockOpt(sock, SO_REUSEADDR, val);
     ASSERT_EQ(val, 0);
   }
-  
+
   TEST_F(TSocketOptionTest, ConvLinger) {
     TFd sock(socket(AF_INET, SOCK_STREAM, 0));
     Conv<TLinger>::SetSockOpt(sock, SO_LINGER, TLinger());
     TLinger val;
     Conv<TLinger>::GetSockOpt(sock, SO_LINGER, val);
     ASSERT_FALSE(val.IsKnown());
-    Conv<TLinger>::SetSockOpt(sock, SO_LINGER, TLinger(seconds(30)));
+    Conv<TLinger>::SetSockOpt(sock, SO_LINGER,
+        TLinger(std::chrono::seconds(30)));
     Conv<TLinger>::GetSockOpt(sock, SO_LINGER, val);
     ASSERT_TRUE(val.IsKnown());
     ASSERT_EQ(val->count(), 30);
   }
-  
+
   TEST_F(TSocketOptionTest, ConvTimeout) {
     TFd sock(socket(AF_INET, SOCK_STREAM, 0));
     Conv<TTimeout>::SetSockOpt(sock, SO_RCVTIMEO, TTimeout(2000000));
@@ -110,31 +112,31 @@ namespace {
     Conv<TTimeout>::GetSockOpt(sock, SO_RCVTIMEO, val);
     ASSERT_EQ(val.count(), 0);
   }
-  
+
   template <typename TVal>
-  string ToString(const TVal &val) {
-    ostringstream strm;
+  std::string ToString(const TVal &val) {
+    std::ostringstream strm;
     Format<TVal>::Dump(strm, val);
     return strm.str();
   }
-  
+
   TEST_F(TSocketOptionTest, FormatBool) {
     ASSERT_EQ(ToString(true), "true");
     ASSERT_EQ(ToString(false), "false");
   }
-  
+
   TEST_F(TSocketOptionTest, FormatInt) {
     ASSERT_EQ(ToString(0), "0");
     ASSERT_EQ(ToString(101), "101");
     ASSERT_EQ(ToString(-101), "-101");
   }
-  
+
   TEST_F(TSocketOptionTest, FormatLinger) {
     ASSERT_EQ(ToString(TLinger()), "off");
-    ASSERT_EQ(ToString(TLinger(seconds(0))), "0 sec(s)");
-    ASSERT_EQ(ToString(TLinger(seconds(30))), "30 sec(s)");
+    ASSERT_EQ(ToString(TLinger(std::chrono::seconds(0))), "0 sec(s)");
+    ASSERT_EQ(ToString(TLinger(std::chrono::seconds(30))), "30 sec(s)");
   }
-  
+
   TEST_F(TSocketOptionTest, FormatUcred) {
     ucred val;
     val.pid = 101;
@@ -142,17 +144,18 @@ namespace {
     val.gid = 303;
     ASSERT_EQ(ToString(val), "{ pid: 101, uid: 202, gid: 303 }");
   }
-  
+
   TEST_F(TSocketOptionTest, FormatTimeout) {
     ASSERT_EQ(ToString(TTimeout()), "0 usec(s)");
-    ASSERT_EQ(ToString(TTimeout(microseconds(200))), "200 usec(s)");
+    ASSERT_EQ(ToString(TTimeout(std::chrono::microseconds(200))),
+        "200 usec(s)");
   }
-  
+
   TEST_F(TSocketOptionTest, FormatString) {
-    ASSERT_EQ(ToString(string()), "\"\"");
-    ASSERT_EQ(ToString(string("eth0")), "\"eth0\"");
+    ASSERT_EQ(ToString(std::string()), "\"\"");
+    ASSERT_EQ(ToString(std::string("eth0")), "\"eth0\"");
   }
-  
+
   TEST_F(TSocketOptionTest, StdObject) {
     TFd sock(socket(AF_INET, SOCK_STREAM, 0));
     bool val = ReuseAddr.Get(sock);
@@ -163,7 +166,7 @@ namespace {
     ReuseAddr.Set(sock, false);
     ReuseAddr.Get(sock, val);
     ASSERT_FALSE(val);
-    ostringstream strm;
+    std::ostringstream strm;
     ReuseAddr.Dump(strm, sock);
     ASSERT_EQ(strm.str(), "reuse_addr: false");
   }
@@ -171,6 +174,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
+  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

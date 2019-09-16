@@ -18,11 +18,14 @@
  
    Unit test for <thread/segmented_list.h>.
  */
-  
+
 #include <thread/segmented_list.h>
-  
+
+#include <log_util/init_logging.h>
+
 #include <gtest/gtest.h>
 
+using namespace LogUtil;
 using namespace Thread;
 
 namespace {
@@ -65,7 +68,7 @@ namespace {
     ASSERT_EQ(slist.SegmentCount(), 1U);
     ASSERT_EQ(slist.CopyOutSegments(), EmptyResult());
     ASSERT_TRUE(slist.SanityCheck());
-    
+
     slist.AddNew(1);
     ASSERT_TRUE(slist.SanityCheck());
     ASSERT_FALSE(slist.Empty());
@@ -472,6 +475,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
+  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

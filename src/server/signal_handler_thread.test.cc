@@ -33,10 +33,12 @@
 #include <base/on_destroy.h>
 #include <base/time_util.h>
 #include <base/zero.h>
+#include <log_util/init_logging.h>
 #include <signal/set.h>
 #include <thread/fd_managed_thread.h>
 
 using namespace Base;
+using namespace LogUtil;
 using namespace Server;
 using namespace Signal;
 using namespace Thread;
@@ -229,6 +231,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
+  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

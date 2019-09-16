@@ -22,22 +22,25 @@
 #include <capped/blob.h>
 #include <capped/writer.h>
 #include <capped/reader.h>
-  
+
 #include <cstring>
 #include <sstream>
 #include <string>
-  
+
+#include <log_util/init_logging.h>
+
 #include <gtest/gtest.h>
-  
+
 using namespace std;
 using namespace Capped;
+using namespace LogUtil;
 
 namespace {
 
   /* Sample data. */
   const char *Str = "Mofo the Psychic Gorilla";
   const size_t StrSize = strlen(Str);
-  
+
   /* Convert a blob to a std string. */
   string ToString(const TBlob &blob) {
     ostringstream strm;
@@ -76,7 +79,7 @@ namespace {
     a = writer.DraftBlob();
     ASSERT_EQ(ToString(a), Str);
   }
-  
+
   TEST_F(TBlobTest, WriteAndRead) {
     /* Write a blob. */
     TPool pool(256, 1, TPool::TSync::Unguarded);
@@ -99,6 +102,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
+  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

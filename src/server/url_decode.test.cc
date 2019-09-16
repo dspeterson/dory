@@ -20,10 +20,13 @@
  */ 
 
 #include <server/url_decode.h>
-  
+
+#include <log_util/init_logging.h>
+
 #include <gtest/gtest.h>
-  
+
 using namespace Base;
+using namespace LogUtil;
 using namespace std;
 using namespace Server;
 
@@ -48,19 +51,19 @@ namespace {
     UrlDecode(AsPiece("Hello%2C%20World%26%25Ab%fF"), result_buf);
     ASSERT_EQ(result_buf, "Hello, World&%Ab\xff");
   }
-  
+
   TEST_F(TUrlDecodeTest, Empty) {
     string result_buf;
-  
+
     UrlDecode(AsPiece(""), result_buf);
     ASSERT_EQ(result_buf, "");
-  
+
     UrlDecode(AsPiece("foo"), result_buf);
     ASSERT_EQ(result_buf, "foo");
-  
+
     UrlDecode(Base::TPiece<const char>(), result_buf);
     ASSERT_EQ(result_buf, "");
-  
+
     UrlDecode(AsPiece("%3C%7B+.x%3A448.0%2C+.y%3A147.0+%7D%3E"), result_buf);
     ASSERT_EQ(result_buf, "<{ .x:448.0, .y:147.0 }>");
     UrlDecode(AsPiece(
@@ -73,12 +76,13 @@ namespace {
     ASSERT_EQ(result_buf,
         "{\"likes\":[],\"userref\":\"test2\",\"content\":\"aaa\",\"cid\":1}");
   }
-  
+
   // TODO: Test for error cases
 
 }  // namespace
 
 int main(int argc, char **argv) {
+  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

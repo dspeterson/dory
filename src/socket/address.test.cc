@@ -18,14 +18,16 @@
  
    Unit test for <socket/address.h>.
  */
- 
+
 #include <socket/address.h>
-  
+
 #include <sstream>
-  
+
+#include <log_util/init_logging.h>
+
 #include <gtest/gtest.h>
-  
-using namespace std;
+
+using namespace LogUtil;
 using namespace Socket;
 
 namespace {
@@ -45,12 +47,14 @@ namespace {
   };  // TAddressTest
 
   TEST_F(TAddressTest, Specials) {
-    ASSERT_EQ(TAddress(TAddress::IPv4Any), TAddress(istringstream("0.0.0.0")));
+    ASSERT_EQ(TAddress(TAddress::IPv4Any),
+        TAddress(std::istringstream("0.0.0.0")));
     ASSERT_EQ(TAddress(TAddress::IPv4Loopback),
-        TAddress(istringstream("127.0.0.1")));
-    ASSERT_EQ(TAddress(TAddress::IPv6Any), TAddress(istringstream("[::]")));
+        TAddress(std::istringstream("127.0.0.1")));
+    ASSERT_EQ(TAddress(TAddress::IPv6Any),
+        TAddress(std::istringstream("[::]")));
     ASSERT_EQ(TAddress(TAddress::IPv6Loopback),
-        TAddress(istringstream("[::1]")));
+        TAddress(std::istringstream("[::1]")));
   }
 
 }  // namespace
