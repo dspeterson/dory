@@ -23,9 +23,9 @@
 
 #include <utility>
 
+#include <base/counter.h>
 #include <base/no_default_case.h>
 #include <log/log.h>
-#include <server/counter.h>
 
 using namespace Base;
 using namespace Dory;

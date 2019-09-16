@@ -36,6 +36,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <base/counter.h>
 #include <base/error_util.h>
 #include <base/no_default_case.h>
 #include <capped/pool.h>
@@ -51,7 +52,6 @@
 #include <dory/util/misc_util.h>
 #include <dory/web_interface.h>
 #include <log/log.h>
-#include <server/counter.h>
 #include <server/daemonize.h>
 #include <signal/masker.h>
 #include <socket/address.h>

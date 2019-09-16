@@ -30,11 +30,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <base/counter.h>
 #include <base/error_util.h>
 #include <base/gettid.h>
 #include <dory/input_dg/input_dg_util.h>
 #include <log/log.h>
-#include <server/counter.h>
 #include <socket/address.h>
 
 using namespace Base;

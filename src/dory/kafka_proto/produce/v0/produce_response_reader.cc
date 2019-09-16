@@ -23,8 +23,8 @@
 
 #include <cassert>
 
+#include <base/counter.h>
 #include <base/field_access.h>
-#include <server/counter.h>
 
 using namespace Dory;
 using namespace Dory::KafkaProto;

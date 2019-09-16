@@ -23,9 +23,9 @@
 
 #include <limits>
 
+#include <base/counter.h>
 #include <base/field_access.h>
 #include <base/no_default_case.h>
-#include <server/counter.h>
 
 using namespace Dory;
 using namespace Dory::KafkaProto::Metadata::V0;

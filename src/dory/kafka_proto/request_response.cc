@@ -23,9 +23,9 @@
 
 #include <cstdint>
 
+#include <base/counter.h>
 #include <base/field_access.h>
 #include <dory/kafka_proto/errors.h>
-#include <server/counter.h>
 
 using namespace Dory;
 using namespace Dory::KafkaProto;

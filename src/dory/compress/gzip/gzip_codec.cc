@@ -33,8 +33,8 @@
 #include <boost/lexical_cast.hpp>
 #include <zlib.h>
 
+#include <base/counter.h>
 #include <base/on_destroy.h>
-#include <server/counter.h>
 
 using namespace Base;
 using namespace Dory;

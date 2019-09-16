@@ -21,7 +21,7 @@
 
 #include <dory/util/pause_button.h>
 
-#include <server/counter.h>
+#include <base/counter.h>
 
 using namespace Dory;
 using namespace Dory::Util;

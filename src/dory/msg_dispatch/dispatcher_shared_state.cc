@@ -21,9 +21,9 @@
 
 #include <dory/msg_dispatch/dispatcher_shared_state.h>
 
+#include <base/counter.h>
 #include <dory/msg_state_tracker.h>
 #include <log/log.h>
-#include <server/counter.h>
 
 using namespace Base;
 using namespace Dory;

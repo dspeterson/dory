@@ -27,6 +27,7 @@
 
 #include <unistd.h>
 
+#include <base/counter.h>
 #include <base/gettid.h>
 #include <base/no_default_case.h>
 #include <base/time_util.h>
@@ -37,7 +38,6 @@
 #include <dory/util/connect_to_host.h>
 #include <dory/util/topic_map.h>
 #include <log/log.h>
-#include <server/counter.h>
 #include <server/daemonize.h>
 
 using namespace Base;

@@ -25,10 +25,10 @@
 #include <chrono>
 #include <string>
 
+#include <base/counter.h>
 #include <capped/memory_cap_reached.h>
 #include <dory/msg_creator.h>
 #include <log/log.h>
-#include <server/counter.h>
 
 using namespace Capped;
 using namespace Dory;

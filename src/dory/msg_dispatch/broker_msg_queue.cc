@@ -21,8 +21,8 @@
 
 #include <dory/msg_dispatch/broker_msg_queue.h>
 
+#include <base/counter.h>
 #include <dory/msg_state_tracker.h>
-#include <server/counter.h>
 
 using namespace Base;
 using namespace Dory;

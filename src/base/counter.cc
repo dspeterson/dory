@@ -1,4 +1,4 @@
-/* <server/counter.cc>
+/* <base/counter.cc>
 
    ----------------------------------------------------------------------------
    Copyright 2010-2013 if(we)
@@ -16,15 +16,14 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <server/counter.h>.
+   Implements <base/counter.h>.
  */
 
-#include <server/counter.h>
+#include <base/counter.h>
 
 #include <base/exclusive_lock.h>
 
 using namespace Base;
-using namespace Server;
 
 TCounter::TCounter(const TCodeLocation &code_location, const char *name)
     : CodeLocation(code_location),

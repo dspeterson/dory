@@ -21,10 +21,10 @@
 
 #include <cassert>
 
+#include <base/counter.h>
 #include <dory/input_dg/any_partition/any_partition_util.h>
 #include <dory/input_dg/any_partition/v0/v0_input_dg_reader.h>
 #include <log/log.h>
-#include <server/counter.h>
 
 using namespace Capped;
 using namespace Dory;

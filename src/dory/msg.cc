@@ -21,10 +21,10 @@
 
 #include <dory/msg.h>
 
+#include <base/counter.h>
 #include <base/time_util.h>
 #include <capped/writer.h>
 #include <log/log.h>
-#include <server/counter.h>
 #include <server/daemonize.h>
 
 using namespace Base;

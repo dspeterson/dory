@@ -27,6 +27,7 @@
 
 #include <poll.h>
 
+#include <base/counter.h>
 #include <base/io_util.h>
 #include <base/no_default_case.h>
 #include <base/time_util.h>
@@ -35,7 +36,6 @@
 #include <dory/util/poll_array.h>
 #include <dory/util/system_error_codes.h>
 #include <log/log.h>
-#include <server/counter.h>
 #include <socket/db/error.h>
 
 using namespace Base;

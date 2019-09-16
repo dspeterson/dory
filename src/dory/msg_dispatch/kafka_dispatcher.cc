@@ -21,8 +21,8 @@
 
 #include <dory/msg_dispatch/kafka_dispatcher.h>
 
+#include <base/counter.h>
 #include <log/log.h>
-#include <server/counter.h>
 
 using namespace Base;
 using namespace Dory;

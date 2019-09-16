@@ -27,6 +27,7 @@
 
 #include <poll.h>
 
+#include <base/counter.h>
 #include <base/error_util.h>
 #include <base/no_default_case.h>
 #include <dory/input_dg/input_dg_util.h>
@@ -34,7 +35,6 @@
 #include <dory/util/poll_array.h>
 #include <dory/util/system_error_codes.h>
 #include <log/log.h>
-#include <server/counter.h>
 
 using namespace Base;
 using namespace Capped;

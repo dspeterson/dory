@@ -25,11 +25,11 @@
 #include <utility>
 #include <vector>
 
+#include <base/counter.h>
 #include <base/error_util.h>
 #include <capped/blob.h>
 #include <capped/reader.h>
 #include <log/log.h>
-#include <server/counter.h>
 
 using namespace Base;
 using namespace Capped;
@@ -67,7 +67,7 @@ static void UpdateLruList(std::string &&s, std::list<std::string> &lru_list,
 }
 
 size_t TAnomalyTracker::GetNoDiscardQueryCount() {
-  Server::TCounter::Sample();
+  TCounter::Sample();
   return NoDiscardQuery.GetCount();
 }
 

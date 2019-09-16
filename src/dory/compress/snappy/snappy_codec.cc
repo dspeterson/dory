@@ -28,8 +28,8 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include <base/counter.h>
 #include <dory/compress/snappy/lib_snappy.h>
-#include <server/counter.h>
 
 using namespace Base;
 using namespace Dory;

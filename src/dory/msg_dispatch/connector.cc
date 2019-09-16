@@ -31,6 +31,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <base/counter.h>
 #include <base/error_util.h>
 #include <base/gettid.h>
 #include <base/no_default_case.h>
@@ -42,11 +43,10 @@
 #include <dory/util/connect_to_host.h>
 #include <dory/util/system_error_codes.h>
 #include <log/log.h>
-#include <server/counter.h>
 #include <socket/db/error.h>
 
 #include <dory/msg_dispatch/common.h>
-#include <server/counter.h>
+#include <base/counter.h>
 
 using namespace Base;
 using namespace Dory;

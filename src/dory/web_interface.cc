@@ -25,11 +25,11 @@
 #include <sstream>
 #include <vector>
 
+#include <base/counter.h>
 #include <base/error_util.h>
 #include <base/no_default_case.h>
 #include <dory/web_request_handler.h>
 #include <log/log.h>
-#include <server/counter.h>
 #include <server/url_decode.h>
 
 using namespace Base;

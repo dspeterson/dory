@@ -28,6 +28,7 @@
 #include <unistd.h>
 
 #include <base/basename.h>
+#include <base/counter.h>
 #include <base/error_util.h>
 #include <log/die_handler.h>
 #include <log/log.h>
@@ -36,12 +37,10 @@
 #include <log/log_writer.h>
 #include <log/stdout_stderr_log_writer.h>
 #include <log/syslog_log_writer.h>
-#include <server/counter.h>
 
 using namespace Base;
 using namespace Log;
 using namespace LogUtil;
-using namespace Server;
 
 SERVER_COUNTER(LogPrefixWriteFailed);
 SERVER_COUNTER(LogToFileFailed);

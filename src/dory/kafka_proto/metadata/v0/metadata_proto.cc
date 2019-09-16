@@ -26,12 +26,12 @@
 #include <cstring>
 #include <string>
 
+#include <base/counter.h>
 #include <dory/kafka_proto/kafka_error_code.h>
 #include <dory/kafka_proto/metadata/v0/metadata_request_writer.h>
 #include <dory/kafka_proto/metadata/v0/metadata_response_reader.h>
 #include <dory/metadata.h>
 #include <log/log.h>
-#include <server/counter.h>
 
 using namespace Dory;
 using namespace Dory::KafkaProto;

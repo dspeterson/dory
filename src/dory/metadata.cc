@@ -25,9 +25,9 @@
 #include <memory>
 #include <utility>
 
+#include <base/counter.h>
 #include <base/time_util.h>
 #include <log/log.h>
-#include <server/counter.h>
 
 using namespace Base;
 using namespace Dory;

@@ -25,7 +25,6 @@
 #include <limits>
 
 #include <base/impossible_error.h>
-#include <server/daemonize.h>
 
 namespace Base {
 

@@ -22,11 +22,11 @@
 
 #include <dory/msg_dispatch/produce_response_processor.h>
 
+#include <base/counter.h>
 #include <base/gettid.h>
 #include <base/no_default_case.h>
 #include <dory/util/msg_util.h>
 #include <log/log.h>
-#include <server/counter.h>
 
 using namespace Base;
 using namespace Dory;

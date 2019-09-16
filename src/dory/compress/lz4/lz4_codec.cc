@@ -31,8 +31,8 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include <base/counter.h>
 #include <base/on_destroy.h>
-#include <server/counter.h>
 #include <third_party/lz4/lz4-1.8.0/lib/lz4frame.h>
 
 using namespace Base;

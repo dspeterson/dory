@@ -1,4 +1,4 @@
-/* <server/counter.h>
+/* <base/counter.h>
 
    ----------------------------------------------------------------------------
    Copyright 2010-2013 if(we)
@@ -31,9 +31,9 @@
 #include <base/shared_lock.h>
 
 /* A macro to simplify declaring counters. */
-#define SERVER_COUNTER(name) static ::Server::TCounter name(HERE, #name);
+#define SERVER_COUNTER(name) static ::Base::TCounter name(HERE, #name);
 
-namespace Server {
+namespace Base {
 
   /* A counter useful for providing health reports.
 
@@ -193,4 +193,4 @@ namespace Server {
     static time_t SampleTime, ResetTime;
   };  // TCounter
 
-}  // Server
+}  // Base

@@ -1,7 +1,5 @@
-/* <server/counter.test.cc>
-  
-   Unit test for <server/counter.h>.
- 
+/* <base/counter.test.cc>
+
    ----------------------------------------------------------------------------
    Copyright 2010-2013 if(we)
 
@@ -17,9 +15,11 @@
    See the License for the specific language governing permissions and
    limitations under the License.
    ----------------------------------------------------------------------------
+
+   Unit test for <base/counter.h>.
  */
 
-#include <server/counter.h>
+#include <base/counter.h>
 
 #include <cstdio>
 #include <cstring>
@@ -39,7 +39,6 @@
 #include <gtest/gtest.h>
 
 using namespace Base;
-using namespace Server;
 
 namespace {
 

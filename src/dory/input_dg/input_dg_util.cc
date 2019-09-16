@@ -24,13 +24,13 @@
 #include <cassert>
 #include <cstdint>
 
+#include <base/counter.h>
 #include <base/field_access.h>
 #include <dory/input_dg/any_partition/any_partition_util.h>
 #include <dory/input_dg/input_dg_common.h>
 #include <dory/input_dg/input_dg_constants.h>
 #include <dory/input_dg/partition_key/partition_key_util.h>
 #include <log/log.h>
-#include <server/counter.h>
 
 using namespace Base;
 using namespace Dory;

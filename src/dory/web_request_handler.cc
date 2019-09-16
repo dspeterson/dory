@@ -31,15 +31,14 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <base/counter.h>
 #include <base/time_util.h>
 #include <dory/build_id.h>
-#include <server/counter.h>
 #include <third_party/base64/base64.h>
 
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Debug;
-using namespace Server;
 
 /* Size of string buffer to use for converting time_t (seconds since epoch)
    values to human-readable form.  According to the man page for ctime_r(),
