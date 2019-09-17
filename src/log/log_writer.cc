@@ -55,6 +55,14 @@ void Log::HandleLogRotateRequest() {
 
 std::shared_ptr<TLogWriterBase> Log::GetLogWriter() noexcept {
   std::lock_guard<std::mutex> lock(LogWriterMutex);
-  assert(!!LogWriter);
+
+  if (!LogWriter) {
+    /* If no log writer has yet been created, make a default one that logs only
+       to stdout/stderr. */
+    LogWriter = std::make_shared<TCombinedLogWriter>(
+        true /* enable_stdout_stderr */, false /* enable_syslog */,
+        std::string() /* file_path */);
+  }
+
   return LogWriter;
 }

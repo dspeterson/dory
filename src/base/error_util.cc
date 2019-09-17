@@ -58,10 +58,9 @@ static void DefaultDieHandler(const char *msg,
     void *const *stack_trace_buffer, size_t stack_trace_size) noexcept {
   /* Default behavior is to write 'msg' and stack trace to stderr.  If write()
      fails here, there is nothing we can do about it. */
-  static const int out_fd = 2;  // stderr
+  const int out_fd = 2;  // stderr
   write(out_fd, msg, std::strlen(msg));
-  static const char newline = '\n';
-  write(out_fd, &newline, sizeof(newline));
+  write(out_fd, "\n", 1);
   backtrace_symbols_fd(stack_trace_buffer, stack_trace_size, out_fd);
 }
 
@@ -72,13 +71,12 @@ void Base::SetDieHandler(Base::TDieHandler handler) noexcept {
   DieHandler = handler;
 }
 
-static const size_t STACK_TRACE_SIZE = 128;
-
 [[ noreturn ]] void Base::Die(const char *msg) noexcept {
   /* Ideally, we should use an off-stack location for the stack trace buffer.
      This would allow preservation of memory contents beyond the end of the
      stack, which can potentially be useful to examine in the core file.  For
      now, this is good enough. */
+  const size_t STACK_TRACE_SIZE = 128;
   void *trace_buf[STACK_TRACE_SIZE];
   const int trace_size = backtrace(trace_buf,
       static_cast<int>(STACK_TRACE_SIZE));

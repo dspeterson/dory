@@ -38,8 +38,7 @@ namespace Log {
      this function, the existing file descriptor for the logfile will be
      reused, rather than reopening the file.  If opening the logfile fails,
      std::system_error will be thrown and the call will otherwise have no
-     effect (i.e. any previous log writer will be preserved).
-   */
+     effect (i.e. any previous log writer will be preserved). */
   void SetLogWriter(bool enable_stdout_stderr, bool enable_syslog,
       const std::string &file_path,
       mode_t file_mode = TFileLogWriter::default_file_mode);
@@ -57,7 +56,9 @@ namespace Log {
      their references. */
   void HandleLogRotateRequest();
 
-  /* Get a reference to the current global log writer. */
+  /* Get a reference to the current global log writer.  If SetLogWriter() has
+     not yet been called, returns a default log writer that logs only to
+     stdout/stderr. */
   std::shared_ptr<TLogWriterBase> GetLogWriter() noexcept;
 
 }
