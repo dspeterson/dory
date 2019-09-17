@@ -82,6 +82,14 @@ namespace {
     CheckClose(lhs, rhs);
   }
 
+  TEST_F(TFdTest, Swap) {
+    TFd fd_1(1);
+    TFd fd_2(2);
+    fd_1.Swap(fd_2);
+    ASSERT_EQ(int(fd_1), 2);
+    ASSERT_EQ(int(fd_2), 1);
+  }
+
 }  // namespace
 
 int main(int argc, char **argv) {

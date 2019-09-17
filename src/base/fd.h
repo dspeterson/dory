@@ -93,11 +93,17 @@ namespace Base {
       }
     }
 
+    void Swap(TFd &that) noexcept {
+      assert(this);
+      assert(&that);
+      std::swap(OsHandle, that.OsHandle);
+    }
+
     /* Swaperator. */
     TFd &operator=(TFd &&that) noexcept {
       assert(this);
       assert(&that);
-      std::swap(OsHandle, that.OsHandle);
+      Swap(that);
       return *this;
     }
 
