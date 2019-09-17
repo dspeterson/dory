@@ -37,17 +37,43 @@ namespace Base {
     /* name_template must adhere to the format specified by mkstemps(). */
     TTmpFile(const char *name_template, bool delete_on_destroy);
 
+    /* Take ownership from 'that', leaving 'that' empty. */
+    TTmpFile(TTmpFile &&that) noexcept;
+
     ~TTmpFile();
 
+    bool IsEmpty() const noexcept {
+      assert(this);
+      return Name.empty();
+    }
+
+    /* If we are nonempty and DeleteOnDestroy is true, delete the file.
+       Regardless, reset our internal state to empty, leaving DeleteOnDestroy
+       with its prior value. */
+    void Reset() noexcept;
+
+    /* Take ownership from 'that', leaving 'that' empty. */
+    TTmpFile &operator=(TTmpFile &&that) noexcept;
+
+    void Swap(TTmpFile &that) noexcept;
+
     const std::string &GetName() const {
+      assert(this);
       return Name;
     }
 
     const TFd &GetFd() const {
+      assert(this);
       return Fd;
     }
 
+    bool GetDeleteOnDestroy() const noexcept {
+      assert(this);
+      return DeleteOnDestroy;
+    }
+
     void SetDeleteOnDestroy(bool delete_on_destroy) {
+      assert(this);
       DeleteOnDestroy = delete_on_destroy;
     }
 

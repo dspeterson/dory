@@ -22,14 +22,36 @@
   
 #include <base/tmp_file.h>
  
+#include <cerrno>
 #include <cstddef>
 #include <cstring>
+#include <utility>
  
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include <gtest/gtest.h>
   
 using namespace Base;
 
 namespace {
+
+  bool FileExists(const std::string &name) {
+    struct stat buf;
+    int ret = stat(name.c_str(), &buf);
+    const bool exists = (ret == 0);
+    assert(exists || (errno == ENOENT));
+    assert(!exists || S_ISREG(buf.st_mode));
+    return exists;
+  }
+
+  ino_t GetInodeNumber(int fd) {
+    struct stat buf;
+    int ret = fstat(fd, &buf);
+    assert(ret == 0);
+    return buf.st_ino;
+  }
 
   /* The fixture for testing class TTmpFile. */
   class TTmpFileTest : public ::testing::Test {
@@ -84,6 +106,100 @@ namespace {
     ASSERT_EQ(tmp_file.GetName().substr(0, 4), std::string("burp"));
     ASSERT_NE(tmp_file.GetName().substr(4, 6), std::string("XXXXXX"));
     ASSERT_EQ(tmp_file.GetName().substr(10, 10), std::string("yXXXXXbarf"));
+  }
+
+  TEST_F(TTmpFileTest, Reset) {
+    TTmpFile f1("/tmp/tmp_file_test.XXXXXX", true);
+    const std::string f1_name = f1.GetName();
+    ASSERT_TRUE(FileExists(f1_name));
+    f1.Reset();
+    ASSERT_TRUE(f1.GetName().empty());
+    ASSERT_TRUE(f1.GetDeleteOnDestroy());
+    ASSERT_FALSE(f1.GetFd().IsOpen());
+    ASSERT_FALSE(FileExists(f1_name));
+  }
+
+  TEST_F(TTmpFileTest, MoveConstruct) {
+    TTmpFile f1("/tmp/tmp_file_test.XXXXXX", true);
+    const std::string f1_name = f1.GetName();
+    ASSERT_TRUE(FileExists(f1_name));
+
+    {
+      TTmpFile f2(std::move(f1));
+      ASSERT_TRUE(FileExists(f1_name));
+      ASSERT_TRUE(f1.GetName().empty());
+      ASSERT_TRUE(f1.GetDeleteOnDestroy());
+      ASSERT_FALSE(f1.GetFd().IsOpen());
+      ASSERT_EQ(f2.GetName(), f1_name);
+      ASSERT_TRUE(f2.GetDeleteOnDestroy());
+      ASSERT_TRUE(f2.GetFd().IsOpen());
+    }
+
+    ASSERT_FALSE(FileExists(f1_name));
+  }
+
+  TEST_F(TTmpFileTest, MoveAssign) {
+    TTmpFile f1("/tmp/tmp_file_test.XXXXXX", true);
+    const std::string f1_name = f1.GetName();
+    ASSERT_TRUE(FileExists(f1_name));
+    const int f1_fd = f1.GetFd();
+    const ino_t f1_inode = GetInodeNumber(f1.GetFd());
+
+    {
+      TTmpFile f2("/tmp/tmp_file_test.XXXXXX", true);
+      const std::string f2_name = f2.GetName();
+      ASSERT_TRUE(FileExists(f2_name));
+
+      f2 = std::move(f1);
+      ASSERT_FALSE(FileExists(f2_name));
+      ASSERT_TRUE(FileExists(f1_name));
+      ASSERT_TRUE(f1.GetName().empty());
+      ASSERT_EQ(f2.GetName(), f1_name);
+      ASSERT_FALSE(f1.GetFd().IsOpen());
+      ASSERT_TRUE(f2.GetFd().IsOpen());
+      ASSERT_EQ(f2.GetFd(), f1_fd);
+      ASSERT_EQ(GetInodeNumber(f2.GetFd()), f1_inode);
+    }
+
+    ASSERT_FALSE(FileExists(f1_name));
+  }
+
+  TEST_F(TTmpFileTest, Swap) {
+    std::string f1_name;
+    std::string f2_name;
+
+    {
+      TTmpFile f1("/tmp/tmp_file_test.XXXXXX", true);
+      f1_name = f1.GetName();
+      ASSERT_TRUE(FileExists(f1_name));
+      const int f1_fd = f1.GetFd();
+      const ino_t f1_inode = GetInodeNumber(f1.GetFd());
+
+      {
+        TTmpFile f2("/tmp/tmp_file_test.XXXXXX", true);
+        f2_name = f2.GetName();
+        ASSERT_TRUE(FileExists(f2_name));
+        const int f2_fd = f2.GetFd();
+        const ino_t f2_inode = GetInodeNumber(f2.GetFd());
+
+        f2.Swap(f1);
+        ASSERT_TRUE(FileExists(f1_name));
+        ASSERT_TRUE(FileExists(f2_name));
+        ASSERT_EQ(f1.GetName(), f2_name);
+        ASSERT_EQ(f2.GetName(), f1_name);
+        ASSERT_TRUE(f1.GetFd().IsOpen());
+        ASSERT_TRUE(f2.GetFd().IsOpen());
+        ASSERT_EQ(f1.GetFd(), f2_fd);
+        ASSERT_EQ(f2.GetFd(), f1_fd);
+        ASSERT_EQ(GetInodeNumber(f1.GetFd()), f2_inode);
+        ASSERT_EQ(GetInodeNumber(f2.GetFd()), f1_inode);
+      }
+
+      ASSERT_FALSE(FileExists(f1_name));
+      ASSERT_TRUE(FileExists(f2_name));
+    }
+
+    ASSERT_FALSE(FileExists(f2_name));
   }
 
 }  // namespace

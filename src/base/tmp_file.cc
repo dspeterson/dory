@@ -22,8 +22,10 @@
 
 #include <base/tmp_file.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
+#include <utility>
 #include <vector>
 
 #include <unistd.h>
@@ -70,10 +72,52 @@ TTmpFile::TTmpFile(const char *name_template, bool delete_on_destroy)
   Name = &name_buf[0];
 }
 
+TTmpFile::TTmpFile(TTmpFile &&that) noexcept
+    : Name(std::move(that.Name)),
+      DeleteOnDestroy(that.DeleteOnDestroy),
+      Fd(std::move(that.Fd)) {
+  /* Make sure 'that' doesn't attempt to delete file on destruction. */
+  that.Name.clear();
+
+  assert(!that.Fd.IsOpen());
+}
+
 TTmpFile::~TTmpFile() {
-  if (DeleteOnDestroy) {
+  Reset();
+}
+
+void TTmpFile::Reset() noexcept {
+  if (DeleteOnDestroy && !Name.empty()) {
     unlink(Name.c_str());
   }
+
+  Name.clear();
+  Fd.Reset();
+}
+
+TTmpFile &TTmpFile::operator=(TTmpFile &&that) noexcept {
+  assert(this);
+  assert(&that);
+
+  if (&that != this) {
+    Reset();
+    Name = std::move(that.Name);
+    DeleteOnDestroy = that.DeleteOnDestroy;
+    Fd = std::move(that.Fd);
+
+    /* Make sure 'that' doesn't attempt to delete file on destruction. */
+    that.Name.clear();
+  }
+
+  return *this;
+}
+
+void TTmpFile::Swap(TTmpFile &that) noexcept {
+  assert(this);
+  assert(&that);
+  Name.swap(that.Name);
+  std::swap(DeleteOnDestroy, that.DeleteOnDestroy);
+  Fd.Swap(that.Fd);
 }
 
 std::string Base::MakeTmpFilename(const char *name_template) {
