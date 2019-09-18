@@ -27,11 +27,10 @@
 
 #include <base/no_default_case.h>
 
-using namespace std;
 using namespace Base;
 
 void TError::Abort(const TCodeLocation &code_location) {
-  cerr << "aborting at " << code_location << endl;
+  std::cerr << "aborting at " << code_location << std::endl;
   abort();
 }
 
@@ -44,7 +43,7 @@ void TError::PostCtor(const TCodeLocation &code_location,
 
   try {
     CodeLocation = code_location;
-    stringstream out_strm;
+    std::stringstream out_strm;
     out_strm << CodeLocation << ", ";
 
     try {
@@ -73,7 +72,7 @@ void TError::PostCtor(const TCodeLocation &code_location,
 
   try {
     CodeLocation = code_location;
-    stringstream out_strm;
+    std::stringstream out_strm;
     out_strm << CodeLocation << ", ";
 
     try {

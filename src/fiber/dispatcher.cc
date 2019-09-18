@@ -28,8 +28,6 @@
 #include <signal/masker.h>
 #include <signal/set.h>
 
-using namespace std;
-using namespace chrono;
 using namespace Base;
 using namespace Fiber;
 using namespace Signal;
@@ -228,14 +226,14 @@ void TDispatcher::Run(const TTimeout &grace_period,
      deadline is reached.  Check for the deadline every at least every 100
      milliseconds.  Note that we are no longer interruptable. */
   auto deadline = Now() + grace_period;
-  max_timeout = milliseconds(100);
+  max_timeout = std::chrono::milliseconds(100);
 
   while (HandlerCount && Now() < deadline) {  // When will now be now?  Soon...
     Dispatch(max_timeout, shutdown_mask_set.Get());
   }
 }
 
-void TDispatcher::Shutdown(thread &t, int signal_number) {
+void TDispatcher::Shutdown(std::thread &t, int signal_number) {
   assert(this);
   assert(&t);
   ShuttingDown = true;
@@ -300,7 +298,8 @@ bool TDispatcher::Dispatch(const TOptTimeout &max_timeout,
   TOptTimeout timeout;
 
   if (nearest_deadline) {
-    timeout.MakeKnown(duration_cast<TTimeout>(*nearest_deadline - Now()));
+    timeout.MakeKnown(
+        std::chrono::duration_cast<TTimeout>(*nearest_deadline - Now()));
   }
 
   if (max_timeout && timeout && *timeout > *max_timeout) {
@@ -313,9 +312,9 @@ bool TDispatcher::Dispatch(const TOptTimeout &max_timeout,
   timespec *ts_ptr;
 
   if (timeout) {
-    auto ticks = nanoseconds(*timeout).count();
-    ts.tv_sec  = ticks / nano::den;
-    ts.tv_nsec = ticks % nano::den;
+    auto ticks = std::chrono::nanoseconds(*timeout).count();
+    ts.tv_sec  = ticks / std::nano::den;
+    ts.tv_nsec = ticks % std::nano::den;
     ts_ptr = &ts;
   } else {
     ts_ptr = nullptr;

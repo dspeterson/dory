@@ -20,7 +20,8 @@
  */
 
 #include <fiber/dispatcher.h>
-  
+ 
+#include <cstddef> 
 #include <sstream>
 #include <string>
 #include <thread>
@@ -31,8 +32,6 @@
   
 #include <gtest/gtest.h>
   
-using namespace std;
-using namespace chrono;
 using namespace Base;
 using namespace Fiber;
 using namespace Socket;
@@ -290,7 +289,7 @@ namespace {
 
         /* Send the message and expect to get it echoed back. */
         IfLt0(send(fd, expected.data(), expected.size(), MSG_NOSIGNAL));
-        memset(actual, 0, sizeof(actual));
+        std::memset(actual, 0, sizeof(actual));
         IfLt0(recv(fd, actual, sizeof(actual), 0));
         ++((expected == actual) ? pass_count : fail_count);
       }
@@ -330,7 +329,7 @@ namespace {
          These clients will disconnect on their own after completing their I/O
          rounds. */
       atomic_size_t pass_count(0), fail_count(0), rude_count(0);
-      vector<thread> clients;
+      std::vector<thread> clients;
 
       for (size_t idx = 0; idx < client_count; ++idx) {
         clients.push_back(thread(ClientMain, idx, port, io_count,
@@ -367,7 +366,7 @@ namespace {
       /* Launch some client threads.
          These clients will never voluntarily disconnect. */
       atomic_size_t pass_count(0), fail_count(0), rude_count(0);
-      vector<thread> clients;
+      std::vector<thread> clients;
 
       for (size_t idx = 0; idx < client_count; ++idx) {
         clients.push_back(thread(ClientMain, idx, port, -1, ref(pass_count),

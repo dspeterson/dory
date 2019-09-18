@@ -53,7 +53,7 @@
 #include <dory/msg_state_tracker.h>
 #include <dory/test_util/mock_kafka_config.h>
 #include <dory/util/misc_util.h>
-#include <log_util/init_logging.h>
+#include <test_util/test_logging.h>
 #include <thread/fd_managed_thread.h>
 #include <xml/test/xml_test_initializer.h>
 
@@ -70,7 +70,7 @@ using namespace Dory::KafkaProto::Produce;
 using namespace Dory::MockKafkaServer;
 using namespace Dory::TestUtil;
 using namespace Dory::Util;
-using namespace LogUtil;
+using namespace ::TestUtil;
 using namespace Thread;
 using namespace Xml;
 using namespace Xml::Test;
@@ -1806,7 +1806,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
-  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
+  TTmpFile test_logfile = InitTestLogging(argv[0]);
   return RUN_ALL_TESTS();
 }

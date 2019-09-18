@@ -21,17 +21,18 @@
 
 #include <rpc/transceiver.h>
 
+#include <cstddef>
 #include <string>
 
 #include <base/fd.h>
-#include <log_util/init_logging.h>
+#include <base/tmp_file.h>
+#include <test_util/test_logging.h>
 
 #include <gtest/gtest.h>
 
-using namespace std;
 using namespace Base;
-using namespace LogUtil;
 using namespace Rpc;
+using namespace TestUtil;
 
 namespace {
 
@@ -55,7 +56,7 @@ namespace {
     TFd::SocketPair(sock_a, sock_b, AF_UNIX, SOCK_STREAM, 0);
     TTransceiver xver;
     /* Send a message in two pieces. */
-    string expected("Hello, world!");
+    std::string expected("Hello, world!");
     size_t
         size = expected.size(),
         half = size / 2;
@@ -81,13 +82,13 @@ namespace {
     }
 
     /* Did we get it? */
-    ASSERT_EQ(string(actual, size), expected);
+    ASSERT_EQ(std::string(actual, size), expected);
   }
 
 }  // namespace
 
 int main(int argc, char **argv) {
-  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
+  TTmpFile test_logfile = InitTestLogging(argv[0]);
   return RUN_ALL_TESTS();
 }

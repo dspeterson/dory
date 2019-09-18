@@ -23,14 +23,16 @@
 
 #include <sys/stat.h>
 #include <unistd.h>
-  
-#include <log_util/init_logging.h>
+
+#include <base/tmp_file.h> 
 #include <socket/address.h>
-  
+#include <test_util/test_logging.h>
+
 #include <gtest/gtest.h>
-  
-using namespace LogUtil;
+
+using namespace Base;
 using namespace Socket;
+using namespace TestUtil;
 
 namespace {
 
@@ -72,7 +74,7 @@ namespace {
     ASSERT_FALSE(sock.IsBound());
     ret = stat(path, &buf);
     ASSERT_EQ(ret, -1);
-  
+
     {
       TNamedUnixSocket sock2(SOCK_DGRAM, 0);
       TAddress address2;
@@ -85,7 +87,7 @@ namespace {
       ASSERT_EQ(ret, 0);
       ASSERT_TRUE(S_ISSOCK(buf.st_mode));
     }
-  
+
     ret = stat(path, &buf);
     ASSERT_EQ(ret, -1);
   }
@@ -93,7 +95,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
-  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
+  TTmpFile test_logfile = InitTestLogging(argv[0]);
   return RUN_ALL_TESTS();
 }

@@ -23,7 +23,6 @@
 
 #include <sstream>
 
-using namespace std;
 using namespace Socket;
 
 const TAnyOption *Socket::AllOptions[] = {
@@ -52,7 +51,7 @@ const TAnyOption *Socket::AllOptions[] = {
   nullptr
 };
 
-void Socket::DumpAllOptions(ostream &strm, int sock) {
+void Socket::DumpAllOptions(std::ostream &strm, int sock) {
   assert(&strm);
   strm << "socket_ops: {";
   bool has_written = false;

@@ -32,15 +32,16 @@
 
 #include <base/on_destroy.h>
 #include <base/time_util.h>
+#include <base/tmp_file.h>
 #include <base/zero.h>
-#include <log_util/init_logging.h>
 #include <signal/set.h>
+#include <test_util/test_logging.h>
 #include <thread/fd_managed_thread.h>
 
 using namespace Base;
-using namespace LogUtil;
 using namespace Server;
 using namespace Signal;
+using namespace TestUtil;
 using namespace Thread;
 
 namespace {
@@ -231,7 +232,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
-  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
+  TTmpFile test_logfile = InitTestLogging(argv[0]);
   return RUN_ALL_TESTS();
 }

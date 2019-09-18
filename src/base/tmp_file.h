@@ -37,6 +37,10 @@ namespace Base {
     /* name_template must adhere to the format specified by mkstemps(). */
     TTmpFile(const char *name_template, bool delete_on_destroy);
 
+    TTmpFile(const std::string &name_template, bool delete_on_destroy)
+        : TTmpFile(name_template.c_str(), delete_on_destroy) {
+    }
+
     /* Take ownership from 'that', leaving 'that' empty. */
     TTmpFile(TTmpFile &&that) noexcept;
 

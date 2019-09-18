@@ -35,7 +35,6 @@
 #include <base/zero.h>
 #include <socket/named_unix_socket.h>
 
-using namespace std;
 using namespace Base;
 using namespace Socket;
 
@@ -70,7 +69,7 @@ TAddress::TAddress(TSpecial special, in_port_t port) {
   SetPort(port);
 }
 
-TAddress::TAddress(istream &&strm) {
+TAddress::TAddress(std::istream &&strm) {
   assert(&strm);
 
   if (ws(strm).peek() == '!') {
@@ -83,7 +82,7 @@ TAddress::TAddress(istream &&strm) {
     Storage.ss_family = AF_LOCAL;
     std::string path;
     strm >> path;
-    strncpy(Local.sun_path, path.c_str(), sizeof(Local.sun_path));
+    std::strncpy(Local.sun_path, path.c_str(), sizeof(Local.sun_path));
     Local.sun_path[sizeof(Local.sun_path) - 1] = '\0';
   } else {
     /* Read the IP portion of the address into a temp buffer.  The buffer must
@@ -110,7 +109,7 @@ TAddress::TAddress(istream &&strm) {
           break;
         }
 
-        if (isxdigit(c) || c == '.' || c == ':') {
+        if (std::isxdigit(c) || c == '.' || c == ':') {
           if (csr >= end) {
             throw 0; // TODO
           }
@@ -127,7 +126,7 @@ TAddress::TAddress(istream &&strm) {
       for (;;) {
         int c = strm.peek();
 
-        if (isxdigit(c) || c == '.') {
+        if (std::isxdigit(c) || c == '.') {
           if (csr >= end) {
             throw 0; // TODO
           }
@@ -185,19 +184,19 @@ bool TAddress::operator==(const TAddress &that) const {
         break;
       }
       case AF_INET: {
-        result = (memcmp(&IPv4.sin_addr.s_addr, &that.IPv4.sin_addr.s_addr,
-                         sizeof(IPv4.sin_addr.s_addr)) == 0) &&
+        result = (std::memcmp(&IPv4.sin_addr.s_addr,
+            &that.IPv4.sin_addr.s_addr, sizeof(IPv4.sin_addr.s_addr)) == 0) &&
                  (IPv4.sin_port == that.IPv4.sin_port);
         break;
       }
       case AF_INET6: {
-        result = (memcmp(&IPv6.sin6_addr, &that.IPv6.sin6_addr,
+        result = (std::memcmp(&IPv6.sin6_addr, &that.IPv6.sin6_addr,
                          sizeof(IPv6.sin6_addr)) == 0) &&
                  (IPv6.sin6_port == that.IPv6.sin6_port);
         break;
       }
       case AF_LOCAL: {
-        result = !strcmp(Local.sun_path, that.Local.sun_path);
+        result = !std::strcmp(Local.sun_path, that.Local.sun_path);
         break;
       }
       NO_DEFAULT_CASE;
@@ -209,7 +208,7 @@ bool TAddress::operator==(const TAddress &that) const {
 
 size_t TAddress::GetHash() const {
   assert(this);
-  return _Fnv_hash_bytes(&Storage, GetLen(), 0);
+  return std::_Fnv_hash_bytes(&Storage, GetLen(), 0);
 }
 
 void TAddress::GetName(
@@ -287,9 +286,9 @@ TAddress &TAddress::SetPath(const char *path) {
 
   switch (Storage.ss_family) {
     case AF_LOCAL: {
-      strncpy(Local.sun_path, path, sizeof(Local.sun_path));
+      std::strncpy(Local.sun_path, path, sizeof(Local.sun_path));
       Local.sun_path[sizeof(Local.sun_path) - 1] = '\0';
-      if (strcmp(path, Local.sun_path)) {
+      if (std::strcmp(path, Local.sun_path)) {
         THROW_ERROR(TPathTooLong);
       }
       break;
@@ -300,7 +299,7 @@ TAddress &TAddress::SetPath(const char *path) {
   return *this;
 }
 
-void TAddress::Write(ostream &strm) const {
+void TAddress::Write(std::ostream &strm) const {
   assert(this);
   assert(&strm);
   in_port_t port = 0;
@@ -370,7 +369,7 @@ void Socket::Bind(TNamedUnixSocket &socket, const TAddress &address) {
   assert(&socket);
   assert(&address);
   assert(address.GetFamily() == AF_LOCAL);
-  string path(address.GetPath());
+  std::string path(address.GetPath());
 
   /* Make sure socket file doesn't already exist. */
   int ret = unlink(path.c_str());

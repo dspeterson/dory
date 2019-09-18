@@ -23,15 +23,15 @@
 
 #include <cstring>
 
-using namespace std;
 using namespace Base;
 
 const char *TCodeLocation::GetFile() const {
   assert(this);
-  return File + ((strncmp(File, SrcRoot, SrcRootLen) == 0) ? (SrcRootLen) : 0);
+  return File + ((std::strncmp(File, SrcRoot, SrcRootLen) == 0) ?
+      (SrcRootLen) : 0);
 }
 
-void TCodeLocation::Write(ostream &strm) const {
+void TCodeLocation::Write(std::ostream &strm) const {
   assert(this);
   assert(&strm);
   strm << '[' << GetFile() << ", " << LineNumber << ']';
@@ -39,4 +39,4 @@ void TCodeLocation::Write(ostream &strm) const {
 
 const char *TCodeLocation::SrcRoot = "src";
 
-size_t TCodeLocation::SrcRootLen = strlen(SrcRoot);
+size_t TCodeLocation::SrcRootLen = std::strlen(SrcRoot);

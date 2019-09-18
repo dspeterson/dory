@@ -20,10 +20,11 @@
  */
 
 #include <base/slice.h>
-  
+
+#include <cstddef>
+
 #include <gtest/gtest.h>
   
-using namespace std;
 using namespace Base;
 
 namespace {

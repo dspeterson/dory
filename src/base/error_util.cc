@@ -54,14 +54,14 @@ const char *Base::Strerror(int errno_value, char *buf, size_t buf_size) {
 #endif
 }
 
-static void DefaultDieHandler(const char *msg,
+void Base::DefaultDieHandler(const char *msg,
     void *const *stack_trace_buffer, size_t stack_trace_size) noexcept {
   /* Default behavior is to write 'msg' and stack trace to stderr.  If write()
      fails here, there is nothing we can do about it. */
-  const int out_fd = 2;  // stderr
-  write(out_fd, msg, std::strlen(msg));
-  write(out_fd, "\n", 1);
-  backtrace_symbols_fd(stack_trace_buffer, stack_trace_size, out_fd);
+  const int stderr_fd = 2;
+  write(stderr_fd, msg, std::strlen(msg));
+  write(stderr_fd, "\n", 1);
+  backtrace_symbols_fd(stack_trace_buffer, stack_trace_size, stderr_fd);
 }
 
 static TDieHandler DieHandler = DefaultDieHandler;
@@ -85,5 +85,7 @@ void Base::SetDieHandler(Base::TDieHandler handler) noexcept {
   /* Log error message and stack trace. */
   DieHandler(msg, trace_buf, static_cast<size_t>(trace_size));
 
-  abort();  // force core dump
+  /* Unless we are running with libasan, this should cause a core dump.
+     libasan disables core dumps by default, since they may be very large. */
+  std::abort();
 }

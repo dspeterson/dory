@@ -22,11 +22,11 @@
 #include <base/timer_fd.h>
 
 #include <algorithm>
+#include <cstddef>
 
 #include <base/error_util.h>
 #include <base/zero.h>
 
-using namespace std;
 using namespace Base;
 
 TTimerFd::TTimerFd(size_t milliseconds)

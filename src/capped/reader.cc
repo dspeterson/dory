@@ -21,11 +21,11 @@
 
 #include <capped/reader.h>
 
+#include <cstddef>
 #include <cstring>
 
 #include <base/error_util.h>
 
-using namespace std;
 using namespace Base;
 using namespace Capped;
 
@@ -63,7 +63,7 @@ TReader &TReader::Advance(void *data, size_t size) {
 
     if (size < avail) {
       if (data) {
-        memcpy(data, Cursor, size);
+        std::memcpy(data, Cursor, size);
       }
 
       Cursor += size;
@@ -75,7 +75,7 @@ TReader &TReader::Advance(void *data, size_t size) {
        This might reduce the remaining read to zero. */
 
     if (data) {
-      memcpy(data, Cursor, avail);
+      std::memcpy(data, Cursor, avail);
       reinterpret_cast<char *&>(data) += avail;
     }
 

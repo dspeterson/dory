@@ -21,9 +21,9 @@
 
 #include <capped/writer.h>
 
+#include <cstddef>
 #include <cstring>
 
-using namespace std;
 using namespace Capped;
 
 TWriter::TWriter(TPool *pool) noexcept
@@ -70,7 +70,7 @@ TWriter &TWriter::Write(const void *data, size_t size) {
     if (size <= avail) {
       /* The new data fits entirely in the existing space, so we won't need to
          link on any more blocks. */
-      memcpy(Cursor, data, size);
+      std::memcpy(Cursor, data, size);
       Cursor += size;
       NumBytes += size;
       return *this;
@@ -79,7 +79,7 @@ TWriter &TWriter::Write(const void *data, size_t size) {
     /* The new data doesn't entirely fit, but we'll make a start.  We will need
        to allocate more blocks, and we'll link them to the end of our existing
        list. */
-    memcpy(Cursor, data, avail);
+    std::memcpy(Cursor, data, avail);
     reinterpret_cast<const char *&>(data) += avail;
     size -= avail;
     link = &(LastBlock->NextBlock);
@@ -99,7 +99,7 @@ TWriter &TWriter::Write(const void *data, size_t size) {
   /* Copy as many whole blocks as we can. */
   while (size > block_size) {
     assert(block);
-    memcpy(block->Data, data, block_size);
+    std::memcpy(block->Data, data, block_size);
     reinterpret_cast<const char *&>(data) += block_size;
     size -= block_size;
     block = block->NextBlock;
@@ -107,7 +107,7 @@ TWriter &TWriter::Write(const void *data, size_t size) {
 
   /* Copy in the last of the new data (a whole or partial block) and get ready
      for the next write. */
-  memcpy(block->Data, data, size);
+  std::memcpy(block->Data, data, size);
   LastBlock = block;
   Cursor = block->Data + size;
   NumBytes += bytes_to_write;

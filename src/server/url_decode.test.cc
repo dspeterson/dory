@@ -21,14 +21,14 @@
 
 #include <server/url_decode.h>
 
-#include <log_util/init_logging.h>
+#include <base/tmp_file.h>
+#include <test_util/test_logging.h>
 
 #include <gtest/gtest.h>
 
 using namespace Base;
-using namespace LogUtil;
-using namespace std;
 using namespace Server;
+using namespace TestUtil;
 
 namespace {
 
@@ -47,13 +47,13 @@ namespace {
   };  // TUrlDecodeTest
 
   TEST_F(TUrlDecodeTest, Typical) {
-    string result_buf;
+    std::string result_buf;
     UrlDecode(AsPiece("Hello%2C%20World%26%25Ab%fF"), result_buf);
     ASSERT_EQ(result_buf, "Hello, World&%Ab\xff");
   }
 
   TEST_F(TUrlDecodeTest, Empty) {
-    string result_buf;
+    std::string result_buf;
 
     UrlDecode(AsPiece(""), result_buf);
     ASSERT_EQ(result_buf, "");
@@ -82,7 +82,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
-  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
+  TTmpFile test_logfile = InitTestLogging(argv[0]);
   return RUN_ALL_TESTS();
 }

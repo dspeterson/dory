@@ -164,6 +164,11 @@ namespace Base {
       void (*)(const char *msg, void *const *stack_trace_buffer,
           size_t stack_trace_size) noexcept>())>::type;
 
+  /* Default Die() handler.  This is used if SetDieHandler() below is not
+     called.  This writes its output to stderr. */
+  void DefaultDieHandler(const char *msg,
+      void *const *stack_trace_buffer, size_t stack_trace_size) noexcept;
+
   /* Specify a fatal error handler.  This should be called early during program
      initialization. */
   void SetDieHandler(TDieHandler handler) noexcept;

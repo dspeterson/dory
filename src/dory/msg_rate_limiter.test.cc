@@ -21,14 +21,16 @@
 
 #include <dory/msg_rate_limiter.h>
 
+#include <base/tmp_file.h>
 #include <dory/conf/topic_rate_conf.h>
-#include <log_util/init_logging.h>
+#include <test_util/test_logging.h>
 
 #include <gtest/gtest.h>
 
+using namespace Base;
 using namespace Dory;
 using namespace Dory::Conf;
-using namespace LogUtil;
+using namespace ::TestUtil;
 
 namespace {
 
@@ -143,7 +145,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
-  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
+  TTmpFile test_logfile = InitTestLogging(argv[0]);
   return RUN_ALL_TESTS();
 }

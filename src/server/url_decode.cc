@@ -26,14 +26,12 @@
 
 #include <iostream>
 
-using namespace std;
-
 using namespace Base;
 using namespace Server;
 
 // TODO: This to hex conversion I feel could be heavily optimized.
 static inline unsigned char HexToNum(const char *c_in, const char *start) {
-  auto c = static_cast<unsigned char>(tolower(*c_in));
+  auto c = static_cast<unsigned char>(std::tolower(*c_in));
 
   if(!isxdigit(c)) {
     throw TUrlDecodeError(static_cast<unsigned int>(c_in - start),
@@ -67,7 +65,7 @@ void Server::UrlDecode(const TPiece<const char> &in, std::string &out) {
 
   // Copy the contents of the piece to a non-const buffer
   char *str = new char[in.GetSize()];
-  memcpy(str, in.GetStart(), in.GetSize());
+  std::memcpy(str, in.GetStart(), in.GetSize());
 
   // Convert the string character by character until the whole thing is decoded
   char *store_csr = str;

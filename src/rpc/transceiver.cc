@@ -28,7 +28,6 @@
 #include <base/error_util.h>
 #include <base/zero.h>
 
-using namespace std;
 using namespace Base;
 using namespace Rpc;
 
@@ -96,7 +95,7 @@ iovec *TTransceiver::GetIoVecs(size_t size) {
       AvailLimit = nullptr;
       DataStart  = nullptr;
       DataLimit  = nullptr;
-      throw bad_alloc();
+      throw std::bad_alloc();
     }
 
     AvailLimit = AvailStart + size;

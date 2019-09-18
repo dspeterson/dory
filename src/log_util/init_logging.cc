@@ -29,7 +29,6 @@
 
 #include <base/basename.h>
 #include <base/counter.h>
-#include <base/error_util.h>
 #include <log/die_handler.h>
 #include <log/log.h>
 #include <log/log_entry.h>
@@ -124,9 +123,9 @@ static void HandleFileLogWriteFailure() {
   LogToFileFailed.Increment();
 }
 
-void LogUtil::InitLogging(const char *prog_name, Log::TPri max_level,
+void LogUtil::InitLoggingCommon(const char *prog_name, Log::TPri max_level,
     bool enable_stdout_stderr, bool enable_syslog,
-    const std::string &file_path, mode_t file_mode) {
+    const std::string &file_path, mode_t file_mode, TDieHandler die_handler) {
   /* Initialize syslog() logging even if enable_syslog is false.  syslog()
      logging can be enabled at any time, and it requires that initialization
      has been completed, so do the initialization now.
@@ -142,11 +141,13 @@ void LogUtil::InitLogging(const char *prog_name, Log::TPri max_level,
   SetPrefixWriter(WriteLogPrefix);
   SetLogMask(UpTo(max_level));
   SetLogWriter(enable_stdout_stderr, enable_syslog, file_path, file_mode);
-  SetDieHandler(DieHandler<TPri::ERR>);
-  LOG(TPri::NOTICE) << "Log started";
+  SetDieHandler(die_handler);
 }
 
-void LogUtil::InitTestLogging(const char *prog_name, const std::string &file_path) {
-  InitLogging(prog_name, TPri::DEBUG, false /* enable_stdout_stderr */,
-      true /* enable_syslog */, file_path);
+void LogUtil::InitLogging(const char *prog_name, Log::TPri max_level,
+    bool enable_stdout_stderr, bool enable_syslog,
+    const std::string &file_path, mode_t file_mode) {
+  InitLoggingCommon(prog_name, max_level, enable_stdout_stderr, enable_syslog,
+      file_path, file_mode, DieHandler<TPri::ERR>);
+  LOG(TPri::NOTICE) << "Log started";
 }

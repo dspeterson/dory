@@ -22,6 +22,7 @@
 #include <base/io_util.h>
   
 #include <cerrno>
+#include <cstddef>
 #include <cstring>
 #include <string>
 #include <system_error>
@@ -33,7 +34,6 @@
   
 #include <gtest/gtest.h>
   
-using namespace std;
 using namespace Base;
 
 namespace {
@@ -70,7 +70,7 @@ namespace {
 
     try {
       ReadAtMost(readable, ActualData, MaxActualSize, 1000);
-    } catch (const system_error &x) {
+    } catch (const std::system_error &x) {
       if (x.code().value() == ETIMEDOUT) {
         timed_out = true;
       } else {
@@ -95,7 +95,7 @@ namespace {
 
     try {
       WriteAtMost(writeable, ExpectedData, ExpectedSize);
-    } catch (const system_error &error) {
+    } catch (const std::system_error &error) {
       /* TODO: change this to error.code() == errc::broken_pipe */
       caught_broken_pipe = (error.code().value() == EPIPE);
     }
@@ -109,7 +109,7 @@ namespace {
       for (; ; ) {
         WriteAtMost(writeable, ExpectedData, ExpectedSize, 1000);
       }
-    } catch (const system_error &x) {
+    } catch (const std::system_error &x) {
       if (x.code().value() == ETIMEDOUT) {
         timed_out = true;
       } else {
@@ -141,7 +141,7 @@ namespace {
 
     try {
       TryReadExactly(readable, ActualData, ExpectedSize, 1000);
-    } catch (const system_error &x) {
+    } catch (const std::system_error &x) {
       if (x.code().value() == ETIMEDOUT) {
         timed_out = true;
       } else {
@@ -161,7 +161,7 @@ namespace {
       for (; ; ) {
         TryWriteExactly(writeable, ExpectedData, ExpectedSize, 1000);
       }
-    } catch (const system_error &x) {
+    } catch (const std::system_error &x) {
       if (x.code().value() == ETIMEDOUT) {
         timed_out = true;
       } else {

@@ -28,7 +28,6 @@
 
 #include <base/error_util.h>
 
-using namespace std;
 using namespace Base;
 
 TDirIter::TDirIter(const char *dir)
@@ -60,8 +59,8 @@ bool TDirIter::TryRefresh() const {
 #pragma GCC diagnostic pop
 
     if (ptr) {
-      if (DirEnt.d_type != DT_DIR || (strcmp(DirEnt.d_name, "..") &&
-          strcmp(DirEnt.d_name, "."))) {
+      if (DirEnt.d_type != DT_DIR || (std::strcmp(DirEnt.d_name, "..") &&
+          std::strcmp(DirEnt.d_name, "."))) {
         Pos = AtEntry;
       }
     } else {

@@ -26,7 +26,6 @@
   
 #include <gtest/gtest.h>
   
-using namespace std;
 using namespace Base;
 
 namespace {
@@ -46,7 +45,7 @@ namespace {
   };  // TStlUtilsTest
 
   TEST_F(TStlUtilsTest, Contains) {
-    unordered_set<int> container;
+    std::unordered_set<int> container;
     container.insert(101);
     ASSERT_TRUE(Contains(container, 101));
     ASSERT_FALSE(Contains(container, 202));

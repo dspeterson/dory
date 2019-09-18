@@ -25,7 +25,6 @@
 
 #include <base/error_util.h>
 
-using namespace std;
 using namespace Base;
 using namespace Socket::Db;
 

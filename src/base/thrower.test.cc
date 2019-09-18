@@ -20,18 +20,18 @@
  */
 
 #include <base/thrower.h>
-  
+ 
+#include <cstddef> 
 #include <string>
 #include <vector>
   
 #include <gtest/gtest.h>
   
-using namespace std;
 using namespace Base;
 
 namespace {
 
-  void GetParts(const char *msg, vector<string> &parts) {
+  void GetParts(const char *msg, std::vector<std::string> &parts) {
     assert(msg);
     assert(&parts);
     parts.clear();
@@ -43,7 +43,7 @@ namespace {
       char c = *cursor;
       if (start) {
         if (!c || c == ';') {
-          parts.push_back(string(start, end + 1));
+          parts.push_back(std::string(start, end + 1));
           if (!c) {
             break;
           }
@@ -80,11 +80,11 @@ namespace {
   };  // TThrowerTest
   
   TEST_F(TThrowerTest, GetParts) {
-    const vector<string> expected = {
+    const std::vector<std::string> expected = {
       "hello", "doctor", "name", "continue  yesterday"
     };
 
-    vector<string> actual;
+    std::vector<std::string> actual;
     GetParts("   hello; doctor;name   ;  continue  yesterday", actual);
     ASSERT_EQ(actual.size(), expected.size());
 
@@ -93,7 +93,7 @@ namespace {
     }
   }
   
-  DEFINE_ERROR(TFoo, invalid_argument, "a fooness has occurred");
+  DEFINE_ERROR(TFoo, std::invalid_argument, "a fooness has occurred");
   
   const char
       *Extra1 = "some stuff",
@@ -101,7 +101,7 @@ namespace {
   
   template <typename TThrowAs, typename TCatchAs>
   void ThrowIt() {
-    vector<string> parts;
+    std::vector<std::string> parts;
     try {
       THROW_ERROR(TThrowAs) << Extra1 << EndOfPart << Extra2;
     } catch (const TCatchAs &ex) {
@@ -115,9 +115,9 @@ namespace {
   
   TEST_F(TThrowerTest, Typical) {
     ThrowIt<TFoo, TFoo>();
-    ThrowIt<TFoo, invalid_argument>();
-    ThrowIt<TFoo, logic_error>();
-    ThrowIt<TFoo, exception>();
+    ThrowIt<TFoo, std::invalid_argument>();
+    ThrowIt<TFoo, std::logic_error>();
+    ThrowIt<TFoo, std::exception>();
   }
 
 }  // namespace

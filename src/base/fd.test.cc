@@ -20,7 +20,8 @@
  */
 
 #include <base/fd.h>
-  
+ 
+#include <cstddef> 
 #include <cstring>
   
 #include <base/io_util.h>
@@ -28,7 +29,6 @@
   
 #include <gtest/gtest.h>
   
-using namespace std;
 using namespace Base;
  
 namespace {

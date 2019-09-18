@@ -25,7 +25,7 @@
 
 #include <base/tmp_file.h>
 #include <dory/compress/compression_type.h>
-#include <log_util/init_logging.h>
+#include <test_util/test_logging.h>
 #include <xml/test/xml_test_initializer.h>
 
 #include <gtest/gtest.h>
@@ -34,7 +34,7 @@ using namespace Base;
 using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::Conf;
-using namespace LogUtil;
+using namespace ::TestUtil;
 using namespace Xml;
 using namespace Xml::Test;
 
@@ -293,7 +293,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
-  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
+  TTmpFile test_logfile = InitTestLogging(argv[0]);
   return RUN_ALL_TESTS();
 }

@@ -23,29 +23,31 @@
 #include <capped/writer.h>
 #include <capped/reader.h>
 
+#include <cstddef>
 #include <cstring>
 #include <sstream>
 #include <string>
 
-#include <log_util/init_logging.h>
+#include <base/tmp_file.h>
+#include <test_util/test_logging.h>
 
 #include <gtest/gtest.h>
 
-using namespace std;
+using namespace Base;
 using namespace Capped;
-using namespace LogUtil;
+using namespace TestUtil;
 
 namespace {
 
   /* Sample data. */
   const char *Str = "Mofo the Psychic Gorilla";
-  const size_t StrSize = strlen(Str);
+  const size_t StrSize = std::strlen(Str);
 
   /* Convert a blob to a std string. */
-  string ToString(const TBlob &blob) {
-    ostringstream strm;
-    blob.ForEachBlock<ostream &>(
-        [](const void *data, size_t size, ostream &os) -> bool {
+  std::string ToString(const TBlob &blob) {
+    std::ostringstream strm;
+    blob.ForEachBlock<std::ostream &>(
+        [](const void *data, size_t size, std::ostream &os) -> bool {
           os.write(static_cast<const char *>(data), size);
           return true;
         },
@@ -102,7 +104,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
-  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
+  TTmpFile test_logfile = InitTestLogging(argv[0]);
   return RUN_ALL_TESTS();
 }

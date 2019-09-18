@@ -32,7 +32,6 @@
   
 #include <gtest/gtest.h>
   
-using namespace std;
 using namespace Base;
 
 namespace {
@@ -66,8 +65,8 @@ namespace {
   TEST_F(TErrorUtilsTest, LibraryGenerated) {
     bool caught = false;
     try {
-      thread().detach();
-    } catch (const system_error &error) {
+      std::thread().detach();
+    } catch (const std::system_error &error) {
       caught = true;
     } catch (...) {}
     ASSERT_TRUE(caught);
@@ -78,7 +77,7 @@ namespace {
 
     try {
       IfLt0(read(-1, nullptr, 0));
-    } catch (const system_error &error) {
+    } catch (const std::system_error &error) {
       caught = true;
     } catch (...) {}
     ASSERT_TRUE(caught);
@@ -94,23 +93,23 @@ namespace {
     sigemptyset(&sigset);
     sigaddset(&sigset, SIGUSR1);
     sigprocmask(SIG_UNBLOCK, &sigset, nullptr);
-    mutex mx;
-    condition_variable cv;
+    std::mutex mx;
+    std::condition_variable cv;
     bool running = false, was_interrupted = false;
-    thread t([&mx, &cv, &running, &was_interrupted] {
+    std::thread t([&mx, &cv, &running, &was_interrupted] {
       /* lock */ {
-        unique_lock<mutex> lock(mx);
+        std::unique_lock<mutex> lock(mx);
         running = true;
         cv.notify_one();
       }
       try {
         IfLt0(pause());
-      } catch (system_error &error) {
+      } catch (std::system_error &error) {
         was_interrupted = WasInterrupted(error);
       } catch (...) {}
     });
     /* lock */ {
-      unique_lock<mutex> lock(mx);
+      std::unique_lock<mutex> lock(mx);
       while (!running) {
         cv.wait(lock);
       }

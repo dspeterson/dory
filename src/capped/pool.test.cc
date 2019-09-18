@@ -21,17 +21,18 @@
 
 #include <capped/pool.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 
-#include <log_util/init_logging.h>
+#include <base/tmp_file.h>
+#include <test_util/test_logging.h>
 
 #include <gtest/gtest.h>
 
-using namespace std;
 using namespace Base;
 using namespace Capped;
-using namespace LogUtil;
+using namespace TestUtil;
 
 namespace {
 
@@ -66,7 +67,7 @@ namespace {
     bool success;
 
     try {
-      unique_ptr<TPoint> p(new TPoint);
+      std::unique_ptr<TPoint> p(new TPoint);
       success = true;
     } catch (const TMemoryCapReached &) {
       success = false;
@@ -90,7 +91,7 @@ namespace {
   };  // TPoolTest
 
   TEST_F(TPoolTest, Typical) {
-    unique_ptr<TPoint>
+    std::unique_ptr<TPoint>
         a(new TPoint),
         b(new TPoint),
         c(new TPoint);
@@ -104,7 +105,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
-  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
+  TTmpFile test_logfile = InitTestLogging(argv[0]);
   return RUN_ALL_TESTS();
 }

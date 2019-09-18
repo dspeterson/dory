@@ -23,6 +23,7 @@
 
 #include <cassert>
 #include <cerrno>
+#include <cstddef>
 
 #include <poll.h>
 #include <unistd.h>
@@ -32,8 +33,6 @@
 
 #include <base/error_util.h>
 #include <base/time.h>
-
-using namespace std;
 
 size_t Base::ReadAtMost(int fd, void *buf, size_t max_size) {
   return static_cast<size_t>(IfLt0(read(fd, buf, max_size)));

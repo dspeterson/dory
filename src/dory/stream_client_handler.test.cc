@@ -48,8 +48,8 @@
 #include <dory/msg_state_tracker.h>
 #include <dory/stream_client_handler.h>
 #include <dory/test_util/misc_util.h>
-#include <log_util/init_logging.h>
 #include <server/unix_stream_server.h>
+#include <test_util/test_logging.h>
 #include <thread/gate.h>
 
 #include <gtest/gtest.h>
@@ -60,8 +60,8 @@ using namespace Dory;
 using namespace Dory::Client;
 using namespace Dory::Debug;
 using namespace Dory::TestUtil;
-using namespace LogUtil;
 using namespace Server;
+using namespace ::TestUtil;
 using namespace Thread;
 
 namespace {
@@ -458,7 +458,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
-  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
+  TTmpFile test_logfile = InitTestLogging(argv[0]);
   return RUN_ALL_TESTS();
 }

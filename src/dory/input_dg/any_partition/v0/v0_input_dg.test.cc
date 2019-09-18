@@ -30,6 +30,7 @@
 #include <string>
 #include <vector>
 
+#include <base/tmp_file.h>
 #include <capped/pool.h>
 #include <capped/reader.h>
 #include <dory/anomaly_tracker.h>
@@ -38,15 +39,16 @@
 #include <dory/msg.h>
 #include <dory/msg_state_tracker.h>
 #include <dory/test_util/misc_util.h>
-#include <log_util/init_logging.h>
+#include <test_util/test_logging.h>
 
 #include <gtest/gtest.h>
 
+using namespace Base;
 using namespace Capped;
 using namespace Dory;
 using namespace Dory::InputDg;
 using namespace Dory::TestUtil;
-using namespace LogUtil;
+using namespace ::TestUtil;
 
 namespace {
 
@@ -125,7 +127,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
-  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
+  TTmpFile test_logfile = InitTestLogging(argv[0]);
   return RUN_ALL_TESTS();
 }

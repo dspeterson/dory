@@ -25,6 +25,7 @@
 
 #include <sys/types.h>
 
+#include <base/error_util.h>
 #include <log/file_log_writer.h>
 #include <log/pri.h>
 
@@ -35,13 +36,16 @@ namespace LogUtil {
      logging will be disabled.  Note that all parameter values except
      'prog_name' can be changed at runtime via logging subsystem API.
    */
+  void InitLoggingCommon(const char *prog_name, Log::TPri max_level,
+      bool enable_stdout_stderr, bool enable_syslog,
+      const std::string &file_path, mode_t file_mode,
+      Base::TDieHandler die_handler);
+
+  /* Same as above, but uses an internally defined TDieHandler suitable for
+     non-test code. */
   void InitLogging(const char *prog_name, Log::TPri max_level,
       bool enable_stdout_stderr, bool enable_syslog,
       const std::string &file_path,
       mode_t file_mode = Log::TFileLogWriter::default_file_mode);
-
-  /* Logging subsystem initialization function intended to be called by unit
-     tests. */
-  void InitTestLogging(const char *prog_name, const std::string &file_path);
 
 }  // LogUtil

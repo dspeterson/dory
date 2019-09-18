@@ -24,10 +24,11 @@
 #include <string>
 
 #include <base/opt.h>
+#include <base/tmp_file.h>
 #include <dory/msg.h>
 #include <dory/msg_creator.h>
 #include <dory/test_util/misc_util.h>
-#include <log_util/init_logging.h>
+#include <test_util/test_logging.h>
 
 #include <gtest/gtest.h>
 
@@ -35,8 +36,7 @@ using namespace Base;
 using namespace Dory;
 using namespace Dory::Batch;
 using namespace Dory::TestUtil;
-using namespace Log;
-using namespace LogUtil;
+using namespace ::TestUtil;
 
 namespace {
 
@@ -288,7 +288,7 @@ namespace {
 }  // namespace
 
 int main(int argc, char **argv) {
-  InitTestLogging(argv[0], std::string() /* file_path */);
   ::testing::InitGoogleTest(&argc, argv);
+  TTmpFile test_logfile = InitTestLogging(argv[0]);
   return RUN_ALL_TESTS();
 }
