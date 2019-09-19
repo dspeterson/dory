@@ -142,6 +142,7 @@ void LogUtil::InitLoggingCommon(const char *prog_name, Log::TPri max_level,
   SetLogMask(UpTo(max_level));
   SetLogWriter(enable_stdout_stderr, enable_syslog, file_path, file_mode);
   SetDieHandler(die_handler);
+  DieOnTerminate();
 }
 
 void LogUtil::InitLogging(const char *prog_name, Log::TPri max_level,

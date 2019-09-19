@@ -150,7 +150,7 @@ namespace Base {
 
      The handler type is defined using decltype because C++ does not allow
      direct use of noexcept in a typedef or using declaration.
-     std::remove_reference is needed because the std::declval expression
+     std::remove_reference is needed because the std::declval() expression
      passed to decltype() is a temporary (i.e. an rvalue), so the
      decltype(...) evaluates to an rvalue reference to a function pointer.
 
@@ -172,6 +172,11 @@ namespace Base {
   /* Specify a fatal error handler.  This should be called early during program
      initialization. */
   void SetDieHandler(TDieHandler handler) noexcept;
+
+  /* Call std::set_terminate() to install a std::terminate_handler that
+     immediately calls Die(), which should generate a stack trace before
+     calling std::abort(). */
+  void DieOnTerminate() noexcept;
 
   /* Generate a stack trace, call fatal error handler specified by
      SetDieHandler() above, and dump core. */
