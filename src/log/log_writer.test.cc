@@ -27,6 +27,7 @@
 
 #include <unistd.h>
 
+#include <base/error_util.h>
 #include <base/on_destroy.h>
 #include <base/file_reader.h>
 #include <base/tmp_file.h>
@@ -114,5 +115,6 @@ namespace {
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
+  DieOnTerminate();
   return RUN_ALL_TESTS();
 }

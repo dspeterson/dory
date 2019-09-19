@@ -21,11 +21,13 @@
 
 #include <base/convert.h>
   
-#include <gtest/gtest.h>
-  
 #include <climits>
 #include <iostream>
-  
+
+#include <base/error_util.h>
+
+#include <gtest/gtest.h>
+
 using namespace Base;
  
 namespace {
@@ -69,5 +71,6 @@ namespace {
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
+  DieOnTerminate();
   return RUN_ALL_TESTS();
 }

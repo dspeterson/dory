@@ -28,7 +28,8 @@
 #include <system_error>
   
 #include <signal.h>
-  
+
+#include <base/error_util.h>
 #include <base/fd.h>
 #include <base/zero.h>
   
@@ -232,5 +233,6 @@ namespace {
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
+  DieOnTerminate();
   return RUN_ALL_TESTS();
 }

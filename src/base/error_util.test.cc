@@ -27,7 +27,8 @@
   
 #include <signal.h>
 #include <unistd.h>
-  
+
+#include <base/error_util.h> 
 #include <base/zero.h>
   
 #include <gtest/gtest.h>
@@ -121,3 +122,9 @@ namespace {
 #endif
 
 }  // namespace
+
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  DieOnTerminate();
+  return RUN_ALL_TESTS();
+}

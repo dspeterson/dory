@@ -23,6 +23,8 @@
 
 #include <cstdint>
 
+#include <base/error_util.h>
+
 #include <gtest/gtest.h>
 
 using namespace Base;
@@ -58,5 +60,6 @@ namespace {
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
+  DieOnTerminate();
   return RUN_ALL_TESTS();
 }

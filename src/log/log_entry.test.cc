@@ -26,12 +26,14 @@
 #include <memory>
 #include <string>
 
+#include <base/error_util.h>
 #include <log/log_entry_access_api.h>
 #include <log/log_writer_base.h>
 #include <log/pri.h>
 
 #include <gtest/gtest.h>
 
+using namespace Base;
 using namespace Log;
 
 namespace {
@@ -310,5 +312,6 @@ namespace {
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
+  DieOnTerminate();
   return RUN_ALL_TESTS();
 }

@@ -23,7 +23,8 @@
 
 #include <cstdlib>
 #include <iostream>
-  
+
+#include <base/error_util.h>
 #include <base/event_semaphore.h>
   
 #include <gtest/gtest.h>
@@ -90,5 +91,6 @@ namespace {
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
+  DieOnTerminate();
   return RUN_ALL_TESTS();
 }

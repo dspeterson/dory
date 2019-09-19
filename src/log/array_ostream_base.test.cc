@@ -25,8 +25,11 @@
 #include <cstddef>
 #include <string>
 
+#include <base/error_util.h>
+
 #include <gtest/gtest.h>
 
+using namespace Base;
 using namespace Log;
  
 namespace {
@@ -123,5 +126,6 @@ namespace {
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
+  DieOnTerminate();
   return RUN_ALL_TESTS();
 }
