@@ -73,7 +73,8 @@ namespace {
       return EntryWithPrefixAndNewline;
     }
 
-    void WriteEntry(TLogEntryAccessApi &entry) const noexcept override {
+    void WriteEntry(TLogEntryAccessApi &entry,
+        bool /* no_stdout_stderr */) const noexcept override {
       assert(this);
       Entry = entry.Get(false /* with_prefix */,
           false /* with_trailing_newline */).first;
@@ -87,7 +88,8 @@ namespace {
     }
 
     void WriteStackTrace(TPri /* pri */, void *const * /* buffer */,
-        size_t /* size */) const noexcept override {
+        size_t /* size */,
+        bool /* no_stdout_stderr */) const noexcept override {
       assert(this);
       ASSERT_TRUE(false);
     }

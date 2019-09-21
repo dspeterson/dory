@@ -143,35 +143,41 @@ namespace Base {
     size_t BufSize = 0;
   };
 
-  /* Pointer to function with the following signature:
+  /* TFatalMsgWriter is a pointer to a function with the following signature:
 
-         void func(const char *msg, void *const *stack_trace_buffer,
+         void msg_writer(const char *msg) noexcept;
+
+     TFatalStackTraceWriter is a pointer to a function with the following
+     signature:
+
+         void stack_trace_writer(void *const *stack_trace_buffer,
              size_t stack_trace_size) noexcept;
 
-     The handler type is defined using decltype because C++ does not allow
-     direct use of noexcept in a typedef or using declaration.
+     In both cases, the handler type is defined using decltype because C++ does
+     not allow direct use of noexcept in a typedef or using declaration.
      std::remove_reference is needed because the std::declval() expression
      passed to decltype() is a temporary (i.e. an rvalue), so the
      decltype(...) evaluates to an rvalue reference to a function pointer.
 
-     Function is called when a fatal error has occurred.  Parameter 'msg' is an
-     error message.  Parameters 'stack_trace_buffer' and 'stack_trace_size' are
-     the results of a call to backtrace().  The implementation should log 'msg'
-     along with a stack trace.  If possible, the stack trace should be logged
-     by calling backtrace_symbols_fd() for maximum reliability.
+     stack_trace_buffer and stack_trace_size contain the results of a call to
+     backtrace().  TFatalStackTraceWriter should ideally call
+     backtrace_symbols_fd() to log the stack trace with maximum reliability.
+     If this is not possible (for instance because output is not going to a
+     file descriptor), backtrace_symbols() should be used.
    */
-  using TDieHandler = std::remove_reference<decltype(std::declval<
-      void (*)(const char *msg, void *const *stack_trace_buffer,
+
+  using TFatalMsgWriter = std::remove_reference<decltype(std::declval<
+      void (*)(const char *msg) noexcept>())>::type;
+
+  using TFatalStackTraceWriter = std::remove_reference<decltype(std::declval<
+      void (*)(void *const *stack_trace_buffer,
           size_t stack_trace_size) noexcept>())>::type;
 
-  /* Default Die() handler.  This is used if SetDieHandler() below is not
-     called.  This writes its output to stderr. */
-  void DefaultDieHandler(const char *msg,
-      void *const *stack_trace_buffer, size_t stack_trace_size) noexcept;
-
-  /* Specify a fatal error handler.  This should be called early during program
-     initialization. */
-  void SetDieHandler(TDieHandler handler) noexcept;
+  /* Install functions for secondary fatal error output (i.e. logging
+     subsystem).  Functions should avoid writing to stdout/stderr since primary
+     output always goes to stderr. */
+  void InitSecondaryFatalErrorLogging(TFatalMsgWriter msg_writer,
+      TFatalStackTraceWriter stack_trace_writer) noexcept;
 
   /* Call std::set_terminate() to install a std::terminate_handler that
      immediately calls Die(), which should generate a stack trace before

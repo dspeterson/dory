@@ -28,6 +28,7 @@
 #include <dory/mock_kafka_server/config.h>
 #include <dory/mock_kafka_server/server.h>
 #include <dory/util/arg_parse_error.h>
+#include <log/log.h>
 #include <log/pri.h>
 #include <log_util/init_logging.h>
 
@@ -52,6 +53,7 @@ int mock_kafka_server_main(int argc, char **argv) {
 
   InitLogging(argv[0], TPri::DEBUG, cfg->LogEcho /* enable_stdout_stderr */,
       true /* enable_syslog */, std::string() /* file_path */);
+  LOG(TPri::NOTICE) << "Log started";
 
   /* Force all supported compression libraries to load.  We want to fail early
      if a library fails to load. */

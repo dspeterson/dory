@@ -87,7 +87,8 @@ TFileLogWriter::TFileLogWriter(const std::string &path, mode_t open_mode)
           new TFd() : new TFd(OpenLogPath(path.c_str(), open_mode))) {
 }
 
-void TFileLogWriter::WriteEntry(TLogEntryAccessApi &entry) const noexcept {
+void TFileLogWriter::WriteEntry(TLogEntryAccessApi &entry,
+    bool /* no_stdout_stderr */) const noexcept {
   assert(this);
 
   if (IsEnabled()) {
@@ -100,7 +101,7 @@ void TFileLogWriter::WriteEntry(TLogEntryAccessApi &entry) const noexcept {
 }
 
 void TFileLogWriter::WriteStackTrace(TPri /* pri */, void *const *buffer,
-    size_t size) const noexcept {
+    size_t size, bool /* no_stdout_stderr */) const noexcept {
   assert(this);
 
   if (IsEnabled()) {

@@ -41,7 +41,7 @@ namespace Log {
      effect (i.e. any previous log writer will be preserved). */
   void SetLogWriter(bool enable_stdout_stderr, bool enable_syslog,
       const std::string &file_path,
-      mode_t file_mode = TFileLogWriter::default_file_mode);
+      mode_t file_mode = TFileLogWriter::DEFAULT_FILE_MODE);
 
   /* If a log writer has already been set (via a call to SetLogWriter() above),
      and it was configured to write to a file, this will attempt to reopen the

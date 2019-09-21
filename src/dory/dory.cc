@@ -104,6 +104,7 @@ static int DoryMain(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
+  LOG(TPri::NOTICE) << "Log started";
   std::unique_ptr<TDoryServer> dory;
 
   try {

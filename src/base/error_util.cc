@@ -28,6 +28,7 @@
 #include <exception>
 
 #include <sys/types.h>
+#include <sys/uio.h>
 #include <unistd.h>
 
 #include <base/gettid.h>
@@ -59,21 +60,28 @@ const char *Base::Strerror(int errno_value, char *buf, size_t buf_size) {
 #endif
 }
 
-void Base::DefaultDieHandler(const char *msg,
-    void *const *stack_trace_buffer, size_t stack_trace_size) noexcept {
-  /* Default behavior is to write 'msg' and stack trace to stderr.  If write()
-     fails here, there is nothing we can do about it. */
-  const int stderr_fd = 2;
-  write(stderr_fd, msg, std::strlen(msg));
-  write(stderr_fd, "\n", 1);
-  backtrace_symbols_fd(stack_trace_buffer, stack_trace_size, stderr_fd);
+static void DefaultSecondaryFatalMsgWriter(const char * /* msg */) noexcept {
+  /* no-op */
 }
 
-static TDieHandler DieHandler = DefaultDieHandler;
+static void DefaultSecondaryFatalStackTraceWriter(
+    void *const * /*stack_trace_buffer*/,
+    size_t /* stack_trace_size */) noexcept {
+  /* no-op */
+}
 
-void Base::SetDieHandler(Base::TDieHandler handler) noexcept {
-  assert(handler);
-  DieHandler = handler;
+static TFatalMsgWriter SecondaryFatalMsgWriter =
+    DefaultSecondaryFatalMsgWriter;
+
+static TFatalStackTraceWriter SecondaryFatalStackTraceWriter =
+    DefaultSecondaryFatalStackTraceWriter;
+
+void Base::InitSecondaryFatalErrorLogging(TFatalMsgWriter msg_writer,
+    TFatalStackTraceWriter stack_trace_writer) noexcept {
+  assert(msg_writer);
+  assert(stack_trace_writer);
+  SecondaryFatalMsgWriter = msg_writer;
+  SecondaryFatalStackTraceWriter = stack_trace_writer;
 }
 
 [[ noreturn ]] static void TerminateHandler() noexcept {
@@ -86,20 +94,43 @@ void Base::DieOnTerminate() noexcept {
   std::set_terminate(TerminateHandler);
 }
 
+static const int stderr_fd = 2;
+
+static void WriteFatalMsgToStderr(const char *msg) noexcept {
+  /* In the presence of concurrency, a single call to writev() may make the
+     output look a bit nicer than two calls to write().  In some cases, the
+     entire output vector is supposed to be written atomically, which avoids
+     interleaved output between the message and trailing newline.  The write is
+     best effort.  If it fails, there is nothing we can do about it, so ignore
+     the error. */
+  struct iovec iov[2];
+  iov[0].iov_base = const_cast<char *>(msg);
+  iov[0].iov_len = std::strlen(msg);
+  iov[1].iov_base = const_cast<char *>("\n");
+  iov[1].iov_len = 1;
+  writev(stderr_fd, iov, sizeof(iov) / sizeof(*iov));
+}
+
 static void EmitStackTrace(const char *msg) {
   /* trace_buf is static because we want to use an off-stack location.  This
      minimizes stack usage to preserve memory contents beyond the end of the
      stack, which can potentially be useful to examine in the core file.  Due
      to die_flag (see below), this code path can only execute once, so we don't
-     have to worry about reentrant usage. */
-  static const size_t STACK_TRACE_SIZE = 128;
+     have to worry about concurrency. */
+  static const int STACK_TRACE_SIZE = 128;
   static void *trace_buf[STACK_TRACE_SIZE];
-  const int trace_size = backtrace(trace_buf,
-      static_cast<int>(STACK_TRACE_SIZE));
-  assert(static_cast<size_t>(trace_size) <= STACK_TRACE_SIZE);
+  const int trace_size = backtrace(trace_buf, STACK_TRACE_SIZE);
+  assert(trace_size <= STACK_TRACE_SIZE);
 
-  /* Log error message and stack trace. */
-  DieHandler(msg, trace_buf, static_cast<size_t>(trace_size));
+  /* Write error message and stack trace to stderr first, since this should
+     never fail in a manner that causes an additional fatal error. */
+  WriteFatalMsgToStderr(msg);
+  backtrace_symbols_fd(trace_buf, trace_size, stderr_fd);
+
+  /* Now write output to any configured secondary location(s).  For instance,
+     maybe syslog and/or a file. */
+  SecondaryFatalMsgWriter(msg);
+  SecondaryFatalStackTraceWriter(trace_buf, trace_size);
 }
 
 /* First caller of Die() takes this flag. */
@@ -121,7 +152,7 @@ static std::atomic<pid_t> die_flag_holder(0);
        threads can be obtained from the core file. */
     die_flag_holder.store(my_tid);
 
-    EmitStackTrace(msg);
+    EmitStackTrace(msg);  // implementation assumes no concurrency
 
     /* Unless we are running with libasan, this should cause a core dump.
        libasan disables core dumps by default, since they may be very large. */
@@ -142,26 +173,22 @@ static std::atomic<pid_t> die_flag_holder(0);
              will either see the other thread's ID or 0 when reading
              die_flag_holder below.
 
-     All writes to stderr below are best effort.  If a write fails, there is
-     nothing we can do about it, so ignore the error.
+     Don't log secondary output at this point, since that risks calling Die()
+     recursively.  Another atomic_flag here would allow us to safely log
+     secondary output, but it's probably not worth the effort.
    */
-  const int stderr_fd = 2;
-  write(stderr_fd, msg, std::strlen(msg));
-  write(stderr_fd, "\n", 1);
+
+  WriteFatalMsgToStderr(msg);
 
   if (die_flag_holder.load() == my_tid) {
-    /* Call abort() immediately to prevent recursion from continuing until we
-       overflow our stack. */
-    const char abort_msg[] = "Calling abort() on recursive Die() invocation";
-    write(stderr_fd, abort_msg, std::strlen(abort_msg));
-    write(stderr_fd, "\n", 1);
+    /* Call abort() to prevent recursion from continuing until we overflow our
+       stack. */
+    WriteFatalMsgToStderr("Calling abort() on recursive Die() invocation");
     std::abort();
   }
 
-  const char other_thread_msg[] =
-      "Other thread detected in Die(): waiting for stack trace to finish";
-  write(stderr_fd, other_thread_msg, std::strlen(other_thread_msg));
-  write(stderr_fd, "\n", 1);
+  WriteFatalMsgToStderr(
+      "Other thread detected in Die(): waiting for stack trace to finish");
 
   /* Wait for die_flag holder to finish stack trace and call abort(). */
   for (; ; ) {

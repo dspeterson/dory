@@ -45,7 +45,7 @@ namespace Log {
     /* Create a new log writer from scratch, based on config. */
     TCombinedLogWriter(bool enable_stdout_stderr, bool enable_syslog,
         const std::string &file_path,
-        mode_t file_mode = TFileLogWriter::default_file_mode);
+        mode_t file_mode = TFileLogWriter::DEFAULT_FILE_MODE);
 
     /* Create a new log writer, attempting to reuse any open file descriptor
        for logfile from 'old_writer'.  This avoids unnecessarily closing and
@@ -53,7 +53,7 @@ namespace Log {
     TCombinedLogWriter(const TCombinedLogWriter &old_writer,
         bool enable_stdout_stderr, bool enable_syslog,
         const std::string &file_path,
-        mode_t file_mode = TFileLogWriter::default_file_mode);
+        mode_t file_mode = TFileLogWriter::DEFAULT_FILE_MODE);
 
     bool StdoutStderrLoggingIsEnabled() const noexcept {
       assert(this);
@@ -81,12 +81,13 @@ namespace Log {
       return FileLogWriter.GetOpenMode();
     }
 
-    void WriteEntry(TLogEntryAccessApi &entry) const noexcept override;
+    void WriteEntry(TLogEntryAccessApi &entry,
+        bool no_stdout_stderr) const noexcept override;
 
     /* The parameters represent the results from a call to backtrace().  Write
        a stack trace to the log. */
     void WriteStackTrace(TPri pri, void *const *buffer,
-        size_t size) const noexcept override;
+        size_t size, bool no_stdout_stderr) const noexcept override;
 
     private:
     const TStdoutStderrLogWriter StdoutStderrLogWriter;

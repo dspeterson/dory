@@ -80,11 +80,16 @@ namespace Log {
         "Not enough space for trailing newline and C string terminator");
 
     public:
+    /* no_stdout_stderr will get a true value only when we are writing fatal
+       error output, which always goes to stderr regardless of how the logging
+       subsystem is configured.  To avoid duplication, we therefore we want to
+       suppress stdout/stderr output from logging in this case. */
     TLogEntry(std::shared_ptr<TLogWriterBase> &&log_writer,
-        TPri level) noexcept
+        TPri level, bool no_stdout_stderr = false) noexcept
         : TArrayOstreamBase<BufSize, PrefixSpace, 2 /* SuffixSpace */>(),
           LogWriter(std::move(log_writer)),
-          Level(level) {
+          Level(level),
+          NoStdoutStderr(no_stdout_stderr) {
       assert(!!LogWriter);
     }
 
@@ -175,17 +180,20 @@ namespace Log {
         Written = true;
 
         if (!this->IsEmpty()) {
-          LogWriter->WriteEntry(*this);
+          LogWriter->WriteEntry(*this, NoStdoutStderr);
         }
       }
     }
 
     private:
     /* Destination to write log entry to. */
-    std::shared_ptr<TLogWriterBase> LogWriter;
+    const std::shared_ptr<TLogWriterBase> LogWriter;
 
     /* Log levels correspond to those defined by syslog(). */
     const TPri Level;
+
+    /* If true, omit stdout/stderr output. */
+    const bool NoStdoutStderr;
 
     /* Prefix can be at most PrefixSpace bytes, and starts at buffer index
        (PrefixSpace - PrefixLen). */

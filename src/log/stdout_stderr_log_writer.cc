@@ -33,10 +33,10 @@ void TStdoutStderrLogWriter::SetErrorHandler(TErrorHandler handler) {
 }
 
 void TStdoutStderrLogWriter::WriteEntry(
-    TLogEntryAccessApi &entry) const noexcept {
+    TLogEntryAccessApi &entry, bool no_stdout_stderr) const noexcept {
   assert(this);
 
-  if (Enabled) {
+  if (Enabled && !no_stdout_stderr) {
     try {
       /* Anything at least as severe as LOG_WARNING goes to stderr, so it
          doesn't get lost in the noise. */
@@ -47,11 +47,11 @@ void TStdoutStderrLogWriter::WriteEntry(
   }
 }
 
-void TStdoutStderrLogWriter::WriteStackTrace(TPri /* pri */, void *const *buffer,
-    size_t size) const noexcept {
+void TStdoutStderrLogWriter::WriteStackTrace(TPri /* pri */,
+    void *const *buffer, size_t size, bool no_stdout_stderr) const noexcept {
   assert(this);
 
-  if (Enabled) {
+  if (Enabled && !no_stdout_stderr) {
     backtrace_symbols_fd(buffer, static_cast<int>(size), 2 /* stderr */);
   }
 }

@@ -64,7 +64,8 @@ TSyslogLogWriter::TSyslogLogWriter(bool enabled)
   }
 }
 
-void TSyslogLogWriter::WriteEntry(TLogEntryAccessApi &entry) const noexcept {
+void TSyslogLogWriter::WriteEntry(TLogEntryAccessApi &entry,
+    bool /* no_stdout_stderr */) const noexcept {
   assert(this);
 
   if (Enabled) {
@@ -78,7 +79,7 @@ void TSyslogLogWriter::WriteEntry(TLogEntryAccessApi &entry) const noexcept {
 }
 
 void TSyslogLogWriter::WriteStackTrace(TPri pri, void *const *buffer,
-    size_t size) const noexcept {
+    size_t size, bool /* no_stdout_stderr */) const noexcept {
   assert(this);
 
   if (Enabled) {

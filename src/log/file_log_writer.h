@@ -79,14 +79,14 @@ namespace Log {
        so it should be set before concurrent access is possible. */
     static void SetErrorHandler(TErrorHandler handler) noexcept;
 
-    static const mode_t default_file_mode =
+    static const mode_t DEFAULT_FILE_MODE =
         S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 
     /* Throws std::system_error on error opening file.  An empty path disables
        the writer.  If nonempty, the path must be absolute (i.e. it must start
        with '/'). */
     TFileLogWriter(const std::string &path,
-        mode_t open_mode = default_file_mode);
+        mode_t open_mode = DEFAULT_FILE_MODE);
 
     TFileLogWriter(const TFileLogWriter &) = default;
 
@@ -110,12 +110,13 @@ namespace Log {
     }
 
     /* Write 'entry' to file.  A trailing newline will be appended. */
-    void WriteEntry(TLogEntryAccessApi &entry) const noexcept override;
+    void WriteEntry(TLogEntryAccessApi &entry,
+        bool no_stdout_stderr) const noexcept override;
 
     /* The parameters represent the results from a call to backtrace().  Write
        a stack trace to the log. */
     void WriteStackTrace(TPri pri, void *const *buffer,
-        size_t size) const noexcept override;
+        size_t size, bool no_stdout_stderr) const noexcept override;
 
     private:
     static void NullErrorHandler() noexcept;

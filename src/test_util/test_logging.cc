@@ -27,25 +27,14 @@
 
 #include <base/basename.h>
 #include <base/error_util.h>
-#include <log/die_handler.h>
 #include <log/log.h>
 #include <log_util/init_logging.h>
 
 #include <gtest/gtest.h>
 
 using namespace Log;
+using namespace LogUtil;
 using namespace TestUtil;
-
-static void TestDieHandler(const char *msg, void *const *stack_trace_buffer,
-    size_t stack_trace_size) {
-  /* First write output to stderr, so user sees error while looking at
-     stdout/stderr output from test. */
-  Base::DefaultDieHandler(msg, stack_trace_buffer, stack_trace_size);
-
-  /* Then write output to log.  This will write to logfile (a temporary file
-     that gets left behind on fatal error or test failure). */
-  Log::DieHandler<TPri::ERR>(msg, stack_trace_buffer, stack_trace_size);
-}
 
 static Base::TTmpFile MakeTestLogfile(const std::string &prog_basename) {
   std::string name_template("/tmp/");
@@ -85,10 +74,9 @@ Base::TTmpFile TestUtil::InitTestLogging(const char *prog_name) {
   /* For unit tests, write normal log messages only to the caller-specified
      logfile, which will be a temporary file.  Fatal error output goes to both
      stderr and the logfile. */
-  LogUtil::InitLoggingCommon(prog_name, TPri::DEBUG,
-      false /* enable_stdout_stderr */, false /* enable_syslog */,
-      tmp_logfile.GetName(), TFileLogWriter::default_file_mode,
-      TestDieHandler);
+  InitLogging(prog_name, TPri::DEBUG, false /* enable_stdout_stderr */,
+      false /* enable_syslog */, tmp_logfile.GetName(),
+      TFileLogWriter::DEFAULT_FILE_MODE);
 
   testing::UnitTest::GetInstance()->listeners().Append(
       new TestFailureEventListener);

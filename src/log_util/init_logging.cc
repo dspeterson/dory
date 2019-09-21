@@ -29,7 +29,6 @@
 
 #include <base/basename.h>
 #include <base/counter.h>
-#include <log/die_handler.h>
 #include <log/log.h>
 #include <log/log_entry.h>
 #include <log/log_prefix_assign_api.h>
@@ -123,9 +122,27 @@ static void HandleFileLogWriteFailure() {
   LogToFileFailed.Increment();
 }
 
-void LogUtil::InitLoggingCommon(const char *prog_name, Log::TPri max_level,
+static void LogFatalMsg(const char *msg) noexcept {
+  /* Write the fatal error message and stack trace regardless of what
+     IsEnabled(pri) would return.  A fatal error is always interesting enough
+     to log.  Parameter 'pri' will be passed to syslog() if syslog() logging is
+     enabled.  Avoid logging to stderr, since that has already been done. */
+  TLogEntryType(GetLogWriter(), TPri::ERR, true /* no_stdout_stderr */) << msg;
+}
+
+static void LogFatalStackTrace(void *const *stack_trace_buffer,
+    size_t stack_trace_size) noexcept {
+  /* Write the stack trace regardless of what IsEnabled(pri) would return.  A
+     fatal error is always interesting enough to log.  Parameter 'pri' will be
+     passed to syslog() if syslog() logging is enabled.  Avoid logging to
+     stderr, since that has already been done. */
+  GetLogWriter()->WriteStackTrace(TPri::ERR, stack_trace_buffer,
+      stack_trace_size, true /* no_stdout_stderr */);
+}
+
+void LogUtil::InitLogging(const char *prog_name, Log::TPri max_level,
     bool enable_stdout_stderr, bool enable_syslog,
-    const std::string &file_path, mode_t file_mode, TDieHandler die_handler) {
+    const std::string &file_path, mode_t file_mode) {
   /* Initialize syslog() logging even if enable_syslog is false.  syslog()
      logging can be enabled at any time, and it requires that initialization
      has been completed, so do the initialization now.
@@ -141,14 +158,6 @@ void LogUtil::InitLoggingCommon(const char *prog_name, Log::TPri max_level,
   SetPrefixWriter(WriteLogPrefix);
   SetLogMask(UpTo(max_level));
   SetLogWriter(enable_stdout_stderr, enable_syslog, file_path, file_mode);
-  SetDieHandler(die_handler);
+  InitSecondaryFatalErrorLogging(LogFatalMsg, LogFatalStackTrace);
   DieOnTerminate();
-}
-
-void LogUtil::InitLogging(const char *prog_name, Log::TPri max_level,
-    bool enable_stdout_stderr, bool enable_syslog,
-    const std::string &file_path, mode_t file_mode) {
-  InitLoggingCommon(prog_name, max_level, enable_stdout_stderr, enable_syslog,
-      file_path, file_mode, DieHandler<TPri::ERR>);
-  LOG(TPri::NOTICE) << "Log started";
 }
