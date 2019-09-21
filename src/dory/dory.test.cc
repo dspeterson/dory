@@ -30,7 +30,6 @@
 #include <utility>
 #include <vector>
 
-#include <boost/lexical_cast.hpp>
 #include <netinet/in.h>
 
 #include <base/field_access.h>
@@ -183,8 +182,7 @@ namespace {
     std::ofstream ofs(tmp_file.GetName());
     ofs << DoryConf;
     ofs.close();
-    std::string msg_buffer_max_str =
-        boost::lexical_cast<std::string>(MsgBufferMaxKb);
+    std::string msg_buffer_max_str = std::to_string(MsgBufferMaxKb);
     std::vector<const char *> args;
     args.push_back("dory");
     args.push_back("--config_path");
@@ -302,10 +300,9 @@ namespace {
        starting at 10000.  During the test, dory will connect to these ports
        and forward messages it gets from the UNIX domain socket. */
     std::string line("ports 10000 ");
-    line += boost::lexical_cast<std::string>(num_brokers);
+    line += std::to_string(num_brokers);
     result.push_back(line);
-    std::string num_partitions_str =
-        boost::lexical_cast<std::string>(partitions_per_topic);
+    std::string num_partitions_str = std::to_string(partitions_per_topic);
     size_t i = 0;
 
     for (const auto &topic : topic_vec) {
@@ -322,7 +319,7 @@ namespace {
       size_t offset = i % num_brokers;
       ++i;
       line += " ";
-      line += boost::lexical_cast<std::string>(offset);
+      line += std::to_string(offset);
       result.push_back(line);
     }
   }
@@ -1167,7 +1164,7 @@ namespace {
 
     if (compression_level.IsKnown()) {
       level_blurb = " level=\"";
-      level_blurb += boost::lexical_cast<std::string>(*compression_level);
+      level_blurb += std::to_string(*compression_level);
       level_blurb += "\"";
     }
 
@@ -1192,7 +1189,7 @@ namespace {
        << "        <namedConfigs>" << std::endl
        << "            <config name=\"config1\" type=\"" << compression_type
        << "\"" << level_blurb << " minSize=\""
-       << boost::lexical_cast<std::string>(compression_min_size) << "\" />"
+       << std::to_string(compression_min_size) << "\" />"
        << std::endl
        << "        </namedConfigs>" << std::endl
        << std::endl
@@ -1584,7 +1581,7 @@ namespace {
   std::string CreateStressTestMsgBody(const std::string &msg_body_base,
       size_t seq, size_t pad) {
     std::string result;
-    std::string seq_str = boost::lexical_cast<std::string>(seq);
+    std::string seq_str = std::to_string(seq);
 
     if (seq_str.size() < pad) {
       result.assign(pad - seq_str.size(), '0');

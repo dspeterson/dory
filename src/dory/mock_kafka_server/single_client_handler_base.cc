@@ -24,8 +24,6 @@
 #include <iostream>
 #include <limits>
 
-#include <boost/lexical_cast.hpp>
-
 #include <base/field_access.h>
 #include <base/gettid.h>
 #include <base/no_default_case.h>
@@ -126,10 +124,10 @@ bool TSingleClientHandlerBase::OpenOutputFile() {
     flags |= std::ios_base::trunc;
     path += "/server.out.";
     size_t port = Setup.BasePort + PortOffset;
-    path += boost::lexical_cast<std::string>(port);
+    path += std::to_string(port);
     path += ".";
     pid_t tid = Gettid();
-    path += boost::lexical_cast<std::string>(tid);
+    path += std::to_string(tid);
   }
 
   Out.open(path, flags);
@@ -463,7 +461,7 @@ void TSingleClientHandlerBase::PrintCurrentMsgSet(const TMsgSet &msg_set,
     if (key.empty()) {
       Out << "      n: " << MsgCount << " v: [" << value << "]" << std::endl;
     } else {
-      MsgCountStr = boost::lexical_cast<std::string>(MsgCount);
+      MsgCountStr = std::to_string(MsgCount);
       std::string pad(MsgCountStr.size(), ' ');
       Out << "      n: " << MsgCount << " k: [" << key << "]" << std::endl
           << "         " << pad << " v: [" << value << "]" << std::endl;

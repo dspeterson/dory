@@ -39,7 +39,7 @@ using namespace Dory::Util;
 
 static std::string MakeErrorMsg(size_t line_num, const char *msg) {
   std::string blurb("Error on line ");
-  blurb += boost::lexical_cast<std::string>(line_num);
+  blurb += std::to_string(line_num);
   blurb += " of setup file: ";
   blurb += msg;
   return blurb;

@@ -29,8 +29,6 @@
 #include <stdexcept>
 #include <string>
 
-#include <boost/lexical_cast.hpp>
-
 #include <base/counter.h>
 #include <base/on_destroy.h>
 #include <third_party/lz4/lz4-1.8.0/lib/lz4frame.h>
@@ -128,9 +126,9 @@ size_t TLz4Codec::ComputeUncompressedResultBufSpace(
     Lz4Error.Increment();
     std::string msg(
         "Bad uncompressed data size in lz4 frame: compressed size ");
-    msg += boost::lexical_cast<std::string>(compressed_size);
+    msg += std::to_string(compressed_size);
     msg += " uncompressed size ";
-    msg += boost::lexical_cast<std::string>(uncompressed_size);
+    msg += std::to_string(uncompressed_size);
     throw TCompressionCodecApi::TError(msg.c_str());
   }
 
@@ -145,9 +143,9 @@ static void CheckReadBufferOverflow(size_t bytes_consumed, size_t capacity,
     std::string msg("Bug in ");
     msg += fn_name;
     msg += "(): consumed ";
-    msg += boost::lexical_cast<std::string>(bytes_consumed);
+    msg += std::to_string(bytes_consumed);
     msg += " bytes from buffer with size of only ";
-    msg += boost::lexical_cast<std::string>(capacity);
+    msg += std::to_string(capacity);
     /* There is a bug in the compression library that caused data to be
        consumed past the end of our buffer. */
     throw std::logic_error(msg.c_str());
@@ -162,9 +160,9 @@ static void CheckWriteBufferOverflow(size_t bytes_written, size_t capacity,
     std::string msg("Bug in ");
     msg += fn_name;
     msg += "(): overwrote buffer of size ";
-    msg += boost::lexical_cast<std::string>(capacity);
+    msg += std::to_string(capacity);
     msg += " with output of size ";
-    msg += boost::lexical_cast<std::string>(bytes_written);
+    msg += std::to_string(bytes_written);
     /* There is a bug in the compression library that caused data to be written
        past the end of our buffer.  Terminate immediately, since memory has
        been trashed. */

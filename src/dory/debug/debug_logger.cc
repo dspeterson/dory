@@ -24,7 +24,6 @@
 #include <cerrno>
 #include <cstring>
 
-#include <boost/lexical_cast.hpp>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -109,13 +108,13 @@ void TDebugLogger::LogMsg(const TMsg &msg) {
   }
 
   LogEntry = "ts: ";
-  LogEntry += boost::lexical_cast<std::string>(msg.GetTimestamp());
+  LogEntry += std::to_string(msg.GetTimestamp());
   LogEntry += " topic: ";
-  LogEntry += boost::lexical_cast<std::string>(msg.GetTopic().size());
+  LogEntry += std::to_string(msg.GetTopic().size());
   LogEntry += "[";
   LogEntry += msg.GetTopic();
   LogEntry += "] key: ";
-  LogEntry += boost::lexical_cast<std::string>(Encoded.size());
+  LogEntry += std::to_string(Encoded.size());
   LogEntry += "[";
   LogEntry += Encoded;
   LogEntry += "] value: ";
@@ -129,7 +128,7 @@ void TDebugLogger::LogMsg(const TMsg &msg) {
         static_cast<unsigned int>(RawData.size()));
   }
 
-  LogEntry += boost::lexical_cast<std::string>(Encoded.size());
+  LogEntry += std::to_string(Encoded.size());
   LogEntry += "[";
   LogEntry += Encoded;
   LogEntry += "]\n";

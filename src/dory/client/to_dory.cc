@@ -35,7 +35,6 @@
 #include <utility>
 #include <vector>
 
-#include <boost/lexical_cast.hpp>
 #include <netinet/in.h>
 
 #include <base/basename.h>
@@ -244,7 +243,7 @@ bool CreateDg(std::vector<uint8_t> &buf, const TConfig &cfg,
   std::string value;
 
   if (cfg.Seq) {
-    std::string seq = boost::lexical_cast<std::string>(msg_count);
+    std::string seq = std::to_string(msg_count);
 
     if (seq.size() < cfg.Pad) {
       value.assign(cfg.Pad - seq.size(), '0');

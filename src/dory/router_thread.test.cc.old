@@ -27,8 +27,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/lexical_cast.hpp>
-
 #include <capped/pool.h>
 #include <capped/reader.h>
 #include <dory/anomaly_tracker.h>
@@ -125,9 +123,8 @@ TRouterThreadConfig::TRouterThreadConfig(in_port_t broker_port,
       ProdMngrFactory(true),
       DebugSetup("/unused/path", TDebugSetup::MAX_LIMIT,
                  TDebugSetup::MAX_LIMIT) {
-  std::string msg_buffer_max_str =
-      boost::lexical_cast<std::string>(msg_buffer_max_kb);
-  std::string broker_port_str = boost::lexical_cast<std::string>(broker_port);
+  std::string msg_buffer_max_str = std::to_string(msg_buffer_max_kb);
+  std::string broker_port_str = std::to_string(broker_port);
   Args.push_back("dory");
   Args.push_back("--kafka_broker");
   Args.push_back("localhost");
@@ -193,7 +190,7 @@ FIXTURE(Test1) {
 
   for (size_t i = 0; i < 16; ++i) {
     s = "message number ";
-    s += boost::lexical_cast<std::string>(i);
+    s += std::to_string(i);
     msg_vec.push_back(s);
   }
 

@@ -30,7 +30,6 @@
 #include <stdexcept>
 #include <string>
 
-#include <boost/lexical_cast.hpp>
 #include <zlib.h>
 
 #include <base/counter.h>
@@ -105,7 +104,7 @@ static int CheckStatus(int status, const z_stream &strm,
     default: {
       ZlibUnknownError.Increment();
       std::string blurb("unknown error ");
-      blurb += boost::lexical_cast<std::string>(status);
+      blurb += std::to_string(status);
       ThrowZlibError(strm, zlib_function_name, blurb.c_str());
       break;  // not reached
     }

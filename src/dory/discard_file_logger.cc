@@ -777,7 +777,7 @@ bool TDiscardFileLogger::CheckMaxFileSize(uint64_t next_entry_size) {
   uint64_t epoch_ms = GetEpochMilliseconds();
   std::string rename_path(LogPath);
   rename_path += ".";
-  rename_path += boost::lexical_cast<std::string>(epoch_ms);
+  rename_path += std::to_string(epoch_ms);
   LogFd.Reset();
   int ret = rename(LogPath.c_str(), rename_path.c_str());
 

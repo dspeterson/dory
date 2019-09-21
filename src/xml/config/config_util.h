@@ -30,7 +30,6 @@
 #include <utility>
 #include <vector>
 
-#include <boost/lexical_cast.hpp>
 #include <xercesc/dom/DOMDocument.hpp>
 #include <xercesc/dom/DOMElement.hpp>
 #include <xercesc/dom/DOMText.hpp>
@@ -320,8 +319,7 @@ namespace Xml {
         NARROW result = static_cast<NARROW>(wide);
 
         if (static_cast<WIDE>(result) != wide) {
-          throw TAttrOutOfRange(elem, attr_name,
-              boost::lexical_cast<std::string>(wide).c_str());
+          throw TAttrOutOfRange(elem, attr_name, std::to_string(wide).c_str());
         }
 
         return result;

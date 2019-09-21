@@ -26,8 +26,6 @@
 #include <mutex>
 #include <string>
 
-#include <boost/lexical_cast.hpp>
-
 #include <base/counter.h>
 #include <dory/compress/snappy/lib_snappy.h>
 
@@ -67,7 +65,7 @@ static void CheckSnappyStatus(snappy_status status,
     default: {
       SnappyUnknownError.Increment();
       msg += "unknown error ";
-      msg += boost::lexical_cast<std::string>(status);
+      msg += std::to_string(status);
       break;
     }
   }
