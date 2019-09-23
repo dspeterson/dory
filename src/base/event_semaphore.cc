@@ -59,7 +59,6 @@ void TEventSemaphore::Reset(int initial_count) {
 
     if (dup_fd >= 0) {
       assert(dup_fd == Fd);
-      close(new_fd);
 
       /* Preserve setting of close on exec flag. */
       IfLt0(fcntl(dup_fd, F_SETFD, flags));
