@@ -187,7 +187,7 @@ namespace Base {
   inline std::ostream &operator<<(std::ostream &strm, const TSlice &that) {
     return strm << '[' << that.Start << ", " << that.Limit << ')';
   }
-}
+}  // Base
 
 namespace std {
 

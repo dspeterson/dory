@@ -23,7 +23,8 @@
 
 using namespace Base;
 
-size_t TRandomExpBackoff::NextValue() {
+size_t
+TRandomExpBackoff::NextValue() {
   assert(this);
   size_t half_base = BaseCount / 2;
   size_t min_result = half_base;

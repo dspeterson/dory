@@ -29,7 +29,7 @@ using namespace Base;
 
 namespace {
 
-  /* The fixture for testing class TEventSemaphoreNotifier. */
+  /* The fixture for testing class TOnDestroy. */
   class TOnDestroyTest : public ::testing::Test {
     protected:
     TOnDestroyTest() = default;

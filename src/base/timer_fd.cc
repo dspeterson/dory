@@ -25,12 +25,13 @@
 #include <cstddef>
 
 #include <base/error_util.h>
+#include <base/wr/fd_util.h>
 #include <base/zero.h>
 
 using namespace Base;
 
-TTimerFd::TTimerFd(size_t milliseconds)
-    : Fd(timerfd_create(CLOCK_MONOTONIC, 0)) {
+TTimerFd::TTimerFd(size_t milliseconds) noexcept
+    : Fd(Wr::timerfd_create(CLOCK_MONOTONIC, 0)) {
   itimerspec its;
   Zero(its);
   //seconds = max(seconds, static_cast<uint32_t>(1));
@@ -40,12 +41,12 @@ TTimerFd::TTimerFd(size_t milliseconds)
   its.it_interval.tv_nsec = nanoseconds;
   its.it_value.tv_sec = seconds;
   its.it_value.tv_nsec = nanoseconds;
-  IfLt0(timerfd_settime(Fd, 0, &its, nullptr));
+  Wr::timerfd_settime(Fd, 0, &its, nullptr);
 }
 
 uint64_t TTimerFd::Pop() {
   assert(this);
-  uint64_t count;
-  IfLt0(read(Fd, &count, sizeof(count)));
+  uint64_t count = 0;
+  IfLt0(Wr::read(Wr::TDisp::Nonfatal, {EINTR}, Fd, &count, sizeof(count)));
   return count;
 }

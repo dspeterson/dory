@@ -34,7 +34,7 @@ namespace Base {
         "Type parameter must be integral and not bool");
 
     // Returns number of bits in integral type T.
-    static constexpr size_t Value() {
+    static constexpr size_t Value() noexcept {
       return sizeof(T) * CHAR_BIT;
     }
   };

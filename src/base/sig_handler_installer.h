@@ -1,4 +1,4 @@
-/* <signal/handler_installer.h>
+/* <base/sig_handler_installer.h>
 
    ----------------------------------------------------------------------------
    Copyright 2010-2013 if(we)
@@ -29,30 +29,31 @@
 #include <base/error_util.h>
 #include <base/no_copy_semantics.h>
 #include <base/zero.h>
-#include <signal/set.h>
+#include <base/sig_set.h>
+#include <base/wr/signal_util.h>
 
-namespace Signal {
+namespace Base {
 
   /* RAII for installing a signal handler. */
-  class THandlerInstaller {
-    NO_COPY_SEMANTICS(THandlerInstaller);
+  class TSigHandlerInstaller {
+    NO_COPY_SEMANTICS(TSigHandlerInstaller);
 
     public:
     /* Set the mask to the given set. */
-    explicit THandlerInstaller(int sig, TSet mask,
-        void (*handler)(int) noexcept = DoNothing)
+    explicit TSigHandlerInstaller(int sig, TSigSet mask,
+        void (*handler)(int) noexcept = DoNothing) noexcept
         : SignalNumber(sig) {
       struct sigaction new_act;
-      Base::Zero(new_act);
+      Zero(new_act);
       new_act.sa_handler = handler;
       std::memcpy(&new_act.sa_mask, mask.Get(), sizeof(new_act.sa_mask));
-      Base::IfLt0(sigaction(sig, &new_act, &OldAct));
+      Wr::sigaction(sig, &new_act, &OldAct);
     }
 
     /* Restore the old action. */
-    ~THandlerInstaller() {
+    ~TSigHandlerInstaller() {
       assert(this);
-      sigaction(SignalNumber, &OldAct, nullptr);
+      Wr::sigaction(SignalNumber, &OldAct, nullptr);
     }
 
     /* The signal we handle. */
@@ -70,6 +71,6 @@ namespace Signal {
 
     /* The action which we will restore. */
     struct sigaction OldAct;
-  };  // THandlerInstaller
+  };  // TSigHandlerInstaller
 
-}  // Signal
+}  // Base

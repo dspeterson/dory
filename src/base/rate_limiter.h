@@ -55,7 +55,7 @@ namespace Base {
   class TRateLimiter final {
     public:
     /* A function that, when called, tells you the current time. */
-    using TClockFn = std::function<TTimePoint()>;
+    using TClockFn = std::function<TTimePoint() noexcept>;
 
     /* Construct a rate limiter that uses 'clock_fn' as its clock and allows
        events to occur no more frequently than once every 'min_interval'. */
@@ -67,7 +67,7 @@ namespace Base {
     /* When you want to perform the event whose rate you want to limit, first
        call this method.  If it returns true, perform the event.  Otherwise
        don't perform the event. */
-    bool Test() {
+    bool Test() noexcept {
       TTimePoint now = ClockFn();
 
       if (LastEventTime.IsUnknown()) {

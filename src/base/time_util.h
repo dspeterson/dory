@@ -38,20 +38,20 @@
 
 namespace Base {
 
-  void SleepMilliseconds(size_t milliseconds);
+  void SleepMilliseconds(size_t milliseconds) noexcept;
 
-  void SleepMicroseconds(size_t microseconds);
+  void SleepMicroseconds(size_t microseconds) noexcept;
 
   /* Return the number of seconds since the epoch.  Fractional seconds are
      truncated. */
-  uint64_t GetEpochSeconds();
+  uint64_t GetEpochSeconds() noexcept;
 
   /* Return the number of milliseconds since the epoch.  Fractional
      milliseconds are truncated. */
-  uint64_t GetEpochMilliseconds();
+  uint64_t GetEpochMilliseconds() noexcept;
 
   /* Return the number of milliseconds since some unspecified point in the
      past.  Uses clock_gettime() with clock type of CLOCK_MONOTONIC_RAW. */
-  uint64_t GetMonotonicRawMilliseconds();
+  uint64_t GetMonotonicRawMilliseconds() noexcept;
 
 }  // Base

@@ -25,16 +25,15 @@
 #include <exception>
 #include <utility>
 
+#include <base/sig_masker.h>
+#include <base/sig_set.h>
 #include <log/log.h>
-#include <signal/masker.h>
-#include <signal/set.h>
 #include <thread/fd_managed_thread.h>
 
 using namespace Base;
 using namespace Dory;
 using namespace Dory::MockKafkaServer;
 using namespace Log;
-using namespace Signal;
 using namespace Thread;
 
 void TConnectHandlerBase::OnShutdown() {
@@ -96,7 +95,7 @@ void TConnectHandlerBase::RunThread(std::unique_ptr<TMockKafkaWorker> &&w) {
        all signal handling, so worker threads spend their entire lifetimes with
        all signals blocked.  Block all signals when creating the thread, so it
        inherits the desired signal mask. */
-    TMasker masker(*TSet(TSet::TListInit::Exclude, {}));
+    TSigMasker masker(*TSigSet(TSigSet::TListInit::Exclude, {}));
     state.Worker->Start();
   }
 

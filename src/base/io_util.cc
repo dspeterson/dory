@@ -33,9 +33,14 @@
 
 #include <base/error_util.h>
 #include <base/time.h>
+#include <base/wr/fd_util.h>
+#include <base/wr/file_util.h>
+#include <base/wr/net_util.h>
+
+using namespace Base;
 
 size_t Base::ReadAtMost(int fd, void *buf, size_t max_size) {
-  return static_cast<size_t>(IfLt0(read(fd, buf, max_size)));
+  return static_cast<size_t>(IfLt0(Wr::read(fd, buf, max_size)));
 }
 
 size_t Base::ReadAtMost(int fd, void *buf, size_t max_size, int timeout_ms) {
@@ -44,7 +49,7 @@ size_t Base::ReadAtMost(int fd, void *buf, size_t max_size, int timeout_ms) {
     event.fd = fd;
     event.events = POLLIN;
     event.revents = 0;
-    int ret = IfLt0(poll(&event, 1, timeout_ms));
+    int ret = IfLt0(Wr::poll(&event, 1, timeout_ms));
 
     if (ret == 0) {
       ThrowSystemError(ETIMEDOUT);
@@ -56,9 +61,10 @@ size_t Base::ReadAtMost(int fd, void *buf, size_t max_size, int timeout_ms) {
 
 size_t Base::WriteAtMost(int fd, const void *buf, size_t max_size) {
   struct stat stat;
-  IfLt0(fstat(fd, &stat));
+  IfLt0(Wr::fstat(fd, &stat));
   return static_cast<size_t>(IfLt0(S_ISSOCK(stat.st_mode) ?
-      send(fd, buf, max_size, MSG_NOSIGNAL) : write(fd, buf, max_size)));
+      Wr::send(fd, buf, max_size, MSG_NOSIGNAL) :
+      Wr::write(fd, buf, max_size)));
 }
 
 size_t Base::WriteAtMost(int fd, const void *buf, size_t max_size,
@@ -68,7 +74,7 @@ size_t Base::WriteAtMost(int fd, const void *buf, size_t max_size,
     event.fd = fd;
     event.events = POLLOUT;
     event.revents = 0;
-    int ret = IfLt0(poll(&event, 1, timeout_ms));
+    int ret = IfLt0(Wr::poll(&event, 1, timeout_ms));
 
     if (ret == 0) {
       ThrowSystemError(ETIMEDOUT);
@@ -202,16 +208,4 @@ bool Base::TryWriteExactly(int fd, const void *buf, size_t size,
   }
 
   return true;
-}
-
-void Base::SetCloseOnExec(int fd) {
-  int flags;
-  IfLt0(flags = fcntl(fd, F_GETFD, 0));
-  IfLt0(fcntl(fd, F_SETFD, flags | FD_CLOEXEC));
-}
-
-void Base::SetNonBlocking(int fd) {
-  int flags;
-  IfLt0(flags = fcntl(fd, F_GETFL, 0));
-  IfLt0(fcntl(fd, F_SETFL, flags | O_NONBLOCK));
 }

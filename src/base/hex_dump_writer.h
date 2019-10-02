@@ -57,7 +57,7 @@ namespace Base {
     /* defines how output is formatted */
     class TFormat final {
       public:
-      /* constructr specifies a default format */
+      /* constructor specifies a default format */
       TFormat() = default;
 
       /* constructor allows client to specify all format parameters */

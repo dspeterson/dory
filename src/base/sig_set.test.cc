@@ -1,4 +1,4 @@
-/* <signal/set.test.cc>
+/* <base/sig_set.test.cc>
  
    ----------------------------------------------------------------------------
    Copyright 2010-2013 if(we)
@@ -16,10 +16,10 @@
    limitations under the License.
    ----------------------------------------------------------------------------
  
-   Unit test for <signal/set.h>.
+   Unit test for <base/sig_set.h>.
  */
 
-#include <signal/set.h>
+#include <base/sig_set.h>
 
 #include <base/tmp_file.h>
 #include <test_util/test_logging.h>
@@ -27,27 +27,26 @@
 #include <gtest/gtest.h>
 
 using namespace Base;
-using namespace Signal;
 using namespace TestUtil;
 
 namespace {
 
   /* The fixture for testing signal sets. */
-  class TSetTest : public ::testing::Test {
+  class TSigSetTest : public ::testing::Test {
     protected:
-    TSetTest() = default;
+    TSigSetTest() = default;
 
-    ~TSetTest() override = default;
+    ~TSigSetTest() override = default;
 
     void SetUp() override {
     }
 
     void TearDown() override {
     }
-  };  // TSetTest
+  };  // TSigSetTest
 
-  TEST_F(TSetTest, Empty) {
-    TSet a;
+  TEST_F(TSigSetTest, Empty) {
+    TSigSet a;
     ASSERT_FALSE(a[SIGINT]);
     a += SIGINT;
     ASSERT_TRUE(a[SIGINT]);
@@ -55,8 +54,8 @@ namespace {
     ASSERT_FALSE(a[SIGINT]);
   }
 
-  TEST_F(TSetTest, Full) {
-    TSet a(TSet::TListInit::Exclude, {});
+  TEST_F(TSigSetTest, Full) {
+    TSigSet a(TSigSet::TListInit::Exclude, {});
     ASSERT_TRUE(a[SIGINT]);
     a -= SIGINT;
     ASSERT_FALSE(a[SIGINT]);
@@ -64,26 +63,26 @@ namespace {
     ASSERT_TRUE(a[SIGINT]);
   }
 
-  TEST_F(TSetTest, Copy) {
-    TSet a(TSet::TListInit::Include, { SIGINT });
+  TEST_F(TSigSetTest, Copy) {
+    TSigSet a(TSigSet::TListInit::Include, {SIGINT });
     ASSERT_TRUE(a[SIGINT]);
-    TSet b(a);
+    TSigSet b(a);
     ASSERT_TRUE(a[SIGINT]);
     ASSERT_TRUE(b[SIGINT]);
   }
 
-  TEST_F(TSetTest, Assign) {
-    TSet a(TSet::TListInit::Include, { SIGINT });
+  TEST_F(TSigSetTest, Assign) {
+    TSigSet a(TSigSet::TListInit::Include, {SIGINT });
     ASSERT_TRUE(a[SIGINT]);
-    TSet b;
+    TSigSet b;
     ASSERT_FALSE(b[SIGINT]);
     b = a;
     ASSERT_TRUE(a[SIGINT]);
     ASSERT_TRUE(b[SIGINT]);
   }
 
-  TEST_F(TSetTest, Exclude) {
-    TSet a(TSet::TListInit::Exclude, { SIGINT });
+  TEST_F(TSigSetTest, Exclude) {
+    TSigSet a(TSigSet::TListInit::Exclude, {SIGINT });
     ASSERT_TRUE(a[SIGPIPE]);
     ASSERT_FALSE(a[SIGINT]);
   }

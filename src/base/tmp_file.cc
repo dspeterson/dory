@@ -31,6 +31,7 @@
 #include <unistd.h>
 
 #include <base/error_util.h>
+#include <base/wr/file_util.h>
 
 using namespace Base;
 
@@ -68,7 +69,7 @@ TTmpFile::TTmpFile(const char *name_template, bool delete_on_destroy)
   const size_t suffix_len = len - i - 6;
 
   std::vector<char> name_buf(name_template, name_template + len + 1);
-  Fd = IfLt0(mkstemps(&name_buf[0], static_cast<int>(suffix_len)));
+  Fd = IfLt0(Wr::mkstemps(&name_buf[0], static_cast<int>(suffix_len)));
   Name = &name_buf[0];
 }
 
@@ -88,7 +89,7 @@ TTmpFile::~TTmpFile() {
 
 void TTmpFile::Reset() noexcept {
   if (DeleteOnDestroy && !Name.empty()) {
-    unlink(Name.c_str());
+    Wr::unlink(Name.c_str());
   }
 
   Name.clear();

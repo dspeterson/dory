@@ -35,6 +35,8 @@
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
 #include <base/opt.h>
+#include <base/sig_handler_installer.h>
+#include <base/sig_set.h>
 #include <base/timer_fd.h>
 #include <base/thrower.h>
 #include <capped/pool.h>
@@ -54,8 +56,6 @@
 #include <server/stream_server_base.h>
 #include <server/tcp_ipv4_server.h>
 #include <server/unix_stream_server.h>
-#include <signal/handler_installer.h>
-#include <signal/set.h>
 #include <thread/managed_thread_pool.h>
 
 namespace Dory {
@@ -85,13 +85,20 @@ namespace Dory {
     DEFINE_ERROR(TMaxInputMsgSizeTooLarge, std::runtime_error,
         "max_input_msg_size is too large");
 
-    DEFINE_ERROR(TMustAllowLargeDatagrams, std::runtime_error, "You didn't specify allow_large_unix_datagrams, and max_input_msg_size is large enough that clients sending large datagrams will need to increase SO_SNDBUF above the default value.  Either decrease max_input_msg_size or specify allow_large_unix_datagrams.");
+    DEFINE_ERROR(TMustAllowLargeDatagrams, std::runtime_error,
+        "You didn't specify allow_large_unix_datagrams, and "
+        "max_input_msg_size is large enough that clients sending large "
+        "datagrams will need to increase SO_SNDBUF above the default value.  "
+        "Either decrease max_input_msg_size or specify "
+        "allow_large_unix_datagrams.");
 
     DEFINE_ERROR(TBadDebugDir, std::runtime_error,
         "debug_dir must be an absolute path");
 
     DEFINE_ERROR(TBadDiscardLogMaxFileSize, std::runtime_error,
-        "discard_log_max_file_size must be at least twice the maximum input message size.  To disable discard logfile generation, leave discard_log_path unspecified.");
+        "discard_log_max_file_size must be at least twice the maximum input "
+        "message size.  To disable discard logfile generation, leave "
+        "discard_log_path unspecified.");
 
     class TServerConfig final {
       NO_COPY_SEMANTICS(TServerConfig);
@@ -136,9 +143,9 @@ namespace Dory {
       TSignalHandlerInstaller();
 
       private:
-      Signal::THandlerInstaller SigintInstaller;
+      Base::TSigHandlerInstaller SigintInstaller;
 
-      Signal::THandlerInstaller SigtermInstaller;
+      Base::TSigHandlerInstaller SigtermInstaller;
     };  // TSignalHandlerInstaller
 
     static TServerConfig CreateConfig(int argc, char **argv,
@@ -208,9 +215,9 @@ namespace Dory {
        connections. */
     using TWorkerPool = TStreamClientHandler::TWorkerPool;
 
-    static Signal::TSet AllHandledSignals() noexcept;
+    static Base::TSigSet AllHandledSignals() noexcept;
 
-    static Signal::TSet AllSignalsExceptHandled() noexcept;
+    static Base::TSigSet AllSignalsExceptHandled() noexcept;
 
     std::unique_ptr<Server::TStreamServerBase::TConnectionHandlerApi>
     CreateStreamClientHandler(bool is_tcp);

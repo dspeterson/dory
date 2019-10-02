@@ -1,4 +1,4 @@
-/* <signal/handler_installer.cc>
+/* <base/sig_handler_installer.cc>
 
    ----------------------------------------------------------------------------
    Copyright 2010-2013 if(we)
@@ -16,12 +16,12 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <signal/handler_installer.h>.
+   Implements <base/sig_handler_installer.h>.
  */
 
-#include <signal/handler_installer.h>
+#include <base/sig_handler_installer.h>
 
-using namespace Signal;
+using namespace Base;
 
-void THandlerInstaller::DoNothing(int) noexcept {
+void TSigHandlerInstaller::DoNothing(int) noexcept {
 }

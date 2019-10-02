@@ -50,19 +50,19 @@ namespace {
   TEST_F(TPauseButtonTest, Test1) {
     TPauseButton pause_button;
     const Base::TFd &fd = pause_button.GetFd();
-    ASSERT_FALSE(fd.IsReadable());
+    ASSERT_FALSE(fd.IsReadableIntr());
     pause_button.Push();
-    ASSERT_TRUE(fd.IsReadable());
+    ASSERT_TRUE(fd.IsReadableIntr());
     pause_button.Push();
-    ASSERT_TRUE(fd.IsReadable());
+    ASSERT_TRUE(fd.IsReadableIntr());
     pause_button.Reset();
-    ASSERT_FALSE(fd.IsReadable());
+    ASSERT_FALSE(fd.IsReadableIntr());
     pause_button.Reset();
-    ASSERT_FALSE(fd.IsReadable());
+    ASSERT_FALSE(fd.IsReadableIntr());
     pause_button.Push();
-    ASSERT_TRUE(fd.IsReadable());
+    ASSERT_TRUE(fd.IsReadableIntr());
     pause_button.Reset();
-    ASSERT_FALSE(fd.IsReadable());
+    ASSERT_FALSE(fd.IsReadableIntr());
   }
 
 }  // namespace

@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <base/error.h>
+#include <base/error_util.h>
 
 /* Use this macro to close out any switch which doesn't have a default case,
    like this:
@@ -40,4 +40,4 @@
    If control reaches the macro, it will abort the program.  It is therefore
    safe to use the switch to conditionally initialize an otherwise unitialized
    variable, as shown. */
-#define NO_DEFAULT_CASE default: ::Base::TError::Abort(HERE)
+#define NO_DEFAULT_CASE default: ::Base::Die("Invalid switch value")

@@ -26,26 +26,27 @@
 #include <time.h>
 
 #include <base/no_copy_semantics.h>
+#include <base/wr/time_util.h>
 
 namespace Base {
 
   class TTime {
     public:
-    TTime() {
+    TTime() noexcept {
       Time.tv_sec = 0;
       Time.tv_nsec = 0;
     }
 
-    TTime(time_t sec, long nsec) {
+    TTime(time_t sec, long nsec) noexcept {
       Time.tv_sec = sec;
       Time.tv_nsec = nsec;
     }
 
-    void Now(clockid_t clk_id = CLOCK_REALTIME) {
-      clock_gettime(clk_id, &Time);
+    void Now(clockid_t clk_id = CLOCK_REALTIME) noexcept {
+      Wr::clock_gettime(clk_id, &Time);
     }
 
-    size_t Remaining(clockid_t clk_id = CLOCK_REALTIME) const {
+    size_t Remaining(clockid_t clk_id = CLOCK_REALTIME) const noexcept {
       TTime t;
       t.Now(clk_id);
       if (*this <= t) return 0;
@@ -53,7 +54,8 @@ namespace Base {
       return diff.Sec() * 1000 + diff.Nsec() / 1000000;
     }
 
-    size_t RemainingMicroseconds(clockid_t clk_id = CLOCK_REALTIME) const {
+    size_t RemainingMicroseconds(
+        clockid_t clk_id = CLOCK_REALTIME) const noexcept {
       TTime t;
       t.Now(clk_id);
 
@@ -65,43 +67,43 @@ namespace Base {
       return diff.Sec() * 1000000 + diff.Nsec() / 1000;
     }
 
-    time_t Sec() const {
+    time_t Sec() const noexcept {
       return Time.tv_sec;
     }
 
-    long Nsec() const {
+    long Nsec() const noexcept {
       return Time.tv_nsec;
     }
 
-    TTime &operator=(const TTime &rhs);
+    TTime &operator=(const TTime &rhs) noexcept;
 
-    bool operator==(const TTime &rhs) const;
+    bool operator==(const TTime &rhs) const noexcept;
 
-    bool operator!=(const TTime &rhs) const;
+    bool operator!=(const TTime &rhs) const noexcept;
 
-    bool operator<(const TTime &rhs) const;
+    bool operator<(const TTime &rhs) const noexcept;
 
-    bool operator>(const TTime &rhs) const;
+    bool operator>(const TTime &rhs) const noexcept;
 
-    bool operator<=(const TTime &rhs) const;
+    bool operator<=(const TTime &rhs) const noexcept;
 
-    bool operator>=(const TTime &rhs) const;
+    bool operator>=(const TTime &rhs) const noexcept;
 
-    TTime &operator+=(const TTime &rhs);
+    TTime &operator+=(const TTime &rhs) noexcept;
 
-    TTime &operator-=(const TTime &rhs);
+    TTime &operator-=(const TTime &rhs) noexcept;
 
-    const TTime operator+(const TTime &rhs) const;
+    const TTime operator+(const TTime &rhs) const noexcept;
 
-    const TTime operator-(const TTime &rhs) const;
+    const TTime operator-(const TTime &rhs) const noexcept;
 
-    TTime &operator+=(size_t msec);
+    TTime &operator+=(size_t msec) noexcept;
 
-    TTime &operator-=(size_t msec);
+    TTime &operator-=(size_t msec) noexcept;
 
-    TTime &AddMicroseconds(size_t usec);
+    TTime &AddMicroseconds(size_t usec) noexcept;
 
-    TTime &SubtractMicroseconds(size_t usec);
+    TTime &SubtractMicroseconds(size_t usec) noexcept;
 
     private:
     struct timespec Time;

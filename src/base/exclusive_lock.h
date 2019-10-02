@@ -35,6 +35,7 @@ namespace Base {
     public:
     /* Will not return until the lock is granted. */
     TExclusiveLock(const TAsset &asset)
+        noexcept(noexcept(asset.AcquireExclusive()))
         : Asset(asset) {
       assert(&asset);
       asset.AcquireExclusive();

@@ -35,7 +35,7 @@ namespace Base {
     NO_COPY_SEMANTICS(TTimerFd);
 
     public:
-    explicit TTimerFd(size_t milliseconds);
+    explicit TTimerFd(size_t milliseconds) noexcept;
 
     const TFd &GetFd() const {
       assert(this);

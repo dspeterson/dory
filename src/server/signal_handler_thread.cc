@@ -31,7 +31,6 @@
 
 using namespace Base;
 using namespace Server;
-using namespace Signal;
 
 TSignalHandlerThread &TSignalHandlerThread::The() {
   static TSignalHandlerThread singleton;
@@ -50,7 +49,7 @@ void TSignalHandlerThread::Init(
   assert(handler_callback);
 
   /* Set says "block all but client-specified signals". */
-  BlockedSet = TSet(TSet::TListInit::Exclude, signals);
+  BlockedSet = TSigSet(TSigSet::TListInit::Exclude, signals);
 
   HandlerCallback = handler_callback;
 
@@ -77,8 +76,8 @@ void TSignalHandlerThread::Start() {
      blocked for the caller.  From here onward, thread assumes all signal
      handling responsibility.  No other threads should unblock any signals. */
   assert(HandlerCallback);
-  IfLt0(sigprocmask(SIG_SETMASK, TSet(TSet::TListInit::Exclude, {}).Get(),
-      nullptr));
+  IfLt0(sigprocmask(SIG_SETMASK,
+      TSigSet(TSigSet::TListInit::Exclude, {}).Get(), nullptr));
   DoStart();
 }
 
@@ -152,7 +151,7 @@ void TSignalHandlerThread::Handler(int signum, siginfo_t *info,
 
 void TSignalHandlerThread::InstallHandler() const {
   assert(this);
-  TSet block_all(TSet::TListInit::Exclude, {});
+  TSigSet block_all(TSigSet::TListInit::Exclude, {});
 
   /* Install our handler for each client-specified signal. */
   for (const auto &item : CaughtSignals) {

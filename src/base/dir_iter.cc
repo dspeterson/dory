@@ -21,17 +21,16 @@
 
 #include <base/dir_iter.h>
 
+#include <cerrno>
 #include <cstring>
-#include <memory>
-#include <stack>
-#include <string>
 
 #include <base/error_util.h>
+#include <base/wr/file_util.h>
 
 using namespace Base;
 
 TDirIter::TDirIter(const char *dir)
-    : Handle(opendir(dir)) {
+    : Handle(Wr::opendir(dir)) {
   if (!Handle) {
     ThrowSystemError(errno);
   }
@@ -39,23 +38,23 @@ TDirIter::TDirIter(const char *dir)
 
 TDirIter::~TDirIter() {
   assert(this);
-  closedir(Handle);
+  Wr::closedir(Handle);
 }
 
-void TDirIter::Rewind() {
+void TDirIter::Rewind() noexcept {
   assert(this);
   rewinddir(Handle);
   Pos = NotFresh;
 }
 
-bool TDirIter::TryRefresh() const {
+bool TDirIter::TryRefresh() const noexcept {
   assert(this);
 
   while (Pos == NotFresh) {
     dirent *ptr;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    IfLt0(readdir_r(Handle, &DirEnt, &ptr));
+    Wr::readdir_r(Handle, &DirEnt, &ptr);
 #pragma GCC diagnostic pop
 
     if (ptr) {

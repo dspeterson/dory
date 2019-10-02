@@ -1,4 +1,4 @@
-/* <signal/masker.h>
+/* <base/sig_masker.h>
 
    ----------------------------------------------------------------------------
    Copyright 2010-2013 if(we)
@@ -27,23 +27,29 @@
 
 #include <base/error_util.h>
 #include <base/no_copy_semantics.h>
+#include <base/sig_set.h>
+#include <base/wr/signal_util.h>
 
-namespace Signal {
+namespace Base {
 
   /* RAII for setting the signal mask. */
-  class TMasker {
-    NO_COPY_SEMANTICS(TMasker);
+  class TSigMasker {
+    NO_COPY_SEMANTICS(TSigMasker);
 
     public:
     /* Set the mask to the given set. */
-    TMasker(const sigset_t &new_set) {
-      Base::IfNe0(pthread_sigmask(SIG_SETMASK, &new_set, &OldSet));
+    TSigMasker(const sigset_t &new_set) noexcept {
+      Wr::pthread_sigmask(SIG_SETMASK, &new_set, &OldSet);
+    }
+
+    TSigMasker(const TSigSet &new_set) noexcept
+        : TSigMasker(*new_set) {
     }
 
     /* Restore the mask. */
-    ~TMasker() {
+    ~TSigMasker() {
       assert(this);
-      pthread_sigmask(SIG_SETMASK, &OldSet, nullptr);
+      Wr::pthread_sigmask(SIG_SETMASK, &OldSet, nullptr);
     }
 
     const sigset_t &GetOldSet() const noexcept {
@@ -54,6 +60,6 @@ namespace Signal {
     private:
     /* The set to which we will restore. */
     sigset_t OldSet;
-  };  // TMasker
+  };  // TSigMasker
 
-}  // Signal
+}  // Base

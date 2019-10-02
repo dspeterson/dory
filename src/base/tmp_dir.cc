@@ -28,6 +28,7 @@
 #include <vector>
 
 #include <base/error_util.h>
+#include <base/wr/file_util.h>
 
 using namespace Base;
 
@@ -36,7 +37,7 @@ TTmpDir::TTmpDir(const char *name_template, bool delete_on_destroy)
   std::vector<char> name_buf(1 + std::strlen(name_template));
   std::strncpy(&name_buf[0], name_template, name_buf.size());
 
-  if (mkdtemp(&name_buf[0]) == nullptr) {
+  if (Wr::mkdtemp(&name_buf[0]) == nullptr) {
     ThrowSystemError(errno);
   }
 

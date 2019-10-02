@@ -1,4 +1,4 @@
-/* <signal/set.h>
+/* <base/sig_set.h>
 
    ----------------------------------------------------------------------------
    Copyright 2010-2013 if(we)
@@ -29,11 +29,12 @@
 
 #include <base/error_util.h>
 #include <base/no_default_case.h>
+#include <base/wr/signal_util.h>
 
-namespace Signal {
+namespace Base {
 
   /* A set of signals. */
-  class TSet {
+  class TSigSet {
     public:
     /* How to construct a new set from an initializer list. */
     enum class TListInit {
@@ -49,32 +50,31 @@ namespace Signal {
        which seems reasonable.  This avoids inconvenience. */
 
     /* See TOp0. */
-    TSet() noexcept {
-      int result = sigemptyset(&OsObj);
-      assert(result == 0);
+    TSigSet() noexcept {
+      Wr::sigemptyset(&OsObj);
+    }
+
+    explicit TSigSet(const sigset_t &sigset) noexcept {
+      std::memcpy(&OsObj, &sigset, sizeof(OsObj));
     }
 
     /* See TOp1.*/
-    TSet(TListInit init, std::initializer_list<int> sigs) noexcept {
+    TSigSet(TListInit init, std::initializer_list<int> sigs) noexcept {
       switch (init) {
         case TListInit::Include: {
-          int result = sigemptyset(&OsObj);
-          assert(result == 0);
+          Wr::sigemptyset(&OsObj);
 
           for (int sig: sigs) {
-            result = sigaddset(&OsObj, sig);
-            assert(result == 0);
+            Wr::sigaddset(&OsObj, sig);
           }
 
           break;
         }
         case TListInit::Exclude: {
-          int result = sigfillset(&OsObj);
-          assert(result == 0);
+          Wr::sigfillset(&OsObj);
 
           for (int sig: sigs) {
-            result = sigdelset(&OsObj, sig);
-            assert(result == 0);
+            Wr::sigdelset(&OsObj, sig);
           }
 
           break;
@@ -83,59 +83,63 @@ namespace Signal {
       }
     }
 
-    static TSet FromSigmask() {
-      TSet result;
-      Base::IfNe0(pthread_sigmask(0, nullptr, &result.OsObj));
+    static TSigSet FromSigmask() noexcept {
+      TSigSet result;
+      Wr::pthread_sigmask(0, nullptr, &result.OsObj);
       return result;
     }
 
     /* Copy constructor. */
-    TSet(const TSet &that) noexcept {
+    TSigSet(const TSigSet &that) noexcept {
       assert(&that);
       std::memcpy(&OsObj, &that.OsObj, sizeof(OsObj));
     }
 
     /* Assignment operator. */
-    TSet &operator=(const TSet &that) noexcept {
+    TSigSet &operator=(const TSigSet &that) noexcept {
+      assert(this);
       assert(&that);
       std::memcpy(&OsObj, &that.OsObj, sizeof(OsObj));
       return *this;
     }
 
-    /* Add the signal to the set. */
-    TSet &operator+=(int sig) noexcept {
+    /* Assignment operator from sigset_t. */
+    TSigSet &operator=(const sigset_t &sigset) noexcept {
       assert(this);
-      int result = sigaddset(&OsObj, sig);
-      assert(result == 0);
+      std::memcpy(&OsObj, &sigset, sizeof(OsObj));
+      return *this;
+    }
+
+    /* Add the signal to the set. */
+    TSigSet &operator+=(int sig) noexcept {
+      assert(this);
+      Wr::sigaddset(&OsObj, sig);
       return *this;
     }
 
     /* Remove the signal from the set. */
-    TSet &operator-=(int sig) noexcept {
+    TSigSet &operator-=(int sig) noexcept {
       assert(this);
-      int result = sigdelset(&OsObj, sig);
-      assert(result == 0);
+      Wr::sigdelset(&OsObj, sig);
       return *this;
     }
 
     /* Construct a new set with the signal added. */
-    TSet operator+(int sig) noexcept {
+    TSigSet operator+(int sig) noexcept {
       assert(this);
-      return TSet(*this) += sig;
+      return TSigSet(*this) += sig;
     }
 
     /* Construct a new set with the signal removed. */
-    TSet operator-(int sig) noexcept {
+    TSigSet operator-(int sig) noexcept {
       assert(this);
-      return TSet(*this) -= sig;
+      return TSigSet(*this) -= sig;
     }
 
     /* True iff. the signal is in the set. */
     bool operator[](int sig) const noexcept {
       assert(this);
-      int result = sigismember(&OsObj, sig);
-      assert((result == 0) || (result == 1));
-      return result != 0;
+      return Wr::sigismember(&OsObj, sig);
     }
 
     /* Access the OS object. */
@@ -153,6 +157,6 @@ namespace Signal {
     private:
     /* The OS representation of the set. */
     sigset_t OsObj;
-  };  // TSet
+  };  // TSigSet
 
-}  // Signal
+}  // Base

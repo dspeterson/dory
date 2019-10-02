@@ -598,7 +598,7 @@ namespace Base {
     assert(dest.GetSize() >= size);
     assert(src.GetSize() >= size);
     assert(sizeof(TDestVal) == sizeof(TSrcVal));
-    memcpy(dest.GetStart(), src.GetStart(), size * sizeof(TDestVal));
+    std::memcpy(dest.GetStart(), src.GetStart(), size * sizeof(TDestVal));
     return dest;
   }
 

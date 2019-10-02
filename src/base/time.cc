@@ -23,7 +23,7 @@
 
 using namespace Base;
 
-TTime &TTime::operator=(const TTime &rhs) {
+TTime &TTime::operator=(const TTime &rhs) noexcept {
   if (this == &rhs) {
     return *this;
   }
@@ -32,35 +32,35 @@ TTime &TTime::operator=(const TTime &rhs) {
   return *this;
 }
 
-bool TTime::operator==(const TTime &rhs) const {
+bool TTime::operator==(const TTime &rhs) const noexcept {
   return (Time.tv_sec == rhs.Time.tv_sec) &&
          (Time.tv_nsec == rhs.Time.tv_nsec);
 }
 
-bool TTime::operator!=(const TTime &rhs) const {
+bool TTime::operator!=(const TTime &rhs) const noexcept {
   return (Time.tv_sec != rhs.Time.tv_sec) ||
          (Time.tv_nsec != rhs.Time.tv_nsec);
 }
 
-bool TTime::operator<(const TTime &rhs) const {
+bool TTime::operator<(const TTime &rhs) const noexcept {
   return (Time.tv_sec < rhs.Time.tv_sec) ||
       ((Time.tv_sec == rhs.Time.tv_sec) && (Time.tv_nsec < rhs.Time.tv_nsec));
 }
 
-bool TTime::operator>(const TTime &rhs) const {
+bool TTime::operator>(const TTime &rhs) const noexcept {
   return (Time.tv_sec > rhs.Time.tv_sec) ||
       ((Time.tv_sec == rhs.Time.tv_sec) && (Time.tv_nsec > rhs.Time.tv_nsec));
 }
 
-bool TTime::operator<=(const TTime &rhs) const {
+bool TTime::operator<=(const TTime &rhs) const noexcept {
   return (*this < rhs) || (*this == rhs);
 }
 
-bool TTime::operator>=(const TTime &rhs) const {
+bool TTime::operator>=(const TTime &rhs) const noexcept {
   return (*this > rhs) || (*this == rhs);
 }
 
-TTime &TTime::operator+=(const TTime &rhs) {
+TTime &TTime::operator+=(const TTime &rhs) noexcept {
   Time.tv_sec += rhs.Time.tv_sec;
   Time.tv_nsec += rhs.Time.tv_nsec;
 
@@ -72,7 +72,7 @@ TTime &TTime::operator+=(const TTime &rhs) {
   return *this;
 }
 
-TTime &TTime::operator-=(const TTime &rhs) {
+TTime &TTime::operator-=(const TTime &rhs) noexcept {
   Time.tv_sec -= rhs.Time.tv_sec;
   Time.tv_nsec -= rhs.Time.tv_nsec;
 
@@ -84,26 +84,26 @@ TTime &TTime::operator-=(const TTime &rhs) {
   return *this;
 }
 
-const TTime TTime::operator+(const TTime &rhs) const {
+const TTime TTime::operator+(const TTime &rhs) const noexcept {
   return TTime(*this) += rhs;
 }
 
-const TTime TTime::operator-(const TTime &rhs) const {
+const TTime TTime::operator-(const TTime &rhs) const noexcept {
   return TTime(*this) -= rhs;
 }
 
-TTime &TTime::operator+=(size_t msec) {
+TTime &TTime::operator+=(size_t msec) noexcept {
   return *this += TTime(msec / 1000, (msec % 1000) * 1000000);
 }
 
-TTime &TTime::operator-=(size_t msec) {
+TTime &TTime::operator-=(size_t msec) noexcept {
   return *this -= TTime(msec / 1000, (msec % 1000) * 1000000);
 }
 
-TTime &TTime::AddMicroseconds(size_t usec) {
+TTime &TTime::AddMicroseconds(size_t usec) noexcept {
   return *this += TTime(usec / 1000000, (usec % 1000000) * 1000);
 }
 
-TTime &TTime::SubtractMicroseconds(size_t usec) {
+TTime &TTime::SubtractMicroseconds(size_t usec) noexcept {
   return *this -= TTime(usec / 1000000, (usec % 1000000) * 1000);
 }

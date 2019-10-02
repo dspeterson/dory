@@ -50,20 +50,20 @@ namespace Base {
   class TCodeLocation {
     public:
     /* The default is a blank file at line 1. */
-    TCodeLocation()
+    TCodeLocation() noexcept
         : File(""), LineNumber(1) {
     }
 
     /* Represents the given file and line.  'file' must not be null and
        'line_number' must be > 0. */
-    TCodeLocation(const char *file, unsigned line_number)
+    TCodeLocation(const char *file, unsigned line_number) noexcept
         : File(file), LineNumber(line_number) {
       assert(file);
       assert(line_number);
     }
 
     /* Returns the file.  Never returns null. */
-    const char *GetFile() const;
+    const char *GetFile() const noexcept;
 
     /* Returns the line number.  Always returns > 0. */
     unsigned GetLineNumber() const {

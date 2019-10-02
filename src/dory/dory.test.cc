@@ -228,7 +228,7 @@ namespace {
       return false;
     }
 
-    if (!Dory->GetInitWaitFd().IsReadable(30000)) {
+    if (!Dory->GetInitWaitFd().IsReadableIntr(30000)) {
       std::cerr << "Dory server failed to initialize after 30 seconds."
           << std::endl;
       return false;

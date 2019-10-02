@@ -33,4 +33,4 @@ namespace Base {
     return static_cast<pid_t>(syscall(SYS_gettid));
   }
 
-}
+}  // Base

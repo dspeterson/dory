@@ -24,12 +24,19 @@
 #include <fcntl.h>
 #include <unistd.h>
  
-#include <base/error_util.h> 
-#include <base/io_util.h>
+#include <base/error_util.h>
+#include <base/wr/fd_util.h>
   
 #include <gtest/gtest.h>
   
 using namespace Base;
+
+static void SetCloseOnExec(int fd) noexcept {
+  const int flags = Wr::fcntl(fd, F_GETFD, 0);
+  assert(flags >= 0);
+  const int ret = Wr::fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
+  assert(ret >= 0);
+}
 
 namespace {
 
@@ -62,42 +69,42 @@ namespace {
   TEST_F(TEventSemaphoreTest, Typical) {
     static const uint64_t actual_count = 3;
     TEventSemaphore sem;
-    ASSERT_FALSE(sem.GetFd().IsReadable());
+    ASSERT_FALSE(sem.GetFd().IsReadableIntr());
     sem.Push(actual_count);
 
     for (uint64_t i = 0; i < actual_count; ++i) {
-      ASSERT_TRUE(sem.GetFd().IsReadable());
+      ASSERT_TRUE(sem.GetFd().IsReadableIntr());
       sem.Pop();
     }
 
-    ASSERT_FALSE(sem.GetFd().IsReadable());
+    ASSERT_FALSE(sem.GetFd().IsReadableIntr());
   }
   
   TEST_F(TEventSemaphoreTest, Nonblocking) {
     static const uint64_t actual_count = 3;
     TEventSemaphore sem(0, true);
-    ASSERT_FALSE(sem.GetFd().IsReadable());
+    ASSERT_FALSE(sem.GetFd().IsReadableIntr());
     ASSERT_FALSE(sem.Pop());
-    ASSERT_FALSE(sem.GetFd().IsReadable());
+    ASSERT_FALSE(sem.GetFd().IsReadableIntr());
     sem.Push(actual_count);
 
     for (uint64_t i = 0; i < actual_count; ++i) {
-      ASSERT_TRUE(sem.GetFd().IsReadable());
+      ASSERT_TRUE(sem.GetFd().IsReadableIntr());
       ASSERT_TRUE(sem.Pop());
     }
 
-    ASSERT_FALSE(sem.GetFd().IsReadable());
+    ASSERT_FALSE(sem.GetFd().IsReadableIntr());
     ASSERT_FALSE(sem.Pop());
   }
   
   TEST_F(TEventSemaphoreTest, Reset) {
     TEventSemaphore sem;
-    ASSERT_FALSE(sem.GetFd().IsReadable());
+    ASSERT_FALSE(sem.GetFd().IsReadableIntr());
     int old_fd = sem.GetFd();
     sem.Reset(1);
     int new_fd = sem.GetFd();
     ASSERT_EQ(new_fd, old_fd);
-    ASSERT_TRUE(sem.GetFd().IsReadable());
+    ASSERT_TRUE(sem.GetFd().IsReadableIntr());
     int flags = fcntl(sem.GetFd(), F_GETFD, 0);
     ASSERT_EQ(flags & FD_CLOEXEC, 0);
     SetCloseOnExec(sem.GetFd());
@@ -107,21 +114,21 @@ namespace {
     sem.Reset(0);
     new_fd = sem.GetFd();
     ASSERT_EQ(new_fd, old_fd);
-    ASSERT_FALSE(sem.GetFd().IsReadable());
+    ASSERT_FALSE(sem.GetFd().IsReadableIntr());
     flags = fcntl(sem.GetFd(), F_GETFD, 0);
     ASSERT_NE(flags & FD_CLOEXEC, 0);
   }
   
   TEST_F(TEventSemaphoreTest, ResetNonblocking) {
     TEventSemaphore sem(0, true);
-    ASSERT_FALSE(sem.GetFd().IsReadable());
+    ASSERT_FALSE(sem.GetFd().IsReadableIntr());
     ASSERT_FALSE(sem.Pop());
-    ASSERT_FALSE(sem.GetFd().IsReadable());
+    ASSERT_FALSE(sem.GetFd().IsReadableIntr());
     int old_fd = sem.GetFd();
     sem.Reset(1);
     int new_fd = sem.GetFd();
     ASSERT_EQ(new_fd, old_fd);
-    ASSERT_TRUE(sem.GetFd().IsReadable());
+    ASSERT_TRUE(sem.GetFd().IsReadableIntr());
     int flags = fcntl(sem.GetFd(), F_GETFD, 0);
     ASSERT_EQ(flags & FD_CLOEXEC, 0);
     SetCloseOnExec(sem.GetFd());
@@ -131,9 +138,9 @@ namespace {
     sem.Reset(0);
     new_fd = sem.GetFd();
     ASSERT_EQ(new_fd, old_fd);
-    ASSERT_FALSE(sem.GetFd().IsReadable());
+    ASSERT_FALSE(sem.GetFd().IsReadableIntr());
     ASSERT_FALSE(sem.Pop());
-    ASSERT_FALSE(sem.GetFd().IsReadable());
+    ASSERT_FALSE(sem.GetFd().IsReadableIntr());
     flags = fcntl(sem.GetFd(), F_GETFD, 0);
     ASSERT_NE(flags & FD_CLOEXEC, 0);
     sem.Push();

@@ -43,22 +43,22 @@ namespace Base {
           DoubleTimesLeft(max_double)
     {}
 
-    size_t GetInitialCount() const {
+    size_t GetInitialCount() const noexcept {
       assert(this);
       return InitialCount;
     }
 
-    size_t GetMaxDouble() const {
+    size_t GetMaxDouble() const noexcept {
       assert(this);
       return MaxDouble;
     }
 
-    size_t GetCurrentBaseCount() const {
+    size_t GetCurrentBaseCount() const noexcept {
       assert(this);
       return BaseCount;
     }
 
-    size_t GetCurrentDoubleTimesLeft() const {
+    size_t GetCurrentDoubleTimesLeft() const noexcept {
       assert(this);
       return DoubleTimesLeft;
     }
@@ -77,7 +77,7 @@ namespace Base {
 
     /* This reinitializes the object to its initially constructed state,
        allowing it to generate a new sequence of values. */
-    void Reset() {
+    void Reset() noexcept {
       assert(this);
 
       BaseCount = InitialCount;
@@ -86,7 +86,7 @@ namespace Base {
 
     /* This overload of Reset() functions as above, but lets new initial_count
        and max_double values be chosen. */
-    void Reset(size_t initial_count, size_t max_double) {
+    void Reset(size_t initial_count, size_t max_double) noexcept {
       InitialCount = initial_count;
       MaxDouble = max_double;
       Reset();

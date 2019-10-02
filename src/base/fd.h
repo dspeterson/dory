@@ -29,6 +29,7 @@
 
 #include <base/error_util.h>
 #include <base/no_copy_semantics.h>
+#include <base/wr/fd_util.h>
 
 namespace Base {
 
@@ -69,9 +70,9 @@ namespace Base {
 
     /* Copy-construct, duplicating the file descriptor with the OS call dup(),
        if necessary. */
-    TFd(const TFd &that)
+    TFd(const TFd &that) noexcept
         : OsHandle((that.OsHandle >= 3) ?
-              IfLt0(dup(that.OsHandle)) : that.OsHandle) {
+              Wr::dup(that.OsHandle) : that.OsHandle) {
     }
 
     /* Construct from a naked file descriptor, which the new instance will own.
@@ -89,7 +90,7 @@ namespace Base {
       assert(this);
 
       if (OsHandle >= 3) {
-        close(OsHandle);
+        Wr::close(OsHandle);
       }
     }
 
@@ -109,7 +110,7 @@ namespace Base {
 
     /* Assignment.  This will duplicate the file descriptor, if any, using the
        OS function dup(). */
-    TFd &operator=(const TFd &that) {
+    TFd &operator=(const TFd &that) noexcept {
       assert(this);
       return *this = TFd(that);
     }
@@ -138,8 +139,13 @@ namespace Base {
 
     /* True iff. the file descriptor can be read from without blocking.
        Waits for at most the given number of milliseconds for the descriptor to
-       become readable.  A negative timeout will wait forever. */
-    bool IsReadable(int timeout = 0) const;
+       become readable.  A negative timeout will wait forever.  Guaranteed not
+       to be interrupted by a signal. */
+    bool IsReadable(int timeout = 0) const noexcept;
+
+    /* Similar to IsReadable(), but can be interrupted by signal.  Throws
+       std::system_error if interrupted by signal. */
+    bool IsReadableIntr(int timeout = 0) const;
 
     /* Returns the naked file desciptor, which may be -1, and returns to the
        default-constructed state.  This is how to get the naked file desciptor
@@ -158,25 +164,11 @@ namespace Base {
     }
 
     /* Construct the read- and write-only ends of a pipe. */
-    static void Pipe(TFd &readable, TFd &writeable, int flags = 0) {
-      assert(&readable);
-      assert(&writeable);
-      int fds[2];
-      IfLt0(pipe2(fds, flags));
-      readable = TFd(fds[0], NoThrow);
-      writeable = TFd(fds[1], NoThrow);
-    }
+    static void Pipe(TFd &readable, TFd &writeable, int flags = 0) noexcept;
 
     /* Construct both ends of a socket. */
     static void SocketPair(TFd &lhs, TFd &rhs, int domain, int type,
-        int proto = 0) {
-      assert(&lhs);
-      assert(&rhs);
-      int fds[2];
-      IfLt0(socketpair(domain, type, proto, fds));
-      lhs = TFd(fds[0], NoThrow);
-      rhs = TFd(fds[1], NoThrow);
-    }
+        int proto = 0) noexcept;
 
     private:
     /* Use to disambiguate construction for Pipe() and SocketPair(). */
@@ -184,7 +176,8 @@ namespace Base {
 
     /* Constuctor used by Pipe() and SocketPair(). */
     TFd(int os_handle, TNoThrow) noexcept
-        : OsHandle(os_handle) {}
+        : OsHandle(os_handle) {
+    }
 
     /* The naked file descriptor we wrap.  This can be -1. */
     int OsHandle = -1;

@@ -212,7 +212,7 @@ namespace {
     const Base::TFd &msg_available_fd = output_queue.GetMsgAvailableFd();
 
     while (msg_list.size() < 4) {
-      if (!msg_available_fd.IsReadable(30000)) {
+      if (!msg_available_fd.IsReadableIntr(30000)) {
         ASSERT_TRUE(false);
         break;
       }
@@ -288,7 +288,7 @@ namespace {
     const Base::TFd &msg_available_fd = output_queue.GetMsgAvailableFd();
 
     while (msg_list.size() < 4) {
-      if (!msg_available_fd.IsReadable(30000)) {
+      if (!msg_available_fd.IsReadableIntr(30000)) {
         ASSERT_TRUE(false);
         break;
       }

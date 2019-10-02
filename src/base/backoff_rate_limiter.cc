@@ -26,7 +26,7 @@
 using namespace Base;
 
 static size_t ComputeTimeToNow(const struct timespec &start,
-    const struct timespec &now) {
+    const struct timespec &now) noexcept {
   if (start.tv_sec > now.tv_sec) {
     return 0;
   }
@@ -40,7 +40,8 @@ static size_t ComputeTimeToNow(const struct timespec &start,
          ((now.tv_nsec - start.tv_nsec) / 1000000);
 }
 
-static long ComputeBackoffWindow(size_t initial_delay, size_t max_double) {
+static long ComputeBackoffWindow(size_t initial_delay,
+    size_t max_double) noexcept {
   /* This behavior is somewhat arbitrary. */
   size_t window = initial_delay << (max_double + 2);
   assert(window >> (max_double + 2) == initial_delay);  // check for overflow
@@ -76,7 +77,8 @@ size_t TBackoffRateLimiter::ComputeDelay() {
   return 0;
 }
 
-bool TBackoffRateLimiter::InBackoffWindow(const struct timespec &now) {
+bool
+TBackoffRateLimiter::InBackoffWindow(const struct timespec &now) noexcept {
   assert(this);
 
   if (FirstTime) {

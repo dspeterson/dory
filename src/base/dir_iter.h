@@ -79,7 +79,7 @@ namespace Base {
     ~TDirIter();
 
     /* True until we reach then end of the directory. */
-    operator bool() const {
+    operator bool() const noexcept {
       assert(this);
       return TryRefresh();
     }
@@ -114,7 +114,7 @@ namespace Base {
     }
 
     /* Go back to the start of the directory. */
-    void Rewind();
+    void Rewind() noexcept;
 
     private:
     /* What we know about our current position within the directory we're
@@ -144,7 +144,7 @@ namespace Base {
        return true.
        If not, try to position to the next entry, update Pos, and return
        success/failure. */
-    bool TryRefresh() const;
+    bool TryRefresh() const noexcept;
 
     /* The return of opendir().  Never null. */
     DIR *Handle;

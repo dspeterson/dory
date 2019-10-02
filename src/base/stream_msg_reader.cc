@@ -28,6 +28,7 @@
 
 #include <base/error_util.h>
 #include <base/no_default_case.h>
+#include <base/wr/fd_util.h>
 
 using namespace Base;
 
@@ -58,7 +59,7 @@ TStreamMsgReader::TState TStreamMsgReader::Read() {
 
   /* Note that read() works with TCP and UNIX domain stream sockets, as well as
      standard UNIX pipes. */
-  ssize_t ret = read(Impl.Fd, Impl.Buf.Space(), read_size);
+  ssize_t ret = Wr::read(Impl.Fd, Impl.Buf.Space(), read_size);
 
   if (ret < 0) {
 #pragma GCC diagnostic push

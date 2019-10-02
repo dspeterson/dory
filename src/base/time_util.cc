@@ -25,11 +25,13 @@
 
 #include <time.h>
 
+#include <base/wr/time_util.h>
+
 using namespace Base;
 
 namespace Base {
 
-  void SleepMilliseconds(size_t milliseconds) {
+  void SleepMilliseconds(size_t milliseconds) noexcept {
     if (milliseconds == 0) {
       return;
     }
@@ -38,16 +40,12 @@ namespace Base {
     delay.tv_sec = milliseconds / 1000;
     delay.tv_nsec = (milliseconds % 1000) * 1000000;
 
-    while (nanosleep(&delay, &remaining) < 0) {
-      if (errno != EINTR) {
-        IfLt0(-1);  // this will throw
-      }
-
+    while (Wr::nanosleep(&delay, &remaining)) {
       delay = remaining;
     }
   }
 
-  void SleepMicroseconds(size_t microseconds) {
+  void SleepMicroseconds(size_t microseconds) noexcept {
     if (microseconds == 0) {
       return;
     }
@@ -56,30 +54,26 @@ namespace Base {
     delay.tv_sec = microseconds / 1000000;
     delay.tv_nsec = (microseconds % 1000000) * 1000;
 
-    while (nanosleep(&delay, &remaining) < 0) {
-      if (errno != EINTR) {
-        IfLt0(-1);  // this will throw
-      }
-
+    while (Wr::nanosleep(&delay, &remaining)) {
       delay = remaining;
     }
   }
 
-  uint64_t GetEpochSeconds() {
+  uint64_t GetEpochSeconds() noexcept {
     struct timespec t;
-    IfLt0(clock_gettime(CLOCK_REALTIME, &t));
+    Wr::clock_gettime(CLOCK_REALTIME, &t);
     return static_cast<uint64_t>(t.tv_sec);
   }
 
-  uint64_t GetEpochMilliseconds() {
+  uint64_t GetEpochMilliseconds() noexcept {
     struct timespec t;
-    IfLt0(clock_gettime(CLOCK_REALTIME, &t));
+    Wr::clock_gettime(CLOCK_REALTIME, &t);
     return (static_cast<uint64_t>(t.tv_sec) * 1000) + (t.tv_nsec / 1000000);
   }
 
-  uint64_t GetMonotonicRawMilliseconds() {
+  uint64_t GetMonotonicRawMilliseconds() noexcept {
     struct timespec t;
-    IfLt0(clock_gettime(CLOCK_MONOTONIC_RAW, &t));
+    Wr::clock_gettime(CLOCK_MONOTONIC_RAW, &t);
     return (static_cast<uint64_t>(t.tv_sec) * 1000) + (t.tv_nsec / 1000000);
   }
 

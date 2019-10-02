@@ -42,7 +42,7 @@ namespace Log {
   using TLogEntryType = TLogEntry<LogEntryBufSize, LogEntryPrefixSpace>;
 
   /* Used in LOG_R() macro below. */
-  using TRateLimiter = Base::TThreadSafeRateLimiter<
+  using TLogRateLimiter = Base::TThreadSafeRateLimiter<
       std::chrono::steady_clock::time_point,
       std::chrono::steady_clock::duration>;
 
@@ -68,8 +68,8 @@ namespace Log {
    The above will limit log messages to at most one every 30 seconds.
  */
 #define LOG_R(p, d) Log::IsEnabled(p) && \
-    []() -> Log::TRateLimiter & { \
-      static Log::TRateLimiter lim(&std::chrono::steady_clock::now, \
+    []() -> Log::TLogRateLimiter & { \
+      static Log::TLogRateLimiter lim(&std::chrono::steady_clock::now, \
           std::chrono::steady_clock::duration(d)); \
       return lim; \
     }().Test() && \

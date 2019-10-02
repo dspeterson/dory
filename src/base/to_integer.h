@@ -39,31 +39,31 @@ namespace Base {
     HEX = 1U << 3  // hexadecimal
   };
 
-  constexpr unsigned int operator&(TBase a, TBase b) {
+  constexpr unsigned int operator&(TBase a, TBase b) noexcept {
     return static_cast<unsigned int>(a) & static_cast<unsigned int>(b);
   }
 
-  constexpr unsigned int operator&(TBase a, unsigned int b) {
+  constexpr unsigned int operator&(TBase a, unsigned int b) noexcept {
     return static_cast<unsigned int>(a) & b;
   }
 
-  constexpr unsigned int operator&(unsigned int a, TBase b) {
+  constexpr unsigned int operator&(unsigned int a, TBase b) noexcept {
     return a & static_cast<unsigned int>(b);
   }
 
-  constexpr unsigned int operator|(TBase a, TBase b) {
+  constexpr unsigned int operator|(TBase a, TBase b) noexcept {
     return static_cast<unsigned int>(a) | static_cast<unsigned int>(b);
   }
 
-  constexpr unsigned int operator|(TBase a, unsigned int b) {
+  constexpr unsigned int operator|(TBase a, unsigned int b) noexcept {
     return static_cast<unsigned int>(a) | b;
   }
 
-  constexpr unsigned int operator|(unsigned int a, TBase b) {
+  constexpr unsigned int operator|(unsigned int a, TBase b) noexcept {
     return a | static_cast<unsigned int>(b);
   }
 
-  constexpr unsigned int operator!(TBase a) {
+  constexpr unsigned int operator!(TBase a) noexcept {
     return !static_cast<unsigned int>(a);
   }
 

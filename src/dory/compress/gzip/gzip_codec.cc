@@ -51,7 +51,7 @@ DEFINE_COUNTER(ZlibStreamError);
 DEFINE_COUNTER(ZlibUnknownError);
 DEFINE_COUNTER(ZlibVersionError);
 
-static void ThrowZlibError(const z_stream &strm,
+[[ noreturn ]] static void ThrowZlibError(const z_stream &strm,
     const char *zlib_function_name, const char *blurb) {
   std::string msg("zlib function ");
   msg += zlib_function_name;

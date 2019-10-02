@@ -28,68 +28,107 @@
 #include <unistd.h>
 
 #include <base/error_util.h>
-#include <base/io_util.h>
+#include <base/sig_masker.h>
+#include <base/wr/fd_util.h>
 
 using namespace Base;
 
-TEventSemaphore::TEventSemaphore(int initial_count, bool nonblocking)
-    : Fd(IfLt0(eventfd(initial_count, EFD_SEMAPHORE))) {
+static void SetNonBlocking(int fd) noexcept {
+  const int flags = Wr::fcntl(fd, F_GETFD, 0);
+  assert(flags >= 0);
+  const int ret = Wr::fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+  assert(ret >= 0);
+}
+
+TEventSemaphore::TEventSemaphore(int initial_count, bool nonblocking) noexcept
+    : Fd(Wr::eventfd(initial_count, EFD_SEMAPHORE)) {
   if (nonblocking) {
     SetNonBlocking(Fd);
   }
 }
 
-void TEventSemaphore::Reset(int initial_count) {
+void TEventSemaphore::Reset(int initial_count) noexcept {
   assert(this);
-  int flags = IfLt0(fcntl(Fd, F_GETFL, 0));
-  TFd new_fd = IfLt0(eventfd(initial_count, EFD_SEMAPHORE));
+  int flags = Wr::fcntl(Fd, F_GETFL, 0);
+  TFd new_fd = Wr::eventfd(initial_count, EFD_SEMAPHORE);
 
   /* Xfer old flags to new FD, including nonblocking option if previously
      specified. */
-  IfLt0(fcntl(new_fd, F_SETFL, flags));
+  int ret = Wr::fcntl(new_fd, F_SETFL, flags);
+  assert(ret >= 0);
 
   /* Save setting of "close on exec" flag. */
-  flags = IfLt0(fcntl(Fd, F_GETFD, 0));
+  flags = Wr::fcntl(Fd, F_GETFD, 0);
+  assert(flags >= 0);
 
   /* dup() the new FD into the old one.  This prevents the FD number from
      changing, which clients may find helpful.  'new_fd' gets closed by its
      destructor on return. */
-  for (; ; ) {
-    int dup_fd = dup2(new_fd, Fd);
+  int dup_fd = Wr::dup2(new_fd, Fd);
+  assert(dup_fd == Fd);
 
-    if (dup_fd >= 0) {
-      assert(dup_fd == Fd);
-
-      /* Preserve setting of close on exec flag. */
-      IfLt0(fcntl(dup_fd, F_SETFD, flags));
-      break;
-    }
-
-    if (errno != EINTR) {
-      IfLt0(dup_fd);  // this will throw
-    }
-  }
+  /* Preserve setting of close on exec flag. */
+  ret = Wr::fcntl(dup_fd, F_SETFD, flags);
+  assert(ret >= 0);
 }
 
-bool TEventSemaphore::Pop() {
+bool TEventSemaphore::Pop() noexcept {
   assert(this);
   uint64_t dummy;
-  ssize_t ret = read(Fd, &dummy, sizeof(dummy));
+  ssize_t ret = Wr::read(Wr::TDisp::AddFatal, {EIO, EISDIR}, Fd, &dummy,
+      sizeof(dummy));
 
-  if (ret < 0) {
-    if (errno == EAGAIN) {
-      /* The nonblocking option was passed to the constructor, and the
-         semaphore was unavailable when we tried to do the pop. */
-      return false;
-    }
-
-    IfLt0(ret);  // this will throw
+  if (ret >= 0) {
+    return true;  // fast path: success
   }
 
-  return true;
+  if (errno == EAGAIN) {
+    /* The nonblocking option was passed to the constructor, and the
+       semaphore was unavailable when we tried to do the pop. */
+    return false;  // fast path: nonblocking failure
+  }
+
+  /* We were interrupted by a signal.  Try again with all signals blocked, so
+     only EAGAIN or fatal errors can cause read() to fail.  This avoids the
+     cost of the extra system calls to block and unblock signals in most
+     cases. */
+  assert(errno == EINTR);
+  TSigMasker masker(TSigSet(TSigSet::TListInit::Exclude, {}));
+  ret = Wr::read(Wr::TDisp::AddFatal, {EIO, EISDIR}, Fd, &dummy,
+      sizeof(dummy));
+
+  if (ret >= 0) {
+    return true;  // success
+  }
+
+  assert(errno == EAGAIN);
+
+  /* The nonblocking option was passed to the constructor, and the
+     semaphore was unavailable when we tried to do the pop. */
+  return false;
 }
 
-void TEventSemaphore::Push(int count) {
+bool TEventSemaphore::PopIntr() {
   assert(this);
-  IfLt0(eventfd_write(Fd, static_cast<eventfd_t>(count)));
+  uint64_t dummy;
+  ssize_t ret = Wr::read(Wr::TDisp::AddFatal, {EIO, EISDIR}, Fd, &dummy,
+      sizeof(dummy));
+
+  if (ret >= 0) {
+    return true;  // success
+  }
+
+  if (errno == EINTR) {
+    ThrowSystemError(errno);  // interrupted by signal
+  }
+
+  /* The nonblocking option was passed to the constructor, and the
+     semaphore was unavailable when we tried to do the pop. */
+  assert(errno == EAGAIN);
+  return false;
+}
+
+void TEventSemaphore::Push(int count) noexcept {
+  assert(this);
+  Wr::eventfd_write(Fd, static_cast<eventfd_t>(count));
 }

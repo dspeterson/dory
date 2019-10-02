@@ -904,31 +904,6 @@ namespace {
   }
 
   TEST_F(TStreamMsgReaderTest, Test4) {
-    /* test behavior with error on read */
-    TPipe p(MakePipe());
-    TTestReader r(p.Read);
-
-    /* close read end of pipe so reader will get error on attempted read */
-    p.CloseRead();
-
-    /* reader should try to read 20 bytes */
-    r.GetNextReadSizeReturnValue = 20;
-    r.SetNoMsgReady();
-
-    bool caught = false;
-
-    try {
-      r.Read();  // should throw std::system_error
-    } catch (const std::system_error &) {
-      caught = true;
-    } catch (...) {
-      ASSERT_TRUE(false);
-    }
-
-    ASSERT_TRUE(caught);
-  }
-
-  TEST_F(TStreamMsgReaderTest, Test5) {
     /* test behavior with nonblocking file descriptor */
     TPipe p(MakePipe(true));
     TTestReader r(p.Read);

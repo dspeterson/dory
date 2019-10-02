@@ -25,6 +25,7 @@
 #include <cstring>
 
 #include <base/error.h>
+#include <base/error_util.h>
 
 namespace Base {
 
@@ -35,7 +36,8 @@ namespace Base {
        the global 'errno' defined in <cerrno>. */
     TOsError(const TCodeLocation &code_location, int error_code = errno)
         : ErrorCode(error_code) {
-      PostCtor(code_location, strerror(error_code));
+      char buf[256];
+      PostCtor(code_location, Strerror(error_code, buf, sizeof(buf)));
     }
 
     int GetErrorCode() const {

@@ -29,9 +29,9 @@
 
 using namespace Base;
 
-void TError::Abort(const TCodeLocation &code_location) {
+[[ noreturn ]] void TError::Abort(const TCodeLocation &code_location) {
   std::cerr << "aborting at " << code_location << std::endl;
-  abort();
+  std::abort();
 }
 
 TError::TError() : WhatPtr("PostCtor() was not called") {}
@@ -106,7 +106,8 @@ TDemangleError::TDemangleError(const TCodeLocation &code_location, int ret) {
       break;
     case -2:
       details =
-          "mangled name is not a valid name under the C++ ABI name mangling rules";
+          "mangled name is not a valid name under the C++ ABI name mangling "
+          "rules";
       break;
     case -3:
       details = "One of the arguments is invalid";

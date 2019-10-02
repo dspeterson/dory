@@ -41,7 +41,7 @@ namespace Base {
         : Limiter(clock_fn, min_interval) {
     }
 
-    bool Test() {
+    bool Test() noexcept {
       assert(this);
       std::lock_guard<std::mutex> lock(Mutex);
       return Limiter.Test();
@@ -53,4 +53,4 @@ namespace Base {
     TRateLimiter<TTimePoint, TDuration> Limiter;
   };
 
-}
+}  // Base

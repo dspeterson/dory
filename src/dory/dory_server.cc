@@ -39,6 +39,7 @@
 #include <base/counter.h>
 #include <base/error_util.h>
 #include <base/no_default_case.h>
+#include <base/sig_masker.h>
 #include <capped/pool.h>
 #include <dory/batch/batch_config_builder.h>
 #include <dory/compress/compression_init.h>
@@ -53,7 +54,6 @@
 #include <dory/web_interface.h>
 #include <log/log.h>
 #include <server/daemonize.h>
-#include <signal/masker.h>
 #include <socket/address.h>
 #include <socket/option.h>
 
@@ -68,7 +68,6 @@ using namespace Dory::KafkaProto::Produce;
 using namespace Dory::Util;
 using namespace Log;
 using namespace Server;
-using namespace Signal;
 using namespace Socket;
 using namespace Thread;
 
@@ -318,7 +317,7 @@ int TDoryServer::Run() {
      handling.  It is important that we have all signals blocked when creating
      threads, since they inherit our signal mask, and we want them to block all
      signals. */
-  TMasker block_all(*TSet(TSet::TListInit::Exclude, {}));
+  TSigMasker block_all(*TSigSet(TSigSet::TListInit::Exclude, {}));
 
   LOG(TPri::NOTICE) << "Server started";
 
@@ -376,12 +375,12 @@ void TDoryServer::RequestShutdown() noexcept {
   }
 }
 
-TSet TDoryServer::AllHandledSignals() noexcept {
-  return TSet(TSet::TListInit::Include, { SIGINT, SIGTERM });
+TSigSet TDoryServer::AllHandledSignals() noexcept {
+  return TSigSet(TSigSet::TListInit::Include, {SIGINT, SIGTERM });
 }
 
-TSet TDoryServer::AllSignalsExceptHandled() noexcept {
-  return TSet(TSet::TListInit::Exclude, { SIGINT, SIGTERM });
+TSigSet TDoryServer::AllSignalsExceptHandled() noexcept {
+  return TSigSet(TSigSet::TListInit::Exclude, {SIGINT, SIGTERM });
 }
 
 std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>

@@ -37,12 +37,12 @@ namespace Base {
 
     ~TTmpDir();
 
-    const std::string &GetName() const {
+    const std::string &GetName() const noexcept {
       assert(this);
       return Name;
     }
 
-    void SetDeleteOnDestroy(bool delete_on_destroy) {
+    void SetDeleteOnDestroy(bool delete_on_destroy) noexcept {
       assert(this);
       DeleteOnDestroy = delete_on_destroy;
     }

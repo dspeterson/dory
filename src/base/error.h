@@ -82,20 +82,16 @@ namespace Base {
     virtual TError *Dupe() const = 0;
 
     /* Returns the location at which the exception was thrown. */
-    const TCodeLocation &GetCodeLocation() const {
+    const TCodeLocation &GetCodeLocation() const noexcept {
       assert(this);
       return CodeLocation;
     }
-
-    /* Returns the name of the final error class.  Never null. */
-    const char *GetClassName() const;
 
     /* Returns the type info struct of the final error class. Never null. */
     virtual const std::type_info &GetTypeInfo() const = 0;
 
     /* Aborts the program, sending an error message to stderr. */
-    static void Abort(const TCodeLocation &code_location)
-        __attribute__((noreturn));
+    [[ noreturn ]] static void Abort(const TCodeLocation &code_location);
 
     protected:
     /* Defaults to safe but useless values.  PostCtor() does the real work. */

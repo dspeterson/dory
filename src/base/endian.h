@@ -27,42 +27,42 @@ namespace Base {
 
   /* The 8-bit version, to facilitate templates which can take any of the
      uint[n]_t types. */
-  inline uint8_t SwapEnds(uint8_t val) {
+  inline uint8_t SwapEnds(uint8_t val) noexcept {
     return val;
   }
 
   /* And the signed version. */
-  inline int8_t SwapEnds(int8_t val) {
+  inline int8_t SwapEnds(int8_t val) noexcept {
     return val;
   }
 
   /* The 16-bit version. */
-  inline uint16_t SwapEnds(uint16_t val) {
+  inline uint16_t SwapEnds(uint16_t val) noexcept {
     return __builtin_bswap16(val);
   }
 
   /* And the signed version. */
-  inline int16_t SwapEnds(int16_t val) {
+  inline int16_t SwapEnds(int16_t val) noexcept {
     return SwapEnds(static_cast<uint16_t>(val));
   }
 
   /* The 32-bit version. */
-  inline uint32_t SwapEnds(uint32_t val) {
+  inline uint32_t SwapEnds(uint32_t val) noexcept {
     return __builtin_bswap32(val);
   }
 
   /* And the signed version. */
-  inline int32_t SwapEnds(int32_t val) {
+  inline int32_t SwapEnds(int32_t val) noexcept {
     return SwapEnds(static_cast<uint32_t>(val));
   }
 
   /* The 64-bit version. */
-  inline uint64_t SwapEnds(uint64_t val) {
+  inline uint64_t SwapEnds(uint64_t val) noexcept {
     return __builtin_bswap64(val);
   }
 
   /* And the signed version. */
-  inline int64_t SwapEnds(int64_t val) {
+  inline int64_t SwapEnds(int64_t val) noexcept {
     return SwapEnds(static_cast<uint64_t>(val));
   }
 

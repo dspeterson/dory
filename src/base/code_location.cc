@@ -25,7 +25,7 @@
 
 using namespace Base;
 
-const char *TCodeLocation::GetFile() const {
+const char *TCodeLocation::GetFile() const noexcept {
   assert(this);
   return File + ((std::strncmp(File, SrcRoot, SrcRootLen) == 0) ?
       (SrcRootLen) : 0);

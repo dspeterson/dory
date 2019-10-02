@@ -91,7 +91,7 @@ namespace {
   void TTestWorker2::Run() {
     const TFd &fd = GetShutdownRequestFd();
 
-    while (!fd.IsReadable()) {
+    while (!fd.IsReadableIntr()) {
       sleep(1);
     }
 
@@ -124,7 +124,7 @@ namespace {
   void TTestWorker3::Run() {
     const TFd &fd = GetShutdownRequestFd();
 
-    while (!fd.IsReadable()) {
+    while (!fd.IsReadableIntr()) {
       sleep(1);
     }
 
@@ -143,7 +143,7 @@ namespace {
     ASSERT_FALSE(thread_executed);
     worker.Start();
 
-    if (!worker.GetShutdownWaitFd().IsReadable(30000)) {
+    if (!worker.GetShutdownWaitFd().IsReadableIntr(30000)) {
       ASSERT_TRUE(false);
       return;
     }
@@ -153,7 +153,7 @@ namespace {
     thread_executed = false;
     worker.Start();
 
-    if (!worker.GetShutdownWaitFd().IsReadable(30000)) {
+    if (!worker.GetShutdownWaitFd().IsReadableIntr(30000)) {
       ASSERT_TRUE(false);
       return;
     }
@@ -170,7 +170,7 @@ namespace {
     ASSERT_FALSE(flag);
     worker.RequestShutdown();
 
-    if (!worker.GetShutdownWaitFd().IsReadable(30000)) {
+    if (!worker.GetShutdownWaitFd().IsReadableIntr(30000)) {
       ASSERT_TRUE(false);
       return;
     }
@@ -184,7 +184,7 @@ namespace {
     ASSERT_FALSE(flag);
     worker.RequestShutdown();
 
-    if (!worker.GetShutdownWaitFd().IsReadable(30000)) {
+    if (!worker.GetShutdownWaitFd().IsReadableIntr(30000)) {
       ASSERT_TRUE(false);
       return;
     }
@@ -201,7 +201,7 @@ namespace {
     worker.RequestShutdown();
     bool threw = false;
 
-    if (!worker.GetShutdownWaitFd().IsReadable(30000)) {
+    if (!worker.GetShutdownWaitFd().IsReadableIntr(30000)) {
       ASSERT_TRUE(false);
       return;
     }
@@ -221,7 +221,7 @@ namespace {
     worker.RequestShutdown();
     threw = false;
 
-    if (!worker.GetShutdownWaitFd().IsReadable(30000)) {
+    if (!worker.GetShutdownWaitFd().IsReadableIntr(30000)) {
       ASSERT_TRUE(false);
       return;
     }
@@ -249,7 +249,7 @@ namespace {
     worker.RequestShutdown();
     bool threw = false;
 
-    if (!worker.GetShutdownWaitFd().IsReadable(30000)) {
+    if (!worker.GetShutdownWaitFd().IsReadableIntr(30000)) {
       ASSERT_TRUE(false);
       return;
     }
@@ -274,7 +274,7 @@ namespace {
     worker.RequestShutdown();
     threw = false;
 
-    if (!worker.GetShutdownWaitFd().IsReadable(30000)) {
+    if (!worker.GetShutdownWaitFd().IsReadableIntr(30000)) {
       ASSERT_TRUE(false);
       return;
     }
@@ -310,7 +310,7 @@ namespace {
     ASSERT_TRUE(threw);
     threw = false;
 
-    if (!worker.GetShutdownWaitFd().IsReadable(30000)) {
+    if (!worker.GetShutdownWaitFd().IsReadableIntr(30000)) {
       ASSERT_TRUE(false);
       return;
     }

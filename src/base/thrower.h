@@ -85,7 +85,7 @@ namespace Base {
     }
 
     /* Boom goes the dynamite. */
-    ~TThrower() noexcept(false) __attribute__((noreturn)) {
+    [[ noreturn ]] ~TThrower() noexcept(false) {
       assert(this);
       throw TError(Strm.str().c_str());
     }

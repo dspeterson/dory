@@ -31,16 +31,15 @@
 #include <unistd.h>
 
 #include <base/on_destroy.h>
+#include <base/sig_set.h>
 #include <base/time_util.h>
 #include <base/tmp_file.h>
 #include <base/zero.h>
-#include <signal/set.h>
 #include <test_util/test_logging.h>
 #include <thread/fd_managed_thread.h>
 
 using namespace Base;
 using namespace Server;
-using namespace Signal;
 using namespace TestUtil;
 using namespace Thread;
 
@@ -118,7 +117,7 @@ namespace {
 
     handler_thread.Init(SignalCallback, {SIGUSR1, SIGCHLD});
     handler_thread.Start();
-    const TSet mask = TSet::FromSigmask();
+    const TSigSet mask = TSigSet::FromSigmask();
 
     /* For this thread, all signals should be blocked (except SIGKILL and
        SIGSTOP, which can't be blocked) after call to Start().  Here we don't
@@ -212,14 +211,14 @@ namespace {
     handler_thread.RequestShutdown();
 
     for (size_t i = 0; i < 1000; ++i) {
-      if (handler_thread.GetShutdownWaitFd().IsReadable()) {
+      if (handler_thread.GetShutdownWaitFd().IsReadableIntr()) {
         break;
       }
 
       SleepMilliseconds(10);
     }
 
-    ASSERT_TRUE(handler_thread.GetShutdownWaitFd().IsReadable());
+    ASSERT_TRUE(handler_thread.GetShutdownWaitFd().IsReadableIntr());
 
     /* Make sure handler didn't throw an exception. */
     try {

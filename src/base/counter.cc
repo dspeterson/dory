@@ -25,7 +25,8 @@
 
 using namespace Base;
 
-TCounter::TCounter(const TCodeLocation &code_location, const char *name)
+TCounter::TCounter(const TCodeLocation &code_location,
+    const char *name) noexcept
     : CodeLocation(code_location),
       Name(name) {
   assert(name);
@@ -33,7 +34,7 @@ TCounter::TCounter(const TCodeLocation &code_location, const char *name)
   FirstCounter = this;
 }
 
-time_t TCounter::Reset() {
+time_t TCounter::Reset() noexcept {
   TExclusiveLock<TBlockingAsset> lock(Asset);
   ResetTime = time(0);
 
@@ -46,7 +47,7 @@ time_t TCounter::Reset() {
   return ResetTime;
 }
 
-void TCounter::Sample() {
+void TCounter::Sample() noexcept {
   TExclusiveLock<TBlockingAsset> lock(Asset);
   SampleTime = time(0);
 
@@ -62,4 +63,6 @@ TBlockingAsset TCounter::Asset;
 
 TCounter *TCounter::FirstCounter = nullptr;
 
-time_t TCounter::SampleTime = time(0), TCounter::ResetTime = SampleTime;
+time_t TCounter::SampleTime = time(0);
+
+time_t TCounter::ResetTime = SampleTime;

@@ -27,6 +27,7 @@
 
 #include <base/no_copy_semantics.h>
 #include <base/os_error.h>
+#include <base/wr/thread_util.h>
 
 namespace Base {
 
@@ -36,8 +37,8 @@ namespace Base {
 
     public:
     /* Constructs a new, unlocked asset. */
-    TBlockingAsset() {
-      Base::TOsError::IfNe0(HERE, pthread_rwlock_init(&RwLock, nullptr));
+    TBlockingAsset() noexcept {
+      Wr::pthread_rwlock_init(&RwLock, nullptr);
     }
 
     /* Destroys the target.
@@ -45,27 +46,27 @@ namespace Base {
        Destroying a locked target has undefined results. */
     ~TBlockingAsset() {
       assert(this);
-      pthread_rwlock_destroy(&RwLock);
+      Wr::pthread_rwlock_destroy(&RwLock);
     }
 
-    void AcquireExclusive() const {
+    void AcquireExclusive() const noexcept {
       assert(this);
-      Base::TOsError::IfNe0(HERE, pthread_rwlock_wrlock(&RwLock));
+      Wr::pthread_rwlock_wrlock(&RwLock);
     }
 
-    void AcquireShared() const {
+    void AcquireShared() const noexcept {
       assert(this);
-      Base::TOsError::IfNe0(HERE, pthread_rwlock_rdlock(&RwLock));
+      Wr::pthread_rwlock_rdlock(&RwLock);
     }
 
-    void ReleaseExclusive() const {
+    void ReleaseExclusive() const noexcept {
       assert(this);
-      pthread_rwlock_unlock(&RwLock);
+      Wr::pthread_rwlock_unlock(&RwLock);
     }
 
-    void ReleaseShared() const {
+    void ReleaseShared() const noexcept {
       assert(this);
-      pthread_rwlock_unlock(&RwLock);
+      Wr::pthread_rwlock_unlock(&RwLock);
     }
 
     private:

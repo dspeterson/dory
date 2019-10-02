@@ -24,13 +24,12 @@
 #include <sys/resource.h>
 
 #include <base/error_util.h>
-#include <signal/handler_installer.h>
-#include <signal/masker.h>
-#include <signal/set.h>
+#include <base/sig_handler_installer.h>
+#include <base/sig_masker.h>
+#include <base/sig_set.h>
 
 using namespace Base;
 using namespace Fiber;
-using namespace Signal;
 
 TDispatcher::THandler::~THandler() {
   assert(this);
@@ -186,11 +185,12 @@ void TDispatcher::Run(const TTimeout &grace_period,
      won't abort the whole process.  We'll mask out all signals while we're
      running, then unmask the shutdown signal only while we're blocked in
      Dispatch().  That way arbitrary I/O won't be affected. */
-  THandlerInstaller handle_signal(shutdown_signal_number, TSet(), ShutdownSigHandler);
-  TMasker masker(*TSet(TSet::TListInit::Exclude, {}));
+  TSigHandlerInstaller handle_signal(shutdown_signal_number, TSigSet(),
+      ShutdownSigHandler);
+  TSigMasker masker(*TSigSet(TSigSet::TListInit::Exclude, {}));
   GotShutdownSignal = false;
-  TSet mask_set(TSet::TListInit::Exclude, {});
-  TSet shutdown_mask_set(TSet::TListInit::Exclude, {});
+  TSigSet mask_set(TSigSet::TListInit::Exclude, {});
+  TSigSet shutdown_mask_set(TSigSet::TListInit::Exclude, {});
 
   for (int sig : allow_signals) {
     mask_set -= sig;

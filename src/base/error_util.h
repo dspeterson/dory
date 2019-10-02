@@ -37,7 +37,7 @@ namespace Base {
 
   /* Throw the given code as an error in the system category. */
   template <typename TCode>
-  inline void ThrowSystemError(TCode code) {
+  [[ noreturn ]] inline void ThrowSystemError(TCode code) {
     throw std::system_error(code, std::system_category());
   }
 
@@ -76,7 +76,7 @@ namespace Base {
      pointer to that buffer, or return a pointer to some statically allocated
      string constant.  The valid lifetime of the memory pointed to by the
      return value must be assumed to not exceed the lifetime of 'buf'. */
-  const char *Strerror(int errno_value, char *buf, size_t buf_size);
+  const char *Strerror(int errno_value, char *buf, size_t buf_size) noexcept;
 
   /* RAII container for result of backtrace_symbols() library call. */
   class TBacktraceSymbols final {
@@ -184,8 +184,11 @@ namespace Base {
      calling std::abort(). */
   void DieOnTerminate() noexcept;
 
-  /* Generate a stack trace, call fatal error handler specified by
-     SetDieHandler() above, and dump core. */
+  /* Generate a stack trace, log fatal error message, and dump core. */
   [[ noreturn ]] void Die(const char *msg) noexcept;
 
-};  // Base
+  /* Log fatal error message and dump core, but don't generate a stack
+     trace. */
+  [[ noreturn ]] void DieNoStackTrace(const char *msg) noexcept;
+
+}  // Base

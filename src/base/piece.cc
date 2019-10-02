@@ -23,14 +23,14 @@
 
 unsigned char *Base::BuildCStr(const TPiece<const unsigned char> &piece) {
   auto *out_str = new unsigned char[piece.GetSize() + 1];
-  memcpy(out_str, piece.GetStart(), piece.GetSize());
+  std::memcpy(out_str, piece.GetStart(), piece.GetSize());
   out_str[piece.GetSize()] = 0;
   return out_str;
 }
 
 char *Base::BuildCStr(const TPiece<const char> &piece) {
   char *out_str = new char[piece.GetSize() + 1];
-  memcpy(out_str, piece.GetStart(), piece.GetSize());
+  std::memcpy(out_str, piece.GetStart(), piece.GetSize());
   out_str[piece.GetSize()] = 0;
   return out_str;
 }

@@ -585,7 +585,7 @@ namespace {
     ASSERT_EQ(stats.QueueErrorCount, 0U);
     ASSERT_EQ(stats.NotifyErrorCount, 0U);
     ASSERT_EQ(stats.LiveWorkerCount, 0U);
-    ASSERT_FALSE(pool.GetErrorPendingFd().IsReadable());
+    ASSERT_FALSE(pool.GetErrorPendingFd().IsReadableIntr());
   }
 
   TEST_F(TManagedThreadPoolTest, ExceptionTest) {
@@ -610,10 +610,10 @@ namespace {
     w3.GetWorkFn() = work_fn;
 
     std::thread::id w1_id = w1.Launch();
-    ASSERT_TRUE(error_fd.IsReadable(10000));
+    ASSERT_TRUE(error_fd.IsReadableIntr(10000));
     std::list<TManagedThreadPoolBase::TWorkerError> error_list =
         pool.GetAllPendingErrors();
-    ASSERT_FALSE(error_fd.IsReadable());
+    ASSERT_FALSE(error_fd.IsReadableIntr());
     ASSERT_EQ(error_list.size(), 1U);
     TManagedThreadPoolBase::TWorkerError error = error_list.front();
     error_list.pop_front();
@@ -640,7 +640,7 @@ namespace {
     w2.Launch();
     std::thread::id w3_id = w3.Launch();
 
-    ASSERT_TRUE(error_fd.IsReadable(10000));
+    ASSERT_TRUE(error_fd.IsReadableIntr(10000));
 
     for (size_t i = 0;
         (i < 30) && (pool.GetStats().FinishWorkCount < 3);
@@ -650,9 +650,9 @@ namespace {
 
     ASSERT_EQ(pool.GetStats().FinishWorkCount, 3U);
     ASSERT_EQ(counter.load(), 3U);
-    ASSERT_TRUE(error_fd.IsReadable());
+    ASSERT_TRUE(error_fd.IsReadableIntr());
     error_list = pool.GetAllPendingErrors();
-    ASSERT_FALSE(error_fd.IsReadable());
+    ASSERT_FALSE(error_fd.IsReadableIntr());
     ASSERT_EQ(error_list.size(), 1U);
     error = error_list.front();
     error_list.pop_front();
@@ -695,7 +695,7 @@ namespace {
     }
 
     ASSERT_EQ(counter.load(), 6U);
-    ASSERT_FALSE(error_fd.IsReadable());
+    ASSERT_FALSE(error_fd.IsReadableIntr());
     error_list = pool.GetAllPendingErrors();
     ASSERT_TRUE(error_list.empty());
 
@@ -736,7 +736,7 @@ namespace {
     ASSERT_EQ(stats.QueueErrorCount, 0U);
     ASSERT_EQ(stats.NotifyErrorCount, 0U);
     ASSERT_EQ(stats.LiveWorkerCount, 0U);
-    ASSERT_FALSE(pool.GetErrorPendingFd().IsReadable());
+    ASSERT_FALSE(pool.GetErrorPendingFd().IsReadableIntr());
   }
 
   void CheckForWorkerThreadErrors(
@@ -821,7 +821,7 @@ namespace {
     ASSERT_EQ(stats.FinishWorkCount, counter.load());
     ASSERT_EQ(stats.QueueErrorCount, 0U);
     ASSERT_EQ(stats.NotifyErrorCount, 0U);
-    ASSERT_FALSE(pool.GetErrorPendingFd().IsReadable());
+    ASSERT_FALSE(pool.GetErrorPendingFd().IsReadableIntr());
     pool.RequestShutdown();
     pool.WaitForShutdown();
     errors = pool.GetAllPendingErrors();
@@ -888,7 +888,7 @@ namespace {
     ASSERT_EQ(stats.FinishWorkCount, counter.load());
     ASSERT_EQ(stats.QueueErrorCount, 0U);
     ASSERT_EQ(stats.NotifyErrorCount, 0U);
-    ASSERT_FALSE(pool.GetErrorPendingFd().IsReadable());
+    ASSERT_FALSE(pool.GetErrorPendingFd().IsReadableIntr());
     ASSERT_EQ(counter.load(), count_per_worker * initial_thread_count);
 
     pool.RequestShutdown();
@@ -956,7 +956,7 @@ namespace {
     ASSERT_EQ(stats.FinishWorkCount, counter.load());
     ASSERT_EQ(stats.QueueErrorCount, 0U);
     ASSERT_EQ(stats.NotifyErrorCount, 0U);
-    ASSERT_FALSE(pool.GetErrorPendingFd().IsReadable());
+    ASSERT_FALSE(pool.GetErrorPendingFd().IsReadableIntr());
     ASSERT_EQ(counter.load(), count_per_worker * initial_thread_count);
 
     pool.RequestShutdown();

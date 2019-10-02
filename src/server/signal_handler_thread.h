@@ -32,8 +32,8 @@
 #include <utility>
 
 #include <base/no_copy_semantics.h>
+#include <base/sig_set.h>
 #include <base/zero.h>
-#include <signal/set.h>
 
 namespace Server {
 
@@ -127,7 +127,7 @@ namespace Server {
 
     /* Signal mask indicates "block all signals except those that the handler
        thread is supposed to handle". */
-    Signal::TSet BlockedSet;
+    Base::TSigSet BlockedSet;
 
     /* Client-provided callback to execute on receipt of signal. */
     THandler HandlerCallback = nullptr;

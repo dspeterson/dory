@@ -53,7 +53,7 @@ TMockKafkaConfig::TMockKafkaConfig(
 void TMockKafkaConfig::StartKafka() {
   if (!KafkaStarted) {
     MainThread->Start();
-    MainThread->GetInitWaitFd().IsReadable(-1);
+    MainThread->GetInitWaitFd().IsReadableIntr(-1);
     bool success =Inj.Connect("localhost", MainThread->GetCmdPort());
     ASSERT_TRUE(success);
     KafkaStarted = true;

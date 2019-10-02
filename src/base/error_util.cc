@@ -35,7 +35,8 @@
 
 using namespace Base;
 
-const char *Base::Strerror(int errno_value, char *buf, size_t buf_size) {
+const char *Base::Strerror(int errno_value, char *buf,
+    size_t buf_size) noexcept {
   assert(buf);
   assert(buf_size);
 
@@ -140,7 +141,8 @@ static std::atomic_flag die_flag = ATOMIC_FLAG_INIT;
    of 0. */
 static std::atomic<pid_t> die_flag_holder(0);
 
-[[ noreturn ]] void Base::Die(const char *msg) noexcept {
+[[ noreturn ]] static void DieImpl(const char *msg,
+    bool stack_trace) noexcept {
   const pid_t my_tid = Gettid();
 
   if (!die_flag.test_and_set()) {
@@ -152,7 +154,12 @@ static std::atomic<pid_t> die_flag_holder(0);
        threads can be obtained from the core file. */
     die_flag_holder.store(my_tid);
 
-    EmitStackTrace(msg);  // implementation assumes no concurrency
+    if (stack_trace) {
+      EmitStackTrace(msg);  // implementation assumes no concurrency
+    } else {
+      WriteFatalMsgToStderr(msg);
+      SecondaryFatalMsgWriter(msg);
+    }
 
     /* Unless we are running with libasan, this should cause a core dump.
        libasan disables core dumps by default, since they may be very large. */
@@ -191,7 +198,15 @@ static std::atomic<pid_t> die_flag_holder(0);
       "Other thread detected in Die(): waiting for stack trace to finish");
 
   /* Wait for die_flag holder to finish stack trace and call abort(). */
-  for (; ; ) {
+  for (;;) {
     pause();
   }
+}
+
+[[ noreturn ]] void Base::Die(const char *msg) noexcept {
+  DieImpl(msg, true /* stack_trace */);
+}
+
+[[ noreturn ]] void Base::DieNoStackTrace(const char *msg) noexcept {
+  DieImpl(msg, false /* stack_trace */);
 }

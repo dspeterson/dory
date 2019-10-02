@@ -31,6 +31,7 @@
 
 #include <base/error_util.h>
 #include <base/random_exp_backoff.h>
+#include <base/wr/time_util.h>
 
 namespace Base {
 
@@ -59,17 +60,17 @@ namespace Base {
     /* Call this to indicate that the action is now being performed.  Updates
        the internal state of the rate limiter so it will correctly compute the
        next delay value. */
-    void OnAction() {
+    void OnAction() noexcept {
       assert(this);
       GetCurrentTime(LastEventTime);
     }
 
     private:
-    static void GetCurrentTime(struct timespec &result) {
-      IfLt0(clock_gettime(CLOCK_MONOTONIC_RAW, &result));
+    static void GetCurrentTime(struct timespec &result) noexcept {
+      Wr::clock_gettime(CLOCK_MONOTONIC_RAW, &result);
     }
 
-    bool InBackoffWindow(const struct timespec &now);
+    bool InBackoffWindow(const struct timespec &now) noexcept;
 
     const long BackoffWindow;
 

@@ -304,4 +304,5 @@ namespace Base {
     private:
     TConverter Converter;
   };
-}
+
+}  // Base

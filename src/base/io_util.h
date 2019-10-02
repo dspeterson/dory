@@ -23,6 +23,8 @@
 
 #include <stdexcept>
 
+#include <base/wr/common.h>
+
 namespace Base {
 
   /* The 'AtMost' versions of read and write are basically just wrappers around
@@ -137,11 +139,5 @@ namespace Base {
       throw TCouldNotStart();
     }
   }
-
-  /* Sets the given fd to close-on-exec. */
-  void SetCloseOnExec(int fd);
-
-  /* Sets the given fd to non-blocking I/O. */
-  void SetNonBlocking(int fd);
 
 }  // Base

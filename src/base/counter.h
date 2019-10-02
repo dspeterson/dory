@@ -95,36 +95,37 @@ namespace Base {
     public:
     /* Construct with all counts zero.  The given name should point to a string
        in the data segment, as we do not copy it.  */
-    TCounter(const Base::TCodeLocation &code_location, const char *name);
+    TCounter(const Base::TCodeLocation &code_location,
+        const char *name) noexcept;
 
     /* The code location at which the counter was declared. */
-    const Base::TCodeLocation &GetCodeLocation() const {
+    const Base::TCodeLocation &GetCodeLocation() const noexcept {
       assert(this);
       return CodeLocation;
     }
 
     /* The count as of the last time the counters were sampled. */
-    uint32_t GetCount() const {
+    uint32_t GetCount() const noexcept {
       assert(this);
       return SampledCount;
     }
 
     /* The name of this counter.  This should be unique within its module.
        Never null. */
-    const char *GetName() const {
+    const char *GetName() const noexcept {
       assert(this);
       return Name;
     }
 
     /* The next counter in the program, if any. */
-    const TCounter *GetNextCounter() const {
+    const TCounter *GetNextCounter() const noexcept {
       assert(this);
       return NextCounter;
     }
 
     /* Increment the counter.  This will not change the current frozen value,
        but will be reflected in the next frozen value. */
-    void Increment(uint32_t delta = 1) {
+    void Increment(uint32_t delta = 1) noexcept {
       assert(this);
       Base::TSharedLock<Base::TBlockingAsset> lock(Asset);
       __sync_add_and_fetch(&UnsampledCount, delta);
@@ -133,14 +134,14 @@ namespace Base {
     /* The time of the most recent reset of the counters.
        This is initially set at program start-up, and is changed each time
        you call Sample(true). */
-    static time_t GetResetTime() {
+    static time_t GetResetTime() noexcept {
       return ResetTime;
     }
 
     /* The time of the most recent sample of the counters.
        This is initially set at program start-up, and is changed each time
        you call Sample(). */
-    static time_t GetSampleTime() {
+    static time_t GetSampleTime() noexcept {
       return SampleTime;
     }
 
@@ -148,14 +149,14 @@ namespace Base {
        Calling this function will update ResetTime. We return the reset time
        directly to eliminate any chance of getting another thread's reset
        time. */
-    static time_t Reset();
+    static time_t Reset() noexcept;
 
     /* Add to the sampled values for each counter.
        Calling this function will update SampleTime. */
-    static void Sample();
+    static void Sample() noexcept;
 
     /* The first counter in the program, if any. */
-    static const TCounter *GetFirstCounter() {
+    static const TCounter *GetFirstCounter() noexcept {
       return FirstCounter;
     }
 
@@ -190,7 +191,8 @@ namespace Base {
     static TCounter *FirstCounter;
 
     /* See accessors. */
-    static time_t SampleTime, ResetTime;
+    static time_t SampleTime;
+    static time_t ResetTime;
   };  // TCounter
 
 }  // Base

@@ -22,18 +22,35 @@
 #pragma once
 
 #include <base/event_semaphore.h>
-#include <base/event_semaphore_notifier.h>
 #include <base/no_copy_semantics.h>
 
 namespace Dory {
 
   namespace Util {
 
-    class TInitNotifier final : public Base::TEventSemaphoreNotifier {
+    class TInitNotifier final {
       NO_COPY_SEMANTICS(TInitNotifier);
 
       public:
-      explicit TInitNotifier(Base::TEventSemaphore &sem);
+      explicit TInitNotifier(Base::TEventSemaphore &sem) noexcept
+          : Sem(sem) {
+      }
+
+      ~TInitNotifier() {
+        Notify();
+      }
+
+      void Notify() noexcept {
+        if (!Done) {
+          Sem.Push();
+          Done = true;
+        }
+      }
+
+      private:
+      bool Done = false;
+
+      Base::TEventSemaphore &Sem;
     };  // TInitNotifier
 
   }  // Util
