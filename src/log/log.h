@@ -46,6 +46,12 @@ namespace Log {
       std::chrono::steady_clock::time_point,
       std::chrono::steady_clock::duration>;
 
+  /* Generate and log a stack trace.  Stack trace will be written to logger
+     regardless of value of 'pri' because it is assumed that a stack trace is
+     always interesting enough to log.  If syslog logging is enabled, 'pri'
+     will be passed to syslog(). */
+  void LogStackTrace(TPri pri) noexcept;
+
 }
 
 /* Facilitates expressions such as the following.

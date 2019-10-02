@@ -23,7 +23,6 @@
 
 #include <initializer_list>
 
-#include <execinfo.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/stat.h>
@@ -32,10 +31,8 @@
 #include <base/error_util.h>
 #include <base/os_error.h>
 #include <base/zero.h>
-#include <log/log.h>
 
 using namespace Base;
-using namespace Log;
 
 /* Install the given hander over a list of signals. */
 static void InstallSignalHandlers(std::initializer_list<int> signals,
@@ -45,25 +42,6 @@ static void InstallSignalHandlers(std::initializer_list<int> signals,
     Base::Zero(new_act);
     new_act.sa_handler = handler;
     IfLt0(sigaction(sig_num, &new_act, nullptr));
-  }
-}
-
-void Server::BacktraceToLog() {
-  static const int max_frame_count = 100;
-  void *frames[max_frame_count];
-  int frame_count = backtrace(frames, max_frame_count);
-  char **symbols = backtrace_symbols(frames, frame_count);
-
-  if (symbols) {
-    for (int frame_idx = 0; frame_idx < frame_count; ++frame_idx) {
-      LOG(TPri::ERR) << "[backtrace][frame " << (frame_idx + 1) << " of "
-          << frame_count << "][" << symbols[frame_idx] << "]";
-    }
-
-    free(symbols);
-  } else {
-    LOG(TPri::ERR) << "[backtrace][failed to get " << frame_count
-        << " frames]";
   }
 }
 

@@ -76,15 +76,10 @@ TMsg::~TMsg() {
 
   if (State != TState::Processed) {
     MsgUnprocessedDestroy.Increment();
-    static TLogRateLimiter lim(std::chrono::seconds(5));
-
-    if (lim.Test()) {
-      syslog(LOG_ERR, "Possible bug: destroying unprocessed message with "
-             "topic [%s] and timestamp %llu. This is expected behavior if "
-             "the server is exiting due to a fatal error.", Topic.c_str(),
-             static_cast<unsigned long long>(Timestamp));
-      Server::BacktraceToLog();
-    }
+    LOG_R(TPri::ERR, std::chrono::seconds(5))
+        << "Possible bug: destroying unprocessed message with topic [" << Topic
+        << "] and timestamp " << Timestamp << ".  This is expected behavior "
+        << "if the server is exiting due to a fatal error.";
   }
 }
 ```

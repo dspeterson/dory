@@ -38,7 +38,6 @@
 #include <dory/util/connect_to_host.h>
 #include <dory/util/topic_map.h>
 #include <log/log.h>
-#include <server/daemonize.h>
 
 using namespace Base;
 using namespace Dory;
@@ -741,7 +740,7 @@ void TRouterThread::DiscardFinalMsgs() {
     } else {
       LOG(TPri::ERR)
           << "Router thread got empty TMsg::TPtr in DiscardFinalMsgs()";
-      Server::BacktraceToLog();
+      LogStackTrace(TPri::ERR);
       assert(false);
     }
   }

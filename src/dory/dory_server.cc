@@ -53,7 +53,6 @@
 #include <dory/util/misc_util.h>
 #include <dory/web_interface.h>
 #include <log/log.h>
-#include <server/daemonize.h>
 #include <socket/address.h>
 #include <socket/option.h>
 
@@ -639,7 +638,7 @@ void TDoryServer::DiscardFinalMsgs(std::list<TMsg::TPtr> &msg_list) {
     } else {
       assert(false);
       LOG(TPri::ERR) << "Main thread got empty TMsg::TPtr during shutdown";
-      BacktraceToLog();
+      LogStackTrace(TPri::ERR);
     }
   }
 }

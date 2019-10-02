@@ -26,9 +26,6 @@
 
 namespace Server {
 
-  /* Send a trace of the stack to the log. */
-  void BacktraceToLog();
-
   /* The calling process will fork and the child process will become a daemon.
 
      In particular, the child process will:
