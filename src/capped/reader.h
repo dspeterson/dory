@@ -49,10 +49,10 @@ namespace Capped {
     }
 
     /* Shallow copy is ok. */
-    TReader(const TReader &that) = default;
+    TReader(const TReader &that) noexcept = default;
 
     /* Shallow copy is ok. */
-    TReader &operator=(const TReader &) = default;
+    TReader &operator=(const TReader &) noexcept = default;
 
     /* True iff. we have not yet reached the end of the blob. */
     operator bool() const noexcept {
@@ -77,12 +77,12 @@ namespace Capped {
       return Advance(nullptr, size);
     }
 
-    size_t GetBytesRemaining() const {
+    size_t GetBytesRemaining() const noexcept {
       assert(this);
       return BytesRemaining;
     }
 
-    size_t GetBytesConsumed() const {
+    size_t GetBytesConsumed() const noexcept {
       assert(this);
       size_t total = Blob->Size();
       assert(BytesRemaining <= total);

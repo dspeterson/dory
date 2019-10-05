@@ -29,7 +29,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <sstream>
-#include <stdexcept>
 
 #include <boost/lexical_cast.hpp>
 #include <fcntl.h>
@@ -129,7 +128,7 @@ void TDiscardFileLogger::Init(const char *log_path, uint64_t max_file_size,
   std::string path(log_path);
 
   if (Enabled) {
-    throw std::logic_error("Discard file logging already initialized");
+    Die("Discard file logging already initialized");
   }
 
   CreateDir(log_dir.c_str());

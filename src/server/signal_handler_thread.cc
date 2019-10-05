@@ -22,7 +22,6 @@
 #include <server/signal_handler_thread.h>
 
 #include <cerrno>
-#include <stdexcept>
 
 #include <poll.h>
 #include <signal.h>
@@ -43,7 +42,7 @@ void TSignalHandlerThread::Init(
   assert(this);
 
   if (Initialized) {
-    throw std::logic_error("TSignalHandlerThread already initialized");
+    Die("TSignalHandlerThread already initialized");
   }
 
   assert(handler_callback);
@@ -67,8 +66,7 @@ void TSignalHandlerThread::Start() {
   assert(this);
 
   if (!Initialized) {
-    throw std::logic_error(
-        "TSignalHandlerThread must be initialized before starting");
+    Die("TSignalHandlerThread must be initialized before starting");
   }
 
   /* Block all signals and then start the thread, which starts with all signals

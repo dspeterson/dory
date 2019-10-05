@@ -105,7 +105,7 @@ void TPool::Free(void *ptr) noexcept {
   }
 }
 
-void TPool::FreeList(TBlock *first_block) {
+void TPool::FreeList(TBlock *first_block) noexcept {
   assert(this);
 
   if (first_block == nullptr) {
@@ -129,7 +129,7 @@ void TPool::DoFree(void *ptr) noexcept {
   new (ptr) TBlock(FirstFreeBlock);
 }
 
-void TPool::DoFreeList(TBlock *first_block) {
+void TPool::DoFreeList(TBlock *first_block) noexcept {
   assert(this);
   assert(first_block);
 

@@ -23,7 +23,7 @@
 
 using namespace Capped;
 
-size_t TBlob::DoGetDataInFirstBlock(char *&data) const {
+size_t TBlob::DoGetDataInFirstBlock(char *&data) const noexcept {
   assert(this);
 
   if (FirstBlock == nullptr) {

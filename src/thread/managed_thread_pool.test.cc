@@ -35,13 +35,16 @@
 
 #include <unistd.h>
 
+#include <base/error_util.h>
 #include <base/time_util.h>
 #include <base/tmp_file.h>
+#include <log/log.h>
 #include <test_util/test_logging.h>
 
 #include <gtest/gtest.h>
 
 using namespace Base;
+using namespace Log;
 using namespace TestUtil;
 using namespace Thread;
 
@@ -107,12 +110,10 @@ namespace {
     CalledThreadWorkFn = true;
   }
 
-  void HandleOutOfMemory() {
-    std::cerr << "Failed to create worker thread due to not enough memory.  "
-              << "Try running the stress tests on a system with more memory, "
-              << "or modify them to create fewer worker threads."
-        << std::endl;
-    _exit(1);
+  [[ noreturn ]] void HandleOutOfMemory() noexcept {
+    Die("Failed to create worker thread due to not enough memory.  Try "
+        "running the stress tests on a system with more memory, or modify "
+        "them to create fewer worker threads.");
   }
 
 }  // namespace
@@ -746,14 +747,13 @@ namespace {
         try {
           std::rethrow_exception(e.ThrownException);
         } catch (const std::exception &x) {
-          std::cerr << "Worker thread threw exception: " << x.what()
-              << std::endl;
+          LOG(TPri::ERR) << "Worker thread threw exception: " << x.what();
         } catch (...) {
-          std::cerr << "Worker thread threw unknown exception" << std::endl;
+          Die("Worker thread threw unknown exception");
         }
       }
 
-      _exit(1);
+      Die("Terminating on fatal error");
     }
   }
 

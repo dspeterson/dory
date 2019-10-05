@@ -21,6 +21,8 @@
 
 #include <thread/fd_managed_thread.h>
 
+#include <base/error_util.h>
+
 using namespace Base;
 using namespace Thread;
 
@@ -46,8 +48,7 @@ void TFdManagedThread::RequestShutdown() {
   assert(this);
 
   if (!Thread.joinable()) {
-    throw std::logic_error(
-        "Cannot request shutdown on nonexistent worker thread");
+    Die("Cannot request shutdown on nonexistent worker thread");
   }
 
   ShutdownRequestedSem.Push();
@@ -62,7 +63,7 @@ void TFdManagedThread::Join() {
   assert(this);
 
   if (!Thread.joinable()) {
-    throw std::logic_error("Cannot join nonexistent worker thread");
+    Die("Cannot join nonexistent worker thread");
   }
 
   Thread.join();
@@ -80,7 +81,7 @@ void TFdManagedThread::DoStart() {
   assert(this);
 
   if (Thread.joinable()) {
-    throw std::logic_error("Worker thread is already started");
+    Die("Worker thread is already started");
   }
 
   assert(!ShutdownRequestedSem.GetFd().IsReadable());

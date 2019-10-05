@@ -24,7 +24,6 @@
 #include <cerrno>
 #include <cstring>
 
-#include <base/error_util.h>
 #include <base/wr/file_util.h>
 
 using namespace Base;

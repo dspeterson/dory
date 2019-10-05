@@ -29,6 +29,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <base/error_util.h>
 #include <base/opt.h>
 #include <dory/dory_server.h>
 #include <dory/config.h>
@@ -142,10 +143,9 @@ int main(int argc, char *argv[]) {
     ret = DoryMain(argc, argv);
   } catch (const std::exception &x) {
     LOG(TPri::ERR) << "Fatal error in main thread: " << x.what();
-    _exit(EXIT_FAILURE);
+    Die("Terminating on fatal error");
   } catch (...) {
-    LOG(TPri::ERR) << "Fatal unknown error in main thread";
-    _exit(EXIT_FAILURE);
+    Die("Fatal unknown error in main thread");
   }
 
   return ret;

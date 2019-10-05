@@ -22,7 +22,6 @@
 #include <log/syslog_log_writer.h>
 
 #include <atomic>
-#include <stdexcept>
 
 #include <execinfo.h>
 #include <syslog.h>
@@ -40,8 +39,8 @@ void TSyslogLogWriter::Init(const char *ident, int option, int facility) {
     /* To keep things simple, we will not support echoing of log messages to
        stderr.  If log output to stdout/stderr is desired,
        TStdoutStderrLogWriter should be used. */
-    throw std::logic_error("Cannot initialize syslog subsystem because "
-        "LOG_PERROR is not supported");
+    Die("Cannot initialize syslog subsystem because LOG_PERROR is not "
+        "supported");
   }
 
   openlog(ident, option, facility);
@@ -59,8 +58,8 @@ TSyslogLogWriter::TSyslogLogWriter(bool enabled)
   /* Copy constructor doesn't need to perform this check, since this
      constructor will create the very first object. */
   if (enabled && !Initialized) {
-    throw std::logic_error("Must call TSyslogLogWriter::Init() before "
-        "creating any enabled TSyslogLogWriter objects");
+    Die("Must call TSyslogLogWriter::Init() before creating any enabled "
+        "TSyslogLogWriter objects");
   }
 }
 

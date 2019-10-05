@@ -42,64 +42,65 @@ namespace Dory {
         TakeMsgAndLeaveBatch
       };  // TAction
 
-      TBatcherCore() = default;
+      TBatcherCore() noexcept = default;
 
-      explicit TBatcherCore(const TBatchConfig &config)
+      explicit TBatcherCore(const TBatchConfig &config) noexcept
           : Config(config) {
       }
 
-      TBatcherCore(const TBatcherCore &) = default;
+      TBatcherCore(const TBatcherCore &) noexcept = default;
 
-      TBatcherCore &operator=(const TBatcherCore &) = default;
+      TBatcherCore &operator=(const TBatcherCore &) noexcept = default;
 
-      bool BatchingIsEnabled() const {
+      bool BatchingIsEnabled() const noexcept {
         assert(this);
         return Dory::Batch::BatchingIsEnabled(Config);
       }
 
-      const TBatchConfig &GetConfig() const {
+      const TBatchConfig &GetConfig() const noexcept {
         assert(this);
         return Config;
       }
 
-      bool IsEmpty() const {
+      bool IsEmpty() const noexcept {
         assert(this);
         return (MsgCount == 0);
       }
 
-      size_t GetMsgCount() const {
+      size_t GetMsgCount() const noexcept {
         assert(this);
         return MsgCount;
       }
 
-      size_t GetByteCount() const {
+      size_t GetByteCount() const noexcept {
         assert(this);
         return ByteCount;
       }
 
-      Base::TOpt<TMsg::TTimestamp> GetNextCompleteTime() const;
+      Base::TOpt<TMsg::TTimestamp> GetNextCompleteTime() const noexcept;
 
-      TAction ProcessNewMsg(TMsg::TTimestamp now, const TMsg::TPtr &msg);
+      TAction ProcessNewMsg(TMsg::TTimestamp now,
+          const TMsg::TPtr &msg) noexcept;
 
-      void ClearState();
+      void ClearState() noexcept;
 
       private:
       bool TestTimeLimit(TMsg::TTimestamp now,
           TMsg::TTimestamp new_msg_timestamp =
-              std::numeric_limits<TMsg::TTimestamp>::max()) const;
+              std::numeric_limits<TMsg::TTimestamp>::max()) const noexcept;
 
-      bool TestMsgCount(bool adding_msg = false) const;
+      bool TestMsgCount(bool adding_msg = false) const noexcept;
 
-      bool TestByteCount(size_t bytes_to_add = 0) const;
+      bool TestByteCount(size_t bytes_to_add = 0) const noexcept;
 
-      bool TestByteCountExceeded(size_t bytes_to_add) const;
+      bool TestByteCountExceeded(size_t bytes_to_add) const noexcept;
 
-      bool TestAllLimits(TMsg::TTimestamp now) const {
+      bool TestAllLimits(TMsg::TTimestamp now) const noexcept {
         assert(this);
         return TestTimeLimit(now) || TestMsgCount() || TestByteCount();
       }
 
-      void UpdateState(TMsg::TTimestamp timestamp, size_t body_size);
+      void UpdateState(TMsg::TTimestamp timestamp, size_t body_size) noexcept;
 
       TBatchConfig Config;
 

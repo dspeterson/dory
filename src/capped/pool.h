@@ -83,7 +83,7 @@ namespace Capped {
 
     /* Return the number of bytes of overhead contained in a block.  This is
        the block size minus the amount of actual storage space in the block. */
-    static size_t GetBlockOverhead() {
+    static size_t GetBlockOverhead() noexcept {
       return sizeof(void *);
     }
 
@@ -108,22 +108,22 @@ namespace Capped {
 
     /* Return a linked list of blocks to the pool.  It's safe to free an empty
        list, we just do nothing. */
-    void FreeList(TBlock *first_block);
+    void FreeList(TBlock *first_block) noexcept;
 
     /* The size of the data field in each block. */
-    size_t GetDataSize() const {
+    size_t GetDataSize() const noexcept {
       assert(this);
       return BlockSize - GetBlockOverhead();;
     }
 
     /* The number of blocks in the whole pool, free and allocated. */
-    size_t GetBlockCount() const {
+    size_t GetBlockCount() const noexcept {
       assert(this);
       return BlockCount;
     }
 
     /* The size of each block, in bytes. */
-    size_t GetBlockSize() const {
+    size_t GetBlockSize() const noexcept {
       assert(this);
       return BlockSize;
     }
@@ -135,7 +135,7 @@ namespace Capped {
 
     /* Smilar to FreeList() but mutex is not acquired.  Assumes that
        'first_block' is not null. */
-    void DoFreeList(TBlock *first_block);
+    void DoFreeList(TBlock *first_block) noexcept;
 
     /* See accessors. */
     const size_t BlockSize;

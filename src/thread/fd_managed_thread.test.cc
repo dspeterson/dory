@@ -299,16 +299,6 @@ namespace {
     TTestWorker1 worker(flag);
     ASSERT_FALSE(flag);
     worker.Start();
-    bool threw = false;
-
-    try {
-      worker.Start();
-    } catch (const std::logic_error &) {
-      threw = true;  // worker already started
-    }
-
-    ASSERT_TRUE(threw);
-    threw = false;
 
     if (!worker.GetShutdownWaitFd().IsReadableIntr(30000)) {
       ASSERT_TRUE(false);
@@ -316,23 +306,6 @@ namespace {
     }
 
     worker.Join();
-
-    try {
-      worker.Join();
-    } catch (const std::logic_error &) {
-      threw = true;  // cannot join nonexistent thread
-    }
-
-    ASSERT_TRUE(threw);
-    threw = false;
-
-    try {
-      worker.RequestShutdown();
-    } catch (const std::logic_error &) {
-      threw = true;  // worker already shut down
-    }
-
-    ASSERT_TRUE(threw);
   }
 
 }  // namespace

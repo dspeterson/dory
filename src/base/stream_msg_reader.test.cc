@@ -226,7 +226,7 @@ namespace {
          get here.  Just in case we do, throw an exception because if the
          assumption that all bytes are written is ever violated, tests will
          fail. */
-      throw std::logic_error("Short pipe write in test for TStreamMsgReader");
+      Die("Short pipe write in test for TStreamMsgReader");
     }
   }
 

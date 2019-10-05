@@ -23,7 +23,6 @@
 
 #include <array>
 
-#include <base/error_util.h>
 #include <base/time_util.h>
 
 #include <poll.h>
@@ -69,7 +68,7 @@ void TManagedThreadPoolBase::Start(bool populate) {
   assert(this);
 
   if (Manager.IsStarted()) {
-    throw std::logic_error("Thread pool is already started");
+    Die("Thread pool is already started");
   }
 
   assert(!AllWorkersFinished.GetFd().IsReadable());
@@ -136,8 +135,7 @@ void TManagedThreadPoolBase::RequestShutdown() {
   assert(this);
 
   if (!Manager.IsStarted()) {
-    throw std::logic_error(
-        "Cannot call RequestShutdown() on thread pool that is not started");
+    Die("Cannot call RequestShutdown() on thread pool that is not started");
   }
 
   Manager.RequestShutdown();
@@ -147,8 +145,7 @@ void TManagedThreadPoolBase::WaitForShutdown() {
   assert(this);
 
   if (!Manager.IsStarted()) {
-    throw std::logic_error(
-        "Cannot call WaitForShutdown() on thread pool that is not started");
+    Die("Cannot call WaitForShutdown() on thread pool that is not started");
   }
 
   try {

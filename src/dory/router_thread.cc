@@ -22,12 +22,13 @@
 #include <dory/router_thread.h>
 
 #include <cstdlib>
+#include <exception>
 #include <limits>
-#include <stdexcept>
 
 #include <unistd.h>
 
 #include <base/counter.h>
+#include <base/error_util.h>
 #include <base/gettid.h>
 #include <base/no_default_case.h>
 #include <base/time_util.h>
@@ -122,14 +123,14 @@ void TRouterThread::Run() {
   try {
     DoRun();
   } catch (const TShutdownOnDestroy &) {
-    _exit(EXIT_FAILURE);
+    Die("TShutdownOnDestroy thrown from router thread");
   } catch (const std::exception &x) {
     LOG(TPri::ERR) << "Fatal error in router thread " << tid << ": "
         << x.what();
-    _exit(EXIT_FAILURE);
+    Die("Terminating on fatal error");
   } catch (...) {
     LOG(TPri::ERR) << "Fatal unknown error in router thread " << tid;
-    _exit(EXIT_FAILURE);
+    Die("Terminating on fatal error");
   }
 
   LOG(TPri::NOTICE) << "Router thread " << tid << " finished "
@@ -445,12 +446,11 @@ size_t TRouterThread::LookupValidTopicIndex(const std::string &topic) const {
   if (topic_index < 0) {
     /* This should never happen, since the topic is assumed to be present in
        the metadata. */
-    throw std::logic_error("LookupValidTopicIndex() got unknown topic");
+    Die("LookupValidTopicIndex() got unknown topic");
   }
 
   if (static_cast<size_t>(topic_index) >= Metadata->GetTopics().size()) {
-    throw std::logic_error(
-        "Out of range topic index in ChooseAnyPartitionBrokerIndex()");
+    Die("Out of range topic index in ChooseAnyPartitionBrokerIndex()");
   }
 
   return static_cast<size_t>(topic_index);
@@ -516,8 +516,7 @@ const TMetadata::TPartition &TRouterThread::ChoosePartitionByKey(
 
   /* This should never happen, since before routing, we verify that a topic has
      at least one available partition. */
-  throw std::logic_error(
-      "ChoosePartitionByKey() found no in service partitions");
+  Die("ChoosePartitionByKey() found no in service partitions");
 }
 
 size_t TRouterThread::AssignBroker(TMsg::TPtr &msg) {

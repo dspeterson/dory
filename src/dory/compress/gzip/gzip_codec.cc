@@ -33,6 +33,7 @@
 #include <zlib.h>
 
 #include <base/counter.h>
+#include <base/error_util.h>
 #include <base/on_destroy.h>
 
 using namespace Base;
@@ -196,13 +197,13 @@ static size_t DoUncompress(const void *compressed_data, size_t compressed_size,
     /* Our result size is so large that downcasting it to size_t (on a platform
        for which this is a downcast) caused overflow.  Something is seriously
        wrong, and we have likely trashed memory.  Die immediately. */
-    throw std::logic_error("Overflow in result size for zlib decompression");
+    Die("Overflow in result size for zlib decompression");
   }
 
   if (preserve_output && (result_size > output_buf_size)) {
     /* This should never happen, but if it does, we have likely trashed memory.
        Die immediately. */
-    throw std::logic_error("Buffer overflow during zlib decompression");
+    Die("Buffer overflow during zlib decompression");
   }
 
   return result_size;
@@ -281,7 +282,7 @@ size_t TGzipCodec::DoCompress(const void *input_buf, size_t input_buf_size,
   if (output_buf_size < min_result_size) {
     /* This is guaranteed not to happen if 'output_buf_size' is at least as
        large as the value returned by ComputeCompressedResultBufSpace(). */
-    throw std::logic_error("zlib compressed output buffer too small");
+    Die("zlib compressed output buffer too small");
   }
 
   strm.next_in = reinterpret_cast<Bytef *>(const_cast<void *>(input_buf));
@@ -303,13 +304,13 @@ size_t TGzipCodec::DoCompress(const void *input_buf, size_t input_buf_size,
     /* Our result size is so large that downcasting it to size_t (on a platform
        for which this is a downcast) caused overflow.  Something is seriously
        wrong, and we have likely trashed memory.  Die immediately. */
-    throw std::logic_error("Overflow in result size for zlib compression");
+    Die("Overflow in result size for zlib compression");
   }
 
   if (result_size > min_result_size) {
     /* This should never happen, but if it does, we have likely trashed memory.
        Die immediately. */
-    throw std::logic_error("Buffer overflow during zlib compression");
+    Die("Buffer overflow during zlib compression");
   }
 
   ZlibCompressSuccess.Increment();

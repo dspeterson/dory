@@ -59,7 +59,7 @@ namespace Dory {
 
         TConfig& operator=(TConfig &&) = default;
 
-        const TBatchConfig &Get(const std::string &topic) const {
+        const TBatchConfig &Get(const std::string &topic) const noexcept {
           assert(this);
           auto iter = PerTopic.find(topic);
           return (iter == PerTopic.end()) ? DefaultTopic : iter->second;
@@ -76,12 +76,12 @@ namespace Dory {
       explicit TPerTopicBatcher(std::shared_ptr<TConfig> &&config);
 
       /* TODO: Eliminate need for clients to call this method. */
-      bool IsEnabled() const {
+      bool IsEnabled() const noexcept {
         assert(this);
         return bool(Config);
       }
 
-      const std::shared_ptr<TConfig> &GetConfig() const {
+      const std::shared_ptr<TConfig> &GetConfig() const noexcept {
         assert(this);
         return Config;
       }
@@ -94,7 +94,7 @@ namespace Dory {
       std::list<std::list<TMsg::TPtr>>
       GetCompleteBatches(TMsg::TTimestamp now);
 
-      Base::TOpt<TMsg::TTimestamp> GetNextCompleteTime() const;
+      Base::TOpt<TMsg::TTimestamp> GetNextCompleteTime() const noexcept;
 
       /* Get all batches, even incomplete ones.  On return, the batcher will
          have no messages.  This is used when dory is shutting down. */
@@ -144,17 +144,17 @@ namespace Dory {
           return *this;
         }
 
-        bool operator<(const TBatchExpiryRecord &that) const {
+        bool operator<(const TBatchExpiryRecord &that) const noexcept {
           assert(this);
           return (Expiry < that.Expiry);
         }
 
-        TMsg::TTimestamp GetExpiry() const {
+        TMsg::TTimestamp GetExpiry() const noexcept {
           assert(this);
           return Expiry;
         }
 
-        const std::string &GetTopic() const {
+        const std::string &GetTopic() const noexcept {
           assert(this);
           return Topic;
         }

@@ -70,7 +70,7 @@ namespace Capped {
 
     /* Return the number of bytes in a (full) block.  All blocks except for
        possibly the last block are full. */
-    size_t GetBlockSize() const {
+    size_t GetBlockSize() const noexcept {
       assert(this);
       assert(Pool);
       return Pool->GetDataSize();
@@ -83,7 +83,7 @@ namespace Capped {
     }
 
     /* Return the total size in bytes of the data contained. */
-    size_t Size() const {
+    size_t Size() const noexcept {
       assert(this);
       return NumBytes;
     }
@@ -91,7 +91,7 @@ namespace Capped {
     /* On return, 'data' will point to the first byte of data contained in the
        first block, or will be set to nullptr if blob is empty.  Returned value
        is size in bytes of first block, or 0 if blob is empty. */
-    size_t GetDataInFirstBlock(const char *&data) const {
+    size_t GetDataInFirstBlock(const char *&data) const noexcept {
       assert(this);
       char *block_data = nullptr;
       size_t ret = DoGetDataInFirstBlock(block_data);
@@ -102,7 +102,7 @@ namespace Capped {
     /* On return, 'data' will point to the first byte of data contained in the
        first block, or will be set to nullptr if blob is empty.  Returned value
        is size in bytes of first block, or 0 if blob is empty. */
-    size_t GetDataInFirstBlock(char *&data) {
+    size_t GetDataInFirstBlock(char *&data) noexcept {
       assert(this);
       return DoGetDataInFirstBlock(data);
     }
@@ -155,7 +155,7 @@ namespace Capped {
              (pool && first_block && last_block_size));
     }
 
-    size_t DoGetDataInFirstBlock(char *&data) const;
+    size_t DoGetDataInFirstBlock(char *&data) const noexcept;
 
     /* The pool to which to return our blocks, or null if we're empty. */
     TPool *Pool = nullptr;

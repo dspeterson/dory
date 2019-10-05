@@ -29,19 +29,20 @@ namespace Dory {
   namespace Batch {
 
     struct TBatchConfig {
-      TBatchConfig() = default;
+      TBatchConfig() noexcept = default;
 
-      TBatchConfig(size_t time_limit, size_t msg_count, size_t byte_count)
+      TBatchConfig(size_t time_limit, size_t msg_count,
+          size_t byte_count) noexcept
           : TimeLimit(time_limit),
             MsgCount(msg_count),
             ByteCount(byte_count) {
       }
 
-      TBatchConfig(const TBatchConfig &) = default;
+      TBatchConfig(const TBatchConfig &) noexcept = default;
 
-      TBatchConfig& operator=(const TBatchConfig &) = default;
+      TBatchConfig& operator=(const TBatchConfig &) noexcept = default;
 
-      void Clear() {
+      void Clear() noexcept {
         assert(this);
         *this = TBatchConfig();
       }
@@ -53,19 +54,19 @@ namespace Dory {
       size_t ByteCount = 0;
     };  // TBatchConfig
 
-    inline bool BatchingIsEnabled(const TBatchConfig &config) {
+    inline bool BatchingIsEnabled(const TBatchConfig &config) noexcept {
       return config.TimeLimit || config.MsgCount || config.ByteCount;
     }
 
-    inline bool TimeLimitIsEnabled(const TBatchConfig &config) {
+    inline bool TimeLimitIsEnabled(const TBatchConfig &config) noexcept {
       return (config.TimeLimit != 0);
     }
 
-    inline bool MsgCountLimitIsEnabled(const TBatchConfig &config) {
+    inline bool MsgCountLimitIsEnabled(const TBatchConfig &config) noexcept {
       return (config.MsgCount != 0);
     }
 
-    inline bool ByteCountLimitIsEnabled(const TBatchConfig &config) {
+    inline bool ByteCountLimitIsEnabled(const TBatchConfig &config) noexcept {
       return (config.ByteCount != 0);
     }
 

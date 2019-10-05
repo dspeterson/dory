@@ -27,7 +27,7 @@ using namespace Base;
 using namespace Dory;
 using namespace Dory::Batch;
 
-TOpt<TMsg::TTimestamp> TBatcherCore::GetNextCompleteTime() const {
+TOpt<TMsg::TTimestamp> TBatcherCore::GetNextCompleteTime() const noexcept {
   assert(this);
 
   if (IsEmpty() || !TimeLimitIsEnabled(Config)) {
@@ -38,7 +38,8 @@ TOpt<TMsg::TTimestamp> TBatcherCore::GetNextCompleteTime() const {
 }
 
 TBatcherCore::TAction
-TBatcherCore::ProcessNewMsg(TMsg::TTimestamp now, const TMsg::TPtr &msg) {
+TBatcherCore::ProcessNewMsg(TMsg::TTimestamp now,
+    const TMsg::TPtr &msg) noexcept {
   assert(this);
   assert(msg);
 
@@ -79,7 +80,7 @@ TBatcherCore::ProcessNewMsg(TMsg::TTimestamp now, const TMsg::TPtr &msg) {
   return TAction::TakeMsgAndLeaveBatch;
 }
 
-void TBatcherCore::ClearState() {
+void TBatcherCore::ClearState() noexcept {
   assert(this);
   MinTimestamp = std::numeric_limits<TMsg::TTimestamp>::max();
   MsgCount = 0;
@@ -87,7 +88,7 @@ void TBatcherCore::ClearState() {
 }
 
 bool TBatcherCore::TestTimeLimit(TMsg::TTimestamp now,
-    TMsg::TTimestamp new_msg_timestamp) const {
+    TMsg::TTimestamp new_msg_timestamp) const noexcept {
   assert(this);
 
   if (!TimeLimitIsEnabled(Config)) {
@@ -98,7 +99,7 @@ bool TBatcherCore::TestTimeLimit(TMsg::TTimestamp now,
   return (now >= static_cast<TMsg::TTimestamp>(min_ts + Config.TimeLimit));
 }
 
-bool TBatcherCore::TestMsgCount(bool adding_msg) const {
+bool TBatcherCore::TestMsgCount(bool adding_msg) const noexcept {
   assert(this);
 
   if (!MsgCountLimitIsEnabled(Config)) {
@@ -109,7 +110,7 @@ bool TBatcherCore::TestMsgCount(bool adding_msg) const {
   return ((MsgCount + to_add) >= Config.MsgCount);
 }
 
-bool TBatcherCore::TestByteCount(size_t bytes_to_add) const {
+bool TBatcherCore::TestByteCount(size_t bytes_to_add) const noexcept {
   assert(this);
 
   if (!ByteCountLimitIsEnabled(Config)) {
@@ -119,7 +120,7 @@ bool TBatcherCore::TestByteCount(size_t bytes_to_add) const {
   return ((ByteCount + bytes_to_add) >= Config.ByteCount);
 }
 
-bool TBatcherCore::TestByteCountExceeded(size_t bytes_to_add) const {
+bool TBatcherCore::TestByteCountExceeded(size_t bytes_to_add) const noexcept {
   assert(this);
 
   if (!ByteCountLimitIsEnabled(Config)) {
@@ -129,7 +130,8 @@ bool TBatcherCore::TestByteCountExceeded(size_t bytes_to_add) const {
   return ((ByteCount + bytes_to_add) > Config.ByteCount);
 }
 
-void TBatcherCore::UpdateState(TMsg::TTimestamp timestamp, size_t body_size) {
+void TBatcherCore::UpdateState(TMsg::TTimestamp timestamp,
+    size_t body_size) noexcept {
   assert(this);
   MinTimestamp = std::min(MinTimestamp, timestamp);
   ++MsgCount;

@@ -86,8 +86,7 @@ namespace {
          get here.  Just in case we do, throw an exception because if the
          assumption that all bytes are written is ever violated, tests will
          fail. */
-      throw std::logic_error(
-          "Short pipe write in test for TStreamMsgWithSizeReader");
+      Die("Short pipe write in test for TStreamMsgWithSizeReader");
     }
   }
 
@@ -100,8 +99,7 @@ namespace {
          get here.  Just in case we do, throw an exception because if the
          assumption that all bytes are written is ever violated, tests will
          fail. */
-      throw std::logic_error(
-          "Short pipe write in test for TStreamMsgWithSizeReader");
+      Die("Short pipe write in test for TStreamMsgWithSizeReader");
     }
   }
 
@@ -128,7 +126,7 @@ namespace {
 
   std::string MakeDataStr(const TStreamMsgReader &r, size_t offset) {
     if (offset > r.GetDataSize()) {
-      throw std::logic_error("offset out of range in MakeDataStr()");
+      Die("Offset out of range in MakeDataStr()");
     }
 
     if (r.GetDataSize() == offset) {

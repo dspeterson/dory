@@ -24,6 +24,7 @@
 #include <limits>
 #include <stdexcept>
 
+#include <base/error_util.h>
 #include <base/field_access.h>
 
 using namespace Base;
@@ -165,8 +166,7 @@ TStreamMsgWithSizeReaderBase::ChooseSizeFieldReadFn(size_t size_field_size,
     bool size_field_is_signed) {
   if ((size_field_size != 1) && (size_field_size != 2) &&
       (size_field_size != 4) && (size_field_size != 8)) {
-    throw std::logic_error(
-        "Bad value for size_field_size in TStreamMsgWithSizeReaderBase");
+    Die("Bad value for size_field_size in TStreamMsgWithSizeReaderBase");
   }
 
   switch (size_field_size) {

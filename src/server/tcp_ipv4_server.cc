@@ -22,7 +22,6 @@
 #include <server/tcp_ipv4_server.h>
 
 #include <cstring>
-#include <stdexcept>
 #include <utility>
 
 #include <arpa/inet.h>
@@ -59,8 +58,7 @@ in_port_t TTcpIpv4Server::GetBindPort() const {
   assert(this);
 
   if (!IsBound()) {
-    throw std::logic_error(
-        "Cannot get bind port for unbound listening socket");
+    Die("Cannot get bind port for unbound listening socket");
   }
 
   struct sockaddr_in addr;

@@ -167,7 +167,7 @@ TPerTopicBatcher::GetCompleteBatches(TMsg::TTimestamp now) {
   return result;
 }
 
-TOpt<TMsg::TTimestamp> TPerTopicBatcher::GetNextCompleteTime() const {
+TOpt<TMsg::TTimestamp> TPerTopicBatcher::GetNextCompleteTime() const noexcept {
   assert(this);
 
   if (ExpiryTracker.empty()) {

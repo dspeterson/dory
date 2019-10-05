@@ -22,7 +22,6 @@
 #include <dory/unix_dg_input_agent.h>
 
 #include <array>
-#include <exception>
 #include <system_error>
 
 #include <poll.h>
@@ -69,7 +68,8 @@ bool TUnixDgInputAgent::SyncStart() {
   assert(this);
 
   if (IsStarted()) {
-    throw std::logic_error("Cannot call SyncStart() when UNIX datagram input agent is already started");
+    Die("Cannot call SyncStart() when UNIX datagram input agent is already "
+        "started");
   }
 
   SyncStartSuccess = false;
@@ -95,7 +95,7 @@ void TUnixDgInputAgent::Run() {
       } catch (...) {
         LOG(TPri::ERR)
             << "Failed to notify on error starting UNIX datagram input agent";
-        _exit(EXIT_FAILURE);
+        Die("Terminating on fatal error");
       }
     }
 
@@ -124,7 +124,7 @@ void TUnixDgInputAgent::OpenUnixSocket() {
     Bind(InputSocket, input_socket_address);
   } catch (const std::system_error &x) {
     LOG(TPri::ERR) << "Failed to create datagram socket file: " << x.what();
-    _exit(EXIT_FAILURE);
+    Die("Terminating on fatal error");
   }
 
   /* Set the permission bits on the socket file if they were specified as a
@@ -137,7 +137,7 @@ void TUnixDgInputAgent::OpenUnixSocket() {
     } catch (const std::system_error &x) {
       LOG(TPri::ERR) << "Failed to set permissions on datagram socket file: "
           << x.what();
-      _exit(EXIT_FAILURE);
+      Die("Terminating on fatal error");
     }
   }
 }

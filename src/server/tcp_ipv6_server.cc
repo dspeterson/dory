@@ -74,8 +74,7 @@ in_port_t TTcpIpv6Server::GetBindPort() const {
   assert(this);
 
   if (!IsBound()) {
-    throw std::logic_error(
-        "Cannot get bind port for unbound listening socket");
+    Die("Cannot get bind port for unbound listening socket");
   }
 
   struct sockaddr_in6 addr;

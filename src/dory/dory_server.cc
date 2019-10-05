@@ -28,7 +28,6 @@
 #include <limits>
 #include <memory>
 #include <set>
-#include <stdexcept>
 
 #include <arpa/inet.h>
 #include <poll.h>
@@ -200,19 +199,22 @@ void TDoryServer::HandleShutdownSignal(int /*signum*/) noexcept {
   }
 }
 
-static void WorkerPoolFatalErrorHandler(const char *msg) noexcept {
+[[ noreturn ]] static void WorkerPoolFatalErrorHandler(
+    const char *msg) noexcept {
   LOG(TPri::ERR) << "Fatal worker pool error: " << msg;
-  _exit(1);
+  Die("Terminating on fatal error");
 }
 
-static void UnixStreamServerFatalErrorHandler(const char *msg) noexcept {
+[[ noreturn ]] static void UnixStreamServerFatalErrorHandler(
+    const char *msg) noexcept {
   LOG(TPri::ERR) << "Fatal UNIX stream input agent error: " << msg;
-  _exit(1);
+  Die("Terminating on fatal error");
 }
 
-static void TcpServerFatalErrorHandler(const char *msg) noexcept {
+[[ noreturn ]] static void TcpServerFatalErrorHandler(
+    const char *msg) noexcept {
   LOG(TPri::ERR) << "Fatal TCP input agent error: " << msg;
-  _exit(1);
+  Die("Terminating on fatal error");
 }
 
 static inline size_t
@@ -306,7 +308,7 @@ int TDoryServer::Run() {
   TInitNotifier init_notifier(InitWaitSem);
 
   if (Started) {
-    throw std::logic_error("Multiple calls to Run() method not supported");
+    Die("Multiple calls to Run() method not supported");
   }
 
   Started = true;
@@ -366,11 +368,11 @@ void TDoryServer::RequestShutdown() noexcept {
   } catch (const std::exception &x) {
     LOG(TPri::ERR) << "Fatal exception in TDoryServer::RequestShutdown(): "
         << x.what();
-    _exit(EXIT_FAILURE);
+    Die("Terminating on fatal error");
   } catch (...) {
     LOG(TPri::ERR)
         << "Fatal unknown exception in TDoryServer::RequestShutdown()";
-    _exit(EXIT_FAILURE);
+    Die("Terminating on fatal error");
   }
 }
 

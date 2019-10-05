@@ -30,6 +30,7 @@
 #include <string>
 
 #include <base/counter.h>
+#include <base/error_util.h>
 #include <base/on_destroy.h>
 #include <third_party/lz4/lz4-1.8.0/lib/lz4frame.h>
 
@@ -148,7 +149,7 @@ static void CheckReadBufferOverflow(size_t bytes_consumed, size_t capacity,
     msg += std::to_string(capacity);
     /* There is a bug in the compression library that caused data to be
        consumed past the end of our buffer. */
-    throw std::logic_error(msg.c_str());
+    Die(msg.c_str());
   }
 }
 
@@ -166,7 +167,7 @@ static void CheckWriteBufferOverflow(size_t bytes_written, size_t capacity,
     /* There is a bug in the compression library that caused data to be written
        past the end of our buffer.  Terminate immediately, since memory has
        been trashed. */
-    throw std::logic_error(msg);
+    Die(msg.c_str());
   }
 }
 
@@ -195,7 +196,7 @@ size_t TLz4Codec::Uncompress(const void *input_buf, size_t input_buf_size,
     /* This should never happen, assuming that the caller's output buffer is at
        least as large as the value returned by
        ComputeUncompressedResultBufSpace(). */
-    throw std::logic_error("Output buffer for lz4 decompression is too small");
+    Die("Output buffer for lz4 decompression is too small");
   }
 
   size_t in_offset = src_size;
@@ -285,8 +286,7 @@ size_t TLz4Codec::DoCompress(const void *input_buf, size_t input_buf_size,
   size_t compressed_size = output_buf_size - capacity;
 
   if (compressed_size > output_buf_size) {
-    throw std::logic_error(
-        "Compressed size exceeds output buffer size in TLz4Codec::DoCompress()"
+    Die("Compressed size exceeds output buffer size in TLz4Codec::DoCompress()"
     );
   }
 

@@ -49,17 +49,17 @@ namespace Dory {
 
       TSingleTopicBatcher &operator=(TSingleTopicBatcher &&) = default;
 
-      bool IsEmpty() const {
+      bool IsEmpty() const noexcept {
         assert(this);
         return CoreState.IsEmpty();
       }
 
-      const TBatchConfig &GetConfig() const {
+      const TBatchConfig &GetConfig() const noexcept {
         assert(this);
         return CoreState.GetConfig();
       }
 
-      bool BatchingIsEnabled() const {
+      bool BatchingIsEnabled() const noexcept {
         assert(this);
         return CoreState.BatchingIsEnabled();
       }
@@ -72,7 +72,7 @@ namespace Dory {
         return result;
       }
 
-      Base::TOpt<TMsg::TTimestamp> GetNextCompleteTime() const {
+      Base::TOpt<TMsg::TTimestamp> GetNextCompleteTime() const noexcept {
         assert(this);
         return CoreState.GetNextCompleteTime();
       }

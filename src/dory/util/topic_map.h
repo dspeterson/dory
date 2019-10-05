@@ -44,12 +44,12 @@ namespace Dory {
       TTopicMap &operator=(TTopicMap &&) = default;
 
       /* A true value indicates that map contains no messages. */
-      bool IsEmpty() const {
+      bool IsEmpty() const noexcept {
         assert(this);
         return TopicHash.empty();
       }
 
-      void Clear() {
+      void Clear() noexcept {
         assert(this);
         TopicHash.clear();
       }

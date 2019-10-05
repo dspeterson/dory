@@ -224,11 +224,11 @@ void TConnector::Run() {
     LOG(TPri::ERR) << "Fatal error in connector thread " << Gettid()
         << " (index " << MyBrokerIndex << " broker " << broker_id << "): "
         << x.what();
-    _exit(EXIT_FAILURE);
+    Die("Terminating on fatal error");
   } catch (...) {
     LOG(TPri::ERR) << "Fatal unknown error in connector thread " << Gettid()
         << " (index " << MyBrokerIndex << " broker " << broker_id << ")";
-    _exit(EXIT_FAILURE);
+    Die("Terminating on fatal error");
   }
 
   LOG(TPri::NOTICE) << "Coonnector thread " << Gettid() << " (index "

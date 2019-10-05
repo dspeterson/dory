@@ -21,8 +21,9 @@
 
 #include <thread/managed_thread_pool_config.h>
 
-#include <stdexcept>
+#include <base/error_util.h>
 
+using namespace Base;
 using namespace Thread;
 
 TManagedThreadPoolConfig::TManagedThreadPoolConfig(size_t min_pool_size,
@@ -35,19 +36,19 @@ TManagedThreadPoolConfig::TManagedThreadPoolConfig(size_t min_pool_size,
       MaxPruneFraction(max_prune_fraction),
       MinIdleFraction(min_idle_fraction) {
   if (PruneQuantumMs == 0) {
-    throw std::logic_error("PruneQuantumMs must be > 0");
+    Die("PruneQuantumMs must be > 0");
   }
 
   if (PruneQuantumCount == 0) {
-    throw std::logic_error("PruneQuantumCount must be > 0");
+    Die("PruneQuantumCount must be > 0");
   }
 
   if (MaxPruneFraction > 1000) {
-    throw std::logic_error("MaxPruneFraction must be <= 1000");
+    Die("MaxPruneFraction must be <= 1000");
   }
 
   if (MinIdleFraction > 1000) {
-    throw std::logic_error("MinIdleFraction must be <= 1000");
+    Die("MinIdleFraction must be <= 1000");
   }
 }
 
@@ -65,7 +66,7 @@ void TManagedThreadPoolConfig::SetPruneQuantumMs(size_t prune_quantum_ms) {
   assert(this);
 
   if (prune_quantum_ms == 0) {
-    throw std::logic_error("PruneQuantumMs must be > 0");
+    Die("PruneQuantumMs must be > 0");
   }
 
   PruneQuantumMs = prune_quantum_ms;
@@ -76,7 +77,7 @@ void TManagedThreadPoolConfig::SetPruneQuantumCount(
   assert(this);
 
   if (prune_quantum_count == 0) {
-    throw std::logic_error("PruneQuantumCount must be > 0");
+    Die("PruneQuantumCount must be > 0");
   }
 
   PruneQuantumCount = prune_quantum_count;
@@ -86,7 +87,7 @@ void TManagedThreadPoolConfig::SetMaxPruneFraction(size_t max_prune_fraction) {
   assert(this);
 
   if (max_prune_fraction > 1000) {
-    throw std::logic_error("MaxPruneFraction must be <= 1000");
+    Die("MaxPruneFraction must be <= 1000");
   }
 
   MaxPruneFraction = max_prune_fraction;
@@ -96,7 +97,7 @@ void TManagedThreadPoolConfig::SetMinIdleFraction(size_t min_idle_fraction) {
   assert(this);
 
   if (min_idle_fraction > 1000) {
-    throw std::logic_error("MinIdleFraction must be <= 1000");
+    Die("MinIdleFraction must be <= 1000");
   }
 
   MinIdleFraction = min_idle_fraction;

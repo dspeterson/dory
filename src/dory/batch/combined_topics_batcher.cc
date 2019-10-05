@@ -38,14 +38,14 @@ TCombinedTopicsBatcher::TCombinedTopicsBatcher(const TConfig &config)
       ExcludeTopicFilter(config.ExcludeTopicFilter) {
 }
 
-bool TCombinedTopicsBatcher::BatchingIsEnabled() const {
+bool TCombinedTopicsBatcher::BatchingIsEnabled() const noexcept {
   assert(this);
   return (ExcludeTopicFilter || !TopicFilter->empty()) &&
          CoreState.BatchingIsEnabled();
 }
 
 bool TCombinedTopicsBatcher::BatchingIsEnabled(
-    const std::string &topic) const {
+    const std::string &topic) const noexcept {
   assert(this);
 
   if (!CoreState.BatchingIsEnabled()) {

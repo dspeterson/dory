@@ -60,23 +60,23 @@ namespace Dory {
       }
 
       const std::shared_ptr<TPerTopicBatcher::TConfig> &
-      GetPerTopicConfig() const {
+      GetPerTopicConfig() const noexcept {
         assert(this);
         return PerTopicConfig;
       }
 
       const TCombinedTopicsBatcher::TConfig &
-      GetCombinedTopicsConfig() const {
+      GetCombinedTopicsConfig() const noexcept {
         assert(this);
         return CombinedTopicsConfig;
       }
 
-      size_t GetProduceRequestDataLimit() const {
+      size_t GetProduceRequestDataLimit() const noexcept {
         assert(this);
         return ProduceRequestDataLimit;
       }
 
-      size_t GetMessageMaxBytes() const {
+      size_t GetMessageMaxBytes() const noexcept {
         assert(this);
         return MessageMaxBytes;
       }

@@ -32,11 +32,7 @@ using namespace Base;
 using namespace Rpc;
 
 TTransceiver::TDisconnected::TDisconnected()
-    : runtime_error("RPC transceiver hung up on") {
-}
-
-TTransceiver::TPastEnd::TPastEnd()
-    : logic_error("RPC transceiver advanced past end of data") {
+    : std::runtime_error("RPC transceiver hung up on") {
 }
 
 TTransceiver::TTransceiver()
@@ -77,7 +73,7 @@ TTransceiver &TTransceiver::operator+=(size_t size) {
   } else if (size != 0) {
     /* We're out of descriptors and there's still data to account for.
        This means 'size' was impossibly large. */
-    throw TPastEnd();
+    Die("TTransceiver past end of data");
   }
 
   return *this;

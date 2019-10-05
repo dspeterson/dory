@@ -24,7 +24,6 @@
 #include <array>
 #include <cerrno>
 #include <cstring>
-#include <stdexcept>
 #include <utility>
 
 #include <poll.h>
@@ -59,8 +58,7 @@ void TStreamServerBase::Bind() {
   assert(this);
 
   if (IsBound()) {
-    throw std::logic_error(
-        "TStreamServerBase::Bind() has already been called");
+    Die("TStreamServerBase::Bind() has already been called");
   }
 
   TFd listening_socket;
@@ -68,8 +66,7 @@ void TStreamServerBase::Bind() {
   ListeningSocket = std::move(listening_socket);
 
   if (!IsBound()) {
-    throw std::logic_error(
-        "InitListeningSocket() must throw on failure in TStreamServerBase");
+    Die("InitListeningSocket() must throw on failure in TStreamServerBase");
   }
 }
 
@@ -77,8 +74,7 @@ bool TStreamServerBase::SyncStart() {
   assert(this);
 
   if (IsStarted()) {
-    throw std::logic_error(
-        "Cannot call SyncStart() when server is already started");
+    Die("Cannot call SyncStart() when server is already started");
   }
 
   SyncStartSuccess = false;
@@ -226,8 +222,7 @@ void TStreamServerBase::AcceptClients() {
         (Addr == nullptr) ? 0 : len);
 
     if (client_fd.IsOpen()) {
-      throw std::logic_error(
-          "Client FD is nonempty after HandleClientConnection()");
+      Die("Client FD is nonempty after HandleClientConnection()");
     }
   }
 }

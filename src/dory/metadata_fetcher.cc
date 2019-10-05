@@ -23,11 +23,12 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <stdexcept>
+#include <system_error>
 
 #include <poll.h>
 
 #include <base/counter.h>
+#include <base/error_util.h>
 #include <base/io_util.h>
 #include <base/no_default_case.h>
 #include <base/time_util.h>
@@ -106,7 +107,7 @@ std::unique_ptr<TMetadata> TMetadataFetcher::Fetch(int timeout_ms) {
   assert(this);
 
   if (!Sock.IsOpen()) {
-    throw std::logic_error("Must connect to host before getting metadata");
+    Die("Must connect to host before getting metadata");
   }
 
   std::unique_ptr<TMetadata> result;
@@ -169,7 +170,7 @@ TMetadataFetcher::TopicAutocreate(const char *topic, int timeout_ms) {
   assert(this);
 
   if (!Sock.IsOpen()) {
-    throw std::logic_error("Must connect to host before getting metadata");
+    Die("Must connect to host before getting metadata");
   }
 
   std::vector<uint8_t> request;
@@ -292,8 +293,7 @@ bool TMetadataFetcher::ReadResponse(int timeout_ms) {
 
   switch (StreamReader.GetState()) {
     case TStreamMsgReader::TState::ReadNeeded: {
-      throw std::logic_error(
-          "TMetadataFetcher internal error in ReadResponse()");
+      Die("TMetadataFetcher internal error in ReadResponse()");
     }
     case TStreamMsgReader::TState::MsgReady: {
       break;

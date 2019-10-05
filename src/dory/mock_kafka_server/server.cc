@@ -24,9 +24,9 @@
 #include <cstdlib>
 #include <exception>
 #include <iostream>
-#include <stdexcept>
 #include <string>
 
+#include <base/error_util.h>
 #include <dory/util/exceptions.h>
 #include <log/log.h>
 #include <socket/address.h>
@@ -45,7 +45,7 @@ int TServer::Init() {
   assert(this);
 
   if (InitSucceeded) {
-    throw std::logic_error("Init() method already called");
+    Die("Init() method already called");
   }
 
   if (!InitOutputDir()) {

@@ -30,6 +30,7 @@
 
 #include <dirent.h>
 
+#include <base/error_util.h>
 #include <base/no_copy_semantics.h>
 #include <base/thrower.h>
 
@@ -68,9 +69,6 @@ namespace Base {
          doesn't support the concept of kinds of entries. */
       Unknown = DT_UNKNOWN
     };  // TDirIter::TKind
-
-    /* Thrown by Refresh() when we try to go past the end of the directory. */
-    DEFINE_ERROR(TPastEnd, std::logic_error, "past end of directory");
 
     /* Starts at the beginning of the given directory. */
     explicit TDirIter(const char *dir);
@@ -131,12 +129,12 @@ namespace Base {
       AtEnd
     };  // TDirIter::TPos
 
-    /* Like TryRefresh(), but we throw if we're at the end. */
-    void Refresh() const {
+    /* Like TryRefresh(), but die if we're at the end. */
+    void Refresh() const noexcept {
       assert(this);
 
       if (!TryRefresh()) {
-        THROW_ERROR(TPastEnd);
+        Die("Past end of directory");
       }
     }
 

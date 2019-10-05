@@ -56,7 +56,7 @@ namespace Dory {
 
         TConfig(const TBatchConfig &batch_config,
             const std::shared_ptr<TTopicFilter> &topic_filter,
-            bool exclude_topic_filter)
+            bool exclude_topic_filter) noexcept
             : BatchConfig(batch_config),
               TopicFilter(topic_filter),
               ExcludeTopicFilter(exclude_topic_filter) {
@@ -64,19 +64,19 @@ namespace Dory {
 
         TConfig(const TBatchConfig &batch_config,
             std::shared_ptr<TTopicFilter> &&topic_filter,
-            bool exclude_topic_filter)
+            bool exclude_topic_filter) noexcept
             : BatchConfig(batch_config),
               TopicFilter(std::move(topic_filter)),
               ExcludeTopicFilter(exclude_topic_filter) {
         }
 
-        TConfig(const TConfig &) = default;
+        TConfig(const TConfig &) noexcept = default;
 
-        TConfig(TConfig &&) = default;
+        TConfig(TConfig &&) noexcept = default;
 
-        TConfig& operator=(const TConfig &) = default;
+        TConfig& operator=(const TConfig &) noexcept = default;
 
-        TConfig& operator=(TConfig &&) = default;
+        TConfig& operator=(TConfig &&) noexcept = default;
 
         private:
         TBatchConfig BatchConfig;
@@ -90,12 +90,12 @@ namespace Dory {
 
       explicit TCombinedTopicsBatcher(const TConfig &config);
 
-      TConfig GetConfig() const {
+      TConfig GetConfig() const noexcept {
         assert(this);
         return TConfig(CoreState.GetConfig(), TopicFilter, ExcludeTopicFilter);
       }
 
-      bool IsEmpty() const {
+      bool IsEmpty() const noexcept {
         assert(this);
         assert(CoreState.IsEmpty() == TopicMap.IsEmpty());
         return CoreState.IsEmpty();
@@ -103,15 +103,15 @@ namespace Dory {
 
       /* A true return value indicates that batching is enabled for at least
          one topic. */
-      bool BatchingIsEnabled() const;
+      bool BatchingIsEnabled() const noexcept;
 
       /* Return true if batching is enabled for the given topic. */
-      bool BatchingIsEnabled(const std::string &topic) const;
+      bool BatchingIsEnabled(const std::string &topic) const noexcept;
 
       std::list<std::list<TMsg::TPtr>>
       AddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now);
 
-      Base::TOpt<TMsg::TTimestamp> GetNextCompleteTime() const {
+      Base::TOpt<TMsg::TTimestamp> GetNextCompleteTime() const noexcept {
         assert(this);
         return CoreState.GetNextCompleteTime();
       }

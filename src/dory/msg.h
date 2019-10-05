@@ -77,60 +77,60 @@ namespace Dory {
        discard reports. */
     using TTimestamp = int64_t;
 
-    TRoutingType GetRoutingType() const {
+    TRoutingType GetRoutingType() const noexcept {
       assert(this);
       return RoutingType;
     }
 
-    int32_t GetPartitionKey() const {
+    int32_t GetPartitionKey() const noexcept {
       assert(this);
       return PartitionKey;
     }
 
     /* Return the client's timestamp from the input datagram. */
-    TTimestamp GetTimestamp() const {
+    TTimestamp GetTimestamp() const noexcept {
       assert(this);
       return Timestamp;
     }
 
     /* Return our own monotonic raw timestamp that we use for per-topic message
        rate limiting. */
-    uint64_t GetCreationTimestamp() const {
+    uint64_t GetCreationTimestamp() const noexcept {
       assert(this);
       return CreationTimestamp;
     }
 
     /* Accessor for the Kafka topic string. */
-    const std::string &GetTopic() const {
+    const std::string &GetTopic() const noexcept {
       assert(this);
       return Topic;
     }
 
     /* Accessor for the Kafka partition. */
-    int32_t GetPartition() const {
+    int32_t GetPartition() const noexcept {
       assert(this);
       return Partition;
     }
 
     /* Sets the Kafka partition to the given value. */
-    void SetPartition(int32_t partition) {
+    void SetPartition(int32_t partition) noexcept {
       assert(this);
       Partition = partition;
     }
 
     /* Accessor method for the message body. */
-    const Capped::TBlob &GetKeyAndValue() const {
+    const Capped::TBlob &GetKeyAndValue() const noexcept {
       assert(this);
       return KeyAndValue;
     }
 
-    size_t GetKeySize() const {
+    size_t GetKeySize() const noexcept {
       assert(this);
       assert(KeySize <= KeyAndValue.Size());
       return KeySize;
     }
 
-    size_t GetValueSize() const {
+    size_t GetValueSize() const noexcept {
       assert(this);
       assert(KeySize <= KeyAndValue.Size());
       return KeyAndValue.Size() - KeySize;
@@ -140,27 +140,27 @@ namespace Dory {
        messages that exceed the maximum allowed length.
 
        TODO: remove this method once legacy input format goes away */
-    bool BodyIsTruncated() const {
+    bool BodyIsTruncated() const noexcept {
       assert(this);
       return BodyTruncated;
     }
 
-    size_t CountFailedDeliveryAttempt() {
+    size_t CountFailedDeliveryAttempt() noexcept {
       assert(this);
       return ++FailedDeliveryAttemptCount;
     }
 
-    size_t GetFailedDeliveryAttemptCount() const {
+    size_t GetFailedDeliveryAttemptCount() const noexcept {
       assert(this);
       return FailedDeliveryAttemptCount;
     }
 
-    TState GetState() const {
+    TState GetState() const noexcept {
       assert(this);
       return State;
     }
 
-    void SetState(TState state) {
+    void SetState(TState state) noexcept {
       assert(this);
       State = state;
     }

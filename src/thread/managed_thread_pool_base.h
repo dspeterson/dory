@@ -34,6 +34,7 @@
 #include <thread>
 #include <utility>
 
+#include <base/error_util.h>
 #include <base/event_semaphore.h>
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
@@ -155,8 +156,7 @@ namespace Thread {
         assert(this);
 
         if (!IsLaunchable()) {
-          throw std::logic_error(
-              "Cannot call Launch() method on empty TReadyWorkerBase");
+          Base::Die("Cannot call Launch() method on empty TReadyWorkerBase");
         }
 
         Worker->Activate();

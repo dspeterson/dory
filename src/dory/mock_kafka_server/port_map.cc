@@ -22,8 +22,10 @@
 #include <dory/mock_kafka_server/port_map.h>
 
 #include <cassert>
-#include <stdexcept>
 
+#include <base/error_util.h>
+
+using namespace Base;
 using namespace Dory;
 using namespace Dory::MockKafkaServer;
 
@@ -32,13 +34,13 @@ void TPortMap::AddMapping(in_port_t virtual_port, in_port_t physical_port) {
   auto result1 = VToPMap.insert(std::make_pair(virtual_port, physical_port));
 
   if (!result1.second) {
-    throw std::logic_error("virtual to physical port mapping already present");
+    Die("Virtual to physical port mapping already present");
   }
 
   auto result2 = PToVMap.insert(std::make_pair(physical_port, virtual_port));
 
   if (!result2.second) {
-    throw std::logic_error("physical to virtual port mapping already present");
+    Die("Physical to virtual port mapping already present");
   }
 }
 

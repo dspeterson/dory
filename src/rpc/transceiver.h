@@ -60,13 +60,6 @@ namespace Rpc {
       TDisconnected();
     };  // TTransceiver::TDisconnected
 
-    /* Thrown by operator+= when advancing beyond the end of data. */
-    class TPastEnd : public std::logic_error {
-      public:
-      /* Do-little. */
-      TPastEnd();
-    };  // TTransceiver::TPastEnd
-
     /* Start with no data to transfer. */
     TTransceiver();
 
