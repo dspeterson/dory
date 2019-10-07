@@ -30,10 +30,10 @@
 #include <base/counter.h>
 #include <base/error_util.h>
 #include <base/no_default_case.h>
+#include <base/system_error_codes.h>
 #include <dory/input_dg/input_dg_util.h>
 #include <dory/msg.h>
 #include <dory/util/poll_array.h>
-#include <dory/util/system_error_codes.h>
 #include <log/log.h>
 
 using namespace Base;

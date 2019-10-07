@@ -37,6 +37,7 @@
 #include <base/gettid.h>
 #include <base/no_default_case.h>
 #include <base/on_destroy.h>
+#include <base/system_error_codes.h>
 #include <base/time_util.h>
 #include <base/wr/fd_util.h>
 #include <base/wr/net_util.h>
@@ -44,7 +45,6 @@
 #include <dory/msg_dispatch/produce_response_processor.h>
 #include <dory/msg_state_tracker.h>
 #include <dory/util/connect_to_host.h>
-#include <dory/util/system_error_codes.h>
 #include <log/log.h>
 #include <socket/db/error.h>
 

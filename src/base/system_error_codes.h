@@ -1,8 +1,7 @@
-/* <dory/util/system_error_codes.cc>
+/* <base/system_error_codes.h>
 
    ----------------------------------------------------------------------------
    Copyright 2013-2014 if(we)
-   Copyright 2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -17,12 +16,28 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <dory/util/system_error_codes.h>.
+   Functions for interpreting system error codes.
  */
 
-#include <dory/util/system_error_codes.h>
+#pragma once
 
+#include <algorithm>
 #include <cerrno>
+#include <initializer_list>
+#include <system_error>
 
-std::initializer_list<int> Dory::Util::LostTcpConnectionErrorCodes =
-    {ECONNRESET, EPIPE, EIO, EHOSTUNREACH, EHOSTDOWN, ETIMEDOUT};
+namespace Base {
+
+  extern std::initializer_list<int> LostTcpConnectionErrorCodes;
+
+  static inline bool LostTcpConnection(int errno_value) {
+    return (std::find(LostTcpConnectionErrorCodes.begin(),
+        LostTcpConnectionErrorCodes.end(), errno_value) !=
+        LostTcpConnectionErrorCodes.end());
+  }
+
+  static inline bool LostTcpConnection(const std::system_error &x) {
+    return LostTcpConnection(x.code().value());
+  }
+
+}  // Base
