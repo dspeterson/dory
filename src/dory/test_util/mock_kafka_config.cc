@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 #include <base/error_util.h>
+#include <base/wr/fd_util.h>
 
 #include <gtest/gtest.h>
 
@@ -34,8 +35,8 @@ using namespace Dory::TestUtil;
 TMockKafkaConfig::TMockKafkaConfig(
     const std::vector<std::string> &config_file) {
   for (const std::string &line : config_file) {
-    IfLt0(write(SetupFile.GetFd(), line.data(), line.size()));
-    IfLt0(write(SetupFile.GetFd(), "\n", 1));
+    IfLt0(Wr::write(SetupFile.GetFd(), line.data(), line.size()));
+    IfLt0(Wr::write(SetupFile.GetFd(), "\n", 1));
   }
 
   Args.push_back("mock_kafka_server");

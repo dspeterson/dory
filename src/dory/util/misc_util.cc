@@ -31,6 +31,7 @@
 
 #include <base/error_util.h>
 #include <base/fd.h>
+#include <base/wr/net_util.h>
 
 using namespace Base;
 using namespace Dory;
@@ -41,37 +42,32 @@ static bool RunUnixDgSocketTest(std::vector<uint8_t> &buf,
   std::fill(buf.begin(), buf.end(), 0xff);
 
   for (; ; ) {
-    ssize_t ret = send(fd_pair[0], &buf[0], buf.size(), 0);
+    ssize_t ret = Wr::send(Wr::TDisp::Nonfatal, {EINTR, EMSGSIZE}, fd_pair[0],
+        &buf[0], buf.size(), 0);
 
-    if (ret < 0) {
-      switch (errno) {
-        case EINTR:
-          continue;
-        case EMSGSIZE:
-          return false;
-        default:
-          IfLt0(ret);  // this will throw
-      }
+    if (ret >= 0) {
+      break;
     }
 
-    break;
+    if (errno == EMSGSIZE) {
+      return false;
+    }
+
+    assert(errno == EINTR);
   }
 
   std::fill(buf.begin(), buf.end(), 0);
   ssize_t ret = 0;
 
   for (; ; ) {
-    ret = recv(fd_pair[1], &buf[0], buf.size(), 0);
+    ret = Wr::recv(Wr::TDisp::Nonfatal, {EINTR}, fd_pair[1], &buf[0],
+        buf.size(), 0);
 
-    if (ret < 0) {
-      if (errno == EINTR) {
-        continue;
-      }
-
-      IfLt0(ret);  // this will throw
+    if (ret >= 0) {
+      break;
     }
 
-    break;
+    assert(errno == EINTR);
   }
 
   if (static_cast<size_t>(ret) != buf.size()) {
@@ -98,8 +94,7 @@ TUnixDgSizeTestResult Dory::Util::TestUnixDgSize(size_t size) {
 
   {
     int tmp_fd_pair[2];
-    int err = socketpair(AF_LOCAL, SOCK_DGRAM, 0, tmp_fd_pair);
-    IfLt0(err);
+    Wr::socketpair(AF_LOCAL, SOCK_DGRAM, 0, tmp_fd_pair);
     fd_pair[0] = tmp_fd_pair[0];
     fd_pair[1] = tmp_fd_pair[1];
   }
@@ -109,14 +104,11 @@ TUnixDgSizeTestResult Dory::Util::TestUnixDgSize(size_t size) {
   }
 
   auto opt = static_cast<int>(size);
-  int ret = setsockopt(fd_pair[0], SOL_SOCKET, SO_SNDBUF, &opt, sizeof(opt));
 
-  if (ret < 0) {
-    if (errno == EINVAL) {
-      return TUnixDgSizeTestResult::Fail;
-    }
-
-    IfLt0(ret);  // this will throw
+  if (Wr::setsockopt(Wr::TDisp::Nonfatal, {EINVAL}, fd_pair[0],
+      SOL_SOCKET, SO_SNDBUF, &opt, sizeof(opt)) < 0) {
+    assert(errno == EINVAL);
+    return TUnixDgSizeTestResult::Fail;
   }
 
   return RunUnixDgSocketTest(buf, fd_pair) ?

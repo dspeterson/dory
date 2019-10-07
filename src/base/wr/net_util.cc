@@ -27,6 +27,19 @@
 
 using namespace Base;
 
+int Base::Wr::connect(TDisp disp, std::initializer_list<int> errors,
+    int sockfd, const struct sockaddr *addr, socklen_t addrlen) noexcept {
+  const int ret = ::connect(sockfd, addr, addrlen);
+
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EAFNOSUPPORT, EADDRNOTAVAIL, EALREADY, EBADF, EFAULT, EISCONN,
+          ENOTSOCK})) {
+    DieErrno("connect()", errno);
+  }
+
+  return ret;
+}
+
 int Base::Wr::listen(TDisp disp, std::initializer_list<int> errors, int sockfd,
     int backlog) noexcept {
   const int ret = ::listen(sockfd, backlog);
@@ -34,6 +47,18 @@ int Base::Wr::listen(TDisp disp, std::initializer_list<int> errors, int sockfd,
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
       {EBADF, ENOTSOCK, EOPNOTSUPP})) {
     DieErrno("listen()", errno);
+  }
+
+  return ret;
+}
+
+ssize_t Base::Wr::recv(TDisp disp, std::initializer_list<int> errors,
+    int sockfd, void *buf, size_t len, int flags) noexcept {
+  const ssize_t ret = ::recv(sockfd, buf, len, flags);
+
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EBADF, EFAULT, EINVAL, ENOMEM, ENOTCONN, ENOTSOCK})) {
+    DieErrno("recv()", errno);
   }
 
   return ret;

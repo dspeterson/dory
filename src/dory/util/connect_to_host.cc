@@ -23,6 +23,7 @@
 #include <cerrno>
 
 #include <base/error_util.h>
+#include <base/wr/net_util.h>
 #include <dory/util/connect_to_host.h>
 #include <socket/db/cursor.h>
 
@@ -46,24 +47,17 @@ void Dory::Util::ConnectToHost(const char *host_name, in_port_t port,
     /* Create a socket that's compatible with candidate host. */
     TFd sock = csr.NewCompatSocket();
 
-    if (!connect(sock, address, address.GetLen())) {
+    if (!Wr::connect(Wr::TDisp::Nonfatal,
+        {ECONNREFUSED, ETIMEDOUT, EHOSTUNREACH, EHOSTDOWN, EINTR}, sock,
+        address, address.GetLen())) {
       result_socket = std::move(sock);
       break;  // success
     }
 
-    /* What went wrong? */
-    switch (errno) {
-      case ECONNREFUSED:
-      case ETIMEDOUT:
-      case EHOSTUNREACH:
-      case EHOSTDOWN: {
-        /* These errors aren't serious.  Move on to the next host. */
-        break;
-      }
-      default: {
-        /* Anything else is big-time serious. */
-        ThrowSystemError(errno);
-      }
+    if (errno == EINTR) {
+      ThrowSystemError(errno);
     }
+
+    /* Move on to next host. */
   }
 }

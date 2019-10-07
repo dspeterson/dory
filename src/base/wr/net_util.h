@@ -34,11 +34,27 @@ namespace Base {
 
   namespace Wr {
 
+    int connect(TDisp disp, std::initializer_list<int> errors, int sockfd,
+        const struct sockaddr *addr, socklen_t addrlen) noexcept;
+
+    inline int connect(int sockfd, const struct sockaddr *addr,
+        socklen_t addrlen) noexcept {
+      return connect(TDisp::AddFatal, {}, sockfd, addr, addrlen);
+    }
+
     int listen(TDisp disp, std::initializer_list<int> errors, int sockfd,
         int backlog) noexcept;
 
     inline int listen(int sockfd, int backlog) noexcept {
       return listen(TDisp::AddFatal, {}, sockfd, backlog);
+    }
+
+    ssize_t recv(TDisp disp, std::initializer_list<int> errors, int sockfd,
+        void *buf, size_t len, int flags) noexcept;
+
+    inline ssize_t recv(int sockfd, void *buf, size_t len,
+        int flags) noexcept {
+      return recv(TDisp::AddFatal, {}, sockfd, buf, len, flags);
     }
 
     ssize_t send(TDisp disp, std::initializer_list<int> errors, int sockfd,
