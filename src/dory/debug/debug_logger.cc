@@ -27,11 +27,12 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <time.h>
 #include <unistd.h>
 
 #include <base/error_util.h>
 #include <base/no_default_case.h>
+#include <base/wr/fd_util.h>
+#include <base/wr/time_util.h>
 #include <dory/util/msg_util.h>
 #include <log/log.h>
 #include <third_party/base64/base64.h>
@@ -141,7 +142,7 @@ void TDebugLogger::LogMsg(const TMsg &msg) {
     return;
   }
 
-  ssize_t ret = write(LogFd, LogEntry.data(), LogEntry.size());
+  ssize_t ret = Wr::write(LogFd, LogEntry.data(), LogEntry.size());
 
   if (ret < 0) {
     /* Fail gracefully. */
@@ -161,19 +162,19 @@ void TDebugLogger::LogMsgList(const std::list<TMsg::TPtr> &msg_list) {
   }
 }
 
-unsigned long TDebugLogger::Now() {
+unsigned long TDebugLogger::Now() noexcept {
   struct timespec t;
-  IfLt0(clock_gettime(CLOCK_MONOTONIC_RAW, &t));
+  Wr::clock_gettime(CLOCK_MONOTONIC_RAW, &t);
   return t.tv_sec;
 }
 
-void TDebugLogger::DisableLogging() {
+void TDebugLogger::DisableLogging() noexcept {
   assert(this);
   LogFd = -1;
   LoggingEnabled = false;
 }
 
-void TDebugLogger::EnableLogging() {
+void TDebugLogger::EnableLogging() noexcept {
   assert(this);
   LoggingEnabledAt = Now();
   MsgCount = 0;

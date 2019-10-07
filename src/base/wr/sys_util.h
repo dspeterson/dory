@@ -1,7 +1,7 @@
-/* <dory/util/system_error_codes.h>
+/* <base/wr/sys_util.h>
 
    ----------------------------------------------------------------------------
-   Copyright 2013-2014 if(we)
+   Copyright 2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,32 +16,28 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Functions for interpreting system error codes.
+   Wrappers for system/library calls related to system configuration.
  */
 
 #pragma once
 
-#include <algorithm>
-#include <cerrno>
+#include <cassert>
+#include <cstddef>
 #include <initializer_list>
-#include <system_error>
 
-namespace Dory {
+#include <base/wr/common.h>
 
-  namespace Util {
+namespace Base {
 
-    extern std::initializer_list<int> LostTcpConnectionErrorCodes;
+  namespace Wr {
 
-    static inline bool LostTcpConnection(int errno_value) {
-      return (std::find(LostTcpConnectionErrorCodes.begin(),
-          LostTcpConnectionErrorCodes.end(), errno_value) !=
-          LostTcpConnectionErrorCodes.end());
+    int gethostname(TDisp disp, std::initializer_list<int> errors, char *name,
+        size_t len) noexcept;
+
+    inline int gethostname(char *name, size_t len) noexcept {
+      return gethostname(TDisp::AddFatal, {}, name, len);
     }
 
-    static inline bool LostTcpConnection(const std::system_error &x) {
-      return LostTcpConnection(x.code().value());
-    }
+  }  // Wr
 
-  }  // Util
-
-}  // Dory
+}  // Base

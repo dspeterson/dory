@@ -22,6 +22,7 @@
 
 #include <dory/msg_dispatch/connector.h>
 
+#include <cerrno>
 #include <exception>
 #include <string>
 #include <system_error>
@@ -37,6 +38,8 @@
 #include <base/no_default_case.h>
 #include <base/on_destroy.h>
 #include <base/time_util.h>
+#include <base/wr/fd_util.h>
+#include <base/wr/net_util.h>
 #include <dory/kafka_proto/request_response.h>
 #include <dory/msg_dispatch/produce_response_processor.h>
 #include <dory/msg_state_tracker.h>
@@ -157,8 +160,10 @@ void TConnector::WaitForShutdownAck() {
   poll_array[1].events = POLLIN;
   poll_array[1].revents = 0;
 
-  /* Don't check for EINTR, since this thread has signals masked. */
-  IfLt0(poll(poll_array, POLL_ARRAY_SIZE, -1));
+  /* Treat EINTR as fatal, since this thread should have signals masked. */
+  const int ret = Wr::poll(Wr::TDisp::AddFatal, {EINTR}, poll_array,
+      POLL_ARRAY_SIZE, -1);
+  assert(ret > 0);
 
   const char *blurb = poll_array[0].revents ?
       "shutdown ACK" : "shutdown finished notification";
@@ -390,27 +395,26 @@ void TConnector::CheckInputQueue(uint64_t now, bool pop_sem) {
 
 bool TConnector::TrySendProduceRequest() {
   assert(this);
+  ssize_t ret = Wr::send(Wr::TDisp::Nonfatal, LostTcpConnectionErrorCodes,
+      Sock, SendBuf.Data(), SendBuf.DataSize(), MSG_NOSIGNAL);
 
-  try {
-    SendBuf.MarkDataConsumed(static_cast<size_t>(IfLt0(
-        send(Sock, SendBuf.Data(), SendBuf.DataSize(), MSG_NOSIGNAL))));
-  } catch (const std::system_error &x) {
-    if (LostTcpConnection(x)) {
-      LOG(TPri::ERR) << "Connector thread " << Gettid() << " (index "
-          << MyBrokerIndex << " broker " << MyBrokerId()
-          << ") starting pause and finishing due to lost TCP connection "
-          << "during send: " << x.what();
-      ConnectorSocketError.Increment();
-      Ds.PauseButton.Push();
-      return false;
-    }
-
-    throw;  // anything else is fatal
+  if (ret < 0) {
+    assert(LostTcpConnection(errno));
+    char tmp_buf[256];
+    const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
+    LOG(TPri::ERR) << "Connector thread " << Gettid() << " (index "
+        << MyBrokerIndex << " broker " << MyBrokerId()
+        << ") starting pause and finishing due to lost TCP connection during "
+        << "send: " << msg;
+    ConnectorSocketError.Increment();
+    Ds.PauseButton.Push();
+    return false;
   }
 
   /* Data was sent successfully, although maybe not as much as requested.  If
      any unsent data remains, we will continue sending when the socket becomes
      ready again for writing. */
+  SendBuf.MarkDataConsumed(static_cast<size_t>(ret));
   return true;
 }
 
@@ -577,19 +581,20 @@ bool TConnector::HandleSockReadReady() {
   TStreamMsgReader::TState reader_state = TStreamMsgReader::TState::AtEnd;
 
   try {
-    reader_state = StreamReader.Read();
+    reader_state = StreamReader.Read(
+        [](int fd, void *buf, size_t count) {
+          return Wr::read(Wr::TDisp::Nonfatal, LostTcpConnectionErrorCodes, fd,
+              buf, count);
+        });
   } catch (const std::system_error &x) {
-    if (LostTcpConnection(x)) {
-      LOG(TPri::ERR) << "Connector thread " << Gettid() << " (index "
-          << MyBrokerIndex << " broker " << MyBrokerId()
-          << ") starting pause due to lost TCP connection on attempted read: "
-          << x.what();
-      ConnectorSocketError.Increment();
-      Ds.PauseButton.Push();
-      return false;
-    }
-
-    throw;  // anything else is fatal
+    assert(LostTcpConnection(x));
+    LOG(TPri::ERR) << "Connector thread " << Gettid() << " (index "
+        << MyBrokerIndex << " broker " << MyBrokerId()
+        << ") starting pause due to lost TCP connection on attempted read: "
+        << x.what();
+    ConnectorSocketError.Increment();
+    Ds.PauseButton.Push();
+    return false;
   }
 
   for (; ; ) {
@@ -761,9 +766,10 @@ void TConnector::DoRun() {
       break;
     }
 
-    /* Don't check for EINTR, since this thread has signals masked. */
-    int ret = IfLt0(poll(MainLoopPollArray, MainLoopPollArray.Size(),
-        poll_timeout));
+    /* Treat EINTR as fatal, since this thread should have signals masked. */
+    const int ret = Wr::poll(Wr::TDisp::AddFatal, {EINTR}, MainLoopPollArray,
+      MainLoopPollArray.Size(), poll_timeout);
+    assert(ret >= 0);
 
     /* Handle possibly nonmonotonic clock.
        TODO: Use monotonic clock instead. */

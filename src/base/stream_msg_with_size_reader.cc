@@ -29,41 +29,49 @@
 
 using namespace Base;
 
-static TOpt<uint64_t> ReadUnsigned8BitSizeField(const uint8_t *field_loc) {
+static TOpt<uint64_t> ReadUnsigned8BitSizeField(
+    const uint8_t *field_loc) noexcept {
   return TOpt<uint64_t>(*field_loc);
 }
 
-static TOpt<uint64_t> ReadUnsigned16BitSizeField(const uint8_t *field_loc) {
+static TOpt<uint64_t> ReadUnsigned16BitSizeField(
+    const uint8_t *field_loc) noexcept {
   return TOpt<uint64_t>(ReadUint16FromHeader(field_loc));
 }
 
-static TOpt<uint64_t> ReadUnsigned32BitSizeField(const uint8_t *field_loc) {
+static TOpt<uint64_t> ReadUnsigned32BitSizeField(
+    const uint8_t *field_loc) noexcept {
   return TOpt<uint64_t>(ReadUint32FromHeader(field_loc));
 }
 
-static TOpt<uint64_t> ReadUnsigned64BitSizeField(const uint8_t *field_loc) {
+static TOpt<uint64_t> ReadUnsigned64BitSizeField(
+    const uint8_t *field_loc) noexcept {
   return TOpt<uint64_t>(ReadUint64FromHeader(field_loc));
 }
 
-static TOpt<uint64_t> ReadSigned8BitSizeField(const uint8_t *field_loc) {
+static TOpt<uint64_t> ReadSigned8BitSizeField(
+    const uint8_t *field_loc) noexcept {
   auto size = static_cast<int8_t>(*field_loc);
   return (size < 0) ?
       TOpt<uint64_t>() : TOpt<uint64_t>(static_cast<uint64_t>(size));
 }
 
-static TOpt<uint64_t> ReadSigned16BitSizeField(const uint8_t *field_loc) {
+static TOpt<uint64_t> ReadSigned16BitSizeField(
+    const uint8_t *field_loc) noexcept {
   int16_t size = ReadInt16FromHeader(field_loc);
   return (size < 0) ?
       TOpt<uint64_t>() : TOpt<uint64_t>(static_cast<uint64_t>(size));
 }
 
-static TOpt<uint64_t> ReadSigned32BitSizeField(const uint8_t *field_loc) {
+static TOpt<uint64_t> ReadSigned32BitSizeField(
+    const uint8_t *field_loc) noexcept {
   int32_t size = ReadInt32FromHeader(field_loc);
   return (size < 0) ?
       TOpt<uint64_t>() : TOpt<uint64_t>(static_cast<uint64_t>(size));
 }
 
-static TOpt<uint64_t> ReadSigned64BitSizeField(const uint8_t *field_loc) {
+static TOpt<uint64_t> ReadSigned64BitSizeField(
+    const uint8_t *field_loc) noexcept {
   int64_t size = ReadInt64FromHeader(field_loc);
   return (size < 0) ?
       TOpt<uint64_t>() : TOpt<uint64_t>(static_cast<uint64_t>(size));
@@ -90,13 +98,13 @@ TStreamMsgWithSizeReaderBase::TStreamMsgWithSizeReaderBase(
   assert(preferred_read_size);
 }
 
-size_t TStreamMsgWithSizeReaderBase::GetNextReadSize() {
+size_t TStreamMsgWithSizeReaderBase::GetNextReadSize() noexcept {
   assert(this);
   return PreferredReadSize;
 }
 
 TStreamMsgReader::TGetMsgResult
-TStreamMsgWithSizeReaderBase::GetNextMsg() {
+TStreamMsgWithSizeReaderBase::GetNextMsg() noexcept {
   assert(this);
   size_t data_size = GetDataSize();
 
@@ -156,14 +164,14 @@ void TStreamMsgWithSizeReaderBase::HandleReset() noexcept {
   OptDataInvalidReason.Reset();
 }
 
-void TStreamMsgWithSizeReaderBase::BeforeConsumeReadyMsg() {
+void TStreamMsgWithSizeReaderBase::BeforeConsumeReadyMsg() noexcept {
   assert(this);
   OptMsgBodySize.Reset();
 }
 
 TStreamMsgWithSizeReaderBase::TSizeFieldReadFn
 TStreamMsgWithSizeReaderBase::ChooseSizeFieldReadFn(size_t size_field_size,
-    bool size_field_is_signed) {
+    bool size_field_is_signed) noexcept {
   if ((size_field_size != 1) && (size_field_size != 2) &&
       (size_field_size != 4) && (size_field_size != 8)) {
     Die("Bad value for size_field_size in TStreamMsgWithSizeReaderBase");

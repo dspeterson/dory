@@ -30,6 +30,7 @@
 #include <unistd.h>
 
 #include <base/error_util.h>
+#include <base/wr/file_util.h>
 #include <log/log.h>
 
 using namespace Base;
@@ -44,7 +45,7 @@ static int OpenDebugFile(const char *path, bool truncate_file) {
     flags |= O_TRUNC;
   }
 
-  int fd = open(path, flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+  int fd = Wr::open(path, flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 
   if (fd < 0) {
     /* Fail gracefully. */
@@ -151,15 +152,15 @@ void TDebugSetup::SetDebugTopics(
 void TDebugSetup::TruncateDebugFiles() {
   assert(this);
 
-  if (truncate(GetLogPath(TLogId::MSG_RECEIVE).c_str(), 0) < 0) {
+  if (Wr::truncate(GetLogPath(TLogId::MSG_RECEIVE).c_str(), 0) < 0) {
     LOG(TPri::ERR) << "Failed to truncate MSG_RECEIVE debug logfile";
   }
 
-  if (truncate(GetLogPath(TLogId::MSG_SEND).c_str(), 0) < 0) {
+  if (Wr::truncate(GetLogPath(TLogId::MSG_SEND).c_str(), 0) < 0) {
     LOG(TPri::ERR) << "Failed to truncate MSG_SEND debug logfile";
   }
 
-  if (truncate(GetLogPath(TLogId::MSG_GOT_ACK).c_str(), 0) < 0) {
+  if (Wr::truncate(GetLogPath(TLogId::MSG_GOT_ACK).c_str(), 0) < 0) {
     LOG(TPri::ERR) << "Failed to truncate MSG_GOT_ACK debug logfile";
   }
 }
@@ -179,7 +180,7 @@ void TDebugSetup::CreateDebugDir() {
 static void SettingsFtruncate(const TDebugSetup::TSettings &settings) {
   int fd = settings.GetLogFileDescriptor(TDebugSetup::TLogId::MSG_RECEIVE);
 
-  if (fd >= 0 && ftruncate(fd, 0)) {
+  if (fd >= 0 && Wr::ftruncate(fd, 0)) {
     /* Fail gracefully. */
     char tmp_buf[256];
     const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
@@ -188,7 +189,7 @@ static void SettingsFtruncate(const TDebugSetup::TSettings &settings) {
 
   fd = settings.GetLogFileDescriptor(TDebugSetup::TLogId::MSG_SEND);
 
-  if (fd >= 0 && ftruncate(fd, 0)) {
+  if (fd >= 0 && Wr::ftruncate(fd, 0)) {
     /* Fail gracefully. */
     char tmp_buf[256];
     const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
@@ -197,7 +198,7 @@ static void SettingsFtruncate(const TDebugSetup::TSettings &settings) {
 
   fd = settings.GetLogFileDescriptor(TDebugSetup::TLogId::MSG_GOT_ACK);
 
-  if (fd >= 0 && ftruncate(fd, 0)) {
+  if (fd >= 0 && Wr::ftruncate(fd, 0)) {
     /* Fail gracefully. */
     char tmp_buf[256];
     const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
@@ -214,9 +215,30 @@ void TDebugSetup::DeleteOldDebugFiles(
      write to the unlinked files until they see that the debug settings have
      changed.  New debug data gets written to the new files, and is not mixed
      with any data associated with the previous debug settings. */
-  unlink(GetLogPath(TLogId::MSG_RECEIVE).c_str());
-  unlink(GetLogPath(TLogId::MSG_SEND).c_str());
-  unlink(GetLogPath(TLogId::MSG_GOT_ACK).c_str());
+  const std::string &msg_receive_path = GetLogPath(TLogId::MSG_RECEIVE);
+  const std::string &msg_send_path = GetLogPath(TLogId::MSG_SEND);
+  const std::string &msg_got_ack_path = GetLogPath(TLogId::MSG_GOT_ACK);
+
+  if (Wr::unlink(msg_receive_path.c_str())) {
+    char tmp_buf[256];
+    const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
+    LOG(TPri::ERR) << "Failed to unlink debug file for received messages ["
+        << msg_receive_path << "]: " << msg;
+  }
+
+  if (Wr::unlink(msg_send_path.c_str())) {
+    char tmp_buf[256];
+    const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
+    LOG(TPri::ERR) << "Failed to unlink debug file for sent messages ["
+                   << msg_send_path << "]: " << msg;
+  }
+
+  if (Wr::unlink(msg_got_ack_path.c_str())) {
+    char tmp_buf[256];
+    const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
+    LOG(TPri::ERR) << "Failed to unlink debug file for acknowledged messages ["
+                   << msg_got_ack_path << "]: " << msg;
+  }
 
   if (old_settings) {
     /* Now ftruncate the files we just unlinked through their still open file

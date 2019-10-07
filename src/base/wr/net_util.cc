@@ -23,11 +23,21 @@
 
 #include <cerrno>
 
-#include <sys/socket.h>
-
 #include <base/error_util.h>
 
 using namespace Base;
+
+int Base::Wr::listen(TDisp disp, std::initializer_list<int> errors, int sockfd,
+    int backlog) noexcept {
+  const int ret = ::listen(sockfd, backlog);
+
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EBADF, ENOTSOCK, EOPNOTSUPP})) {
+    DieErrno("listen()", errno);
+  }
+
+  return ret;
+}
 
 ssize_t Base::Wr::send(TDisp disp, std::initializer_list<int> errors,
     int sockfd, const void *buf, size_t len, int flags) noexcept {
@@ -37,6 +47,32 @@ ssize_t Base::Wr::send(TDisp disp, std::initializer_list<int> errors,
       {EBADF, EDESTADDRREQ, EFAULT, EINVAL, EISCONN, ENOMEM, ENOTCONN,
           ENOTSOCK, EOPNOTSUPP})) {
     DieErrno("send()", errno);
+  }
+
+  return ret;
+}
+
+int Base::Wr::setsockopt(TDisp disp, std::initializer_list<int> errors,
+    int sockfd, int level, int optname, const void *optval,
+    socklen_t optlen) noexcept {
+  const int ret = ::setsockopt(sockfd, level, optname, optval, optlen);
+
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EBADF, EFAULT, EINVAL, ENOPROTOOPT, ENOTSOCK})) {
+    DieErrno("setsockopt()", errno);
+  }
+
+  return ret;
+}
+
+int Base::Wr::socket(TDisp disp, std::initializer_list<int> errors, int domain,
+    int type, int protocol) noexcept {
+  const int ret = ::socket(domain, type, protocol);
+
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EAFNOSUPPORT, EINVAL, EMFILE, ENFILE, ENOBUFS, ENOMEM,
+          EPROTONOSUPPORT})) {
+    DieErrno("socket()", errno);
   }
 
   return ret;

@@ -26,6 +26,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include <sys/types.h>
+
 #include <base/buf.h>
 #include <base/no_copy_semantics.h>
 
@@ -67,12 +69,31 @@ namespace Base {
        data.  This is guaranteed not to block if prior to the call, the client
        has determined that the file descriptor is readable (for instance, by
        calling poll() or select()).  Returns new reader state after finishing
-       read.  Throws std::system_error on error during attempted read. */
+       read.  On read() error, errno values {EBADF, EFAULT, EINVAL} are treated
+       as fatal, causing immediate program termination.  Other errors cause
+       std::system_error to be thrown. */
     TState Read();
+
+    /* Similar to Read() above, but allows caller to gain more control over the
+       read operation by passing read_fn, which may define its own error
+       handling strategy. */
+    template <typename TReadFn>
+    TState Read(TReadFn read_fn) noexcept(noexcept(read_fn(0, nullptr, 0))) {
+      assert(this);
+      const size_t read_size = PrepareForRead();
+
+      /* In case we get a read size of 0, return here so we don't get a return
+         value of 0 from read() and interpret it as end of input.  A typical
+         subclass implementation will probably never return 0 from
+         GetNextReadSize() but we can't predict how subclasses will behave. */
+      return (read_size == 0) ?
+          Impl.State :
+          ProcessReadResult(read_fn(Impl.Fd, Impl.Buf.Space(), read_size));
+    }
 
     /* When in state TState::MsgReady, client calls this to indicate that the
        ready message has been processed.  Returns next state of reader. */
-    TState ConsumeReadyMsg();
+    TState ConsumeReadyMsg() noexcept;
 
     /* Returns current state of reader. */
     TState GetState() const noexcept {
@@ -246,11 +267,11 @@ namespace Base {
 
     /* Base class calls this when it needs to determine how many bytes to read
        next. */
-    virtual size_t GetNextReadSize() = 0;
+    virtual size_t GetNextReadSize() noexcept = 0;
 
     /* Base class calls this to see if a message is ready for consumption yet.
      */
-    virtual TGetMsgResult GetNextMsg() = 0;
+    virtual TGetMsgResult GetNextMsg() noexcept = 0;
 
     /* At the start of a Reset() call, the base class calls this method to
        allow the derived class to reset any internal state it maintains. */
@@ -259,12 +280,16 @@ namespace Base {
     /* The base class calls this method immediately before a ready message is
        about to be consumed.  Subclass code may use this for updating its
        internal state. */
-    virtual void BeforeConsumeReadyMsg() = 0;
+    virtual void BeforeConsumeReadyMsg() noexcept = 0;
 
     private:
     /* See if there is a complete message in the buffer and update state
        accordingly. */
-    TState TryAdvanceToNextMsg();
+    TState TryAdvanceToNextMsg() noexcept;
+
+    size_t PrepareForRead();
+
+    TState ProcessReadResult(ssize_t read_result);
 
     struct TImpl {
       /* Client-visible state of message reader. */

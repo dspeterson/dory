@@ -27,6 +27,7 @@
 #include <string>
 
 #include <base/error_util.h>
+#include <base/wr/net_util.h>
 #include <dory/util/exceptions.h>
 #include <log/log.h>
 #include <socket/address.h>
@@ -174,17 +175,16 @@ bool TServer::InitCmdPort() {
   CmdHandler.reset(new TCmdHandler(Ss));
   TAddress server_address(TAddress::IPv4Any,
                           UseEphemeralPorts ? 0 : Ss.Config.CmdPort);
-  CmdListenFd = IfLt0(socket(server_address.GetFamily(), SOCK_STREAM, 0));
+  CmdListenFd = IfLt0(Wr::socket(server_address.GetFamily(), SOCK_STREAM, 0));
   int flag = true;
-  IfLt0(setsockopt(CmdListenFd, SOL_SOCKET, SO_REUSEADDR, &flag,
-                   sizeof(flag)));
+  Wr::setsockopt(CmdListenFd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
   Bind(CmdListenFd, server_address);
   TAddress sock_name = GetSockName(CmdListenFd);
   CmdPort = sock_name.GetPort();
   assert(UseEphemeralPorts || (CmdPort == Ss.Config.CmdPort));
   CmdHandler->RegisterWithDispatcher(*Ss.Dispatcher, CmdListenFd,
                                      POLLIN | POLLERR);
-  IfLt0(listen(CmdListenFd, 1024));
+  IfLt0(Wr::listen(CmdListenFd, 1024));
   return true;
 }
 
@@ -224,9 +224,9 @@ void TServer::InitKafkaPorts() {
         UseEphemeralPorts ? static_cast<in_port_t>(0) : virtual_port);
 
     TFd &fd = ListenFdVec[i];
-    fd = IfLt0(socket(server_address.GetFamily(), SOCK_STREAM, 0));
+    fd = IfLt0(Wr::socket(server_address.GetFamily(), SOCK_STREAM, 0));
     int flag = true;
-    IfLt0(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag)));
+    Wr::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
     Bind(fd, server_address);
     TAddress sock_name = GetSockName(fd);
 
@@ -241,6 +241,6 @@ void TServer::InitKafkaPorts() {
   }
 
   for (TFd &fd : ListenFdVec) {
-    IfLt0(listen(fd, 1024));
+    IfLt0(Wr::listen(fd, 1024));
   }
 }

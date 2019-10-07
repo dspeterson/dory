@@ -30,6 +30,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <base/wr/fd_util.h>
+#include <base/wr/file_util.h>
+
 using namespace Base;
 using namespace Dory;
 using namespace Dory::MockKafkaServer;
@@ -52,7 +55,7 @@ TMockKafkaWorker::TryReadExactlyOrShutdown(int fd, void *buf,
   while (bytes_left) {
     fd_event.revents = 0;
     shutdown_request_event.revents = 0;
-    int ret = poll(&events[0], events.size(), -1);
+    int ret = Wr::poll(&events[0], events.size(), -1);
 
     if (ret < 0) {
       if (errno == EINTR) {
@@ -67,7 +70,7 @@ TMockKafkaWorker::TryReadExactlyOrShutdown(int fd, void *buf,
     }
 
     assert(fd_event.revents);
-    ssize_t nbytes = read(fd, pos, bytes_left);
+    ssize_t nbytes = Wr::read(fd, pos, bytes_left);
 
     if (nbytes < 0) {
       switch (errno) {
@@ -102,7 +105,7 @@ TMockKafkaWorker::TryWriteExactlyOrShutdown(int fd, const void *buf,
     size_t size) {
   assert(this);
   struct stat stat_buf;
-  IfLt0(fstat(fd, &stat_buf));
+  IfLt0(Wr::fstat(fd, &stat_buf));
   bool is_socket = S_ISSOCK(stat_buf.st_mode);
 
   std::array<struct pollfd, 2> events;
@@ -119,7 +122,7 @@ TMockKafkaWorker::TryWriteExactlyOrShutdown(int fd, const void *buf,
   while (bytes_left) {
     fd_event.revents = 0;
     shutdown_request_event.revents = 0;
-    int ret = poll(&events[0], events.size(), -1);
+    int ret = Wr::poll(&events[0], events.size(), -1);
 
     if (ret < 0) {
       if (errno == EINTR) {

@@ -52,10 +52,10 @@ namespace Dory {
         /* Compression level, if specified. */
         Base::TOpt<int> Level;
 
-        TConf() = default;
+        TConf() noexcept = default;
 
         TConf(Compress::TCompressionType type, size_t min_size,
-            const Base::TOpt<int> &level)
+            const Base::TOpt<int> &level) noexcept
             : Type(type),
               MinSize(min_size),
               Level(level) {
@@ -69,10 +69,10 @@ namespace Dory {
       using TTopicMap = std::unordered_map<std::string, TConf>;
 
       static bool StringToType(const char *s,
-          Compress::TCompressionType &result);
+          Compress::TCompressionType &result) noexcept;
 
       static bool StringToType(const std::string &s,
-          Compress::TCompressionType &result) {
+          Compress::TCompressionType &result) noexcept {
         return StringToType(s.c_str(), result);
       }
 
@@ -86,17 +86,17 @@ namespace Dory {
 
       TCompressionConf &operator=(TCompressionConf &&) = default;
 
-      size_t GetSizeThresholdPercent() const {
+      size_t GetSizeThresholdPercent() const noexcept {
         assert(this);
         return SizeThresholdPercent;
       }
 
-      const TConf &GetDefaultTopicConfig() const {
+      const TConf &GetDefaultTopicConfig() const noexcept {
         assert(this);
         return DefaultTopicConfig;
       }
 
-      const TTopicMap &GetTopicConfigs() const {
+      const TTopicMap &GetTopicConfigs() const noexcept {
         assert(this);
         return TopicConfigs;
       }

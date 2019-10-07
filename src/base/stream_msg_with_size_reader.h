@@ -124,19 +124,24 @@ namespace Base {
     ~TStreamMsgWithSizeReaderBase() override = default;
 
     protected:
-    size_t GetNextReadSize() override;
+    size_t GetNextReadSize() noexcept override;
 
-    TGetMsgResult GetNextMsg() override;
+    TGetMsgResult GetNextMsg() noexcept override;
 
     void HandleReset() noexcept override;
 
-    void BeforeConsumeReadyMsg() override;
+    void BeforeConsumeReadyMsg() noexcept override;
 
     private:
-    typedef TOpt<uint64_t> (*TSizeFieldReadFn)(const uint8_t *field_loc);
+    /* Pointer to function with the following signature:
+
+           TOpt<uint64_t> fn(const uint8_t *field_loc) noexcept;
+     */
+    using TSizeFieldReadFn = std::remove_reference<decltype(std::declval<
+        TOpt<uint64_t> (*)(const uint8_t *field_loc) noexcept>())>::type;
 
     static TSizeFieldReadFn ChooseSizeFieldReadFn(size_t size_field_size,
-        bool size_field_is_signed);
+        bool size_field_is_signed) noexcept;
 
     /* Size in bytes of size field. */
     const size_t SizeFieldSize;

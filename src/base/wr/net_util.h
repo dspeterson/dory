@@ -21,9 +21,11 @@
 
 #pragma once
 
+#include <cassert>
 #include <cstddef>
 #include <initializer_list>
 
+#include <sys/socket.h>
 #include <sys/types.h>
 
 #include <base/wr/common.h>
@@ -32,12 +34,36 @@ namespace Base {
 
   namespace Wr {
 
+    int listen(TDisp disp, std::initializer_list<int> errors, int sockfd,
+        int backlog) noexcept;
+
+    inline int listen(int sockfd, int backlog) noexcept {
+      return listen(TDisp::AddFatal, {}, sockfd, backlog);
+    }
+
     ssize_t send(TDisp disp, std::initializer_list<int> errors, int sockfd,
         const void *buf, size_t len, int flags) noexcept;
 
     inline ssize_t send(int sockfd, const void *buf, size_t len,
         int flags) noexcept {
       return send(TDisp::AddFatal, {}, sockfd, buf, len, flags);
+    }
+
+    int setsockopt(TDisp disp, std::initializer_list<int> errors, int sockfd,
+        int level, int optname, const void *optval, socklen_t optlen) noexcept;
+
+    inline void setsockopt(int sockfd, int level, int optname,
+        const void *optval, socklen_t optlen) noexcept {
+      const int ret = setsockopt(TDisp::AddFatal, {}, sockfd, level, optname,
+          optval, optlen);
+      assert(ret == 0);
+    }
+
+    int socket(TDisp disp, std::initializer_list<int> errors, int domain,
+        int type, int protocol) noexcept;
+
+    inline int socket(int domain, int type, int protocol) noexcept {
+      return socket(TDisp::AddFatal, {}, domain, type, protocol);
     }
 
     int socketpair(TDisp disp, std::initializer_list<int> errors, int domain,

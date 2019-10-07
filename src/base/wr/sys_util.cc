@@ -1,7 +1,7 @@
-/* <dory/util/system_error_codes.h>
+/* <base/wr/sys_util.cc>
 
    ----------------------------------------------------------------------------
-   Copyright 2013-2014 if(we)
+   Copyright 2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,32 +16,27 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Functions for interpreting system error codes.
+   Implements <base/wr/sys_util.h>.
  */
 
-#pragma once
+#include <base/wr/sys_util.h>
 
-#include <algorithm>
 #include <cerrno>
-#include <initializer_list>
-#include <system_error>
 
-namespace Dory {
+#include <unistd.h>
 
-  namespace Util {
+#include <base/error_util.h>
 
-    extern std::initializer_list<int> LostTcpConnectionErrorCodes;
+using namespace Base;
 
-    static inline bool LostTcpConnection(int errno_value) {
-      return (std::find(LostTcpConnectionErrorCodes.begin(),
-          LostTcpConnectionErrorCodes.end(), errno_value) !=
-          LostTcpConnectionErrorCodes.end());
-    }
+int Base::Wr::gethostname(TDisp disp, std::initializer_list<int> errors,
+    char *name, size_t len) noexcept {
+  const int ret = ::gethostname(name, len);
 
-    static inline bool LostTcpConnection(const std::system_error &x) {
-      return LostTcpConnection(x.code().value());
-    }
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EFAULT, EINVAL})) {
+    DieErrno("gethostname()", errno);
+  }
 
-  }  // Util
-
-}  // Dory
+  return ret;
+}

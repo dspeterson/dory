@@ -33,7 +33,8 @@ using namespace Dory::Compress;
 using namespace Dory::Conf;
 using namespace Dory::Util;
 
-bool TCompressionConf::StringToType(const char *s, TCompressionType &result) {
+bool TCompressionConf::StringToType(const char *s,
+    TCompressionType &result) noexcept {
   assert(s);
 
   if (!strcasecmp(s, "none")) {

@@ -49,7 +49,7 @@ namespace Dory {
 
       static const size_t NUM_LOG_FILES = 3;
 
-      static size_t ToIndex(TLogId id) {
+      static size_t ToIndex(TLogId id) noexcept {
         auto index = static_cast<size_t>(id);
         assert(index < NUM_LOG_FILES);
         return index;
@@ -61,33 +61,34 @@ namespace Dory {
         public:
 
         static bool EnableIsSpecified(
-            const std::unordered_set<std::string> *topics) {
+            const std::unordered_set<std::string> *topics) noexcept {
           return (topics == nullptr) || !topics->empty();
         }
 
         /* Return nullptr if all topics are enabled.  Otherwise return a
            pointer to the set of enabled topics. */
-        const std::unordered_set<std::string> *GetDebugTopics() const {
+        const std::unordered_set<std::string> *
+        GetDebugTopics() const noexcept {
           assert(this);
           return DebugTopics.IsKnown() ? &*DebugTopics : nullptr;
         }
 
-        size_t GetVersion() const {
+        size_t GetVersion() const noexcept {
           assert(this);
           return Version;
         }
 
-        bool LoggingIsEnabled() const {
+        bool LoggingIsEnabled() const noexcept {
           assert(this);
           return LoggingEnabled;
         }
 
-        int GetLogFileDescriptor(TLogId log_id) const {
+        int GetLogFileDescriptor(TLogId log_id) const noexcept {
           assert(this);
           return LogFds[ToIndex(log_id)];
         }
 
-        bool RequestLogBytes(size_t num_bytes) {
+        bool RequestLogBytes(size_t num_bytes) noexcept {
           assert(this);
 
           std::lock_guard<std::mutex> lock(Mutex);
@@ -115,7 +116,7 @@ namespace Dory {
               msg_got_ack_log_path, byte_limit, truncate_files));
         }
 
-        Base::TFd &GetLogFd(TLogId log_id) {
+        Base::TFd &GetLogFd(TLogId log_id) noexcept {
           assert(this);
           return LogFds[ToIndex(log_id)];
         }
@@ -164,23 +165,23 @@ namespace Dory {
         SettingsVersion = Settings->GetVersion();
       }
 
-      const std::string &GetLogPath(TLogId log_id) const {
+      const std::string &GetLogPath(TLogId log_id) const noexcept {
         assert(this);
         return LogPaths[ToIndex(log_id)];
       }
 
-      size_t GetKillSwitchLimitSeconds() const {
+      size_t GetKillSwitchLimitSeconds() const noexcept {
         return KillSwitchLimitSeconds;
       }
 
-      bool MySettingsAreOld(size_t my_version) const {
+      bool MySettingsAreOld(size_t my_version) const noexcept {
         assert(this);
 
         /* We can get away without grabbing 'Mutex' here. */
         return SettingsVersion != my_version;
       }
 
-      std::shared_ptr<TSettings> GetSettings() const {
+      std::shared_ptr<TSettings> GetSettings() const noexcept {
         assert(this);
         std::lock_guard<std::mutex> lock(Mutex);
         assert(Settings);
@@ -205,7 +206,7 @@ namespace Dory {
       void TruncateDebugFiles();
 
       private:
-      std::string &GetLogPath(TLogId log_id) {
+      std::string &GetLogPath(TLogId log_id) noexcept {
         assert(this);
         return LogPaths[ToIndex(log_id)];
       }

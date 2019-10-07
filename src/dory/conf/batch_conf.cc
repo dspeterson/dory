@@ -27,7 +27,8 @@
 using namespace Dory;
 using namespace Dory::Conf;
 
-bool TBatchConf::StringToTopicAction(const char *s, TTopicAction &result) {
+bool TBatchConf::StringToTopicAction(const char *s,
+    TTopicAction &result) noexcept {
   assert(s);
 
   if (!std::strcmp(s, "perTopic")) {

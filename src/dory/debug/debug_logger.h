@@ -68,17 +68,17 @@ namespace Dory {
       /* Return a monotonically increasing timestamp indicating the number of
          seconds since some fixed point in the past (not necessarily the
          epoch). */
-      static unsigned long Now();
+      static unsigned long Now() noexcept;
 
-      unsigned long SecondsSinceEnabled() const {
+      unsigned long SecondsSinceEnabled() const noexcept {
         assert(this);
         unsigned long t = Now();
         return (t >= LoggingEnabledAt) ? (t - LoggingEnabledAt): 0;
       }
 
-      void DisableLogging();
+      void DisableLogging() noexcept;
 
-      void EnableLogging();
+      void EnableLogging() noexcept;
 
       const TDebugSetup &DebugSetup;
 

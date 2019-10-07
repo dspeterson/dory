@@ -61,12 +61,12 @@ namespace Dory {
 
         TBatchValues BatchValues;
 
-        TTopicConf()
+        TTopicConf() noexcept
             : Action(TTopicAction::Disable) {
         }
 
         TTopicConf(TTopicAction action,
-            const TBatchValues &batch_values)
+            const TBatchValues &batch_values) noexcept
             : Action(action),
               BatchValues(batch_values) {
         }
@@ -78,10 +78,11 @@ namespace Dory {
 
       using TTopicMap = std::unordered_map<std::string, TTopicConf>;
 
-      static bool StringToTopicAction(const char *s, TTopicAction &result);
+      static bool StringToTopicAction(const char *s,
+          TTopicAction &result) noexcept;
 
       static bool StringToTopicAction(const std::string &s,
-          TTopicAction &result) {
+          TTopicAction &result) noexcept {
         return StringToTopicAction(s.c_str(), result);
       }
 
@@ -95,37 +96,37 @@ namespace Dory {
 
       TBatchConf &operator=(TBatchConf &&) = default;
 
-      size_t GetProduceRequestDataLimit() const {
+      size_t GetProduceRequestDataLimit() const noexcept {
         assert(this);
         return ProduceRequestDataLimit;
       }
 
-      size_t GetMessageMaxBytes() const {
+      size_t GetMessageMaxBytes() const noexcept {
         assert(this);
         return MessageMaxBytes;
       }
 
-      bool CombinedTopicsBatchingIsEnabled() const {
+      bool CombinedTopicsBatchingIsEnabled() const noexcept {
         assert(this);
         return CombinedTopicsBatchingEnabled;
       }
 
-      const TBatchValues &GetCombinedTopicsConfig() const {
+      const TBatchValues &GetCombinedTopicsConfig() const noexcept {
         assert(this);
         return CombinedTopicsConfig;
       }
 
-      TTopicAction GetDefaultTopicAction() const {
+      TTopicAction GetDefaultTopicAction() const noexcept {
         assert(this);
         return DefaultTopicAction;
       }
 
-      const TBatchValues &GetDefaultTopicConfig() const {
+      const TBatchValues &GetDefaultTopicConfig() const noexcept {
         assert(this);
         return DefaultTopicConfig;
       }
 
-      const TTopicMap &GetTopicConfigs() const {
+      const TTopicMap &GetTopicConfigs() const noexcept {
         assert(this);
         return TopicConfigs;
       }

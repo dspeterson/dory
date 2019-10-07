@@ -53,6 +53,18 @@ int Base::Wr::fstat(TDisp disp, std::initializer_list<int> errors, int fd,
   return ret;
 }
 
+int Base::Wr::ftruncate(TDisp disp, std::initializer_list<int> errors,
+    int fd, off_t length) noexcept {
+  const int ret = ::ftruncate(fd, length);
+
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EFAULT, EINVAL, EBADF})) {
+    DieErrno("ftruncate()", errno);
+  }
+
+  return ret;
+}
+
 char *Base::Wr::mkdtemp(TDisp disp, std::initializer_list<int> errors,
     char *tmpl) noexcept {
   char *const ret = ::mkdtemp(tmpl);
@@ -77,6 +89,30 @@ int Base::Wr::mkstemps(TDisp disp, std::initializer_list<int> errors,
   return ret;
 }
 
+int Base::Wr::open(TDisp disp, std::initializer_list<int> errors,
+    const char *pathname, int flags) noexcept {
+  const int ret = ::open(pathname, flags);
+
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EFAULT, EMFILE, ENFILE, ENOMEM})) {
+    DieErrno("open()", errno);
+  }
+
+  return ret;
+}
+
+int Base::Wr::open(TDisp disp, std::initializer_list<int> errors,
+    const char *pathname, int flags, mode_t mode) noexcept {
+  const int ret = ::open(pathname, flags, mode);
+
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EFAULT, EMFILE, ENFILE, ENOMEM})) {
+    DieErrno("open()", errno);
+  }
+
+  return ret;
+}
+
 DIR *Base::Wr::opendir(TDisp disp, std::initializer_list<int> errors,
     const char *name) noexcept {
   DIR *const ret = ::opendir(name);
@@ -96,6 +132,18 @@ int Base::Wr::readdir_r(TDisp disp, std::initializer_list<int> errors,
   if ((ret != 0) && IsFatal(ret, disp, errors, true /* default_fatal */,
       {EBADF})) {
     DieErrno("readdir_r()", ret);
+  }
+
+  return ret;
+}
+
+int Base::Wr::truncate(TDisp disp, std::initializer_list<int> errors,
+    const char *path, off_t length) noexcept {
+  const int ret = ::truncate(path, length);
+
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EFAULT, EINVAL, EBADF})) {
+    DieErrno("truncate()", errno);
   }
 
   return ret;

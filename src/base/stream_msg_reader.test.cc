@@ -77,7 +77,7 @@ namespace {
 
     ~TTestReader() override = default;
 
-    size_t GetNextReadSize() override;
+    size_t GetNextReadSize() noexcept override;
 
     TGetMsgResult GetNextMsg() noexcept override;
 
@@ -85,7 +85,7 @@ namespace {
 
     void BeforeConsumeReadyMsg() noexcept override;
 
-    void TakeStateSnapshot(TStateSnapshot &snapshot);
+    void TakeStateSnapshot(TStateSnapshot &snapshot) noexcept;
 
     void SetMsgReady(size_t offset, size_t size, size_t trailing_data_size);
 
@@ -108,7 +108,7 @@ namespace {
     TOpt<TGetMsgResult> GetNextMsgReturnValue;
   };  // TTestReader
 
-  size_t TTestReader::GetNextReadSize() {
+  size_t TTestReader::GetNextReadSize() noexcept {
     assert(this);
     TakeStateSnapshot(OnGetNextReadSize);
     return GetNextReadSizeReturnValue;
@@ -141,7 +141,7 @@ namespace {
     ReadyStateOnBeforeConsumeReadyMsg.ReadyMsgOffset = GetReadyMsgOffset();
   }
 
-  void TTestReader::TakeStateSnapshot(TStateSnapshot &snapshot) {
+  void TTestReader::TakeStateSnapshot(TStateSnapshot &snapshot) noexcept {
     assert(this);
     snapshot.State = GetState();
     size_t size = GetDataSize();
@@ -149,8 +149,14 @@ namespace {
     if (size == 0) {
       snapshot.Data.clear();
     } else {
-      snapshot.Data.assign(reinterpret_cast<const char *>(GetData()),
-          GetDataSize());
+      try {
+        snapshot.Data.assign(reinterpret_cast<const char *>(GetData()),
+            GetDataSize());
+      } catch (const std::exception &x) {
+        Die(x.what());
+      } catch (...) {
+        Die("Got unknown exception while taking state snapshot");
+      }
     }
 
     snapshot.EndOfInput = AtEndOfInput();

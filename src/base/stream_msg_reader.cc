@@ -34,61 +34,25 @@ using namespace Base;
 
 TStreamMsgReader::TState TStreamMsgReader::Read() {
   assert(this);
+  const size_t read_size = PrepareForRead();
 
-  if (Impl.State != TState::ReadNeeded) {
-    assert(false);
-    return Impl.State;
-  }
+  /* In case we get a read size of 0, return here so we don't get a return
+     value of 0 from read() and interpret it as end of input.  A typical
+     subclass implementation will probably never return 0 from
+     GetNextReadSize() but we can't predict how subclasses will behave.
 
-  assert(Impl.Fd >= 0);
-  assert(Impl.ReadyMsgOffset == 0);
-  assert(Impl.ReadyMsgSize == 0);
-  assert(!Impl.EndOfInput);
-  size_t read_size = GetNextReadSize();
-
-  if (read_size == 0) {
-    /* In case we get a read size of 0, return here so we don't get a return
-       value of 0 from read() and interpret it as end of input.  A typical
-       subclass implementation will probably never return 0 from
-       GetNextReadSize() but we can't predict how subclasses will be
-       implemented. */
-    return Impl.State;
-  }
-
-  Impl.Buf.EnsureSpace(read_size);
-
-  /* Note that read() works with TCP and UNIX domain stream sockets, as well as
+     Note that read() works with TCP and UNIX domain stream sockets, as well as
      standard UNIX pipes. */
-  ssize_t ret = Wr::read(Impl.Fd, Impl.Buf.Space(), read_size);
-
-  if (ret < 0) {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wlogical-op"
-    if ((errno == EAGAIN) || (errno == EWOULDBLOCK) || (errno == EINTR)) {
-      return Impl.State;
-    }
-#pragma GCC diagnostic pop
-
-    IfLt0(ret);  // throws std::system_error
-  }
-
-  if (ret == 0) {
-    /* There is no more data to read, but depending on how a subclass
-       implements GetNextMsg(), the buffer may still contain unprocessed
-       messages. */
-    Impl.EndOfInput = true;
-  }
-
-  Impl.Buf.MarkSpaceConsumed(static_cast<size_t>(ret));
-  return TryAdvanceToNextMsg();
+  return (read_size == 0) ?
+      Impl.State :
+      ProcessReadResult(Wr::read(Impl.Fd, Impl.Buf.Space(), read_size));
 }
 
-TStreamMsgReader::TState TStreamMsgReader::ConsumeReadyMsg() {
+TStreamMsgReader::TState TStreamMsgReader::ConsumeReadyMsg() noexcept {
   assert(this);
 
   if (Impl.State != TState::MsgReady) {
-    assert(false);
-    return Impl.State;
+    Die("Invalid call to TStreamMsgReader::ConsumeReadyMsg()");
   }
 
   assert(Impl.Fd >= 0);
@@ -116,31 +80,26 @@ const uint8_t *TStreamMsgReader::GetReadyMsg() const noexcept {
      reading past the end of the buffer. */
 
   if ((Impl.State != TState::MsgReady) || Impl.RestrictReadyMsgCalls) {
-    assert(false);
-    return &empty_data;
+    Die("Invalid call to TStreamMsgReader::GetReadyMsg()");
   }
 
   if (Impl.Fd < 0) {
-    assert(false);
-    return &empty_data;
+    Die("Invalid file descriptor in TStreamMsgReader::GetReadyMsg()");
   }
 
   size_t data_size = GetDataSize();
 
   if (Impl.ReadyMsgOffset > data_size) {
-    assert(false);
-    return &empty_data;
+    Die("ReadyMsgOffset invalid in TStreamMsgReader::GetReadyMsg()");
   }
 
   if (Impl.ReadyMsgSize > (data_size - Impl.ReadyMsgOffset)) {
-    assert(false);
-    return &empty_data;
+    Die("ReadyMsgSize invalid in TStreamMsgReader::GetReadyMsg()");
   }
 
   if (Impl.TrailingDataSize >
       ((data_size - Impl.ReadyMsgOffset) - Impl.ReadyMsgSize)) {
-    assert(false);
-    return &empty_data;
+    Die("TrailingDataSize invalid in TStreamMsgReader::GetReadyMsg()");
   }
 
   if ((GetDataSize() == 0) || (Impl.ReadyMsgSize == 0)) {
@@ -172,7 +131,7 @@ TStreamMsgReader::TStreamMsgReader(int fd)
     : Impl(fd) {
 }
 
-TStreamMsgReader::TState TStreamMsgReader::TryAdvanceToNextMsg() {
+TStreamMsgReader::TState TStreamMsgReader::TryAdvanceToNextMsg() noexcept {
   assert(this);
   Impl.RestrictReadyMsgCalls = true;
   TGetMsgResult result = GetNextMsg();
@@ -186,9 +145,8 @@ TStreamMsgReader::TState TStreamMsgReader::TryAdvanceToNextMsg() {
               ((GetDataSize() - Impl.ReadyMsgOffset) - Impl.ReadyMsgSize))) {
         /* Make sure a buggy subclass will not cause us to read beyond the end
            of the buffer. */
-        assert(false);
-        Impl.State = TState::DataInvalid;
-        return Impl.State;
+        Die("Attempt to read past end of buffer in "
+            "TStreamMsgReader::TryAdvanceToNextMsg()");
       }
 
       Impl.ReadyMsgOffset = result.MsgOffset;
@@ -209,6 +167,48 @@ TStreamMsgReader::TState TStreamMsgReader::TryAdvanceToNextMsg() {
   }
 
   return Impl.State;
+}
+
+size_t TStreamMsgReader::PrepareForRead() {
+  assert(this);
+
+  if (Impl.State != TState::ReadNeeded) {
+    Die("Invalid call to TStreamMsgReader::Read()");
+  }
+
+  assert(Impl.Fd >= 0);
+  assert(Impl.ReadyMsgOffset == 0);
+  assert(Impl.ReadyMsgSize == 0);
+  assert(!Impl.EndOfInput);
+  const size_t read_size = GetNextReadSize();
+  Impl.Buf.EnsureSpace(read_size);
+  return read_size;
+}
+
+TStreamMsgReader::TState TStreamMsgReader::ProcessReadResult(
+    ssize_t read_result) {
+  assert(this);
+
+  if (read_result < 0) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wlogical-op"
+    if ((errno == EAGAIN) || (errno == EWOULDBLOCK) || (errno == EINTR)) {
+      return Impl.State;
+    }
+#pragma GCC diagnostic pop
+
+    IfLt0(read_result);  // throws std::system_error
+  }
+
+  if (read_result == 0) {
+    /* There is no more data to read, but depending on how a subclass
+       implements GetNextMsg(), the buffer may still contain unprocessed
+       messages. */
+    Impl.EndOfInput = true;
+  }
+
+  Impl.Buf.MarkSpaceConsumed(static_cast<size_t>(read_result));
+  return TryAdvanceToNextMsg();
 }
 
 TStreamMsgReader::TImpl::TImpl(int fd, TBuf<uint8_t> &&buf)

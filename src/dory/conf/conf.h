@@ -45,22 +45,22 @@ namespace Dory {
 
       using TBroker = Util::THostAndPort;
 
-      const TBatchConf &GetBatchConf() const {
+      const TBatchConf &GetBatchConf() const noexcept {
         assert(this);
         return BatchConf;
       }
 
-      const TCompressionConf &GetCompressionConf() const {
+      const TCompressionConf &GetCompressionConf() const noexcept {
         assert(this);
         return CompressionConf;
       }
 
-      const TTopicRateConf &GetTopicRateConf() const {
+      const TTopicRateConf &GetTopicRateConf() const noexcept {
         assert(this);
         return TopicRateConf;
       }
 
-      const std::vector<TBroker> &GetInitialBrokers() const {
+      const std::vector<TBroker> &GetInitialBrokers() const noexcept {
         assert(this);
         return InitialBrokers;
       }

@@ -24,8 +24,10 @@
 #include <initializer_list>
 
 #include <dirent.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include <base/wr/common.h>
 
@@ -48,6 +50,13 @@ namespace Base {
       return fstat(TDisp::AddFatal, {}, fd, buf);
     }
 
+    int ftruncate(TDisp disp, std::initializer_list<int> errors, int fd,
+        off_t length) noexcept;
+
+    inline int ftruncate(int fd, off_t length) noexcept {
+      return ftruncate(TDisp::AddFatal, {}, fd, length);
+    }
+
     char *mkdtemp(TDisp disp, std::initializer_list<int> errors,
         char *tmpl) noexcept;
 
@@ -60,6 +69,20 @@ namespace Base {
 
     inline int mkstemps(char *tmpl, int suffixlen) noexcept {
       return mkstemps(TDisp::AddFatal, {}, tmpl, suffixlen);
+    }
+
+    int open(TDisp disp, std::initializer_list<int> errors,
+        const char *pathname, int flags) noexcept;
+
+    int open(TDisp disp, std::initializer_list<int> errors,
+        const char *pathname, int flags, mode_t mode) noexcept;
+
+    inline int open(const char *pathname, int flags) noexcept {
+      return open(TDisp::AddFatal, {}, pathname, flags);
+    }
+
+    inline int open(const char *pathname, int flags, mode_t mode) noexcept {
+      return open(TDisp::AddFatal, {}, pathname, flags, mode);
     }
 
     DIR *opendir(TDisp disp, std::initializer_list<int> errors,
@@ -75,6 +98,13 @@ namespace Base {
     inline void readdir_r(DIR *dirp, dirent *entry, dirent **result) noexcept {
       const int ret = readdir_r(TDisp::AddFatal, {}, dirp, entry, result);
       assert(ret == 0);
+    }
+
+    int truncate(TDisp disp, std::initializer_list<int> errors,
+        const char *path, off_t length) noexcept;
+
+    inline int truncate(const char *path, off_t length) noexcept {
+      return truncate(TDisp::AddFatal, {}, path, length);
     }
 
     int unlink(TDisp disp, std::initializer_list<int> errors,

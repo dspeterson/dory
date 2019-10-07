@@ -34,6 +34,7 @@
 #include <base/error_util.h>
 #include <base/io_util.h>
 #include <base/no_default_case.h>
+#include <base/wr/sys_util.h>
 #include <socket/address.h>
 
 using namespace Base;
@@ -97,7 +98,9 @@ TSingleClientHandlerBase::TSendMetadataResult
 TV0ClientHandler::SendMetadataResponse(const TMetadataRequest &request,
     int16_t error, const std::string &error_topic, size_t delay) {
   char host_name[1024];
-  IfLt0(gethostname(host_name, sizeof(host_name)));
+  const int ret = Wr::gethostname(Wr::TDisp::AddFatal, {ENAMETOOLONG},
+      host_name, sizeof(host_name));
+  assert(ret == 0);
   size_t host_name_len = std::strlen(host_name);
   const char *host_name_end = &host_name[host_name_len];
   TMetadataResponseWriter writer;

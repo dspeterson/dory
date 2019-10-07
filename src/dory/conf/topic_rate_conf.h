@@ -53,9 +53,9 @@ namespace Dory {
         Base::TOpt<size_t> MaxCount;
 
         /* Default constructor specifies no limit. */
-        TConf() = default;
+        TConf() noexcept = default;
 
-        TConf(size_t interval, size_t max_count)
+        TConf(size_t interval, size_t max_count) noexcept
             : Interval(interval),
               MaxCount(max_count) {
         }
@@ -77,12 +77,12 @@ namespace Dory {
 
       TTopicRateConf &operator=(TTopicRateConf &&) = default;
 
-      const TConf &GetDefaultTopicConfig() const {
+      const TConf &GetDefaultTopicConfig() const noexcept {
         assert(this);
         return DefaultTopicConfig;
       }
 
-      const TTopicMap &GetTopicConfigs() const {
+      const TTopicMap &GetTopicConfigs() const noexcept {
         assert(this);
         return TopicConfigs;
       }
