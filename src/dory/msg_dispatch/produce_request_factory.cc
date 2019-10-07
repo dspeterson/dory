@@ -99,8 +99,6 @@ TOpt<TProduceRequest> TProduceRequestFactory::BuildRequest(
 
   if (request.second.empty()) {
     assert(false);
-
-
     BugAllTopicsEmpty.Increment();
     LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Bug!!! TAllTopics is empty";
     return TOpt<TProduceRequest>();
