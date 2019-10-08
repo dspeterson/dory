@@ -452,7 +452,7 @@ static std::string BuildModeString(const TOpt<mode_t> &opt_mode) {
   if (opt_mode.IsKnown()) {
     std::snprintf(socket_mode, sizeof(socket_mode), "0%o", *opt_mode);
   } else {
-    strncpy(socket_mode, "<unspecified>", sizeof(socket_mode));
+    std::strncpy(socket_mode, "<unspecified>", sizeof(socket_mode));
   }
 
   socket_mode[sizeof(socket_mode) - 1] = '\0';

@@ -100,6 +100,20 @@ namespace Base {
       assert(ret == 0);
     }
 
+    int rename(TDisp disp, std::initializer_list<int> errors,
+        const char *oldpath, const char *newpath) noexcept;
+
+    inline int rename(const char *oldpath, const char *newpath) noexcept {
+      return rename(TDisp::AddFatal, {}, oldpath, newpath);
+    }
+
+    int stat(TDisp disp, std::initializer_list<int> errors, const char *path,
+        struct stat *buf) noexcept;
+
+    inline int stat(const char *path, struct stat *buf) noexcept {
+      return stat(TDisp::AddFatal, {}, path, buf);
+    }
+
     int truncate(TDisp disp, std::initializer_list<int> errors,
         const char *path, off_t length) noexcept;
 

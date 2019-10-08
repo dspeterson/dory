@@ -42,6 +42,8 @@
 #include <base/gettid.h>
 #include <base/no_default_case.h>
 #include <base/time_util.h>
+#include <base/wr/fd_util.h>
+#include <base/wr/file_util.h>
 #include <dory/util/msg_util.h>
 #include <log/log.h>
 #include <third_party/base64/base64.h>
@@ -538,14 +540,14 @@ GetOldLogFileSizes(const char *log_dir, const char *log_filename) {
     file_path += "/";
     file_path += name;
     struct stat stat_buf;
-    int ret = stat(file_path.c_str(), &stat_buf);
+    int ret = Wr::stat(file_path.c_str(), &stat_buf);
 
     if (ret < 0) {
       if (errno != ENOENT) {
         char buf[256];
-        Strerror(errno, buf, sizeof(buf));
+        const char *msg = Strerror(errno, buf, sizeof(buf));
         LOG(TPri::WARNING) << "Failed to stat() old discard logfile "
-            << file_path << ": " << buf;
+            << file_path << ": " << msg;
       }
 
       continue;
@@ -597,11 +599,11 @@ bool TDiscardFileLogger::TArchiveCleaner::HandleCleanRequest() {
   /* Delete old logfiles, from oldest to newest, until total size limit is no
      longer violated. */
   for (const TOldLogFileInfo &info : old_log_files) {
-    if (unlink(info.AbsolutePath.c_str()) && (errno != ENOENT)) {
+    if (Wr::unlink(info.AbsolutePath.c_str()) && (errno != ENOENT)) {
       char buf[256];
-      Strerror(errno, buf, sizeof(buf));
+      const char *msg = Strerror(errno, buf, sizeof(buf));
       LOG(TPri::WARNING) << "Failed to unlink old discard logfile "
-          << info.AbsolutePath << ": " << buf;
+          << info.AbsolutePath << ": " << msg;
     } else {
       total_size -= info.Size;
 
@@ -633,7 +635,9 @@ void TDiscardFileLogger::TArchiveCleaner::DoRun() {
       item.revents = 0;
     }
 
-    int ret = IfLt0(poll(&events[0], events.size(), -1));
+    /* We should have all signals blocked, so treat EINTR as fatal. */
+    int ret = Wr::poll(Wr::TDisp::AddFatal, {EINTR}, &events[0],
+        events.size(), -1);
     assert(ret > 0);
 
     if (shutdown_request_event.revents) {
@@ -728,15 +732,15 @@ void TDiscardFileLogger::EnforceMaxPrefixLen(std::vector<uint8_t> &msg) {
 
 TFd TDiscardFileLogger::OpenLogPath(const char *log_path) {
   assert(log_path);
-  TFd fd = open(log_path, O_CREAT | O_APPEND | O_WRONLY,
-                S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+  TFd fd = Wr::open(log_path, O_CREAT | O_APPEND | O_WRONLY,
+      S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 
   if (!fd.IsOpen()) {
     char buf[256];
-    Strerror(errno, buf, sizeof(buf));
+    const char *msg = Strerror(errno, buf, sizeof(buf));
     LOG(TPri::WARNING)
         << "Disabling discard logfile mechanism due to failure to open "
-        << "discard logfile " << log_path << " for append: " << buf;
+        << "discard logfile " << log_path << " for append: " << msg;
     DisableLogging();
   }
 
@@ -758,7 +762,8 @@ bool TDiscardFileLogger::CheckMaxFileSize(uint64_t next_entry_size) {
   assert(ArchiveCleaner);
   assert(LogFd.IsOpen());
   struct stat stat_buf;
-  IfLt0(fstat(LogFd, &stat_buf));
+  int ret = fstat(Wr::TDisp::Nonfatal, {}, LogFd, &stat_buf);
+  assert(ret == 0);
 
   if (!S_ISREG(stat_buf.st_mode)) {
     LOG(TPri::WARNING)
@@ -778,14 +783,14 @@ bool TDiscardFileLogger::CheckMaxFileSize(uint64_t next_entry_size) {
   rename_path += ".";
   rename_path += std::to_string(epoch_ms);
   LogFd.Reset();
-  int ret = rename(LogPath.c_str(), rename_path.c_str());
+  ret = Wr::rename(LogPath.c_str(), rename_path.c_str());
 
   if (ret < 0) {
     char buf[256];
-    Strerror(errno, buf, sizeof(buf));
+    const char *msg = Strerror(errno, buf, sizeof(buf));
     LOG(TPri::WARNING)
         << "Disabling discard file logging on failure to rename logfile: "
-        << buf;
+        << msg;
     DisableLogging();
     return false;
   }
@@ -824,9 +829,13 @@ void TDiscardFileLogger::WriteToLog(const std::string &log_entry) {
     ArchiveCleaner->SendCleanRequest();
   }
 
-  ssize_t ret = IfLt0(write(LogFd, log_entry.data(), log_entry.size()));
+  ssize_t ret = Wr::write(LogFd, log_entry.data(), log_entry.size());
 
-  if (static_cast<size_t>(ret) < log_entry.size()) {
+  if (ret < 0) {
+    char buf[256];
+    const char *msg = Strerror(errno, buf, sizeof(buf));
+    LOG(TPri::ERR) << "Failed to write to discard logfile: " << msg;
+  } else if (static_cast<size_t>(ret) < log_entry.size()) {
     LOG(TPri::ERR)
         << "write() to discard logfile returned short count: expected "
         << log_entry.size() << " actual " << ret;

@@ -22,6 +22,7 @@
 #include <base/wr/file_util.h>
 
 #include <cerrno>
+#include <cstdio>
 
 #include <unistd.h>
 
@@ -132,6 +133,30 @@ int Base::Wr::readdir_r(TDisp disp, std::initializer_list<int> errors,
   if ((ret != 0) && IsFatal(ret, disp, errors, true /* default_fatal */,
       {EBADF})) {
     DieErrno("readdir_r()", ret);
+  }
+
+  return ret;
+}
+
+int Base::Wr::rename(TDisp disp, std::initializer_list<int> errors,
+    const char *oldpath, const char *newpath) noexcept {
+  const int ret = ::rename(oldpath, newpath);
+
+  if ((ret != 0) && IsFatal(ret, disp, errors, true /* default_fatal */,
+      {EFAULT, ENOMEM})) {
+    DieErrno("rename()", ret);
+  }
+
+  return ret;
+}
+
+int Base::Wr::stat(TDisp disp, std::initializer_list<int> errors,
+    const char *path, struct stat *buf) noexcept {
+  const int ret = ::stat(path, buf);
+
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EBADF, EFAULT, ENOMEM})) {
+    DieErrno("stat()", errno);
   }
 
   return ret;
