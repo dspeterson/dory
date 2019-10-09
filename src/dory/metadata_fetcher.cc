@@ -33,6 +33,7 @@
 #include <base/no_default_case.h>
 #include <base/system_error_codes.h>
 #include <base/time_util.h>
+#include <base/wr/fd_util.h>
 #include <dory/kafka_proto/request_response.h>
 #include <dory/util/connect_to_host.h>
 #include <dory/util/poll_array.h>
@@ -259,8 +260,12 @@ bool TMetadataFetcher::ReadResponse(int timeout_ms) {
     int time_left = (timeout_ms < 0) ?
         -1 : (timeout_ms - static_cast<int>(elapsed));
 
-    /* Don't check for EINTR, since this thread has signals masked. */
-    if (IfLt0(poll(poll_array, poll_array.Size(), time_left)) == 0) {
+    /* Treat EINTR as fatal, since this thread should have signals masked. */
+    const int ret = Wr::poll(Wr::TDisp::AddFatal, {EINTR}, poll_array,
+        poll_array.Size(), time_left);
+    assert(ret >= 0);
+
+    if (ret == 0) {
       MetadataResponseReadTimeout.Increment();
       return false;
     }
@@ -278,7 +283,12 @@ bool TMetadataFetcher::ReadResponse(int timeout_ms) {
         return false;
       }
 
-      throw;  // anything else is fatal
+      char tmp_buf[256];
+      const char *err_msg = Strerror(x.code().value(), tmp_buf,
+          sizeof(tmp_buf));
+      std::string msg("Failed to read metadata response: ");
+      msg += err_msg;
+      Die(msg.c_str());
     }
 
     current_time = GetMonotonicRawMilliseconds();

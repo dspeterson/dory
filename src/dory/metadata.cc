@@ -40,7 +40,7 @@ DEFINE_COUNTER(MetadataPartitionHasUnknownBroker);
 DEFINE_COUNTER(MetadataSanityCheckFail);
 DEFINE_COUNTER(MetadataSanityCheckSuccess);
 
-bool TMetadata::TBroker::operator==(const TBroker &that) const {
+bool TMetadata::TBroker::operator==(const TBroker &that) const noexcept {
   assert(this);
   return (Id == that.Id) && (Hostname == that.Hostname) &&
          (Port == that.Port) && (InService == that.InService);
@@ -339,7 +339,7 @@ bool TMetadata::operator==(const TMetadata &that) const {
   return CompareBrokers(that) && CompareTopics(that);
 }
 
-int TMetadata::FindTopicIndex(const std::string &topic) const {
+int TMetadata::FindTopicIndex(const std::string &topic) const noexcept {
   assert(this);
   auto iter = TopicNameToIndex.find(topic);
 
@@ -361,7 +361,7 @@ int TMetadata::FindTopicIndex(const std::string &topic) const {
 }
 
 const int32_t *TMetadata::FindPartitionChoices(const std::string &topic,
-    size_t broker_index, size_t &num_choices) const {
+    size_t broker_index, size_t &num_choices) const noexcept {
   assert(this);
   num_choices = 0;
   int topic_index = FindTopicIndex(topic);
@@ -732,7 +732,7 @@ bool TMetadata::CompareBrokers(const TMetadata &that) const {
   assert(this);
 
   struct t_hasher {
-    size_t operator()(const TBroker &broker) const {
+    size_t operator()(const TBroker &broker) const noexcept {
       assert(this);
       return StringHash(broker.Hostname) ^
              Int32Hash(broker.Id ^ broker.Port ^ broker.InService);
@@ -764,29 +764,29 @@ bool TMetadata::SingleTopicCompare(const TMetadata &that,
     int32_t BrokerId;
     int16_t ErrorCode;
 
-    t_part(int32_t id, int32_t broker_id, int16_t error_code)
+    t_part(int32_t id, int32_t broker_id, int16_t error_code) noexcept
         : Id(id),
           BrokerId(broker_id),
           ErrorCode(error_code) {
     }
 
-    t_part(const t_part &) = default;
-    t_part &operator=(const t_part &) = default;
+    t_part(const t_part &) noexcept = default;
+    t_part &operator=(const t_part &) noexcept = default;
 
-    bool operator==(const t_part &that) const {
+    bool operator==(const t_part &that) const noexcept {
       assert(this);
       return (Id == that.Id) && (BrokerId == that.BrokerId) &&
              (ErrorCode == that.ErrorCode);
     }
 
-    bool operator!=(const t_part &that) const {
+    bool operator!=(const t_part &that) const noexcept {
       assert(this);
       return !(*this == that);
     }
   };  // t_part
 
   struct t_hasher {
-    size_t operator()(const t_part &part) const {
+    size_t operator()(const t_part &part) const noexcept {
       assert(this);
       return Int32Hash(part.Id ^ part.BrokerId ^ part.ErrorCode);
     }

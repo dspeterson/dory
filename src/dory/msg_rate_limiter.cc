@@ -40,7 +40,8 @@ bool TMsgRateLimiter::WouldExceedLimit(const std::string &topic,
   return state.Enable && (state.Count > state.MaxCount);
 }
 
-bool TMsgRateLimiter::RateLimitingIsEnabled(const Conf::TTopicRateConf &conf) {
+bool TMsgRateLimiter::RateLimitingIsEnabled(
+    const Conf::TTopicRateConf &conf) noexcept {
   if (conf.GetDefaultTopicConfig().MaxCount.IsKnown()) {
     return true;
   }

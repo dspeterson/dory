@@ -45,22 +45,22 @@ namespace Dory {
     public:
     class TBroker final {
       public:
-      int32_t GetId() const {
+      int32_t GetId() const noexcept {
         assert(this);
         return Id;
       }
 
-      const std::string &GetHostname() const {
+      const std::string &GetHostname() const noexcept {
         assert(this);
         return Hostname;
       }
 
-      uint16_t GetPort() const {
+      uint16_t GetPort() const noexcept {
         assert(this);
         return Port;
       }
 
-      bool IsInService() const {
+      bool IsInService() const noexcept {
         assert(this);
         return InService;
       }
@@ -73,9 +73,9 @@ namespace Dory {
 
       TBroker &operator=(TBroker &&) = default;
 
-      bool operator==(const TBroker &that) const;
+      bool operator==(const TBroker &that) const noexcept;
 
-      bool operator!=(const TBroker &that) const {
+      bool operator!=(const TBroker &that) const noexcept {
         assert(this);
         return !(*this == that);
       }
@@ -87,7 +87,7 @@ namespace Dory {
             Port(port) {
       }
 
-      void MarkInService() {
+      void MarkInService() noexcept {
         assert(this);
         InService = true;
       }
@@ -110,27 +110,27 @@ namespace Dory {
 
     class TPartition final {
       public:
-      int32_t GetId() const {
+      int32_t GetId() const noexcept {
         assert(this);
         return Id;
       }
 
-      size_t GetBrokerIndex() const {
+      size_t GetBrokerIndex() const noexcept {
         assert(this);
         return BrokerIndex;
       }
 
-      int16_t GetErrorCode() const {
+      int16_t GetErrorCode() const noexcept {
         assert(this);
         return ErrorCode;
       }
 
-      TPartition(const TPartition &) = default;
+      TPartition(const TPartition &) noexcept = default;
 
-      TPartition &operator=(const TPartition &) = default;
+      TPartition &operator=(const TPartition &) noexcept = default;
 
       private:
-      TPartition(int32_t id, size_t broker_index, int16_t error_code)
+      TPartition(int32_t id, size_t broker_index, int16_t error_code) noexcept
           : Id(id),
             BrokerIndex(broker_index),
             ErrorCode(error_code) {
@@ -151,22 +151,23 @@ namespace Dory {
     private:
     class TPartitionChoices final {
       public:
-      size_t GetTopicBrokerVecIndex() const {
+      size_t GetTopicBrokerVecIndex() const noexcept {
         assert(this);
         return TopicBrokerVecIndex;
       }
 
-      size_t GetTopicBrokerVecNumItems() const {
+      size_t GetTopicBrokerVecNumItems() const noexcept {
         assert(this);
         return TopicBrokerVecNumItems;
       }
 
-      TPartitionChoices(const TPartitionChoices &) = default;
+      TPartitionChoices(const TPartitionChoices &) noexcept = default;
 
-      TPartitionChoices &operator=(const TPartitionChoices &) = default;
+      TPartitionChoices &operator=(
+          const TPartitionChoices &) noexcept = default;
 
       TPartitionChoices(size_t topic_broker_vec_index,
-          size_t topic_broker_vec_num_items)
+          size_t topic_broker_vec_num_items) noexcept
           : TopicBrokerVecIndex(topic_broker_vec_index),
             TopicBrokerVecNumItems(topic_broker_vec_num_items) {
       }
@@ -184,17 +185,18 @@ namespace Dory {
     public:
     class TTopic final {
       public:
-      const std::vector<TPartition> &GetOkPartitions() const {
+      const std::vector<TPartition> &GetOkPartitions() const noexcept {
         assert(this);
         return OkPartitions;
       }
 
-      const std::vector<TPartition> &GetOutOfServicePartitions() const {
+      const std::vector<TPartition> &
+      GetOutOfServicePartitions() const noexcept {
         assert(this);
         return OutOfServicePartitions;
       }
 
-      const std::vector<TPartition> &GetAllPartitions() const {
+      const std::vector<TPartition> &GetAllPartitions() const noexcept {
         assert(this);
         return AllPartitions;
       }
@@ -307,22 +309,23 @@ namespace Dory {
       return !(*this == that);
     }
 
-    const std::vector<TBroker> &GetBrokers() const {
+    const std::vector<TBroker> &GetBrokers() const noexcept {
       assert(this);
       return Brokers;
     }
 
-    size_t NumInServiceBrokers() const {
+    size_t NumInServiceBrokers() const noexcept {
       assert(this);
       return InServiceBrokerCount;
     }
 
-    const std::vector<TTopic> &GetTopics() const {
+    const std::vector<TTopic> &GetTopics() const noexcept {
       assert(this);
       return Topics;
     }
 
-    const std::unordered_map<std::string, size_t> &GetTopicNameMap() const {
+    const std::unordered_map<std::string, size_t> &
+    GetTopicNameMap() const noexcept {
       assert(this);
       return TopicNameToIndex;
     }
@@ -334,7 +337,7 @@ namespace Dory {
        It's easy to accidentally store the return value in a variable of type
        size_t, test the value for negativity, and not detect a case where a
        topic doesn't exist. */
-    int FindTopicIndex(const std::string &topic) const;
+    int FindTopicIndex(const std::string &topic) const noexcept;
 
     /* For the given topic and broker (identified by index in vector returned
        by GetBrokers()), return a pointer to an array of partition IDs to
@@ -342,7 +345,7 @@ namespace Dory {
        on the given broker.  On return, 'num_choices' will contain # of
        elements in returned array, or 0 in case where nullptr is returned. */
     const int32_t *FindPartitionChoices(const std::string &topic,
-        size_t broker_index, size_t &num_choices) const;
+        size_t broker_index, size_t &num_choices) const noexcept;
 
     bool SanityCheckOkPartitions(const TTopic &t,
         std::unordered_set<size_t> &in_service_broker_indexes,

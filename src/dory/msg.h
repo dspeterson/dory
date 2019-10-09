@@ -230,7 +230,7 @@ namespace Dory {
 
     /* The first 'KeySize' bytes of 'KeyAndValue' are the key.  The remaining
        bytes are the value. */
-    size_t KeySize;
+    const size_t KeySize;
 
     /* True iff. the body was truncated.  This happens to messages that exceed
        the maximum allowed length. */

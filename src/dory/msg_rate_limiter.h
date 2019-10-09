@@ -74,10 +74,11 @@ namespace Dory {
            'IntervalStart' */
         size_t Count = 0;
 
-        TTopicState() = default;
+        TTopicState() noexcept = default;
     };  // TTopicState
 
-    static bool RateLimitingIsEnabled(const Conf::TTopicRateConf &conf);
+    static bool RateLimitingIsEnabled(
+        const Conf::TTopicRateConf &conf) noexcept;
 
     TTopicState &GetTopicState(const std::string &topic, uint64_t timestamp);
 

@@ -34,15 +34,15 @@ namespace Dory {
     NO_COPY_SEMANTICS(TMetadataTimestamp);
 
     public:
-    TMetadataTimestamp() = default;
+    TMetadataTimestamp() noexcept = default;
 
     /* Called by router thread when it updates its metadata. */
-    void RecordUpdate(bool modified);
+    void RecordUpdate(bool modified) noexcept;
 
     /* Called by Mongoose thread when it needs to report how recent the
        metadata is.  Results are provided in milliseconds since the epoch. */
     void GetTimes(uint64_t &last_update_time,
-                  uint64_t &last_modified_time) const;
+                  uint64_t &last_modified_time) const noexcept;
 
     private:
     /* Protects 'LastUpdateTime' and 'LastModifiedTime' from concurrent access

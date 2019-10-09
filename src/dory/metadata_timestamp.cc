@@ -28,7 +28,7 @@
 using namespace Base;
 using namespace Dory;
 
-void TMetadataTimestamp::RecordUpdate(bool modified) {
+void TMetadataTimestamp::RecordUpdate(bool modified) noexcept {
   assert(this);
   uint64_t now = GetEpochMilliseconds();
 
@@ -41,7 +41,7 @@ void TMetadataTimestamp::RecordUpdate(bool modified) {
 }
 
 void TMetadataTimestamp::GetTimes(uint64_t &last_update_time,
-    uint64_t &last_modified_time) const {
+    uint64_t &last_modified_time) const noexcept {
   assert(this);
 
   std::lock_guard<std::mutex> lock(Mutex);
