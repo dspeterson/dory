@@ -50,9 +50,9 @@ namespace Dory {
       virtual void SetProduceProtocol(
           KafkaProto::Produce::TProduceProtocol *protocol) noexcept = 0;
 
-      virtual TState GetState() const = 0;
+      virtual TState GetState() const noexcept = 0;
 
-      virtual size_t GetBrokerCount() const = 0;
+      virtual size_t GetBrokerCount() const noexcept = 0;
 
       /* Create a connector thread for each broker and start the threads
          running, but don't wait for them to finish initialization.  If a
@@ -112,13 +112,13 @@ namespace Dory {
          send or receive. */
 
       /* Becomes readable when a connector thread hits the pause button. */
-      virtual const Base::TFd &GetPauseFd() const = 0;
+      virtual const Base::TFd &GetPauseFd() const noexcept = 0;
 
       /* Becomes readable when all threads have shut down (due to pause,
          metadata refresh, slow shutdown, emergency shutdown).  Then router
          thread can call JoinAll() without blocking.  The last connector thread
          to shut down makes this readable. */
-      virtual const Base::TFd &GetShutdownWaitFd() const = 0;    
+      virtual const Base::TFd &GetShutdownWaitFd() const noexcept = 0;
 
       /* Once the FD returned by GetShutdownWaitFd() becomes readable, this can
          be called without blocking indefinitely. */
@@ -126,7 +126,7 @@ namespace Dory {
 
       /* Get status after shutdown finished.  This can be called once JoinAll()
          has been called. */
-      virtual bool ShutdownWasOk() const = 0;
+      virtual bool ShutdownWasOk() const noexcept = 0;
 
       /* After shutdown is finished, get all messages that didn't get an ACK
          from the given broker. */
@@ -139,7 +139,7 @@ namespace Dory {
       GetSendWaitQueueAfterShutdown(size_t broker_index) = 0;
 
       /* For testing. */
-      virtual size_t GetAckCount() const = 0;
+      virtual size_t GetAckCount() const noexcept = 0;
 
       protected:
       TKafkaDispatcherApi() = default;

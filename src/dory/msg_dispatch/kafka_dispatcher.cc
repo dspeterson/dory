@@ -60,12 +60,12 @@ void TKafkaDispatcher::SetProduceProtocol(
   Ds.ProduceProtocol.reset(protocol);
 }
 
-TKafkaDispatcherApi::TState TKafkaDispatcher::GetState() const {
+TKafkaDispatcherApi::TState TKafkaDispatcher::GetState() const noexcept {
   assert(this);
   return State;
 }
 
-size_t TKafkaDispatcher::GetBrokerCount() const {
+size_t TKafkaDispatcher::GetBrokerCount() const noexcept {
   assert(this);
   return Connectors.size();
 }
@@ -235,12 +235,12 @@ void TKafkaDispatcher::StartFastShutdown() {
   State = TState::ShuttingDown;
 }
 
-const TFd &TKafkaDispatcher::GetPauseFd() const {
+const TFd &TKafkaDispatcher::GetPauseFd() const noexcept {
   assert(this);
   return Ds.PauseButton.GetFd();
 }
 
-const TFd &TKafkaDispatcher::GetShutdownWaitFd() const {
+const TFd &TKafkaDispatcher::GetShutdownWaitFd() const noexcept {
   assert(this);
   return Ds.GetShutdownWaitFd();
 }
@@ -271,7 +271,7 @@ void TKafkaDispatcher::JoinAll() {
   State = TState::Stopped;
 }
 
-bool TKafkaDispatcher::ShutdownWasOk() const {
+bool TKafkaDispatcher::ShutdownWasOk() const noexcept {
   assert(this);
   return OkShutdown;
 }
@@ -311,7 +311,7 @@ TKafkaDispatcher::GetSendWaitQueueAfterShutdown(size_t broker_index) {
   return Connectors[broker_index]->GetSendWaitQueueAfterShutdown();
 }
 
-size_t TKafkaDispatcher::GetAckCount() const {
+size_t TKafkaDispatcher::GetAckCount() const noexcept {
   assert(this);
   return Ds.GetAckCount();
 }

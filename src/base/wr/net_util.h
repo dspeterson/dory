@@ -34,12 +34,29 @@ namespace Base {
 
   namespace Wr {
 
-    int connect(TDisp disp, std::initializer_list<int> errors, int sockfd,
-        const struct sockaddr *addr, socklen_t addrlen) noexcept;
+    int bind(TDisp disp, std::initializer_list<int> errors, int sockfd,
+        const sockaddr *addr, socklen_t addrlen) noexcept;
 
-    inline int connect(int sockfd, const struct sockaddr *addr,
+    inline int bind(int sockfd, const sockaddr *addr,
+        socklen_t addrlen) noexcept {
+      return bind(TDisp::AddFatal, {}, sockfd, addr, addrlen);
+    }
+
+    int connect(TDisp disp, std::initializer_list<int> errors, int sockfd,
+        const sockaddr *addr, socklen_t addrlen) noexcept;
+
+    inline int connect(int sockfd, const sockaddr *addr,
         socklen_t addrlen) noexcept {
       return connect(TDisp::AddFatal, {}, sockfd, addr, addrlen);
+    }
+
+    int getsockname(TDisp disp, std::initializer_list<int> errors, int sockfd,
+        sockaddr *addr, socklen_t *addrlen) noexcept;
+
+    inline void getsockname(int sockfd, sockaddr *addr,
+        socklen_t *addrlen) noexcept {
+      const int ret = getsockname(TDisp::AddFatal, {}, sockfd, addr, addrlen);
+      assert(ret == 0);
     }
 
     int listen(TDisp disp, std::initializer_list<int> errors, int sockfd,

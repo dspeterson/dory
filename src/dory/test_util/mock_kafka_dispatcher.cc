@@ -47,7 +47,7 @@ void TMockKafkaDispatcher::SetProduceProtocol(
 
 }
 
-TKafkaDispatcherApi::TState TMockKafkaDispatcher::GetState() const {
+TKafkaDispatcherApi::TState TMockKafkaDispatcher::GetState() const noexcept {
   assert(this);
 
 
@@ -56,7 +56,7 @@ TKafkaDispatcherApi::TState TMockKafkaDispatcher::GetState() const {
   return TState::Stopped;
 }
 
-size_t TMockKafkaDispatcher::GetBrokerCount() const {
+size_t TMockKafkaDispatcher::GetBrokerCount() const noexcept {
   assert(this);
 
 
@@ -107,16 +107,6 @@ void TMockKafkaDispatcher::DispatchNow(
 
 }
 
-void TMockKafkaDispatcher::Dispatch(TMsg::TPtr &&/*msg*/,
-    size_t /*broker_index*/) {
-  assert(this);
-
-
-
-
-
-}
-
 void TMockKafkaDispatcher::StartSlowShutdown(uint64_t /*start_time*/) {
   assert(this);
 
@@ -135,7 +125,7 @@ void TMockKafkaDispatcher::StartFastShutdown() {
 
 }
 
-const TFd &TMockKafkaDispatcher::GetPauseFd() const {
+const TFd &TMockKafkaDispatcher::GetPauseFd() const noexcept {
   assert(this);
 
 
@@ -146,7 +136,7 @@ const TFd &TMockKafkaDispatcher::GetPauseFd() const {
   return placeholder;
 }
 
-const TFd &TMockKafkaDispatcher::GetShutdownWaitFd() const {
+const TFd &TMockKafkaDispatcher::GetShutdownWaitFd() const noexcept {
   assert(this);
 
 
@@ -166,7 +156,7 @@ void TMockKafkaDispatcher::JoinAll() {
 
 }
 
-bool TMockKafkaDispatcher::ShutdownWasOk() const {
+bool TMockKafkaDispatcher::ShutdownWasOk() const noexcept {
   assert(this);
 
 
@@ -198,7 +188,7 @@ TMockKafkaDispatcher::GetSendWaitQueueAfterShutdown(size_t /*broker_index*/) {
   return std::list<std::list<TMsg::TPtr>>();
 }
 
-size_t TMockKafkaDispatcher::GetAckCount() const {
+size_t TMockKafkaDispatcher::GetAckCount() const noexcept {
   assert(this);
 
 

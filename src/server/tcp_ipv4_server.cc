@@ -28,6 +28,7 @@
 
 #include <base/error_util.h>
 #include <base/fd.h>
+#include <base/wr/net_util.h>
 
 using namespace Base;
 using namespace Server;
@@ -37,7 +38,7 @@ TTcpIpv4Server::TTcpIpv4Server(int backlog, in_addr_t bind_addr,
     std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
     const TFatalErrorHandler &fatal_error_handler)
     : TStreamServerBase(backlog,
-          reinterpret_cast<struct sockaddr *>(&ClientAddr), sizeof(ClientAddr),
+          reinterpret_cast<sockaddr *>(&ClientAddr), sizeof(ClientAddr),
           std::move(connection_handler), fatal_error_handler),
       BindAddr(bind_addr),
       Port(port) {
@@ -48,37 +49,37 @@ TTcpIpv4Server::TTcpIpv4Server(int backlog, in_addr_t bind_addr,
     std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
     TFatalErrorHandler &&fatal_error_handler)
     : TStreamServerBase(backlog,
-          reinterpret_cast<struct sockaddr *>(&ClientAddr), sizeof(ClientAddr),
+          reinterpret_cast<sockaddr *>(&ClientAddr), sizeof(ClientAddr),
           std::move(connection_handler), std::move(fatal_error_handler)),
       BindAddr(bind_addr),
       Port(port) {
 }
 
-in_port_t TTcpIpv4Server::GetBindPort() const {
+in_port_t TTcpIpv4Server::GetBindPort() const noexcept {
   assert(this);
 
   if (!IsBound()) {
     Die("Cannot get bind port for unbound listening socket");
   }
 
-  struct sockaddr_in addr;
+  sockaddr_in addr;
   socklen_t addrlen = sizeof(addr);
-  IfLt0(getsockname(GetListeningSocket(),
-      reinterpret_cast<struct sockaddr *>(&addr), &addrlen));
+  Wr::getsockname(GetListeningSocket(), reinterpret_cast<sockaddr *>(&addr),
+      &addrlen);
   return ntohs(addr.sin_port);
 }
 
 void TTcpIpv4Server::InitListeningSocket(TFd &sock) {
   assert(this);
-  TFd sock_fd(socket(AF_INET, SOCK_STREAM, 0));
+  TFd sock_fd(Wr::socket(Wr::TDisp::Nonfatal, {}, AF_INET, SOCK_STREAM, 0));
   int flag = true;
-  IfLt0(setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag)));
-  struct sockaddr_in serv_addr;
+  Wr::setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
+  sockaddr_in serv_addr;
   std::memset(&serv_addr, 0, sizeof(serv_addr));
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_port = htons(Port);
   serv_addr.sin_addr.s_addr = BindAddr;
-  IfLt0(bind(sock_fd, reinterpret_cast<const struct sockaddr *>(&serv_addr),
+  IfLt0(Wr::bind(sock_fd, reinterpret_cast<const sockaddr *>(&serv_addr),
       sizeof(serv_addr)));
   sock = std::move(sock_fd);
 }

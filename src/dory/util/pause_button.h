@@ -38,7 +38,7 @@ namespace Dory {
       public:
       TPauseButton() = default;
 
-      const Base::TFd &GetFd() const {
+      const Base::TFd &GetFd() const noexcept {
         assert(this);
         return Button.GetFd();
       }

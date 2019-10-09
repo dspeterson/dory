@@ -40,32 +40,30 @@ namespace Server {
 
     public:
     /* Note: 'bind_addr' will typically be 'in6addr_any'. */
-    TTcpIpv6Server(int backlog, const struct in6_addr &bind_addr,
-        in_port_t port, uint32_t scope_id,
+    TTcpIpv6Server(int backlog, const in6_addr &bind_addr, in_port_t port,
+        uint32_t scope_id,
         std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
         const TFatalErrorHandler &fatal_error_handler);
 
     /* Note: 'bind_addr' will typically be 'in6addr_any'. */
-    TTcpIpv6Server(int backlog, const struct in6_addr &bind_addr,
-        in_port_t port,
+    TTcpIpv6Server(int backlog, const in6_addr &bind_addr, in_port_t port,
         std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
         const TFatalErrorHandler &fatal_error_handler);
 
     /* Note: 'bind_addr' will typically be 'in6addr_any'. */
-    TTcpIpv6Server(int backlog, const struct in6_addr &bind_addr,
-        in_port_t port, uint32_t scope_id,
+    TTcpIpv6Server(int backlog, const in6_addr &bind_addr, in_port_t port,
+        uint32_t scope_id,
         std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
         TFatalErrorHandler &&fatal_error_handler);
 
     /* Note: 'bind_addr' will typically be 'in6addr_any'. */
-    TTcpIpv6Server(int backlog, const struct in6_addr &bind_addr,
-        in_port_t port,
+    TTcpIpv6Server(int backlog, const in6_addr &bind_addr, in_port_t port,
         std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
         TFatalErrorHandler &&fatal_error_handler);
 
     ~TTcpIpv6Server() override = default;
 
-    const struct in6_addr &GetBindAddr() const noexcept {
+    const in6_addr &GetBindAddr() const noexcept {
       assert(this);
       return BindAddr;
     }
@@ -80,7 +78,7 @@ namespace Server {
       return ScopeId;
     }
 
-    const struct sockaddr_in6 &GetClientAddr() const noexcept {
+    const sockaddr_in6 &GetClientAddr() const noexcept {
       assert(this);
       return ClientAddr;
     }
@@ -88,19 +86,19 @@ namespace Server {
     /* Get the actual port we are bound to.  Unless we are bound to an
        ephemeral port, this will be the same value that was passed in to the
        constructor. */
-    in_port_t GetBindPort() const;
+    in_port_t GetBindPort() const noexcept;
 
     protected:
     void InitListeningSocket(Base::TFd &sock) override;
 
     private:
-    const struct in6_addr BindAddr;
+    const in6_addr BindAddr;
 
     const in_port_t Port;
 
     const uint32_t ScopeId;
 
-    struct sockaddr_in6 ClientAddr;
+    sockaddr_in6 ClientAddr;
   };  // TTcpIpv6Server
 
 }  // Server

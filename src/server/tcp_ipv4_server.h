@@ -61,7 +61,7 @@ namespace Server {
       return Port;
     }
 
-    const struct sockaddr_in &GetClientAddr() const noexcept {
+    const sockaddr_in &GetClientAddr() const noexcept {
       assert(this);
       return ClientAddr;
     }
@@ -69,7 +69,7 @@ namespace Server {
     /* Get the actual port we are bound to.  Unless we are bound to an
        ephemeral port, this will be the same value that was passed in to the
        constructor. */
-    in_port_t GetBindPort() const;
+    in_port_t GetBindPort() const noexcept;
 
     protected:
     void InitListeningSocket(Base::TFd &sock) override;
@@ -79,7 +79,7 @@ namespace Server {
 
     const in_port_t Port;
 
-    struct sockaddr_in ClientAddr;
+    sockaddr_in ClientAddr;
   };  // TTcpIpv4Server
 
 }  // Server

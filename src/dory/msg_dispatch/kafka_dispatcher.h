@@ -65,9 +65,9 @@ namespace Dory {
       void SetProduceProtocol(
           KafkaProto::Produce::TProduceProtocol *protocol) noexcept override;
 
-      TState GetState() const override;
+      TState GetState() const noexcept override;
 
-      size_t GetBrokerCount() const override;
+      size_t GetBrokerCount() const noexcept override;
 
       void Start(const std::shared_ptr<TMetadata> &md) override;
 
@@ -82,13 +82,13 @@ namespace Dory {
 
       void StartFastShutdown() override;
 
-      const Base::TFd &GetPauseFd() const override;
+      const Base::TFd &GetPauseFd() const noexcept override;
 
-      const Base::TFd &GetShutdownWaitFd() const override;
+      const Base::TFd &GetShutdownWaitFd() const noexcept override;
 
       void JoinAll() override;
 
-      bool ShutdownWasOk() const override;
+      bool ShutdownWasOk() const noexcept override;
 
       std::list<std::list<TMsg::TPtr>>
       GetNoAckQueueAfterShutdown(size_t broker_index) override;
@@ -96,7 +96,7 @@ namespace Dory {
       std::list<std::list<TMsg::TPtr>>
       GetSendWaitQueueAfterShutdown(size_t broker_index) override;
 
-      size_t GetAckCount() const override;
+      size_t GetAckCount() const noexcept override;
 
       private:
       TDispatcherSharedState Ds;

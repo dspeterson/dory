@@ -39,6 +39,9 @@
 #include <base/error_util.h>
 #include <base/no_default_case.h>
 #include <base/sig_masker.h>
+#include <base/wr/fd_util.h>
+#include <base/wr/net_util.h>
+#include <base/wr/time_util.h>
 #include <capped/pool.h>
 #include <dory/batch/batch_config_builder.h>
 #include <dory/compress/compression_init.h>
@@ -183,7 +186,7 @@ TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
   /* The TDoryServer constructor will use the random number generator, so
      initialize it now. */
   struct timespec t;
-  IfLt0(clock_gettime(CLOCK_MONOTONIC_RAW, &t));
+  Wr::clock_gettime(CLOCK_MONOTONIC_RAW, &t);
   std::srand(static_cast<unsigned>(t.tv_sec ^ t.tv_nsec));
 
   return TServerConfig(std::move(cfg), std::move(conf),
@@ -285,10 +288,12 @@ void TDoryServer::BindStatusSocket(bool bind_ephemeral) {
   TAddress status_address(
       Config->StatusLoopbackOnly ? TAddress::IPv4Loopback : TAddress::IPv4Any,
       bind_ephemeral ? 0 : Config->StatusPort);
-  TmpStatusSocket = IfLt0(socket(status_address.GetFamily(), SOCK_STREAM, 0));
+  TmpStatusSocket = Wr::socket(Wr::TDisp::Nonfatal, {},
+      status_address.GetFamily(), SOCK_STREAM, 0);
+  assert(TmpStatusSocket.IsOpen());
   int flag = true;
-  IfLt0(setsockopt(TmpStatusSocket, SOL_SOCKET, SO_REUSEADDR, &flag,
-                   sizeof(flag)));
+  Wr::setsockopt(TmpStatusSocket, SOL_SOCKET, SO_REUSEADDR, &flag,
+      sizeof(flag));
 
   /* This will throw if the server is already running (unless we used an
      ephemeral port, which happens when test code runs us). */
@@ -528,13 +533,10 @@ bool TDoryServer::HandleEvents() {
       item.revents = 0;
     }
 
-    int ret = ppoll(&events[0], events.size(), nullptr,
+    int ret = Wr::ppoll(&events[0], events.size(), nullptr,
         AllSignalsExceptHandled().Get());
     assert(ret);
-
-    if ((ret < 0) && (errno != EINTR)) {
-      IfLt0(ret);  // this will throw
-    }
+    assert((ret > 0) || (errno == EINTR));
 
     if (unix_dg_input_agent_error.revents) {
       assert(UnixDgInputAgent.IsKnown());

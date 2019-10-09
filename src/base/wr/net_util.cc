@@ -27,14 +27,38 @@
 
 using namespace Base;
 
+int Base::Wr::bind(TDisp disp, std::initializer_list<int> errors, int sockfd,
+    const sockaddr *addr, socklen_t addrlen) noexcept {
+  const int ret = ::bind(sockfd, addr, addrlen);
+
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EBADF, EINVAL, ENOTSOCK, EADDRNOTAVAIL, EFAULT, ENOMEM})) {
+    DieErrno("bind()", errno);
+  }
+
+  return ret;
+}
+
 int Base::Wr::connect(TDisp disp, std::initializer_list<int> errors,
-    int sockfd, const struct sockaddr *addr, socklen_t addrlen) noexcept {
+    int sockfd, const sockaddr *addr, socklen_t addrlen) noexcept {
   const int ret = ::connect(sockfd, addr, addrlen);
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
       {EAFNOSUPPORT, EADDRNOTAVAIL, EALREADY, EBADF, EFAULT, EISCONN,
           ENOTSOCK})) {
     DieErrno("connect()", errno);
+  }
+
+  return ret;
+}
+
+int Base::Wr::getsockname(TDisp disp, std::initializer_list<int> errors,
+    int sockfd, sockaddr *addr, socklen_t *addrlen) noexcept {
+  const int ret = ::getsockname(sockfd, addr, addrlen);
+
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EBADF, EFAULT, EINVAL, ENOBUFS, ENOTSOCK})) {
+    DieErrno("getsockname()", errno);
   }
 
   return ret;

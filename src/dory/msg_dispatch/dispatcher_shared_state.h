@@ -71,12 +71,12 @@ namespace Dory {
           const Debug::TDebugSetup &debug_setup,
           const Batch::TGlobalBatchConfig &batch_config);
 
-      size_t GetAckCount() const {
+      size_t GetAckCount() const noexcept {
         assert(this);
         return AckCount.load();
       }
 
-      void IncrementAckCount() {
+      void IncrementAckCount() noexcept {
         assert(this);
         ++AckCount;
       }
@@ -89,12 +89,12 @@ namespace Dory {
       void Discard(std::list<std::list<TMsg::TPtr>> &&batch,
                    TAnomalyTracker::TDiscardReason reason);
 
-      const Base::TFd &GetShutdownWaitFd() const {
+      const Base::TFd &GetShutdownWaitFd() const noexcept {
         assert(this);
         return ShutdownFinished.GetFd();
       }
 
-      size_t GetRunningThreadCount() const {
+      size_t GetRunningThreadCount() const noexcept {
         assert(this);
         return RunningThreadCount.load();
       }

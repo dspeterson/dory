@@ -108,7 +108,7 @@ namespace Dory {
 
       TServerConfig &operator=(TServerConfig &&) = default;
 
-      const TConfig &GetCmdLineConfig() const {
+      const TConfig &GetCmdLineConfig() const noexcept {
         assert(this);
         return *Config;
       }
@@ -159,18 +159,18 @@ namespace Dory {
     ~TDoryServer();
 
     /* Must not be called until _after_ InitConfig() has been called. */
-    size_t GetPoolBlockSize() const {
+    size_t GetPoolBlockSize() const noexcept {
       assert(this);
       return PoolBlockSize;
     }
 
-    const TConfig &GetConfig() const {
+    const TConfig &GetConfig() const noexcept {
       assert(this);
       return *Config;
     }
 
     /* Used for testing. */
-    const TAnomalyTracker &GetAnomalyTracker() const {
+    const TAnomalyTracker &GetAnomalyTracker() const noexcept {
       assert(this);
       return AnomalyTracker;
     }
@@ -178,7 +178,7 @@ namespace Dory {
     /* Test code passes true for 'bind_ephemeral'. */
     void BindStatusSocket(bool bind_ephemeral = false);
 
-    in_port_t GetStatusPort() const {
+    in_port_t GetStatusPort() const noexcept {
       assert(this);
       return StatusPort;
     }
@@ -186,20 +186,20 @@ namespace Dory {
     /* Return the port used by the TCP input agent, or 0 if agent is inactive.
        Do not call until server has been started.  This is intended for test
        code to use for finding the ephemeral port chosen by the kernel. */
-    in_port_t GetInputPort() const {
+    in_port_t GetInputPort() const noexcept {
       assert(this);
       return TcpInputAgent.IsKnown() ? TcpInputAgent->GetBindPort() : 0;
     }
 
     /* Return a file descriptor that becomes readable when the server has
        finished initialization or is shutting down.  Test code calls this. */
-    const Base::TFd &GetInitWaitFd() const {
+    const Base::TFd &GetInitWaitFd() const noexcept {
       assert(this);
       return InitWaitSem.GetFd();
     }
 
     /* This is called by test code. */
-    size_t GetAckCount() const {
+    size_t GetAckCount() const noexcept {
       assert(this);
       return Dispatcher.GetAckCount();
     }
