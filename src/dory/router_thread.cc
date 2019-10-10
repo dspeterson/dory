@@ -32,6 +32,7 @@
 #include <base/gettid.h>
 #include <base/no_default_case.h>
 #include <base/time_util.h>
+#include <base/wr/fd_util.h>
 #include <dory/kafka_proto/metadata/metadata_protocol.h>
 #include <dory/kafka_proto/metadata/version_util.h>
 #include <dory/kafka_proto/produce/produce_protocol.h>
@@ -438,7 +439,8 @@ void TRouterThread::ValidateBeforeReroute(std::list<TMsg::TPtr> &msg_list) {
   }
 }
 
-size_t TRouterThread::LookupValidTopicIndex(const std::string &topic) const {
+size_t TRouterThread::LookupValidTopicIndex(
+    const std::string &topic) const noexcept {
   assert(this);
   assert(Metadata);
   int topic_index = Metadata->FindTopicIndex(topic);
@@ -456,7 +458,8 @@ size_t TRouterThread::LookupValidTopicIndex(const std::string &topic) const {
   return static_cast<size_t>(topic_index);
 }
 
-size_t TRouterThread::ChooseAnyPartitionBrokerIndex(const std::string &topic) {
+size_t TRouterThread::ChooseAnyPartitionBrokerIndex(
+    const std::string &topic) noexcept {
   assert(this);
   assert(Metadata);
 
@@ -490,7 +493,7 @@ size_t TRouterThread::ChooseAnyPartitionBrokerIndex(const std::string &topic) {
 }
 
 const TMetadata::TPartition &TRouterThread::ChoosePartitionByKey(
-    const TMetadata::TTopic &topic_meta, int32_t partition_key) {
+    const TMetadata::TTopic &topic_meta, int32_t partition_key) noexcept {
   assert(this);
   assert(Metadata);
   const std::vector<TMetadata::TBroker> &broker_vec = Metadata->GetBrokers();
@@ -519,7 +522,7 @@ const TMetadata::TPartition &TRouterThread::ChoosePartitionByKey(
   Die("ChoosePartitionByKey() found no in service partitions");
 }
 
-size_t TRouterThread::AssignBroker(TMsg::TPtr &msg) {
+size_t TRouterThread::AssignBroker(TMsg::TPtr &msg) noexcept {
   assert(this);
   RouteSingleMsg.Increment();
   const std::string &topic = msg->GetTopic();
@@ -1153,8 +1156,11 @@ void TRouterThread::DoRun() {
     }
 
     InitMainLoopPollArray();
-    IfLt0(poll(MainLoopPollArray, MainLoopPollArray.Size(),
-               ComputeMainLoopPollTimeout()));
+
+    /* Treat EINTR as fatal since we should have all signals blocked. */
+    const int ret = Wr::poll(Wr::TDisp::AddFatal, {EINTR}, MainLoopPollArray,
+        MainLoopPollArray.Size(), ComputeMainLoopPollTimeout());
+    assert(ret >= 0);
 
     if (MainLoopPollArray[TMainLoopPollItem::ShutdownRequest].revents) {
       StartShutdown();

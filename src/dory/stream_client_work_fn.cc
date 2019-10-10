@@ -22,6 +22,7 @@
 #include <dory/stream_client_work_fn.h>
 
 #include <cassert>
+#include <string>
 #include <system_error>
 #include <utility>
 
@@ -31,6 +32,7 @@
 #include <base/error_util.h>
 #include <base/no_default_case.h>
 #include <base/system_error_codes.h>
+#include <base/wr/fd_util.h>
 #include <dory/input_dg/input_dg_util.h>
 #include <dory/msg.h>
 #include <dory/util/poll_array.h>
@@ -110,8 +112,9 @@ void TStreamClientWorkFn::operator()() {
   do {
     poll_array.ClearRevents();
 
-    /* Don't check for EINTR, since this thread has signals masked. */
-    int ret = IfLt0(poll(poll_array, poll_array.Size(), -1));
+    /* Treat EINTR as fatal, since we should have signals blocked. */
+    int ret = Wr::poll(Wr::TDisp::AddFatal, {EINTR}, poll_array,
+        poll_array.Size(), -1);
     assert(ret > 0);
     assert(sock_item.revents || shutdown_item.revents);
   } while (!shutdown_item.revents && HandleSockReadReady());
@@ -226,7 +229,12 @@ bool TStreamClientWorkFn::HandleSockReadReady() {
       return false;
     }
 
-    throw;  // anything else is fatal
+    char tmp_buf[256];
+    const char *err_msg = Strerror(x.code().value(), tmp_buf, sizeof(tmp_buf));
+    std::string msg(IsTcp ? "TCP" : "UNIX stream");
+    msg += " input thread failed to read from socket: ";
+    msg += err_msg;
+    Die(msg.c_str());
   }
 
   do {

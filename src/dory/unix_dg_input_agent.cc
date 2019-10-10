@@ -32,6 +32,8 @@
 #include <base/counter.h>
 #include <base/error_util.h>
 #include <base/gettid.h>
+#include <base/wr/file_util.h>
+#include <base/wr/net_util.h>
 #include <dory/input_dg/input_dg_util.h>
 #include <log/log.h>
 #include <socket/address.h>
@@ -132,7 +134,7 @@ void TUnixDgInputAgent::OpenUnixSocket() {
      permission bits. */
   if (Config.ReceiveSocketMode.IsKnown()) {
     try {
-      IfLt0(chmod(Config.ReceiveSocketName.c_str(),
+      IfLt0(Wr::chmod(Config.ReceiveSocketName.c_str(),
           *Config.ReceiveSocketMode));
     } catch (const std::system_error &x) {
       LOG(TPri::ERR) << "Failed to set permissions on datagram socket file: "
@@ -145,7 +147,10 @@ void TUnixDgInputAgent::OpenUnixSocket() {
 TMsg::TPtr TUnixDgInputAgent::ReadOneMsg() {
   assert(this);
   char * const msg_begin = reinterpret_cast<char *>(&InputBuf[0]);
-  ssize_t result = IfLt0(recv(InputSocket, msg_begin, InputBuf.size(), 0));
+  const ssize_t result = Wr::recv(Wr::TDisp::Nonfatal, {}, InputSocket,
+      msg_begin, InputBuf.size(), 0);
+  assert(result >= 0);
+
   return InputDg::BuildMsgFromDg(msg_begin, static_cast<size_t>(result),
       Config, Pool, AnomalyTracker, MsgStateTracker);
 }
@@ -166,7 +171,9 @@ void TUnixDgInputAgent::ForwardMessages() {
       item.revents = 0;
     }
 
-    int ret = IfLt0(poll(&events[0], events.size(), -1));
+    /* We should have signals blocked, so treat EINTR as fatal. */
+    int ret = Wr::poll(Wr::TDisp::AddFatal, {EINTR}, &events[0], events.size(),
+        -1);
     assert(ret > 0);
 
     if (shutdown_request_event.revents) {

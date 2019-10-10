@@ -30,6 +30,18 @@
 
 using namespace Base;
 
+int Base::Wr::chmod(TDisp disp, std::initializer_list<int> errors,
+    const char *path, mode_t mode) noexcept {
+  const int ret = ::chmod(path, mode);
+
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EFAULT, ENOMEM})) {
+    DieErrno("chmod()", errno);
+  }
+
+  return ret;
+}
+
 int Base::Wr::closedir(TDisp disp, std::initializer_list<int> errors,
     DIR *dirp) noexcept {
   const int ret = ::closedir(dirp);

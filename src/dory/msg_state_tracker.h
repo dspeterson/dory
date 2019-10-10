@@ -48,14 +48,14 @@ namespace Dory {
 
       long AckWaitCount = 0;
 
-      TTopicStats() = default;
+      TTopicStats() noexcept = default;
     };  // TTopicStats
 
     TMsgStateTracker() = default;
 
     /* A brand new message has been created.  Update our stats to indicate
        this. */
-    void MsgEnterNew();
+    void MsgEnterNew() noexcept;
 
     /* Set the state of 'msg' to TMsg::TState::Batching and update our stats to
        reflect this.  This indicates that the message is being batched. */
@@ -134,35 +134,35 @@ namespace Dory {
     private:
     class TDeltaComputer final {
       public:
-      TDeltaComputer() = default;
+      TDeltaComputer() noexcept = default;
 
-      long GetNewDelta() const {
+      long GetNewDelta() const noexcept {
         assert(this);
         return NewDelta;
       }
 
-      long GetBatchingDelta() const {
+      long GetBatchingDelta() const noexcept {
         assert(this);
         return BatchingDelta;
       }
 
-      long GetSendWaitDelta() const {
+      long GetSendWaitDelta() const noexcept {
         assert(this);
         return SendWaitDelta;
       }
 
-      long GetAckWaitDelta() const {
+      long GetAckWaitDelta() const noexcept {
         assert(this);
         return AckWaitDelta;
       }
 
-      void CountBatchingEntered(TMsg::TState prev_state);
+      void CountBatchingEntered(TMsg::TState prev_state) noexcept;
 
-      void CountSendWaitEntered(TMsg::TState prev_state);
+      void CountSendWaitEntered(TMsg::TState prev_state) noexcept;
 
-      void CountAckWaitEntered(TMsg::TState prev_state);
+      void CountAckWaitEntered(TMsg::TState prev_state) noexcept;
 
-      void CountProcessedEntered(TMsg::TState prev_state);
+      void CountProcessedEntered(TMsg::TState prev_state) noexcept;
 
       private:
       long NewDelta = 0;

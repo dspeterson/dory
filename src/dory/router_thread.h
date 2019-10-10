@@ -84,27 +84,27 @@ namespace Dory {
        thread must immediately be ready to read datagrams from its socket.  In
        the case where the Kafka cluster is temporarily unavailable, router
        thread initialization can take arbitrarily long. */
-    const Base::TFd &GetInitWaitFd() const {
+    const Base::TFd &GetInitWaitFd() const noexcept {
       assert(this);
       return InitFinishedSem.GetFd();
     }
 
-    bool ShutdownWasOk() const {
+    bool ShutdownWasOk() const noexcept {
       assert(this);
       return OkShutdown;
     }
 
-    Thread::TGatePutApi<TMsg::TPtr> &GetMsgChannel() {
+    Thread::TGatePutApi<TMsg::TPtr> &GetMsgChannel() noexcept {
       assert(this);
       return MsgChannel;
     }
 
-    Base::TEventSemaphore &GetMetadataUpdateRequestSem() {
+    Base::TEventSemaphore &GetMetadataUpdateRequestSem() noexcept {
       assert(this);
       return MetadataUpdateRequestSem;
     }
 
-    const TMetadataTimestamp &GetMetadataTimestamp() const {
+    const TMetadataTimestamp &GetMetadataTimestamp() const noexcept {
       assert(this);
       return MetadataTimestamp;
     }
@@ -165,21 +165,21 @@ namespace Dory {
 
     /* Parameter 'topic' _must_ be known to be valid.  Look up topic in
        metadata and return its index. */
-    size_t LookupValidTopicIndex(const std::string &topic) const;
+    size_t LookupValidTopicIndex(const std::string &topic) const noexcept;
 
     /* Parameter 'topic' _must_ be known to be valid.  Look up topic in
        metadata and return its metadata. */
     const TMetadata::TTopic &GetValidTopicMetadata(
-        const std::string &topic) const {
+        const std::string &topic) const noexcept {
       assert(this);
       assert(Metadata);
       return Metadata->GetTopics()[LookupValidTopicIndex(topic)];
     }
 
-    size_t ChooseAnyPartitionBrokerIndex(const std::string &topic);
+    size_t ChooseAnyPartitionBrokerIndex(const std::string &topic) noexcept;
 
     const TMetadata::TPartition &ChoosePartitionByKey(
-        const TMetadata::TTopic &topic_meta, int32_t partition_key);
+        const TMetadata::TTopic &topic_meta, int32_t partition_key) noexcept;
 
     const TMetadata::TPartition &ChoosePartitionByKey(const std::string &topic,
         int32_t partition_key) {
@@ -191,7 +191,7 @@ namespace Dory {
       return ChoosePartitionByKey(GetValidTopicMetadata(topic), partition_key);
     }
 
-    size_t AssignBroker(TMsg::TPtr &msg);
+    size_t AssignBroker(TMsg::TPtr &msg) noexcept;
 
     /* Route a single message.  Batch if appropriate. */
     void Route(TMsg::TPtr &&msg);

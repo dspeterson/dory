@@ -28,7 +28,7 @@ using namespace Base;
 using namespace Dory;
 using namespace Log;
 
-void TMsgStateTracker::MsgEnterNew() {
+void TMsgStateTracker::MsgEnterNew() noexcept {
   assert(this);
 
   std::lock_guard<std::mutex> lock(Mutex);
@@ -197,7 +197,7 @@ void TMsgStateTracker::PruneTopics(const TTopicExistsFn &topic_exists_fn) {
 }
 
 void TMsgStateTracker::TDeltaComputer::CountBatchingEntered(
-    TMsg::TState prev_state) {
+    TMsg::TState prev_state) noexcept {
   assert(this);
 
   switch (prev_state) {
@@ -235,7 +235,7 @@ void TMsgStateTracker::TDeltaComputer::CountBatchingEntered(
 }
 
 void TMsgStateTracker::TDeltaComputer::CountSendWaitEntered(
-    TMsg::TState prev_state) {
+    TMsg::TState prev_state) noexcept {
   assert(this);
 
   switch (prev_state) {
@@ -268,7 +268,7 @@ void TMsgStateTracker::TDeltaComputer::CountSendWaitEntered(
 }
 
 void TMsgStateTracker::TDeltaComputer::CountAckWaitEntered(
-    TMsg::TState prev_state) {
+    TMsg::TState prev_state) noexcept {
   assert(this);
 
   switch (prev_state) {
@@ -306,7 +306,7 @@ void TMsgStateTracker::TDeltaComputer::CountAckWaitEntered(
 }
 
 void TMsgStateTracker::TDeltaComputer::CountProcessedEntered(
-    TMsg::TState prev_state) {
+    TMsg::TState prev_state) noexcept {
   assert(this);
 
   switch (prev_state) {

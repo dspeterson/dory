@@ -35,6 +35,13 @@ namespace Base {
 
   namespace Wr {
 
+    int chmod(TDisp disp, std::initializer_list<int> errors, const char *path,
+        mode_t mode) noexcept;
+
+    inline int chmod(const char *path, mode_t mode) noexcept {
+      return chmod(TDisp::AddFatal, {}, path, mode);
+    }
+
     int closedir(TDisp disp, std::initializer_list<int> errors,
         DIR *dirp) noexcept;
 
