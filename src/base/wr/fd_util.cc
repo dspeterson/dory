@@ -23,7 +23,6 @@
 
 #include <time.h>
 
-#include <base/error_util.h>
 #include <base/sig_masker.h>
 #include <base/sig_set.h>
 

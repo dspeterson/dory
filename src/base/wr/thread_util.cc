@@ -23,8 +23,6 @@
 
 #include <cerrno>
 
-#include <base/error_util.h>
-
 using namespace Base;
 
 int Base::Wr::pthread_rwlock_destroy(TDisp disp,

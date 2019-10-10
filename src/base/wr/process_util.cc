@@ -1,4 +1,4 @@
-/* <base/wr/time_util.cc>
+/* <base/wr/process_util.cc>
 
    ----------------------------------------------------------------------------
    Copyright 2019 Dave Peterson <dave@dspeterson.com>
@@ -16,34 +16,22 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <base/wr/time_util.h>.
+   Implements <base/wr/process_util.h>.
  */
 
-#include <base/wr/time_util.h>
+#include <base/wr/process_util.h>
 
 #include <cerrno>
 
 using namespace Base;
 
-int Base::Wr::clock_gettime(TDisp disp, std::initializer_list<int> errors,
-    clockid_t clk_id, timespec *tp) noexcept {
-  const int ret = ::clock_gettime(clk_id, tp);
+int Base::Wr::getrlimit(TDisp disp, std::initializer_list<int> errors,
+    int resource, rlimit *rlim) noexcept {
+  const int ret = ::getrlimit(resource, rlim);
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
       {EFAULT, EINVAL})) {
-    DieErrno("clock_gettime()", errno);
-  }
-
-  return ret;
-}
-
-int Base::Wr::nanosleep(TDisp disp, std::initializer_list<int> errors,
-    const timespec *req, timespec *rem) noexcept {
-  const int ret = ::nanosleep(req, rem);
-
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
-      {EFAULT, EINVAL})) {
-    DieErrno("nanosleep()", errno);
+    DieErrno("getrlimit()", errno);
   }
 
   return ret;

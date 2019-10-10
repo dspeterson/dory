@@ -225,7 +225,7 @@ namespace Fiber{
     bool ForEachHandler(const TCb &cb);
 
     /* The number of handlers currently registered with this dispatcher. */
-    size_t GetHandlerCount() const {
+    size_t GetHandlerCount() const noexcept {
       assert(this);
       return HandlerCount;
     }
@@ -271,7 +271,7 @@ namespace Fiber{
     static size_t GetMaxEventCount();
 
     /* The current time, as reported by the clock we use for deadlines. */
-    static TDeadline Now() {
+    static TDeadline Now() noexcept {
       return TDeadline::clock::now();
     }
 

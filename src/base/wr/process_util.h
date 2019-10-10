@@ -1,4 +1,4 @@
-/* <base/wr/sys_util.cc>
+/* <base/wr/process_util.h>
 
    ----------------------------------------------------------------------------
    Copyright 2019 Dave Peterson <dave@dspeterson.com>
@@ -16,25 +16,30 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <base/wr/sys_util.h>.
+   Wrappers for process-related system/library calls.
  */
 
-#include <base/wr/sys_util.h>
+#pragma once
 
-#include <cerrno>
+#include <initializer_list>
 
-#include <unistd.h>
+#include <sys/resource.h>
+#include <sys/time.h>
 
-using namespace Base;
+#include <base/wr/common.h>
 
-int Base::Wr::gethostname(TDisp disp, std::initializer_list<int> errors,
-    char *name, size_t len) noexcept {
-  const int ret = ::gethostname(name, len);
+namespace Base {
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
-      {EFAULT, EINVAL})) {
-    DieErrno("gethostname()", errno);
-  }
+  namespace Wr {
 
-  return ret;
-}
+    int getrlimit(TDisp disp, std::initializer_list<int> errors, int resource,
+        rlimit *rlim) noexcept;
+
+    inline void getrlimit(int resource, rlimit *rlim) noexcept {
+      const int ret = getrlimit(TDisp::AddFatal, {}, resource, rlim);
+      assert(ret == 0);
+    }
+
+  }  // Wr
+
+}  // Base

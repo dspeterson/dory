@@ -27,6 +27,8 @@
 #include <base/sig_handler_installer.h>
 #include <base/sig_masker.h>
 #include <base/sig_set.h>
+#include <base/wr/fd_util.h>
+#include <base/wr/process_util.h>
 
 using namespace Base;
 using namespace Fiber;
@@ -244,7 +246,7 @@ void TDispatcher::Shutdown(std::thread &t, int signal_number) {
 
 size_t TDispatcher::GetMaxEventCount() {
   rlimit limits;
-  IfLt0(getrlimit(RLIMIT_NOFILE, &limits));
+  Wr::getrlimit(RLIMIT_NOFILE, &limits);
   return limits.rlim_cur - 1;
 }
 
@@ -321,12 +323,9 @@ bool TDispatcher::Dispatch(const TOptTimeout &max_timeout,
   }
 
   /* Wait for one or more events to occur, or for our timeout, or to be
-     interrupted by a signal.  If we're interrupted, return false
-     immediately. */
-  while (ppoll(Pollers, HandlerCount, ts_ptr, mask_set) < 0) {
-    if (errno != EINTR) {
-      ThrowSystemError(errno);
-    }
+     interrupted by a signal. */
+  while (Wr::ppoll(Pollers, HandlerCount, ts_ptr, mask_set) < 0) {
+    assert(errno == EINTR);
 
     if (GotShutdownSignal) {
       return false;
