@@ -25,6 +25,21 @@
 
 using namespace Base;
 
+int Base::Wr::accept(TDisp disp, std::initializer_list<int> errors, int sockfd,
+    sockaddr *addr, socklen_t *addrlen) noexcept {
+  const int ret = ::accept(sockfd, addr, addrlen);
+
+  /* The man page says that ENOMEM often means that the memory allocation is
+     limited by the socket buffer limits, not by the system memory.  Therefore
+     treat ENOMEM as nonfatal. */
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EBADF, EFAULT, EINVAL, EMFILE, ENFILE, ENOTSOCK, EOPNOTSUPP})) {
+    DieErrno("accept()", errno);
+  }
+
+  return ret;
+}
+
 int Base::Wr::bind(TDisp disp, std::initializer_list<int> errors, int sockfd,
     const sockaddr *addr, socklen_t addrlen) noexcept {
   const int ret = ::bind(sockfd, addr, addrlen);
@@ -86,6 +101,18 @@ ssize_t Base::Wr::recv(TDisp disp, std::initializer_list<int> errors,
   return ret;
 }
 
+ssize_t Base::Wr::recvmsg(TDisp disp, std::initializer_list<int> errors,
+    int sockfd, msghdr *msg, int flags) noexcept {
+  const ssize_t ret = ::recvmsg(sockfd, msg, flags);
+
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EBADF, EFAULT, EINVAL, ENOMEM, ENOTCONN, ENOTSOCK})) {
+    DieErrno("recvmsg()", errno);
+  }
+
+  return ret;
+}
+
 ssize_t Base::Wr::send(TDisp disp, std::initializer_list<int> errors,
     int sockfd, const void *buf, size_t len, int flags) noexcept {
   const ssize_t ret = ::send(sockfd, buf, len, flags);
@@ -94,6 +121,19 @@ ssize_t Base::Wr::send(TDisp disp, std::initializer_list<int> errors,
       {EBADF, EDESTADDRREQ, EFAULT, EINVAL, EISCONN, ENOMEM, ENOTCONN,
           ENOTSOCK, EOPNOTSUPP})) {
     DieErrno("send()", errno);
+  }
+
+  return ret;
+}
+
+ssize_t Base::Wr::sendmsg(TDisp disp, std::initializer_list<int> errors,
+    int sockfd, const msghdr *msg, int flags) noexcept {
+  const ssize_t ret = ::sendmsg(sockfd, msg, flags);
+
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EBADF, EDESTADDRREQ, EFAULT, EINVAL, EISCONN, ENOMEM, ENOTCONN,
+          ENOTSOCK, EOPNOTSUPP})) {
+    DieErrno("sendmsg()", errno);
   }
 
   return ret;

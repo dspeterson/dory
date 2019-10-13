@@ -121,7 +121,7 @@ namespace Server {
     /* Private so only singleton accessor can construct one. */
     TSignalHandlerThread() = default;
 
-    void InstallHandler() const;
+    void InstallHandler() const noexcept;
 
     bool Initialized = false;
 

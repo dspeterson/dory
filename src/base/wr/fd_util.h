@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <cerrno>
 #include <cstddef>
 #include <initializer_list>

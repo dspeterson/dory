@@ -28,6 +28,18 @@
 
 using namespace Base;
 
+int Base::Wr::chdir(TDisp disp, std::initializer_list<int> errors,
+    const char *path) noexcept {
+  const int ret = ::chdir(path);
+
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EFAULT, ENOMEM})) {
+    DieErrno("chdir()", errno);
+  }
+
+  return ret;
+}
+
 int Base::Wr::chmod(TDisp disp, std::initializer_list<int> errors,
     const char *path, mode_t mode) noexcept {
   const int ret = ::chmod(path, mode);

@@ -109,3 +109,15 @@ int Base::Wr::sigismember(TDisp disp, std::initializer_list<int> errors,
 
   return ret;
 }
+
+int Base::Wr::sigprocmask(TDisp disp, std::initializer_list<int> errors,
+    int how, const sigset_t *set, sigset_t *oldset) noexcept {
+  const int ret = ::sigprocmask(how, set, oldset);
+
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      {EFAULT, EINVAL})) {
+    DieErrno("sigprocmask()", ret);
+  }
+
+  return ret;
+}

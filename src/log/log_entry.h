@@ -54,9 +54,9 @@ namespace Log {
 
   /* Access to the prefix writer is not protected from multithreading races, so
      it should be set before concurrent access is possible. */
-  void SetPrefixWriter(TPrefixWriteFn writer);
+  void SetPrefixWriter(TPrefixWriteFn writer) noexcept;
 
-  void WritePrefix(TLogPrefixAssignApi &entry);
+  void WritePrefix(TLogPrefixAssignApi &entry) noexcept;
 
   /* A single log entry, which functions as a std::ostream backed by a fixed
      size buffer of size 'BufSize'.  If more than (BufSize - PrefixSpace - 2)

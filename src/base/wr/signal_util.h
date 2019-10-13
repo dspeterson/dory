@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <initializer_list>
 
 #include <signal.h>
@@ -88,6 +89,15 @@ namespace Base {
       const int ret = sigismember(TDisp::AddFatal, {}, set, signum);
       assert((ret == 0) || (ret == 1));
       return (ret != 0);
+    }
+
+    int sigprocmask(TDisp disp, std::initializer_list<int> errors, int how,
+        const sigset_t *set, sigset_t *oldset) noexcept;
+
+    inline void sigprocmask(int how, const sigset_t *set,
+        sigset_t *oldset) noexcept {
+      const int ret = sigprocmask(TDisp::AddFatal, {}, how, set, oldset);
+      assert(ret == 0);
     }
 
   }  // Wr

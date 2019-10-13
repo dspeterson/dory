@@ -21,16 +21,26 @@
 
 #pragma once
 
+#include <cassert>
 #include <initializer_list>
 
 #include <sys/resource.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #include <base/wr/common.h>
 
 namespace Base {
 
   namespace Wr {
+
+    pid_t fork(TDisp disp, std::initializer_list<int> errors) noexcept;
+
+    inline pid_t fork() noexcept {
+      const pid_t ret = fork(TDisp::AddFatal, {});
+      assert(ret >= 0);
+      return ret;
+    }
 
     int getrlimit(TDisp disp, std::initializer_list<int> errors, int resource,
         rlimit *rlim) noexcept;

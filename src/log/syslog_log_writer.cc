@@ -34,7 +34,8 @@ using namespace Log;
 /* true indicates that syslog() has been initialized. */
 static std::atomic<bool> Initialized(false);
 
-void TSyslogLogWriter::Init(const char *ident, int option, int facility) {
+void TSyslogLogWriter::Init(const char *ident, int option,
+    int facility) noexcept {
   if (option & LOG_PERROR) {
     /* To keep things simple, we will not support echoing of log messages to
        stderr.  If log output to stdout/stderr is desired,
@@ -52,12 +53,12 @@ void TSyslogLogWriter::Init(const char *ident, int option, int facility) {
   Initialized = true;
 }
 
-TSyslogLogWriter::TSyslogLogWriter(bool enabled)
+TSyslogLogWriter::TSyslogLogWriter(bool enabled) noexcept
     : TLogWriterBase()
     , Enabled(enabled) {
   /* Copy constructor doesn't need to perform this check, since this
      constructor will create the very first object. */
-  if (enabled && !Initialized) {
+  if (Enabled && !Initialized) {
     Die("Must call TSyslogLogWriter::Init() before creating any enabled "
         "TSyslogLogWriter objects");
   }

@@ -77,7 +77,7 @@ namespace Log {
 
     /* Access to the error handler is not protected from multithreading races,
        so it should be set before concurrent access is possible. */
-    static void SetErrorHandler(TErrorHandler handler) noexcept;
+    static void SetErrorHandler(TWriteErrorHandler handler) noexcept;
 
     static const mode_t DEFAULT_FILE_MODE =
         S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
@@ -119,9 +119,9 @@ namespace Log {
         size_t size, bool no_stdout_stderr) const noexcept override;
 
     private:
-    static void NullErrorHandler() noexcept;
+    static void NullErrorHandler(TLogWriteError error) noexcept;
 
-    static TErrorHandler ErrorHandler;
+    static TWriteErrorHandler ErrorHandler;
 
     const std::string Path;
 

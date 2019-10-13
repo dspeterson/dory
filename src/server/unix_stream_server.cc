@@ -21,11 +21,14 @@
 
 #include <server/unix_stream_server.h>
 
+#include <cerrno>
 #include <cstring>
 
 #include <arpa/inet.h>
 
 #include <base/error_util.h>
+#include <base/wr/file_util.h>
+#include <base/wr/net_util.h>
 
 using namespace Base;
 using namespace Server;
@@ -54,7 +57,7 @@ TUnixStreamServer::TUnixStreamServer(int backlog, const char *path,
   }
 }
 
-void TUnixStreamServer::SetMode(mode_t mode) {
+void TUnixStreamServer::SetMode(mode_t mode) noexcept {
   assert(this);
 
   if (Mode.IsKnown()) {
@@ -66,7 +69,7 @@ void TUnixStreamServer::SetMode(mode_t mode) {
 
 void TUnixStreamServer::InitListeningSocket(TFd &sock) {
   assert(this);
-  TFd sock_fd(socket(AF_LOCAL, SOCK_STREAM, 0));
+  TFd sock_fd(IfLt0(Wr::socket(AF_LOCAL, SOCK_STREAM, 0)));
   struct sockaddr_un serv_addr;
   std::memset(&serv_addr, 0, sizeof(serv_addr));
   serv_addr.sun_family = AF_LOCAL;
@@ -76,14 +79,14 @@ void TUnixStreamServer::InitListeningSocket(TFd &sock) {
   /* Make sure socket file doesn't already exist. */
   UnlinkPath();
 
-  IfLt0(bind(sock_fd, reinterpret_cast<const struct sockaddr *>(&serv_addr),
+  IfLt0(Wr::bind(sock_fd, reinterpret_cast<const sockaddr *>(&serv_addr),
       sizeof(serv_addr)));
   sock = std::move(sock_fd);
 
   /* Set the permission bits on the socket file if they have been specified.
      If unspecified, the umask determines the permission bits. */
   if (Mode.IsKnown()) {
-    IfLt0(chmod(Path.c_str(), *Mode));
+    IfLt0(Wr::chmod(Path.c_str(), *Mode));
   }
 }
 
@@ -94,9 +97,9 @@ void TUnixStreamServer::CloseListeningSocket(TFd &sock) {
 
 void TUnixStreamServer::UnlinkPath() {
   assert(this);
-  int ret = unlink(Path.c_str());
+  int ret = Wr::unlink(Path.c_str());
 
   if ((ret < 0) && (errno != ENOENT)) {
-    IfLt0(ret);  // this will throw
+    ThrowSystemError(errno);
   }
 }

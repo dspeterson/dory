@@ -53,7 +53,7 @@ namespace Log {
     return ((GetLogMask() & Mask(p)) != 0);
   }
 
-  const char *ToString(TPri p);
+  const char *ToString(TPri p) noexcept;
 
   TPri ToPri(const char *pri_string);
 

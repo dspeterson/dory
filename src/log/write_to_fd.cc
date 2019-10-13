@@ -24,12 +24,29 @@
 #include <unistd.h>
 
 #include <base/error_util.h>
+#include <base/wr/fd_util.h>
 
 using namespace Base;
 using namespace Log;
 
-void Log::WriteToFd(int fd, TLogEntryAccessApi &entry) {
-  auto ret = entry.Get(true /* with_prefix */,
+TFdWriteResult Log::WriteToFd(int fd, TLogEntryAccessApi &entry) noexcept {
+  const auto ret = entry.Get(true /* with_prefix */,
       true /* with_trailing_newline */);
-  IfLt0(write(fd, ret.first, ret.second - ret.first));
+
+  if (ret.second < ret.first) {
+    Die("Invalid log entry detected on attempt to write to file descriptor");
+  }
+
+  const size_t size = ret.second - ret.first;
+  const ssize_t write_result = Wr::write(fd, ret.first, size);
+
+  if (write_result < 0) {
+    return TFdWriteResult::Error;
+  }
+
+  if (static_cast<size_t>(write_result) < size) {
+    return TFdWriteResult::ShortCount;
+  }
+
+  return TFdWriteResult::Ok;
 }

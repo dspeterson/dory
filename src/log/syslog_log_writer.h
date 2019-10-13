@@ -40,9 +40,9 @@ namespace Log {
        WARNING: The memory pointed to by paramater 'ident' must not be freed
        for as long as the program writes to syslog.  This is because openlog()
        internally retains the pointer. */
-    static void Init(const char *ident, int option, int facility);
+    static void Init(const char *ident, int option, int facility) noexcept;
 
-    explicit TSyslogLogWriter(bool enabled);
+    explicit TSyslogLogWriter(bool enabled) noexcept;
 
     bool IsEnabled() const noexcept {
       assert(this);

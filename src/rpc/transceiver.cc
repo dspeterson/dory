@@ -26,6 +26,7 @@
 #include <new>
 
 #include <base/error_util.h>
+#include <base/wr/net_util.h>
 #include <base/zero.h>
 
 using namespace Base;
@@ -107,7 +108,7 @@ size_t TTransceiver::Recv(int sock_fd, int flags) {
   assert(sock_fd >= 0);
   msghdr hdr;
   InitHdr(hdr);
-  return GetActualIoSize(recvmsg(sock_fd, &hdr, flags));
+  return GetActualIoSize(Wr::recvmsg(sock_fd, &hdr, flags));
 }
 
 size_t TTransceiver::Send(int sock_fd, int flags) {
@@ -115,7 +116,7 @@ size_t TTransceiver::Send(int sock_fd, int flags) {
   assert(sock_fd >= 0);
   msghdr hdr;
   InitHdr(hdr);
-  return GetActualIoSize(sendmsg(sock_fd, &hdr, flags | MSG_NOSIGNAL));
+  return GetActualIoSize(Wr::sendmsg(sock_fd, &hdr, flags | MSG_NOSIGNAL));
 }
 
 void TTransceiver::InitHdr(msghdr &hdr) const noexcept {

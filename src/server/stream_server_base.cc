@@ -30,6 +30,7 @@
 
 #include <base/error_util.h>
 #include <base/on_destroy.h>
+#include <base/wr/net_util.h>
 
 using namespace Base;
 using namespace Server;
@@ -124,9 +125,7 @@ TStreamServerBase::TStreamServerBase(int backlog, struct sockaddr *addr,
       AddrSpace(addr_space),
       ConnectionHandler(std::move(connection_handler)) {
   assert(ConnectionHandler);
-
-  /* not strictly necessary */
-  std::memset(Addr, 0, AddrSpace);
+  std::memset(Addr, 0, AddrSpace);  // not strictly necessary
 }
 
 void TStreamServerBase::CloseListeningSocket(TFd &sock) {
@@ -151,7 +150,7 @@ void TStreamServerBase::Run() {
       Bind();
     }
 
-    IfLt0(listen(ListeningSocket, Backlog));
+    IfLt0(Wr::listen(ListeningSocket, Backlog));
   } catch (...) {
     if (SyncStartNotify) {
       try {
@@ -187,7 +186,13 @@ void TStreamServerBase::AcceptClients() {
       item.revents = 0;
     }
 
-    int ret = IfLt0(poll(&events[0], events.size(), -1));
+    int ret = Wr::poll(&events[0], events.size(), -1);
+
+    if (ret < 0) {
+      assert(errno == EINTR);
+      continue;
+    }
+
     assert(ret > 0);
 
     if (shutdown_request_event.revents) {
@@ -196,25 +201,12 @@ void TStreamServerBase::AcceptClients() {
 
     assert(new_client_event.revents);
     socklen_t len = AddrSpace;
-    ret = accept(ListeningSocket, Addr,
+    ret = Wr::accept(ListeningSocket, Addr,
         (Addr == nullptr) ? nullptr : &len);
 
     if (ret < 0) {
-      /* Note: On some operating systems, EPROTO may be reported instead of
-         ECONNABORTED.  EPERM may be reported if firewall rules forbid a
-         connection.  See the man page for accept() regarding the errors below.
-       */
-      if ((errno == ECONNABORTED) || (errno == EPROTO) || (errno == EPERM) ||
-          (errno == ENETDOWN) || (errno == ENOPROTOOPT) ||
-          (errno == EHOSTDOWN) || (errno == ENONET) ||
-          (errno == EHOSTUNREACH) || (errno == EOPNOTSUPP) ||
-          (errno == ENETUNREACH) || (errno == EINTR)) {
-        ConnectionHandler->HandleNonfatalAcceptError(errno);
-        continue;
-      }
-
-      /* Anything else is fatal.  This will throw. */
-      IfLt0(ret);
+      ConnectionHandler->HandleNonfatalAcceptError(errno);
+      continue;
     }
 
     TFd client_fd(ret);

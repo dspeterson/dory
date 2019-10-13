@@ -29,6 +29,8 @@
 
 #include <base/basename.h>
 #include <base/counter.h>
+#include <base/no_default_case.h>
+#include <base/wr/time_util.h>
 #include <log/log.h>
 #include <log/log_entry.h>
 #include <log/log_prefix_assign_api.h>
@@ -41,8 +43,10 @@ using namespace Log;
 using namespace LogUtil;
 
 DEFINE_COUNTER(LogPrefixWriteFailed);
-DEFINE_COUNTER(LogToFileFailed);
-DEFINE_COUNTER(LogToStdoutStderrFailed);
+DEFINE_COUNTER(LogToFileFailedShortCount);
+DEFINE_COUNTER(LogToFileFailedSysError);
+DEFINE_COUNTER(LogToStdoutStderrFailedShortCount);
+DEFINE_COUNTER(LogToStdoutStderrFailedSysError);
 
 static const char *GetProgName(const char *prog_name = nullptr) {
   static const std::string name = (prog_name == nullptr) ? "" : prog_name;
@@ -52,13 +56,9 @@ static const char *GetProgName(const char *prog_name = nullptr) {
 /* Assign a prefix to the given log entry.  The prefix will look something like
    "2019-07-14 19:43:34.001 UTC dory[84828] WARNING: ", assuming that the
    value returned by entry.GetLevel() is TPri::WARNING. */
-static void WriteLogPrefix(TLogPrefixAssignApi &entry) {
+static void WriteLogPrefix(TLogPrefixAssignApi &entry) noexcept {
   struct timespec now;
-
-  if (clock_gettime(CLOCK_REALTIME, &now)) {
-    LogPrefixWriteFailed.Increment();
-    return;
-  }
+  Wr::clock_gettime(CLOCK_REALTIME, &now);
 
   std::tm t;
 
@@ -68,7 +68,8 @@ static void WriteLogPrefix(TLogPrefixAssignApi &entry) {
   }
 
   char buf[64];
-  size_t bytes_written = std::strftime(buf, sizeof(buf), "%Y-%m-%d %T", &t);
+  const size_t bytes_written = std::strftime(buf, sizeof(buf), "%Y-%m-%d %T",
+      &t);
 
   if ((bytes_written == 0) || (bytes_written >= sizeof(buf))) {
     LogPrefixWriteFailed.Increment();
@@ -77,10 +78,17 @@ static void WriteLogPrefix(TLogPrefixAssignApi &entry) {
 
   char *pos = buf + bytes_written;
   size_t space_left = sizeof(buf) - bytes_written;
-  size_t n_bytes = static_cast<size_t>(
-      std::snprintf(pos, space_left, ".%03d UTC %s[%d] ",
-          static_cast<int>(now.tv_nsec / 1000000), GetProgName(),
-          static_cast<int>(getpid())));
+
+  const int ret = std::snprintf(pos, space_left, ".%03d UTC %s[%d] ",
+      static_cast<int>(now.tv_nsec / 1000000), GetProgName(),
+      static_cast<int>(getpid()));
+
+  if (ret < 0) {
+    LogPrefixWriteFailed.Increment();
+    return;
+  }
+
+  const auto n_bytes = static_cast<size_t>(ret);
 
   if (n_bytes >= space_left) {
     LogPrefixWriteFailed.Increment();
@@ -89,8 +97,8 @@ static void WriteLogPrefix(TLogPrefixAssignApi &entry) {
 
   pos += n_bytes;
   space_left -= n_bytes;
-  const char *level_string = ToString(entry.GetLevel());
-  size_t level_len = std::strlen(level_string);
+  const char * const level_string = ToString(entry.GetLevel());
+  const size_t level_len = std::strlen(level_string);
 
   if (level_len >= space_left) {
     LogPrefixWriteFailed.Increment();
@@ -114,12 +122,32 @@ static void WriteLogPrefix(TLogPrefixAssignApi &entry) {
   entry.AssignPrefix(buf, static_cast<size_t>(pos - buf));
 }
 
-static void HandleStdoutStderrLogWriteFailure() {
-  LogToStdoutStderrFailed.Increment();
+static void HandleStdoutStderrLogWriteFailure(TLogWriteError error) noexcept {
+  switch (error) {
+    case TLogWriteError::ShortCount: {
+      LogToStdoutStderrFailedShortCount.Increment();
+      break;
+    }
+    case TLogWriteError::SysError: {
+      LogToStdoutStderrFailedSysError.Increment();
+      break;
+    }
+    NO_DEFAULT_CASE;
+  }
 }
 
-static void HandleFileLogWriteFailure() {
-  LogToFileFailed.Increment();
+static void HandleFileLogWriteFailure(TLogWriteError error) noexcept {
+  switch (error) {
+    case TLogWriteError::ShortCount: {
+      LogToFileFailedShortCount.Increment();
+      break;
+    }
+    case TLogWriteError::SysError: {
+      LogToFileFailedSysError.Increment();
+      break;
+    }
+    NO_DEFAULT_CASE;
+  }
 }
 
 static void LogFatalMsg(const char *msg) noexcept {

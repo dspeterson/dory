@@ -39,7 +39,7 @@ void Log::SetLogMask(unsigned int mask) noexcept {
   LogMask.store(mask, std::memory_order_relaxed);
 }
 
-const char *Log::ToString(Log::TPri p) {
+const char *Log::ToString(Log::TPri p) noexcept {
   const char *result = "";
 
   switch (p) {

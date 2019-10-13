@@ -25,8 +25,14 @@
 
 namespace Log {
 
+  enum class TFdWriteResult {
+    Ok,
+    ShortCount,
+    Error
+  };
+
   /* Write 'entry' to file descriptor 'fd'.  A trailing newline will be
-     appended.  Throw std::system_error on error. */
-  void WriteToFd(int fd, TLogEntryAccessApi &entry);
+     appended.  Return result of attempted write. */
+  TFdWriteResult WriteToFd(int fd, TLogEntryAccessApi &entry) noexcept;
 
 }  // Log

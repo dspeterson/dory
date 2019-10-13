@@ -34,6 +34,14 @@ namespace Base {
 
   namespace Wr {
 
+    int accept(TDisp disp, std::initializer_list<int> errors, int sockfd,
+        sockaddr *addr, socklen_t *addrlen) noexcept;
+
+    inline int accept(int sockfd, sockaddr *addr,
+        socklen_t *addrlen) noexcept {
+      return accept(TDisp::AddFatal, {}, sockfd, addr, addrlen);
+    }
+
     int bind(TDisp disp, std::initializer_list<int> errors, int sockfd,
         const sockaddr *addr, socklen_t addrlen) noexcept;
 
@@ -74,12 +82,26 @@ namespace Base {
       return recv(TDisp::AddFatal, {}, sockfd, buf, len, flags);
     }
 
+    ssize_t recvmsg(TDisp disp, std::initializer_list<int> errors, int sockfd,
+        msghdr *msg, int flags) noexcept;
+
+    inline ssize_t recvmsg(int sockfd, msghdr *msg, int flags) noexcept {
+      return recvmsg(TDisp::AddFatal, {}, sockfd, msg, flags);
+    }
+
     ssize_t send(TDisp disp, std::initializer_list<int> errors, int sockfd,
         const void *buf, size_t len, int flags) noexcept;
 
     inline ssize_t send(int sockfd, const void *buf, size_t len,
         int flags) noexcept {
       return send(TDisp::AddFatal, {}, sockfd, buf, len, flags);
+    }
+
+    ssize_t sendmsg(TDisp disp, std::initializer_list<int> errors, int sockfd,
+        const msghdr *msg, int flags) noexcept;
+
+    inline ssize_t sendmsg(int sockfd, const msghdr *msg, int flags) noexcept {
+      return sendmsg(TDisp::AddFatal, {}, sockfd, msg, flags);
     }
 
     int setsockopt(TDisp disp, std::initializer_list<int> errors, int sockfd,

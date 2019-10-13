@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <cassert>
 #include <initializer_list>
 
 #include <dirent.h>
@@ -34,6 +35,13 @@
 namespace Base {
 
   namespace Wr {
+
+    int chdir(TDisp disp, std::initializer_list<int> errors,
+        const char *path) noexcept;
+
+    inline int chdir(const char *path) noexcept {
+      return chdir(TDisp::AddFatal, {}, path);
+    }
 
     int chmod(TDisp disp, std::initializer_list<int> errors, const char *path,
         mode_t mode) noexcept;

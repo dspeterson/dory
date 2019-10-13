@@ -29,6 +29,8 @@
 #include <sys/types.h>
 
 #include <base/error_util.h>
+#include <base/no_default_case.h>
+#include <base/wr/file_util.h>
 #include <log/write_to_fd.h>
 
 using namespace Base;
@@ -61,10 +63,6 @@ static std::string ValidateFilePathAndMode(const std::string &path,
   return path;
 }
 
-static TFd OpenLogPath(const char *path, mode_t mode) {
-  return TFd(IfLt0(open(path, O_CREAT | O_APPEND | O_WRONLY, mode)));
-}
-
 TFileLogWriter::TInvalidPath::TInvalidPath(const std::string &path)
     : TError(MakeInvalidPathMsg(path), path) {
 }
@@ -75,7 +73,7 @@ TFileLogWriter::TInvalidMode::TInvalidMode(const std::string &path,
       Mode(mode) {
 }
 
-void TFileLogWriter::SetErrorHandler(TErrorHandler handler) noexcept {
+void TFileLogWriter::SetErrorHandler(TWriteErrorHandler handler) noexcept {
   ErrorHandler = handler;
 }
 
@@ -84,7 +82,9 @@ TFileLogWriter::TFileLogWriter(const std::string &path, mode_t open_mode)
       Path(ValidateFilePathAndMode(path, open_mode)),
       OpenMode(open_mode),
       FdRef(path.empty() ?
-          new TFd() : new TFd(OpenLogPath(path.c_str(), open_mode))) {
+          new TFd() :
+          new TFd(IfLt0(Wr::open(path.c_str(), O_CREAT | O_APPEND | O_WRONLY,
+              open_mode)))) {
 }
 
 void TFileLogWriter::WriteEntry(TLogEntryAccessApi &entry,
@@ -92,10 +92,19 @@ void TFileLogWriter::WriteEntry(TLogEntryAccessApi &entry,
   assert(this);
 
   if (IsEnabled()) {
-    try {
-      WriteToFd(*FdRef, entry);
-    } catch (...) {
-      ErrorHandler();
+    switch (WriteToFd(*FdRef, entry)) {
+      case TFdWriteResult::Ok: {
+        break;
+      }
+      case TFdWriteResult::ShortCount: {
+        ErrorHandler(TLogWriteError::ShortCount);
+        break;
+      }
+      case TFdWriteResult::Error: {
+        ErrorHandler(TLogWriteError::SysError);
+        break;
+      }
+      NO_DEFAULT_CASE;
     }
   }
 }
@@ -109,7 +118,8 @@ void TFileLogWriter::WriteStackTrace(TPri /* pri */, void *const *buffer,
   }
 }
 
-void TFileLogWriter::NullErrorHandler() noexcept {
+void TFileLogWriter::NullErrorHandler(TLogWriteError /* error */) noexcept {
 }
 
-TErrorHandler TFileLogWriter::ErrorHandler{TFileLogWriter::NullErrorHandler};
+TWriteErrorHandler
+TFileLogWriter::ErrorHandler{TFileLogWriter::NullErrorHandler};

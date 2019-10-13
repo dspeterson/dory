@@ -27,6 +27,8 @@
 #include <signal.h>
 
 #include <base/error_util.h>
+#include <base/wr/fd_util.h>
+#include <base/wr/signal_util.h>
 
 using namespace Base;
 using namespace Server;
@@ -74,8 +76,8 @@ void TSignalHandlerThread::Start() {
      blocked for the caller.  From here onward, thread assumes all signal
      handling responsibility.  No other threads should unblock any signals. */
   assert(HandlerCallback);
-  IfLt0(sigprocmask(SIG_SETMASK,
-      TSigSet(TSigSet::TListInit::Exclude, {}).Get(), nullptr));
+  Wr::sigprocmask(SIG_SETMASK,
+      TSigSet(TSigSet::TListInit::Exclude, {}).Get(), nullptr);
   DoStart();
 }
 
@@ -99,7 +101,8 @@ void TSignalHandlerThread::Run() {
        indicating that it's time for us to shut down becomes readable.
        Client-specified signals are unblocked inside ppoll(), and all signals
        are blocked everywhere else. */
-    int ret = ppoll(&poll_fd, 1, nullptr, BlockedSet.Get());
+    int ret = Wr::ppoll(&poll_fd, 1, nullptr, BlockedSet.Get());
+
     /* If we were awakened by a signal, ret will be -1 and errno will be EINTR.
        Otherwise, ret will be 1, indicating that it's time to shut down. */
     if (ret != -1) {
@@ -110,13 +113,8 @@ void TSignalHandlerThread::Run() {
       break;
     }
 
+    assert(errno == EINTR);
     assert(poll_fd.revents == 0);
-
-    if (errno != EINTR) {
-      /* Throw on any errno value other than EINTR.  Exception will be made
-         available to caller of base class Join() method. */
-      IfLt0(ret);
-    }
 
     for (auto &item : CaughtSignals) {
       if (item.second.Caught) {
@@ -147,7 +145,7 @@ void TSignalHandlerThread::Handler(int signum, siginfo_t *info,
   iter->second.Set(*info);
 }
 
-void TSignalHandlerThread::InstallHandler() const {
+void TSignalHandlerThread::InstallHandler() const noexcept {
   assert(this);
   TSigSet block_all(TSigSet::TListInit::Exclude, {});
 
@@ -161,6 +159,6 @@ void TSignalHandlerThread::InstallHandler() const {
     /* Specifies that all signals are blocked during handler execution. */
     std::memcpy(&act.sa_mask, block_all.Get(), sizeof(act.sa_mask));
 
-    IfLt0(sigaction(item.first, &act, nullptr));
+    Wr::sigaction(item.first, &act, nullptr);
   }
 }

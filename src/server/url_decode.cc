@@ -33,7 +33,7 @@ using namespace Server;
 static inline unsigned char HexToNum(const char *c_in, const char *start) {
   auto c = static_cast<unsigned char>(std::tolower(*c_in));
 
-  if(!isxdigit(c)) {
+  if(!std::isxdigit(c)) {
     throw TUrlDecodeError(static_cast<unsigned int>(c_in - start),
         "Expected a hex digit but found something else.");
   }

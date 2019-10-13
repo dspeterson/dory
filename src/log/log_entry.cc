@@ -28,10 +28,10 @@ static void NullPrefixWriter(TLogPrefixAssignApi &) noexcept {
 
 TPrefixWriteFn PrefixWriter{NullPrefixWriter};
 
-void Log::SetPrefixWriter(TPrefixWriteFn writer) {
+void Log::SetPrefixWriter(TPrefixWriteFn writer) noexcept {
   PrefixWriter = writer;
 }
 
-void Log::WritePrefix(TLogPrefixAssignApi &entry) {
+void Log::WritePrefix(TLogPrefixAssignApi &entry) noexcept {
   PrefixWriter(entry);
 }

@@ -89,9 +89,14 @@ static int DoryMain(int argc, char *argv[]) {
       }
     }
 
-    InitLogging(argv[0], config.LogLevel,
-        config.LogEcho /* enable_stdout_stderr */, true /* enable_syslog */,
-        std::string() /* file_path */);
+    try {
+      InitLogging(argv[0], config.LogLevel,
+          config.LogEcho && !config.Daemon /* enable_stdout_stderr */,
+          true /* enable_syslog */, std::string() /* file_path */);
+    } catch (const std::exception &x) {
+      std::cerr << "Failed to initialize logging: " << x.what()
+                << std::endl;
+    }
   } catch (const TArgParseError &x) {
     /* Error parsing command line arguments. */
     std::cerr << x.what() << std::endl;

@@ -25,9 +25,17 @@
 
 namespace Log {
 
+  enum class TLogWriteError {
+    /* Write succeeded, but the count of bytes written was short. */
+    ShortCount,
+
+    /* Some sort of system-level error occurred on attempted write. */
+    SysError
+  };
+
   /* Pointer to error handler function with the following signature:
 
-         void func() noexcept;
+         void func(TLogWriteError error) noexcept;
 
      The handler type is defined using decltype because C++ does not allow
      direct use of noexcept in a typedef or using declaration.
@@ -35,7 +43,7 @@ namespace Log {
      to decltype() is a temporary (i.e. an rvalue), so the decltype(...)
      evaluates to an rvalue reference to a function pointer.
    */
-  using TErrorHandler = std::remove_reference<decltype(std::declval<
-      void (*)() noexcept>())>::type;
+  using TWriteErrorHandler = std::remove_reference<decltype(std::declval<
+      void (*)(TLogWriteError) noexcept>())>::type;
 
 }

@@ -65,12 +65,12 @@ namespace Server {
 
     /* Specify a value to chmod() the socket file to the next time it is
        created.  If unspecified, the umask determines the permission bits. */
-    void SetMode(mode_t mode);
+    void SetMode(mode_t mode) noexcept;
 
     /* Specify that the next time the socket file is created, its mode will be
        determined by the umask.  This is the default behavior if SetMode() has
        not been called. */
-    void ClearMode() {
+    void ClearMode() noexcept {
       assert(this);
       Mode.Reset();
     }

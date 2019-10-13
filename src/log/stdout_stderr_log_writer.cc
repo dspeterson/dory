@@ -23,12 +23,15 @@
 
 #include <execinfo.h>
 
+#include <base/no_default_case.h>
 #include <log/pri.h>
 #include <log/write_to_fd.h>
 
+using namespace Base;
 using namespace Log;
 
-void TStdoutStderrLogWriter::SetErrorHandler(TErrorHandler handler) {
+void TStdoutStderrLogWriter::SetErrorHandler(
+    TWriteErrorHandler handler) noexcept {
   ErrorHandler = handler;
 }
 
@@ -36,13 +39,22 @@ void TStdoutStderrLogWriter::WriteEntry(
     TLogEntryAccessApi &entry, bool no_stdout_stderr) const noexcept {
   assert(this);
 
-  if (Enabled && !no_stdout_stderr) {
-    try {
-      /* Anything at least as severe as LOG_WARNING goes to stderr, so it
-         doesn't get lost in the noise. */
-      WriteToFd((entry.GetLevel() <= TPri::WARNING) ? 2 : 1, entry);
-    } catch (...) {
-      ErrorHandler();
+  if (IsEnabled() && !no_stdout_stderr) {
+    /* Anything at least as severe as LOG_WARNING goes to stderr, so it
+       doesn't get lost in the noise. */
+    switch (WriteToFd((entry.GetLevel() <= TPri::WARNING) ? 2 : 1, entry)) {
+      case TFdWriteResult::Ok: {
+        break;
+      }
+      case TFdWriteResult::ShortCount: {
+        ErrorHandler(TLogWriteError::ShortCount);
+        break;
+      }
+      case TFdWriteResult::Error: {
+        ErrorHandler(TLogWriteError::SysError);
+        break;
+      }
+      NO_DEFAULT_CASE;
     }
   }
 }
@@ -56,8 +68,9 @@ void TStdoutStderrLogWriter::WriteStackTrace(TPri /* pri */,
   }
 }
 
-void TStdoutStderrLogWriter::NullErrorHandler() noexcept {
+void TStdoutStderrLogWriter::NullErrorHandler(
+    TLogWriteError /* error */) noexcept {
 }
 
-TErrorHandler TStdoutStderrLogWriter::ErrorHandler{
+TWriteErrorHandler TStdoutStderrLogWriter::ErrorHandler{
     TStdoutStderrLogWriter::NullErrorHandler};
