@@ -29,7 +29,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <base/error_util.h>
 #include <base/no_default_case.h>
 #include <base/wr/fd_util.h>
 #include <base/wr/time_util.h>
@@ -146,10 +145,8 @@ void TDebugLogger::LogMsg(const TMsg &msg) {
 
   if (ret < 0) {
     /* Fail gracefully. */
-    char tmp_buf[256];
-    const char *err_msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
-    LOG(TPri::ERR) << "Failed to write to debug logfile " << ToBlurb(LogId)
-        << ": " << err_msg;
+    LOG_ERRNO(TPri::ERR, errno) << "Failed to write to debug logfile "
+        << ToBlurb(LogId) << ": ";
     DisableLogging();
   }
 }

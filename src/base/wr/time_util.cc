@@ -23,6 +23,8 @@
 
 #include <cerrno>
 
+#include <base/error_util.h>
+
 using namespace Base;
 
 int Base::Wr::clock_gettime(TDisp disp, std::initializer_list<int> errors,

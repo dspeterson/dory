@@ -23,6 +23,8 @@
 
 #include <cerrno>
 
+#include <base/error_util.h>
+
 using namespace Base;
 
 int Base::Wr::accept(TDisp disp, std::initializer_list<int> errors, int sockfd,

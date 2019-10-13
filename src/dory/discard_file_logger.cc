@@ -544,10 +544,8 @@ GetOldLogFileSizes(const char *log_dir, const char *log_filename) {
 
     if (ret < 0) {
       if (errno != ENOENT) {
-        char buf[256];
-        const char *msg = Strerror(errno, buf, sizeof(buf));
-        LOG(TPri::WARNING) << "Failed to stat() old discard logfile "
-            << file_path << ": " << msg;
+        LOG_ERRNO(TPri::WARNING, errno)
+            << "Failed to stat() old discard logfile " << file_path << ": ";
       }
 
       continue;
@@ -600,10 +598,9 @@ bool TDiscardFileLogger::TArchiveCleaner::HandleCleanRequest() {
      longer violated. */
   for (const TOldLogFileInfo &info : old_log_files) {
     if (Wr::unlink(info.AbsolutePath.c_str()) && (errno != ENOENT)) {
-      char buf[256];
-      const char *msg = Strerror(errno, buf, sizeof(buf));
-      LOG(TPri::WARNING) << "Failed to unlink old discard logfile "
-          << info.AbsolutePath << ": " << msg;
+      LOG_ERRNO(TPri::WARNING, errno)
+          << "Failed to unlink old discard logfile " << info.AbsolutePath
+          << ": ";
     } else {
       total_size -= info.Size;
 
@@ -736,11 +733,9 @@ TFd TDiscardFileLogger::OpenLogPath(const char *log_path) {
       S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
 
   if (!fd.IsOpen()) {
-    char buf[256];
-    const char *msg = Strerror(errno, buf, sizeof(buf));
-    LOG(TPri::WARNING)
+    LOG_ERRNO(TPri::WARNING, errno)
         << "Disabling discard logfile mechanism due to failure to open "
-        << "discard logfile " << log_path << " for append: " << msg;
+        << "discard logfile " << log_path << " for append: ";
     DisableLogging();
   }
 
@@ -786,11 +781,8 @@ bool TDiscardFileLogger::CheckMaxFileSize(uint64_t next_entry_size) {
   ret = Wr::rename(LogPath.c_str(), rename_path.c_str());
 
   if (ret < 0) {
-    char buf[256];
-    const char *msg = Strerror(errno, buf, sizeof(buf));
-    LOG(TPri::WARNING)
-        << "Disabling discard file logging on failure to rename logfile: "
-        << msg;
+    LOG_ERRNO(TPri::WARNING, errno)
+        << "Disabling discard file logging on failure to rename logfile: ";
     DisableLogging();
     return false;
   }
@@ -832,9 +824,7 @@ void TDiscardFileLogger::WriteToLog(const std::string &log_entry) {
   ssize_t ret = Wr::write(LogFd, log_entry.data(), log_entry.size());
 
   if (ret < 0) {
-    char buf[256];
-    const char *msg = Strerror(errno, buf, sizeof(buf));
-    LOG(TPri::ERR) << "Failed to write to discard logfile: " << msg;
+    LOG_ERRNO(TPri::ERR, errno) << "Failed to write to discard logfile: ";
   } else if (static_cast<size_t>(ret) < log_entry.size()) {
     LOG(TPri::ERR)
         << "write() to discard logfile returned short count: expected "

@@ -33,7 +33,6 @@
 #include <unistd.h>
 
 #include <base/counter.h>
-#include <base/error_util.h>
 #include <base/gettid.h>
 #include <base/no_default_case.h>
 #include <base/on_destroy.h>
@@ -400,12 +399,10 @@ bool TConnector::TrySendProduceRequest() {
 
   if (ret < 0) {
     assert(LostTcpConnection(errno));
-    char tmp_buf[256];
-    const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
-    LOG(TPri::ERR) << "Connector thread " << Gettid() << " (index "
-        << MyBrokerIndex << " broker " << MyBrokerId()
+    LOG_ERRNO(TPri::ERR, errno) << "Connector thread " << Gettid()
+        << " (index " << MyBrokerIndex << " broker " << MyBrokerId()
         << ") starting pause and finishing due to lost TCP connection during "
-        << "send: " << msg;
+        << "send: ";
     ConnectorSocketError.Increment();
     Ds.PauseButton.Push();
     return false;

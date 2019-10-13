@@ -229,11 +229,9 @@ bool TStreamClientWorkFn::HandleSockReadReady() {
       return false;
     }
 
-    char tmp_buf[256];
-    const char *err_msg = Strerror(x.code().value(), tmp_buf, sizeof(tmp_buf));
     std::string msg(IsTcp ? "TCP" : "UNIX stream");
     msg += " input thread failed to read from socket: ";
-    msg += err_msg;
+    AppendStrerror(x.code().value(), msg);
     Die(msg.c_str());
   }
 

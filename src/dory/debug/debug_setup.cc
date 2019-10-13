@@ -29,7 +29,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <base/error_util.h>
 #include <base/wr/file_util.h>
 #include <log/log.h>
 
@@ -49,9 +48,8 @@ static int OpenDebugFile(const char *path, bool truncate_file) {
 
   if (fd < 0) {
     /* Fail gracefully. */
-    char tmp_buf[256];
-    const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
-    LOG(TPri::ERR) << "Failed to open debug logfile " << path << ": " << msg;
+    LOG_ERRNO(TPri::ERR, errno) << "Failed to open debug logfile " << path
+        << ": ";
   }
 
   return fd;
@@ -182,27 +180,24 @@ static void SettingsFtruncate(const TDebugSetup::TSettings &settings) {
 
   if (fd >= 0 && Wr::ftruncate(fd, 0)) {
     /* Fail gracefully. */
-    char tmp_buf[256];
-    const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
-    LOG(TPri::ERR) << "Failed to truncate msg receive debug logfile: " << msg;
+    LOG_ERRNO(TPri::ERR, errno)
+        << "Failed to truncate msg receive debug logfile: ";
   }
 
   fd = settings.GetLogFileDescriptor(TDebugSetup::TLogId::MSG_SEND);
 
   if (fd >= 0 && Wr::ftruncate(fd, 0)) {
     /* Fail gracefully. */
-    char tmp_buf[256];
-    const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
-    LOG(TPri::ERR) << "Failed to truncate msg send debug logfile: " << msg;
+    LOG_ERRNO(TPri::ERR, errno)
+        << "Failed to truncate msg send debug logfile: ";
   }
 
   fd = settings.GetLogFileDescriptor(TDebugSetup::TLogId::MSG_GOT_ACK);
 
   if (fd >= 0 && Wr::ftruncate(fd, 0)) {
     /* Fail gracefully. */
-    char tmp_buf[256];
-    const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
-    LOG(TPri::ERR) << "Failed to truncate msg got ACK debug logfile: " << msg;
+    LOG_ERRNO(TPri::ERR, errno)
+        << "Failed to truncate msg got ACK debug logfile: ";
   }
 }
 
@@ -220,24 +215,21 @@ void TDebugSetup::DeleteOldDebugFiles(
   const std::string &msg_got_ack_path = GetLogPath(TLogId::MSG_GOT_ACK);
 
   if (Wr::unlink(msg_receive_path.c_str())) {
-    char tmp_buf[256];
-    const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
-    LOG(TPri::ERR) << "Failed to unlink debug file for received messages ["
-        << msg_receive_path << "]: " << msg;
+    LOG_ERRNO(TPri::ERR, errno)
+        << "Failed to unlink debug file for received messages ["
+        << msg_receive_path << "]: ";
   }
 
   if (Wr::unlink(msg_send_path.c_str())) {
-    char tmp_buf[256];
-    const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
-    LOG(TPri::ERR) << "Failed to unlink debug file for sent messages ["
-                   << msg_send_path << "]: " << msg;
+    LOG_ERRNO(TPri::ERR, errno)
+        << "Failed to unlink debug file for sent messages [" << msg_send_path
+        << "]: ";
   }
 
   if (Wr::unlink(msg_got_ack_path.c_str())) {
-    char tmp_buf[256];
-    const char *msg = Strerror(errno, tmp_buf, sizeof(tmp_buf));
-    LOG(TPri::ERR) << "Failed to unlink debug file for acknowledged messages ["
-                   << msg_got_ack_path << "]: " << msg;
+    LOG_ERRNO(TPri::ERR, errno)
+        << "Failed to unlink debug file for acknowledged messages ["
+        << msg_got_ack_path << "]: ";
   }
 
   if (old_settings) {

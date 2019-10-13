@@ -26,6 +26,8 @@
 
 #include <unistd.h>
 
+#include <base/error_util.h>
+
 using namespace Base;
 
 int Base::Wr::chdir(TDisp disp, std::initializer_list<int> errors,

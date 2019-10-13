@@ -33,6 +33,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <base/error_util.h>
 #include <base/wr/common.h>
 
 namespace Base {

@@ -54,9 +54,6 @@ namespace Base {
         bool default_fatal,
         std::initializer_list<int> default_err_list) noexcept;
 
-    [[ noreturn ]] void DieErrno(const char *fn_name,
-        int errno_value) noexcept;
-
   }  // Wr
 
 }  // Base

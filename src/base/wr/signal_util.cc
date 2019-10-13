@@ -23,6 +23,8 @@
 
 #include <cerrno>
 
+#include <base/error_util.h>
+
 using namespace Base;
 
 int Base::Wr::pthread_sigmask(TDisp disp, std::initializer_list<int> errors,

@@ -283,11 +283,8 @@ bool TMetadataFetcher::ReadResponse(int timeout_ms) {
         return false;
       }
 
-      char tmp_buf[256];
-      const char *err_msg = Strerror(x.code().value(), tmp_buf,
-          sizeof(tmp_buf));
       std::string msg("Failed to read metadata response: ");
-      msg += err_msg;
+      AppendStrerror(x.code().value(), msg);
       Die(msg.c_str());
     }
 

@@ -23,6 +23,8 @@
 
 #include <cerrno>
 
+#include <base/error_util.h>
+
 using namespace Base;
 
 pid_t Base::Wr::fork(TDisp disp, std::initializer_list<int> errors) noexcept {

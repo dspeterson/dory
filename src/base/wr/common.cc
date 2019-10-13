@@ -21,20 +21,10 @@
 
 #include <base/wr/common.h>
 
-#include <cerrno>
-#include <string>
-
 #include <base/error_util.h>
 #include <base/no_default_case.h>
 
 using namespace Base;
-
-static std::string MakeErrnoMsg(const char *fn_name, int errno_value) {
-  std::string msg(fn_name);
-  msg += " failed with errno ";
-  msg += std::to_string(errno_value);
-  return msg;
-}
 
 static bool contains(std::initializer_list<int> err_list, int err) noexcept {
   return (std::find(err_list.begin(), err_list.end(), err) != err_list.end());
@@ -70,22 +60,3 @@ bool Base::Wr::IsFatal(int err, TDisp disp,
   return (contains(default_err_list, err) == default_fatal);
 }
 
-[[ noreturn ]] void Base::Wr::DieErrno(const char *fn_name,
-    int errno_value) noexcept {
-  if (errno_value == ENOMEM) {
-    /* If we ran out of memory, a stack trace isn't useful and attempting to
-       create one may fail.  Just log an error message that makes it obvious
-       what happened. */
-    DieNoStackTrace(
-        "System or library call failed with ENOMEM (out of memory)");
-  }
-
-  try {
-    std::string msg = MakeErrnoMsg(fn_name, errno_value);
-    Die(msg.c_str());
-  } catch (...) {
-    /* We got an exception while creating the error message.  Just log the
-       function name. */
-    Die(fn_name);
-  }
-}

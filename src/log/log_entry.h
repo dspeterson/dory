@@ -30,6 +30,7 @@
 #include <type_traits>
 #include <utility>
 
+#include <base/error_util.h>
 #include <base/no_copy_semantics.h>
 #include <log/array_ostream_base.h>
 #include <log/log_entry_access_api.h>
@@ -83,13 +84,15 @@ namespace Log {
     /* no_stdout_stderr will get a true value only when we are writing fatal
        error output, which always goes to stderr regardless of how the logging
        subsystem is configured.  To avoid duplication, we therefore we want to
-       suppress stdout/stderr output from logging in this case. */
+       suppress stdout/stderr output from logging in this case.  If errno_value
+       is nonzero, a strerror() message will be appended to the log entry. */
     TLogEntry(std::shared_ptr<TLogWriterBase> &&log_writer,
-        TPri level, bool no_stdout_stderr = false) noexcept
+        TPri level, bool no_stdout_stderr = false, int errno_value = 0) noexcept
         : TArrayOstreamBase<BufSize, PrefixSpace, 2 /* SuffixSpace */>(),
           LogWriter(std::move(log_writer)),
           Level(level),
-          NoStdoutStderr(no_stdout_stderr) {
+          NoStdoutStderr(no_stdout_stderr),
+          ErrnoValue(errno_value) {
       assert(!!LogWriter);
     }
 
@@ -179,6 +182,10 @@ namespace Log {
       if (!Written) {
         Written = true;
 
+        if (ErrnoValue) {
+          Base::AppendStrerror(ErrnoValue, *this);
+        }
+
         if (!this->IsEmpty()) {
           LogWriter->WriteEntry(*this, NoStdoutStderr);
         }
@@ -194,6 +201,9 @@ namespace Log {
 
     /* If true, omit stdout/stderr output. */
     const bool NoStdoutStderr;
+
+    /* If nonzero, append strerror() message. */
+    const int ErrnoValue;
 
     /* Prefix can be at most PrefixSpace bytes, and starts at buffer index
        (PrefixSpace - PrefixLen). */

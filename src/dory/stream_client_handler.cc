@@ -24,7 +24,6 @@
 #include <cassert>
 #include <utility>
 
-#include <base/error_util.h>
 #include <log/log.h>
 
 using namespace Base;
@@ -58,9 +57,8 @@ void TStreamClientHandler::HandleConnection(Base::TFd &&sock,
 
 void TStreamClientHandler::HandleNonfatalAcceptError(int errno_value) {
   assert(this);
-  char buf[256];
   /* TODO: Consider implementing rate limiting on a per-errno-value basis. */
-  LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Error accepting "
-      << (IsTcp ? "TCP" : "UNIX stream") << " input connection: "
-      << Strerror(errno_value, buf, sizeof(buf));
+  LOG_ERRNO_R(TPri::ERR, errno_value, std::chrono::seconds(30))
+      << "Error accepting " << (IsTcp ? "TCP" : "UNIX stream")
+      << " input connection: ";
 }

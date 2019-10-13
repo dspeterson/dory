@@ -26,6 +26,8 @@
 #include <cerrno>
 #include <cstddef>
 #include <cstdlib>
+#include <ostream>
+#include <string>
 #include <system_error>
 #include <type_traits>
 
@@ -76,6 +78,13 @@ namespace Base {
      string constant.  The valid lifetime of the memory pointed to by the
      return value must be assumed to not exceed the lifetime of 'buf'. */
   const char *Strerror(int errno_value, char *buf, size_t buf_size) noexcept;
+
+  /* Append a message associated with errno_value to msg. */
+  void AppendStrerror(int errno_value, std::string &msg);
+
+  /* Append a message associated with errno_value to the given output
+     stream. */
+  void AppendStrerror(int errno_value, std::ostream &out);
 
   /* RAII container for result of backtrace_symbols() library call. */
   class TBacktraceSymbols final {
@@ -189,5 +198,10 @@ namespace Base {
   /* Log fatal error message and dump core, but don't generate a stack
      trace. */
   [[ noreturn ]] void DieNoStackTrace(const char *msg) noexcept;
+
+  /* fn_name is the name of a system call or library function (for instance,
+     "fcntl()" or "socket()") that failed with the given errno value.  Die with
+     an appropriate error message. */
+  [[ noreturn ]] void DieErrno(const char *fn_name, int errno_value) noexcept;
 
 }  // Base

@@ -61,6 +61,20 @@ const char *Base::Strerror(int errno_value, char *buf,
 #endif
 }
 
+static const size_t StrerrorBufSize = 256;
+
+void Base::AppendStrerror(int errno_value, std::string &msg) {
+  char tmp_buf[StrerrorBufSize];
+  const char *err_msg = Strerror(errno_value, tmp_buf, sizeof(tmp_buf));
+  msg += err_msg;
+}
+
+void Base::AppendStrerror(int errno_value, std::ostream &out) {
+  char tmp_buf[StrerrorBufSize];
+  const char *err_msg = Strerror(errno_value, tmp_buf, sizeof(tmp_buf));
+  out << err_msg;
+}
+
 static void DefaultSecondaryFatalMsgWriter(const char * /* msg */) noexcept {
   /* no-op */
 }
@@ -198,7 +212,7 @@ static std::atomic<pid_t> die_flag_holder(0);
       "Other thread detected in Die(): waiting for stack trace to finish");
 
   /* Wait for die_flag holder to finish stack trace and call abort(). */
-  for (;;) {
+  for (; ; ) {
     pause();
   }
 }
@@ -209,4 +223,28 @@ static std::atomic<pid_t> die_flag_holder(0);
 
 [[ noreturn ]] void Base::DieNoStackTrace(const char *msg) noexcept {
   DieImpl(msg, false /* stack_trace */);
+}
+
+[[ noreturn ]] void Base::DieErrno(const char *fn_name,
+    int errno_value) noexcept {
+  if (errno_value == ENOMEM) {
+    /* If we ran out of memory, a stack trace isn't useful and attempting to
+       create one may fail.  Just log an error message that makes it obvious
+       what happened. */
+    DieNoStackTrace(
+        "System or library call failed with ENOMEM (out of memory)");
+  }
+
+  try {
+    std::string msg(fn_name);
+    msg += " failed with errno ";
+    msg += std::to_string(errno_value);
+    msg += ": ";
+    AppendStrerror(errno_value, msg);
+    Die(msg.c_str());
+  } catch (...) {
+    /* We got an exception while creating the error message.  Just use the
+       function name as the error message. */
+    Die(fn_name);
+  }
 }

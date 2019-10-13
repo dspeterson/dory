@@ -66,7 +66,12 @@ namespace Log {
  */
 #define LOG(p) Log::IsEnabled(p) && Log::TLogEntryType(Log::GetLogWriter(), p)
 
-/* Same as above, but rate limits log messages.  For instance:
+/* Same as LOG(), but appends a strerror() message associated with errno_value
+   to log entry before writing. */
+#define LOG_ERRNO(p, errno_value) Log::IsEnabled(p) && \
+    Log::TLogEntryType(Log::GetLogWriter(), p, false, errno_value)
+
+/* Same as LOG(), but rate limits log messages.  For instance:
 
        LOG_R(TPri::INFO, std::chrono::seconds(30)) << "The answer is "
            << ComputeAnswer();
@@ -80,3 +85,13 @@ namespace Log {
       return lim; \
     }().Test() && \
     Log::TLogEntryType(Log::GetLogWriter(), p)
+
+/* Same as LOG_R(), but appends a strerror() message associated with
+   errno_value to log entry before writing. */
+#define LOG_ERRNO_R(p, errno_value, d) Log::IsEnabled(p) && \
+    []() -> Log::TLogRateLimiter & { \
+      static Log::TLogRateLimiter lim(&std::chrono::steady_clock::now, \
+          std::chrono::steady_clock::duration(d)); \
+      return lim; \
+    }().Test() && \
+    Log::TLogEntryType(Log::GetLogWriter(), p, false, errno_value)
