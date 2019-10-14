@@ -141,14 +141,14 @@ namespace Thread {
        if performing a graceful type of shutdown, the thread should continue to
        monitor the FD in case it becomes readable due to some emergency
        scenario causing unexpected destructor invocation. */
-    void ClearShutdownRequest() {
+    void ClearShutdownRequest() noexcept {
       assert(this);
       ShutdownRequestedSem.Pop();
     }
 
     /* Subclasses should call this in their destructors to make sure the thread
        shuts down even if something unexpected happens. */
-    void ShutdownOnDestroy();
+    void ShutdownOnDestroy() noexcept;
 
     private:
     void RunAndTerminate();

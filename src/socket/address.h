@@ -36,6 +36,7 @@
 
 #include <base/error_util.h>
 #include <base/thrower.h>
+#include <base/wr/net_util.h>
 #include <socket/db/error.h>
 
 namespace Socket {
@@ -57,23 +58,23 @@ namespace Socket {
     enum TSpecial { IPv4Any, IPv4Loopback, IPv6Any, IPv6Loopback };
 
     /* The default address is AF_UNSPEC. */
-    TAddress() {
+    TAddress() noexcept {
       Storage.ss_family = AF_UNSPEC;
     }
 
     /* Move constructor.  The donor is left as AF_UNSPEC. */
-    TAddress(TAddress &&that) {
+    TAddress(TAddress &&that) noexcept {
       that.CopyOut(Storage);
       that.Storage.ss_family = AF_UNSPEC;
     }
 
     /* Copy constructor. */
-    TAddress(const TAddress &that) {
+    TAddress(const TAddress &that) noexcept {
       that.CopyOut(Storage);
     }
 
     /* Copy construct from a naked sockaddr. */
-    explicit TAddress(const sockaddr &sa) {
+    explicit TAddress(const sockaddr &sa) noexcept {
       memcpy(&Storage, &sa, GetLen(sa.sa_family));
     }
 
@@ -88,10 +89,10 @@ namespace Socket {
     explicit TAddress(std::istream &&that);
 
     /* Construct the given special address and port. */
-    TAddress(TSpecial special, in_port_t port = 0);
+    TAddress(TSpecial special, in_port_t port = 0) noexcept;
 
     /* Swaperator. */
-    TAddress &operator=(TAddress &&that) {
+    TAddress &operator=(TAddress &&that) noexcept {
       assert(this);
       assert(&that);
       std::swap(Storage, that.Storage);
@@ -99,13 +100,13 @@ namespace Socket {
     }
 
     /* Assignment operator. */
-    TAddress &operator=(const TAddress &that) {
+    TAddress &operator=(const TAddress &that) noexcept {
       assert(this);
       return *this = TAddress(that);
     }
 
     /* Assign from a naked sockaddr. */
-    TAddress &operator=(const sockaddr &sa) {
+    TAddress &operator=(const sockaddr &sa) noexcept {
       assert(this);
       return *this = TAddress(sa);
     }
@@ -117,47 +118,47 @@ namespace Socket {
     }
 
     /* Assign the given special address, setting port to 0. */
-    TAddress &operator=(TSpecial special) {
+    TAddress &operator=(TSpecial special) noexcept {
       assert(this);
       return *this = TAddress(special);
     }
 
     /* Cast to a naked sockaddr. */
-    operator const sockaddr *() const {
+    operator const sockaddr *() const noexcept {
       assert(this);
       return &Generic;
     }
 
     /* Cast to a modifiable naked sockaddr.  If you modify the structure,
        call Verify() afterward to make sure it's still in good shape. */
-    operator sockaddr *() {
+    operator sockaddr *() noexcept {
       assert(this);
       return &Generic;
     }
 
     /* True iff. the family, addr, and port fields match. */
-    bool operator==(const TAddress &that) const;
+    bool operator==(const TAddress &that) const noexcept;
 
     /* True iff. the family, addr, and port fields don't match. */
-    bool operator!=(const TAddress &that) const {
+    bool operator!=(const TAddress &that) const noexcept {
       return !(*this == that);
     }
 
     /* Assign the given special address and port. */
-    TAddress &Assign(TSpecial special, in_port_t port = 0) {
+    TAddress &Assign(TSpecial special, in_port_t port = 0) noexcept {
       assert(this);
       return *this = TAddress(special, port);
     }
 
     /* Copy the naked address to the given buffer. */
-    void CopyOut(sockaddr_storage &storage) const {
+    void CopyOut(sockaddr_storage &storage) const noexcept {
       assert(this);
       assert(&storage);
       memcpy(&storage, &Storage, GetLen());
     }
 
     /* The family of the address. */
-    sa_family_t GetFamily() const {
+    sa_family_t GetFamily() const noexcept {
       assert(this);
       return Storage.ss_family;
     }
@@ -170,11 +171,11 @@ namespace Socket {
     }
 
     /* The hash of the address. */
-    size_t GetHash() const;
+    size_t GetHash() const noexcept;
 
     /* The number of bytes in use in the address.
        Use this, along with the naked cast, to make OS calls like bind(). */
-    socklen_t GetLen() const {
+    socklen_t GetLen() const noexcept {
       assert(this);
       return GetLen(Storage.ss_family);
     }
@@ -188,14 +189,14 @@ namespace Socket {
 
     /* The port number in host order.
        The port number of an AF_UNSPEC address is always 0. */
-    in_port_t GetPort() const;
+    in_port_t GetPort() const noexcept;
 
     /* Set the port number.  The argument must be in host order.
        An address in the AF_UNSPEC family will ignore this function. */
-    TAddress &SetPort(in_port_t port);
+    TAddress &SetPort(in_port_t port) noexcept;
 
     /* Get the path of a UNIX domain socket. */
-    const char *GetPath() const;
+    const char *GetPath() const noexcept;
 
     /* Set the path of a UNIX domain socket. */
     TAddress &SetPath(const char *path);
@@ -225,13 +226,13 @@ namespace Socket {
     void Write(std::ostream &strm) const;
 
     /* Return to the default-constructed state. */
-    TAddress &Reset() {
+    TAddress &Reset() noexcept {
       assert(this);
       return *this = TAddress();
     }
 
     /* The number of bytes used by an address of the given family. */
-    static socklen_t GetLen(sa_family_t family);
+    static socklen_t GetLen(sa_family_t family) noexcept;
 
     private:
     /* A union of all supported sockaddr families.
@@ -250,7 +251,7 @@ namespace Socket {
     assert(&address);
     int result;
     socklen_t len = TAddress::MaxLen;
-    Base::IfLt0(result = accept(socket, address, &len));
+    Base::IfLt0(result = Base::Wr::accept(socket, address, &len));
     address.Verify();
     return result;
   }
@@ -258,7 +259,7 @@ namespace Socket {
   /* A version of bind() using TAddress. */
   inline void Bind(int socket, const TAddress &address) {
     assert(&address);
-    Base::IfLt0(bind(socket, address, address.GetLen()));
+    Base::IfLt0(Base::Wr::bind(socket, address, address.GetLen()));
   }
 
   /* A version of bind() using TAddress that is specifically intended for
@@ -268,14 +269,14 @@ namespace Socket {
   /* A version of connect() using TAddress. */
   inline void Connect(int socket, const TAddress &address) {
     assert(&address);
-    Base::IfLt0(connect(socket, address, address.GetLen()));
+    Base::IfLt0(Base::Wr::connect(socket, address, address.GetLen()));
   }
 
   /* A version of getpeername() using TAddress. */
   inline TAddress GetPeerName(int socket) {
     TAddress result;
     socklen_t len = TAddress::MaxLen;
-    Base::IfLt0(getpeername(socket, result, &len));
+    Base::Wr::getpeername(socket, result, &len);
     result.Verify();
     return result;
   }
@@ -284,7 +285,7 @@ namespace Socket {
   inline TAddress GetSockName(int socket) {
     TAddress result;
     socklen_t len = TAddress::MaxLen;
-    Base::IfLt0(getsockname(socket, result, &len));
+    Base::Wr::getsockname(socket, result, &len);
     result.Verify();
     return result;
   }
@@ -295,8 +296,8 @@ namespace Socket {
     assert(&address);
     ssize_t result;
     socklen_t len = TAddress::MaxLen;
-    Base::IfLt0(result = recvfrom(socket, buffer, max_size, flags, address,
-                                  &len));
+    Base::IfLt0(result = Base::Wr::recvfrom(socket, buffer, max_size, flags,
+        address, &len));
     address.Verify();
     return static_cast<size_t>(result);
   }
@@ -306,8 +307,8 @@ namespace Socket {
       int flags, const TAddress &address) {
     assert(&address);
     ssize_t result;
-    Base::IfLt0(result = sendto(socket, buffer, max_size, flags, address,
-                                address.GetLen()));
+    Base::IfLt0(result = Base::Wr::sendto(socket, buffer, max_size, flags,
+        address, address.GetLen()));
     return static_cast<size_t>(result);
   }
 
@@ -317,7 +318,7 @@ namespace Socket {
     assert(&new_socket);
     assert(&address);
     socklen_t len = TAddress::MaxLen;
-    int result = accept(socket, address, &len);
+    int result = Base::Wr::accept(socket, address, &len);
 
     if (result < 0) {
       if (errno == EWOULDBLOCK) {
@@ -337,7 +338,7 @@ namespace Socket {
   inline bool TryConnect(int socket, const TAddress &address) {
     assert(&address);
 
-    if (connect(socket, address, address.GetLen()) < 0) {
+    if (Base::Wr::connect(socket, address, address.GetLen()) < 0) {
       if (errno == EWOULDBLOCK) {
         return false;
       }
@@ -355,7 +356,8 @@ namespace Socket {
     assert(&address);
     assert(&size);
     socklen_t len = TAddress::MaxLen;
-    ssize_t result = recvfrom(socket, buffer, max_size, flags, address, &len);
+    ssize_t result = Base::Wr::recvfrom(socket, buffer, max_size, flags,
+        address, &len);
 
     if (result < 0) {
       if (errno == EWOULDBLOCK) {
@@ -377,7 +379,7 @@ namespace Socket {
     assert(&address);
     assert(&size);
 
-    ssize_t result = sendto(socket, buffer, max_size, flags, address,
+    ssize_t result = Base::Wr::sendto(socket, buffer, max_size, flags, address,
         address.GetLen());
 
     if (result < 0) {
@@ -413,7 +415,7 @@ namespace std {
   /* Standard hasher for Socket::TAddress. */
   template <>
   struct hash<Socket::TAddress> {
-    inline size_t operator()(const Socket::TAddress &that) const {
+    inline size_t operator()(const Socket::TAddress &that) const noexcept {
       assert(&that);
       return that.GetHash();
     }

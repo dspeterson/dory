@@ -29,7 +29,7 @@ namespace Thread {
   /* Managed thread pool config class. */
   class TManagedThreadPoolConfig final {
     public:
-    TManagedThreadPoolConfig() = default;
+    TManagedThreadPoolConfig() noexcept = default;
 
     /* Config parameters:
 
@@ -74,12 +74,13 @@ namespace Thread {
      */
     TManagedThreadPoolConfig(size_t min_pool_size, size_t max_pool_size,
         size_t prune_quantum_ms, size_t prune_quantum_count,
-        size_t max_prune_fraction, size_t min_idle_fraction);
+        size_t max_prune_fraction, size_t min_idle_fraction) noexcept;
 
-    TManagedThreadPoolConfig(const TManagedThreadPoolConfig &) = default;
+    TManagedThreadPoolConfig(
+        const TManagedThreadPoolConfig &) noexcept = default;
 
     TManagedThreadPoolConfig &operator=(
-        const TManagedThreadPoolConfig &that) = default;
+        const TManagedThreadPoolConfig &that) noexcept = default;
 
     bool operator==(const TManagedThreadPoolConfig &that) const noexcept;
 
@@ -113,28 +114,28 @@ namespace Thread {
       return PruneQuantumMs;
     }
 
-    void SetPruneQuantumMs(size_t prune_quantum_ms);
+    void SetPruneQuantumMs(size_t prune_quantum_ms) noexcept;
 
     size_t GetPruneQuantumCount() const noexcept {
       assert(this);
       return PruneQuantumCount;
     }
 
-    void SetPruneQuantumCount(size_t prune_quantum_count);
+    void SetPruneQuantumCount(size_t prune_quantum_count) noexcept;
 
     size_t GetMaxPruneFraction() const noexcept {
       assert(this);
       return MaxPruneFraction;
     }
 
-    void SetMaxPruneFraction(size_t max_prune_fraction);
+    void SetMaxPruneFraction(size_t max_prune_fraction) noexcept;
 
     size_t GetMinIdleFraction() const noexcept {
       assert(this);
       return MinIdleFraction;
     }
 
-    void SetMinIdleFraction(size_t min_idle_fraction);
+    void SetMinIdleFraction(size_t min_idle_fraction) noexcept;
 
     private:
     size_t MinPoolSize = 0;

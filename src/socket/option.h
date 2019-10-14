@@ -61,6 +61,7 @@
 #include <base/no_construction.h>
 #include <base/no_copy_semantics.h>
 #include <base/error_util.h>
+#include <base/wr/net_util.h>
 
 namespace Socket {
 
@@ -72,19 +73,19 @@ namespace Socket {
      This version assumes that the argument is a fixed-size data structure,
      which is fine for everything but strings. */
   template <typename TArg>
-  void GetSockOpt(int sock, int code, TArg &arg) {
+  void GetSockOpt(int sock, int code, TArg &arg) noexcept {
     assert(&arg);
     socklen_t dummy = sizeof(arg);
-    Base::IfLt0(getsockopt(sock, SOL_SOCKET, code, &arg, &dummy));
+    Base::Wr::getsockopt(sock, SOL_SOCKET, code, &arg, &dummy);
   }
 
   /* A typesafe wrapper for setsockopt(), q.v.
      This version assumes that the argument is a fixed-size data structure,
      which is fine for everything but strings. */
   template <typename TArg>
-  void SetSockOpt(int sock, int code, const TArg &arg) {
+  void SetSockOpt(int sock, int code, const TArg &arg) noexcept {
     assert(&arg);
-    Base::IfLt0(setsockopt(sock, SOL_SOCKET, code, &arg, sizeof(arg)));
+    Base::Wr::setsockopt(sock, SOL_SOCKET, code, &arg, sizeof(arg));
   }
 
   /**
@@ -142,7 +143,7 @@ namespace Socket {
     using TVal = bool;
 
     /* See forward declaration of generic Conv<>. */
-    static void GetSockOpt(int sock, int code, TVal &val) {
+    static void GetSockOpt(int sock, int code, TVal &val) noexcept {
       assert(&val);
       int temp;
       Socket::GetSockOpt(sock, code, temp);
@@ -150,7 +151,7 @@ namespace Socket {
     }
 
     /* See forward declaration of generic Conv<>. */
-    static void SetSockOpt(int sock, int code, TVal val) {
+    static void SetSockOpt(int sock, int code, TVal val) noexcept {
       int temp = val ? 1 : 0;
       Socket::SetSockOpt(sock, code, temp);
     }
@@ -166,12 +167,12 @@ namespace Socket {
     using TVal = int;
 
     /* See forward declaration of generic Conv<>. */
-    static void GetSockOpt(int sock, int code, TVal &val) {
+    static void GetSockOpt(int sock, int code, TVal &val) noexcept {
       Socket::GetSockOpt(sock, code, val);
     }
 
     /* See forward declaration of generic Conv<>. */
-    static void SetSockOpt(int sock, int code, TVal val) {
+    static void SetSockOpt(int sock, int code, TVal val) noexcept {
       Socket::SetSockOpt(sock, code, val);
     }
   };  // Conv<int>
@@ -186,7 +187,7 @@ namespace Socket {
     using TVal = TLinger;
 
     /* See forward declaration of generic Conv<>. */
-    static void GetSockOpt(int sock, int code, TVal &val) {
+    static void GetSockOpt(int sock, int code, TVal &val) noexcept {
       assert(&val);
       linger temp;
       Socket::GetSockOpt(sock, code, temp);
@@ -198,7 +199,7 @@ namespace Socket {
     }
 
     /* See forward declaration of generic Conv<>. */
-    static void SetSockOpt(int sock, int code, const TVal &val) {
+    static void SetSockOpt(int sock, int code, const TVal &val) noexcept {
       assert(&val);
       linger temp;
       temp.l_onoff = val;
@@ -217,12 +218,12 @@ namespace Socket {
     using TVal = ucred;
 
     /* See forward declaration of generic Conv<>. */
-    static void GetSockOpt(int sock, int code, TVal &val) {
+    static void GetSockOpt(int sock, int code, TVal &val) noexcept {
       Socket::GetSockOpt(sock, code, val);
     }
 
     /* See forward declaration of generic Conv<>. */
-    static void SetSockOpt(int sock, int code, const TVal &val) {
+    static void SetSockOpt(int sock, int code, const TVal &val) noexcept {
       Socket::SetSockOpt(sock, code, val);
     }
   };  // Conv<cred>
@@ -237,7 +238,7 @@ namespace Socket {
     using TVal = TTimeout;
 
     /* See forward declaration of generic Conv<>. */
-    static void GetSockOpt(int sock, int code, TVal &val) {
+    static void GetSockOpt(int sock, int code, TVal &val) noexcept {
       assert(&val);
       timeval temp;
       Socket::GetSockOpt(sock, code, temp);
@@ -245,7 +246,7 @@ namespace Socket {
     }
 
     /* See forward declaration of generic Conv<>. */
-    static void SetSockOpt(int sock, int code, const TVal &val) {
+    static void SetSockOpt(int sock, int code, const TVal &val) noexcept {
       assert(&val);
       auto count = val.count();
       timeval temp;
@@ -265,19 +266,19 @@ namespace Socket {
     using TVal = std::string;
 
     /* See forward declaration of generic Conv<>. */
-    static void GetSockOpt(int sock, int code, TVal &val) {
+    static void GetSockOpt(int sock, int code, TVal &val) noexcept {
       assert(&val);
       char temp[MaxSize];
       auto size = static_cast<socklen_t>(MaxSize);
-      Base::IfLt0(getsockopt(sock, SOL_SOCKET, code, temp, &size));
+      Base::Wr::getsockopt(sock, SOL_SOCKET, code, temp, &size);
       val.assign(temp, size);
     }
 
     /* See forward declaration of generic Conv<>. */
-    static void SetSockOpt(int sock, int code, const TVal &val) {
+    static void SetSockOpt(int sock, int code, const TVal &val) noexcept {
       assert(&val);
-      Base::IfLt0(setsockopt(sock, SOL_SOCKET, code, val.c_str(),
-          static_cast<socklen_t>(val.size())));
+      Base::Wr::setsockopt(sock, SOL_SOCKET, code, val.c_str(),
+          static_cast<socklen_t>(val.size()));
     }
   };  // Conv<TLinger>
 
@@ -399,13 +400,13 @@ namespace Socket {
 
     /* The code number used by getsockopt() and setsockopt() when referring to
        this option. */
-    int GetCode() const {
+    int GetCode() const noexcept {
       assert(this);
       return Code;
     }
 
     /* The human-readable name of this option. */
-    const std::string &GetName() const {
+    const std::string &GetName() const noexcept {
       assert(this);
       return Name;
     }
@@ -440,7 +441,7 @@ namespace Socket {
     using TVal = typename Conv<TSelector>::TVal;
 
     /* The option's value for the given socket, returned by value. */
-    TVal Get(int sock) const {
+    TVal Get(int sock) const noexcept {
       assert(this);
       TVal val;
       Get(sock, val);
@@ -448,7 +449,7 @@ namespace Socket {
     }
 
     /* The option's value for the given socket, returned via out-parameter. */
-    void Get(int sock, TVal &val) const {
+    void Get(int sock, TVal &val) const noexcept {
       assert(this);
       Conv<TSelector>::GetSockOpt(sock, TAnyOption::GetCode(), val);
     }

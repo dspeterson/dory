@@ -28,7 +28,7 @@ using namespace Thread;
 
 TManagedThreadPoolConfig::TManagedThreadPoolConfig(size_t min_pool_size,
     size_t max_pool_size, size_t prune_quantum_ms, size_t prune_quantum_count,
-    size_t max_prune_fraction, size_t min_idle_fraction)
+    size_t max_prune_fraction, size_t min_idle_fraction) noexcept
     : MinPoolSize(min_pool_size),
       MaxPoolSize(max_pool_size),
       PruneQuantumMs(prune_quantum_ms),
@@ -62,7 +62,8 @@ bool TManagedThreadPoolConfig::operator==(
       (MinIdleFraction == that.MinIdleFraction);
 }
 
-void TManagedThreadPoolConfig::SetPruneQuantumMs(size_t prune_quantum_ms) {
+void TManagedThreadPoolConfig::SetPruneQuantumMs(
+    size_t prune_quantum_ms) noexcept {
   assert(this);
 
   if (prune_quantum_ms == 0) {
@@ -73,7 +74,7 @@ void TManagedThreadPoolConfig::SetPruneQuantumMs(size_t prune_quantum_ms) {
 }
 
 void TManagedThreadPoolConfig::SetPruneQuantumCount(
-    size_t prune_quantum_count) {
+    size_t prune_quantum_count) noexcept {
   assert(this);
 
   if (prune_quantum_count == 0) {
@@ -83,7 +84,8 @@ void TManagedThreadPoolConfig::SetPruneQuantumCount(
   PruneQuantumCount = prune_quantum_count;
 }
 
-void TManagedThreadPoolConfig::SetMaxPruneFraction(size_t max_prune_fraction) {
+void TManagedThreadPoolConfig::SetMaxPruneFraction(
+    size_t max_prune_fraction) noexcept {
   assert(this);
 
   if (max_prune_fraction > 1000) {
@@ -93,7 +95,8 @@ void TManagedThreadPoolConfig::SetMaxPruneFraction(size_t max_prune_fraction) {
   MaxPruneFraction = max_prune_fraction;
 }
 
-void TManagedThreadPoolConfig::SetMinIdleFraction(size_t min_idle_fraction) {
+void TManagedThreadPoolConfig::SetMinIdleFraction(
+    size_t min_idle_fraction) noexcept {
   assert(this);
 
   if (min_idle_fraction > 1000) {

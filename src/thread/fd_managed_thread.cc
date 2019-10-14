@@ -95,7 +95,7 @@ void TFdManagedThread::DoStart() {
       });
 }
 
-void TFdManagedThread::ShutdownOnDestroy() {
+void TFdManagedThread::ShutdownOnDestroy() noexcept {
   assert(this);
 
   if (Thread.joinable()) {

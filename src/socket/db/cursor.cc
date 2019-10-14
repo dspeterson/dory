@@ -21,6 +21,7 @@
 
 #include <socket/db/cursor.h>
 
+#include <base/wr/net_util.h>
 #include <base/zero.h>
 #include <socket/db/error.h>
 
@@ -35,7 +36,7 @@ TCursor::TCursor(const char *node, const char *serv, int family, int socktype,
   hints.ai_socktype = socktype;
   hints.ai_protocol = protocol;
   hints.ai_flags = flags;
-  Db::IfNe0(getaddrinfo(node, serv, &hints, &First));
+  Db::IfNe0(Wr::getaddrinfo(node, serv, &hints, &First));
   Rewind();
 }
 
@@ -47,10 +48,10 @@ TCursor::~TCursor() {
 TFd TCursor::NewCompatSocket() const {
   assert(this);
   Freshen();
-  return TFd(socket(Csr->ai_family, Csr->ai_socktype, Csr->ai_protocol));
+  return TFd(Wr::socket(Csr->ai_family, Csr->ai_socktype, Csr->ai_protocol));
 }
 
-void TCursor::TryFreshen() const {
+void TCursor::TryFreshen() const noexcept {
   assert(this);
 
   if (!Csr) {

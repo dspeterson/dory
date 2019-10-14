@@ -26,7 +26,6 @@
 #include <string>
 
 #include <base/basename.h>
-#include <base/error_util.h>
 #include <log/log.h>
 #include <log_util/init_logging.h>
 

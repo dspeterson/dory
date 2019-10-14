@@ -25,12 +25,14 @@
 #include <unistd.h>
 
 #include <base/error_util.h>
+#include <base/wr/file_util.h>
+#include <base/wr/net_util.h>
 
 using namespace Base;
 using namespace Socket;
 
 TNamedUnixSocket::TNamedUnixSocket(int type, int protocol)
-    : Fd(IfLt0(socket(AF_LOCAL, type, protocol))) {
+    : Fd(IfLt0(Wr::socket(AF_LOCAL, type, protocol))) {
 }
 
 void TNamedUnixSocket::Reset() noexcept {
@@ -38,7 +40,7 @@ void TNamedUnixSocket::Reset() noexcept {
   Fd.Reset();
 
   if (!Path.empty()) {
-    unlink(Path.c_str());
+    Wr::unlink(Path.c_str());
     Path.clear();
   }
 }

@@ -43,7 +43,8 @@ TManagedThreadPoolBase::~TManagedThreadPoolBase() {
   }
 }
 
-void TManagedThreadPoolBase::SetConfig(const TManagedThreadPoolConfig &cfg) {
+void TManagedThreadPoolBase::SetConfig(
+    const TManagedThreadPoolConfig &cfg) noexcept {
   assert(this);
   bool notify = false;
 
@@ -122,7 +123,7 @@ TManagedThreadPoolBase::GetAllPendingErrors() {
   return result;
 }
 
-TManagedThreadPoolStats TManagedThreadPoolBase::GetStats() const {
+TManagedThreadPoolStats TManagedThreadPoolBase::GetStats() const noexcept {
   assert(this);
 
   std::lock_guard<std::mutex> lock(PoolLock);
@@ -624,7 +625,7 @@ void TManagedThreadPoolBase::TManager::Run() {
 }
 
 uint64_t TManagedThreadPoolBase::TManager::HandleReconfig(
-    uint64_t old_prune_at, uint64_t now) {
+    uint64_t old_prune_at, uint64_t now) noexcept {
   assert(this);
   MyPool.ReconfigSem.Pop();
   bool reset_segments = false;

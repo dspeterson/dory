@@ -89,7 +89,7 @@ namespace Thread {
     /* # of idle workers. */
     size_t IdleWorkerCount = 0;
 
-    TManagedThreadPoolStats() = default;
+    TManagedThreadPoolStats() noexcept = default;
   };  // TManagedThreadPoolStats
 
 }  // Thread

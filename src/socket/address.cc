@@ -32,13 +32,14 @@
 #include <base/endian.h>
 #include <base/no_default_case.h>
 #include <base/os_error.h>
+#include <base/wr/file_util.h>
 #include <base/zero.h>
 #include <socket/named_unix_socket.h>
 
 using namespace Base;
 using namespace Socket;
 
-TAddress::TAddress(TSpecial special, in_port_t port) {
+TAddress::TAddress(TSpecial special, in_port_t port) noexcept {
   switch (special) {
     case IPv4Any: {
       Zero(IPv4);
@@ -155,7 +156,7 @@ TAddress::TAddress(std::istream &&strm) {
     if (is_ipv6) {
       Zero(IPv4);
 
-      if (!inet_pton(AF_INET6, buf, &IPv6.sin6_addr)) {
+      if (!Wr::inet_pton(AF_INET6, buf, &IPv6.sin6_addr)) {
         throw TOsError(HERE);
       }
 
@@ -164,7 +165,7 @@ TAddress::TAddress(std::istream &&strm) {
     } else {
       Zero(IPv6);
 
-      if (!inet_pton(AF_INET, buf, &IPv4.sin_addr)) {
+      if (!Wr::inet_pton(AF_INET, buf, &IPv4.sin_addr)) {
         throw TOsError(HERE);
       }
 
@@ -174,7 +175,7 @@ TAddress::TAddress(std::istream &&strm) {
   }
 }
 
-bool TAddress::operator==(const TAddress &that) const {
+bool TAddress::operator==(const TAddress &that) const noexcept {
   assert(this);
   bool result = (Storage.ss_family == that.Storage.ss_family);
 
@@ -206,7 +207,7 @@ bool TAddress::operator==(const TAddress &that) const {
   return result;
 }
 
-size_t TAddress::GetHash() const {
+size_t TAddress::GetHash() const noexcept {
   assert(this);
   return std::_Fnv_hash_bytes(&Storage, GetLen(), 0);
 }
@@ -217,12 +218,12 @@ void TAddress::GetName(
   assert(this);
   assert(node_buf || !node_buf_size);
   assert(serv_buf || !serv_buf_size);
-  Db::IfNe0(getnameinfo(&Generic, GetLen(), node_buf,
+  Db::IfNe0(Wr::getnameinfo(&Generic, GetLen(), node_buf,
       static_cast<socklen_t>(node_buf_size), serv_buf,
       static_cast<socklen_t>(serv_buf_size), flags));
 }
 
-in_port_t TAddress::GetPort() const {
+in_port_t TAddress::GetPort() const noexcept {
   assert(this);
   in_port_t result;
 
@@ -245,7 +246,7 @@ in_port_t TAddress::GetPort() const {
   return SwapEnds(result);
 }
 
-TAddress &TAddress::SetPort(in_port_t port) {
+TAddress &TAddress::SetPort(in_port_t port) noexcept {
   assert(this);
 
   switch (Storage.ss_family) {
@@ -266,7 +267,7 @@ TAddress &TAddress::SetPort(in_port_t port) {
   return *this;
 }
 
-const char *TAddress::GetPath() const {
+const char *TAddress::GetPath() const noexcept {
   assert(this);
   const char *result = nullptr;
 
@@ -311,7 +312,7 @@ void TAddress::Write(std::ostream &strm) const {
     }
     case AF_INET: {
       char buf[INET_ADDRSTRLEN];
-      if (!inet_ntop(AF_INET, &IPv4.sin_addr, buf, sizeof(buf))) {
+      if (!Wr::inet_ntop(AF_INET, &IPv4.sin_addr, buf, sizeof(buf))) {
         throw TOsError(HERE);
       }
       strm << buf;
@@ -320,7 +321,7 @@ void TAddress::Write(std::ostream &strm) const {
     }
     case AF_INET6: {
       char buf[INET6_ADDRSTRLEN];
-      if (!inet_ntop(AF_INET6, &IPv6.sin6_addr, buf, sizeof(buf))) {
+      if (!Wr::inet_ntop(AF_INET6, &IPv6.sin6_addr, buf, sizeof(buf))) {
         throw TOsError(HERE);
       }
       strm << '[' << buf << ']';
@@ -339,7 +340,7 @@ void TAddress::Write(std::ostream &strm) const {
   }
 }
 
-socklen_t TAddress::GetLen(sa_family_t family) {
+socklen_t TAddress::GetLen(sa_family_t family) noexcept {
   socklen_t result;
 
   switch (family) {
@@ -372,12 +373,12 @@ void Socket::Bind(TNamedUnixSocket &socket, const TAddress &address) {
   std::string path(address.GetPath());
 
   /* Make sure socket file doesn't already exist. */
-  int ret = unlink(path.c_str());
+  int ret = Wr::unlink(path.c_str());
 
   if ((ret < 0) && (errno != ENOENT)) {
     IfLt0(ret);
   }
 
-  IfLt0(::bind(socket, address, address.GetLen()));
+  IfLt0(Wr::bind(socket, address, address.GetLen()));
   socket.Path.swap(path);
 }

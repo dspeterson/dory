@@ -258,7 +258,7 @@ namespace Thread {
     /* Set the thread pool's configuration to 'cfg'.  This may be called either
        before calling Start() or while the thread pool is operating.  In the
        latter case, the pool will dynamically reconfigure. */
-    void SetConfig(const TManagedThreadPoolConfig &cfg);
+    void SetConfig(const TManagedThreadPoolConfig &cfg) noexcept;
 
     /* Activate the thread pool.  You must call this before allocating threads.
        Once this has been called, the thread pool must be properly shut down
@@ -289,7 +289,7 @@ namespace Thread {
 
     /* Get Pool statistics.  Results are reset when pool Start() method is
        called. */
-    TManagedThreadPoolStats GetStats() const;
+    TManagedThreadPoolStats GetStats() const noexcept;
 
     /* Initiate a shutdown of the thread pool.  This must be followed by a call
        to WaitForShutdown(), which finishes the shutdown operation.
@@ -580,7 +580,7 @@ namespace Thread {
 
       private:
       /* Handle a change in the pool configuration. */
-      uint64_t HandleReconfig(uint64_t old_prune_at, uint64_t now);
+      uint64_t HandleReconfig(uint64_t old_prune_at, uint64_t now) noexcept;
 
       /* Called during a prune operation to compute the maximum possible number
          of threads that can be pruned, based on the pool configuration. */

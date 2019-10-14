@@ -93,12 +93,12 @@ namespace Thread {
       return result;
     }
 
-    const Base::TFd &GetMsgAvailableFd() const override {
+    const Base::TFd &GetMsgAvailableFd() const noexcept override {
       assert(this);
       return Sem.GetFd();
     }
 
-    void Reset() {
+    void Reset() noexcept {
       assert(this);
       Sem.Reset();
       MsgList.clear();

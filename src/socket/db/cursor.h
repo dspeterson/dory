@@ -46,28 +46,28 @@ namespace Socket {
       ~TCursor();
 
       /* True iff. we have a current address. */
-      operator bool() const {
+      operator bool() const noexcept {
         assert(this);
         TryFreshen();
         return Csr != nullptr;
       }
 
       /* The current address. */
-      const TAddress &operator*() const {
+      const TAddress &operator*() const noexcept {
         assert(this);
         Freshen();
         return Address;
       }
 
       /* The current address. */
-      const TAddress *operator->() const {
+      const TAddress *operator->() const noexcept {
         assert(this);
         Freshen();
         return &Address;
       }
 
       /* Move to the next address, if any. */
-      TCursor &operator++() {
+      TCursor &operator++() noexcept {
         assert(this);
         Freshen();
         Csr = nullptr;
@@ -78,7 +78,7 @@ namespace Socket {
       Base::TFd NewCompatSocket() const;
 
       /* Go back to the first address, if any. */
-      TCursor &Rewind() {
+      TCursor &Rewind() noexcept {
         assert(this);
         Csr = nullptr;
         Next = First;
@@ -87,14 +87,14 @@ namespace Socket {
 
       private:
       /* Make sure we have a current address. */
-      void Freshen() const {
+      void Freshen() const noexcept {
         assert(this);
         TryFreshen();
         assert(Csr);
       }
 
       /* Try to have a current address. */
-      void TryFreshen() const;
+      void TryFreshen() const noexcept;
 
       /* The result of getaddrinfo(). */
       addrinfo *First;

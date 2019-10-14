@@ -41,7 +41,7 @@ namespace Thread {
 
     virtual std::list<TMsgType> NonblockingGet() = 0;
 
-    virtual const Base::TFd &GetMsgAvailableFd() const = 0;
+    virtual const Base::TFd &GetMsgAvailableFd() const noexcept = 0;
   };  // TGateGetApi
 
 }  // Thread
