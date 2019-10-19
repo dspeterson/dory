@@ -28,6 +28,7 @@
 
 #include <fcntl.h>
 #include <poll.h>
+#include <sys/epoll.h>
 #include <sys/eventfd.h>
 #include <sys/timerfd.h>
 #include <sys/types.h>
@@ -62,6 +63,32 @@ namespace Base {
       const int ret = dup2(TDisp::AddFatal, {}, oldfd, newfd);
       assert(ret >= 0);
       return ret;
+    }
+
+    int epoll_create1(TDisp disp, std::initializer_list<int> errors,
+        int flags) noexcept;
+
+    inline int epoll_create1(int flags) noexcept {
+      const int ret = epoll_create1(TDisp::AddFatal, {}, flags);
+      assert(ret >= 0);
+      return ret;
+    }
+
+    int epoll_ctl(TDisp disp, std::initializer_list<int> errors, int epfd,
+        int op, int fd, epoll_event *event) noexcept;
+
+    inline void epoll_ctl(int epfd, int op, int fd,
+        epoll_event *event) noexcept {
+      const int ret = epoll_ctl(TDisp::AddFatal, {}, epfd, op, fd, event);
+      assert(ret == 0);
+    }
+
+    int epoll_wait(TDisp disp, std::initializer_list<int> errors, int epfd,
+        epoll_event *events, int maxevents, int timeout) noexcept;
+
+    inline int epoll_wait(int epfd, epoll_event *events, int maxevents,
+        int timeout) noexcept {
+      return epoll_wait(TDisp::AddFatal, {}, epfd, events, maxevents, timeout);
     }
 
     int eventfd(TDisp disp, std::initializer_list<int> errors,
@@ -103,6 +130,14 @@ namespace Base {
     template <typename T>
     int fcntl(int fd, int cmd, T arg) noexcept {
       return fcntl(TDisp::AddFatal, {}, fd, cmd, arg);
+    }
+
+    int pipe(TDisp disp, std::initializer_list<int> errors,
+        int pipefd[2]) noexcept;
+
+    inline void pipe(int pipefd[2]) noexcept {
+      const int ret = pipe(TDisp::AddFatal, {}, pipefd);
+      assert(ret == 0);
     }
 
     int pipe2(TDisp disp, std::initializer_list<int> errors, int pipefd[2],

@@ -27,11 +27,23 @@
 
 using namespace Base;
 
+int Base::Wr::pthread_kill(TDisp disp, std::initializer_list<int> errors,
+    pthread_t thread, int sig) noexcept {
+  const int ret = ::pthread_kill(thread, sig);
+
+  if ((ret != 0) && IsFatal(ret, disp, errors, true /* default_fatal */,
+      {EINVAL})) {
+    DieErrno("pthread_kill()", ret);
+  }
+
+  return ret;
+}
+
 int Base::Wr::pthread_sigmask(TDisp disp, std::initializer_list<int> errors,
     int how, const sigset_t *set, sigset_t *oldset) noexcept {
   const int ret = ::pthread_sigmask(how, set, oldset);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(ret, disp, errors, true /* default_fatal */,
       {EFAULT, EINVAL})) {
     DieErrno("pthread_sigmask()", ret);
   }

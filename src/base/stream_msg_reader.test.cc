@@ -34,6 +34,7 @@
 
 #include <base/error_util.h>
 #include <base/opt.h>
+#include <base/wr/fd_util.h>
 
 #include <gtest/gtest.h>
   
@@ -219,12 +220,13 @@ namespace {
 
   TPipe MakePipe(bool nonblocking = false) {
     int pipefd[2];
-    IfLt0(pipe2(pipefd, nonblocking ? O_NONBLOCK : 0));
+    Wr::pipe2(pipefd, nonblocking ? O_NONBLOCK : 0);
     return TPipe(pipefd[0], pipefd[1]);
   }
 
   void WritePipe(int pipefd, const std::string &s) {
-    ssize_t bytes = IfLt0(write(pipefd, s.data(), s.size()));
+    ssize_t bytes = Wr::write(Wr::TDisp::Nonfatal, {}, pipefd, s.data(),
+        s.size());
 
     if (static_cast<size_t>(bytes) != s.size()) {
       /* The amounts of data written in these tests will be small enough that

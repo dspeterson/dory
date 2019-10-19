@@ -32,6 +32,13 @@ namespace Base {
 
   namespace Wr {
 
+    int pthread_kill(TDisp disp, std::initializer_list<int> errors,
+        pthread_t thread, int sig) noexcept;
+
+    inline int pthread_kill(pthread_t thread, int sig) noexcept {
+      return pthread_kill(TDisp::AddFatal, {}, thread, sig);
+    }
+
     int pthread_sigmask(TDisp disp, std::initializer_list<int> errors,
         int how, const sigset_t *set, sigset_t *oldset) noexcept;
 

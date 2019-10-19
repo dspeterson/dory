@@ -28,7 +28,9 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include <base/error_util.h> 
+#include <base/error_util.h>
+#include <base/wr/fd_util.h>
+#include <base/wr/signal_util.h>
 #include <base/zero.h>
   
 #include <gtest/gtest.h>
@@ -77,7 +79,7 @@ namespace {
     bool caught = false;
 
     try {
-      IfLt0(read(-1, nullptr, 0));
+      IfLt0(Wr::read(Wr::TDisp::Fatal, {}, -1, nullptr, 0));
     } catch (const std::system_error &error) {
       caught = true;
     } catch (...) {}
@@ -89,11 +91,11 @@ namespace {
     struct sigaction action;
     Zero(action);
     action.sa_handler = [](int) {};
-    sigaction(SIGUSR1, &action, 0);
+    Wr::sigaction(Wr::TDisp::Nonfatal, {}, SIGUSR1, &action, 0);
     sigset_t sigset;
-    sigemptyset(&sigset);
-    sigaddset(&sigset, SIGUSR1);
-    sigprocmask(SIG_UNBLOCK, &sigset, nullptr);
+    Wr::sigemptyset(&sigset);
+    Wr::sigaddset(&sigset, SIGUSR1);
+    Wr::sigprocmask(SIG_UNBLOCK, &sigset, nullptr);
     std::mutex mx;
     std::condition_variable cv;
     bool running = false, was_interrupted = false;
@@ -115,7 +117,7 @@ namespace {
         cv.wait(lock);
       }
     }
-    IfNe0(pthread_kill(t.native_handle(), SIGUSR1));
+    Wr::pthread_kill(Wr::TDisp::Nonfatal, {}, t.native_handle(), SIGUSR1);
     t.join();
     ASSERT_TRUE(was_interrupted);
   }

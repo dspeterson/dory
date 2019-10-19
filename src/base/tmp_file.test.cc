@@ -18,30 +18,30 @@
  
    Unit test for <base/tmp_file.h>.
  */
-  
-  
+
 #include <base/tmp_file.h>
- 
+
 #include <cerrno>
 #include <cstddef>
 #include <cstring>
 #include <utility>
- 
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 #include <base/error_util.h>
+#include <base/wr/file_util.h>
 
 #include <gtest/gtest.h>
-  
+
 using namespace Base;
 
 namespace {
 
   bool FileExists(const std::string &name) {
     struct stat buf;
-    int ret = stat(name.c_str(), &buf);
+    int ret = Wr::stat(name.c_str(), &buf);
     const bool exists = (ret == 0);
     assert(exists || (errno == ENOENT));
     assert(!exists || S_ISREG(buf.st_mode));
@@ -50,7 +50,7 @@ namespace {
 
   ino_t GetInodeNumber(int fd) {
     struct stat buf;
-    int ret = fstat(fd, &buf);
+    int ret = Wr::fstat(Wr::TDisp::Nonfatal, {}, fd, &buf);
     assert(ret == 0);
     return buf.st_ino;
   }
@@ -81,7 +81,7 @@ namespace {
     ASSERT_NE(tmp_file.GetName().substr(tmpl_prefix_len, 6),
         std::string("XXXXXX"));
   }
-  
+
   TEST_F(TTmpFileTest, Test2) {
     std::string tmpl("XXXXXXburp");
     TTmpFile tmp_file(tmpl.c_str(), true);
@@ -90,7 +90,7 @@ namespace {
     ASSERT_NE(tmp_file.GetName().substr(0, 6), std::string("XXXXXX"));
     ASSERT_EQ(tmp_file.GetName().substr(6, 4), std::string("burp"));
   }
-  
+
   TEST_F(TTmpFileTest, Test3) {
     std::string tmpl("burpXXXXXX");
     TTmpFile tmp_file(tmpl.c_str(), true);
@@ -99,7 +99,7 @@ namespace {
     ASSERT_EQ(tmp_file.GetName().substr(0, 4), std::string("burp"));
     ASSERT_NE(tmp_file.GetName().substr(4, 6), std::string("XXXXXX"));
   }
-  
+
   TEST_F(TTmpFileTest, Test4) {
     std::string tmpl("burpXXXXXXyXXXXXbarf");
     TTmpFile tmp_file(tmpl.c_str(), true);

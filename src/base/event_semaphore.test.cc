@@ -20,21 +20,22 @@
  */
 
 #include <base/event_semaphore.h>
-  
+
 #include <fcntl.h>
 #include <unistd.h>
- 
+
 #include <base/error_util.h>
 #include <base/wr/fd_util.h>
-  
+
 #include <gtest/gtest.h>
-  
+
 using namespace Base;
 
 static void SetCloseOnExec(int fd) noexcept {
   const int flags = Wr::fcntl(fd, F_GETFD, 0);
   assert(flags >= 0);
-  const int ret = Wr::fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
+  const int ret = Wr::fcntl(Wr::TDisp::Nonfatal, {}, fd, F_SETFD,
+      flags | FD_CLOEXEC);
   assert(ret >= 0);
 }
 
@@ -79,7 +80,7 @@ namespace {
 
     ASSERT_FALSE(sem.GetFd().IsReadableIntr());
   }
-  
+
   TEST_F(TEventSemaphoreTest, Nonblocking) {
     static const uint64_t actual_count = 3;
     TEventSemaphore sem(0, true);
@@ -96,7 +97,7 @@ namespace {
     ASSERT_FALSE(sem.GetFd().IsReadableIntr());
     ASSERT_FALSE(sem.Pop());
   }
-  
+
   TEST_F(TEventSemaphoreTest, Reset) {
     TEventSemaphore sem;
     ASSERT_FALSE(sem.GetFd().IsReadableIntr());
@@ -105,20 +106,20 @@ namespace {
     int new_fd = sem.GetFd();
     ASSERT_EQ(new_fd, old_fd);
     ASSERT_TRUE(sem.GetFd().IsReadableIntr());
-    int flags = fcntl(sem.GetFd(), F_GETFD, 0);
+    int flags = Wr::fcntl(Wr::TDisp::Nonfatal, {}, sem.GetFd(), F_GETFD, 0);
     ASSERT_EQ(flags & FD_CLOEXEC, 0);
     SetCloseOnExec(sem.GetFd());
-    flags = fcntl(sem.GetFd(), F_GETFD, 0);
+    flags = Wr::fcntl(Wr::TDisp::Nonfatal, {}, sem.GetFd(), F_GETFD, 0);
     ASSERT_NE(flags & FD_CLOEXEC, 0);
     old_fd = sem.GetFd();
     sem.Reset(0);
     new_fd = sem.GetFd();
     ASSERT_EQ(new_fd, old_fd);
     ASSERT_FALSE(sem.GetFd().IsReadableIntr());
-    flags = fcntl(sem.GetFd(), F_GETFD, 0);
+    flags = Wr::fcntl(Wr::TDisp::Nonfatal, {}, sem.GetFd(), F_GETFD, 0);
     ASSERT_NE(flags & FD_CLOEXEC, 0);
   }
-  
+
   TEST_F(TEventSemaphoreTest, ResetNonblocking) {
     TEventSemaphore sem(0, true);
     ASSERT_FALSE(sem.GetFd().IsReadableIntr());
@@ -129,10 +130,10 @@ namespace {
     int new_fd = sem.GetFd();
     ASSERT_EQ(new_fd, old_fd);
     ASSERT_TRUE(sem.GetFd().IsReadableIntr());
-    int flags = fcntl(sem.GetFd(), F_GETFD, 0);
+    int flags = Wr::fcntl(Wr::TDisp::Nonfatal, {}, sem.GetFd(), F_GETFD, 0);
     ASSERT_EQ(flags & FD_CLOEXEC, 0);
     SetCloseOnExec(sem.GetFd());
-    flags = fcntl(sem.GetFd(), F_GETFD, 0);
+    flags = Wr::fcntl(Wr::TDisp::Nonfatal, {}, sem.GetFd(), F_GETFD, 0);
     ASSERT_NE(flags & FD_CLOEXEC, 0);
     old_fd = sem.GetFd();
     sem.Reset(0);
@@ -141,7 +142,7 @@ namespace {
     ASSERT_FALSE(sem.GetFd().IsReadableIntr());
     ASSERT_FALSE(sem.Pop());
     ASSERT_FALSE(sem.GetFd().IsReadableIntr());
-    flags = fcntl(sem.GetFd(), F_GETFD, 0);
+    flags = Wr::fcntl(Wr::TDisp::Nonfatal, {}, sem.GetFd(), F_GETFD, 0);
     ASSERT_NE(flags & FD_CLOEXEC, 0);
     sem.Push();
     ASSERT_TRUE(sem.Pop());

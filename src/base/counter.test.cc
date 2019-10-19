@@ -34,6 +34,8 @@
 
 #include <base/error_util.h>
 #include <base/fd.h>
+#include <base/wr/fd_util.h>
+#include <base/wr/net_util.h>
 #include <base/zero.h>
 
 #include <gtest/gtest.h>
@@ -50,18 +52,18 @@ namespace {
   static void ServerMain(int die, int sock, bool *success) {
     try {
       *success = true;
-      TFd ep(epoll_create1(0));
+      TFd ep(Wr::epoll_create1(0));
       epoll_event event;
       Zero(event);
       event.data.fd = die;
       event.events = EPOLLIN;
-      IfLt0(epoll_ctl(ep, EPOLL_CTL_ADD, die, &event));
+      Wr::epoll_ctl(ep, EPOLL_CTL_ADD, die, &event);
       event.data.fd = sock;
       event.events = EPOLLIN;
-      IfLt0(epoll_ctl(ep, EPOLL_CTL_ADD, sock, &event));
+      Wr::epoll_ctl(ep, EPOLL_CTL_ADD, sock, &event);
 
       for (; ; ) {
-        IfLt0(epoll_wait(ep, &event, 1, -1));
+        Wr::epoll_wait(Wr::TDisp::Nonfatal, {}, ep, &event, 1, -1);
 
         if (event.data.fd == die) {
           break;
@@ -69,19 +71,19 @@ namespace {
 
         if (event.data.fd == sock) {
           Connections.Increment();
-          TFd cli(accept(sock, 0, 0));
+          TFd cli(Wr::accept(Wr::TDisp::Nonfatal, {}, sock, 0, 0));
 
           for (; ; ) {
             char buf[BufSize];
-            ssize_t size;
-            IfLt0(size = read(cli, buf, BufSize));
+            ssize_t size = Wr::read(Wr::TDisp::Nonfatal, {}, cli, buf,
+                BufSize);
 
             if (!size) {
               break;
             }
 
             Requests.Increment();
-            IfLt0(write(cli, buf, size));
+            Wr::write(Wr::TDisp::Nonfatal, {}, cli, buf, size);
           }
         }
       }
@@ -94,28 +96,29 @@ namespace {
       bool *success) {
     try {
       *success = true;
-      TFd my_socket(socket(AF_INET, SOCK_STREAM, 0));
+      TFd my_socket(Wr::socket(Wr::TDisp::Nonfatal, {}, AF_INET, SOCK_STREAM,
+          0));
       sockaddr_in addr;
       Zero(addr);
       addr.sin_family = AF_INET;
       addr.sin_port = htons(port);
       addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-      IfLt0(connect(my_socket, reinterpret_cast<sockaddr *>(&addr),
-          sizeof(addr)));
+      Wr::connect(Wr::TDisp::Nonfatal, {}, my_socket,
+          reinterpret_cast<sockaddr *>(&addr), sizeof(addr));
 
       for (uint32_t i = 0; i < request_count; ++i) {
         char request[BufSize];
         sprintf(request, "%d %d", id, i);
-        ssize_t request_size = strlen(request);
-        ssize_t size;
-        IfLt0(size = write(my_socket, request, request_size));
+        ssize_t request_size = std::strlen(request);
+        ssize_t size = Wr::write(Wr::TDisp::Nonfatal, {}, my_socket, request,
+            request_size);
 
         if (size != request_size) {
           throw 0;
         }
 
         char reply[BufSize];
-        IfLt0(size = read(my_socket, reply, BufSize));
+        size = Wr::read(Wr::TDisp::Nonfatal, {}, my_socket, reply, BufSize);
 
         if ((size != request_size) || strncmp(request, reply, request_size)) {
           throw 0;
@@ -129,8 +132,8 @@ namespace {
   in_port_t GetBindPort(int listening_socket) {
     struct sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
-    IfLt0(getsockname(listening_socket,
-        reinterpret_cast<struct sockaddr *>(&addr), &addrlen));
+    Wr::getsockname(listening_socket, reinterpret_cast<sockaddr *>(&addr),
+        &addrlen);
     return ntohs(addr.sin_port);
   }
 
@@ -150,18 +153,19 @@ namespace {
 
   TEST_F(TCounterTest, Typical) {
     int fds[2];
-    IfLt0(pipe(fds));
+    Wr::pipe(fds);
     TFd recv_die(fds[0]), send_die(fds[1]);
-    TFd listening_socket(socket(AF_INET, SOCK_STREAM, 0));
+    TFd listening_socket(Wr::socket(Wr::TDisp::Nonfatal, {}, AF_INET,
+        SOCK_STREAM, 0));
     sockaddr_in server_addr;
     Zero(server_addr);
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = 0;  // bind() to ephemeral port
     server_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    IfLt0(bind(listening_socket,
-        reinterpret_cast<const sockaddr *>(&server_addr), sizeof(server_addr)));
+    Wr::bind(Wr::TDisp::Nonfatal, {}, listening_socket,
+        reinterpret_cast<const sockaddr *>(&server_addr), sizeof(server_addr));
     const in_port_t bind_port = GetBindPort(listening_socket);
-    IfLt0(listen(listening_socket, 5));
+    Wr::listen(Wr::TDisp::Nonfatal, {}, listening_socket, 5);
     bool server_success = false,
         client_1_success = false,
         client_2_success = false,
@@ -179,7 +183,7 @@ namespace {
     client_1.join();
     client_2.join();
     client_3.join();
-    IfLt0(write(send_die, "x", 1));
+    Wr::write(Wr::TDisp::Nonfatal, {}, send_die, "x", 1);
     server.join();
     ASSERT_TRUE(server_success);
     ASSERT_TRUE(client_1_success);

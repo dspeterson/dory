@@ -20,18 +20,18 @@
  */
 
 #include <base/fd.h>
- 
+
 #include <cstddef> 
 #include <cstring>
- 
+
 #include <base/error_util.h> 
 #include <base/io_util.h>
 #include <base/zero.h>
-  
+
 #include <gtest/gtest.h>
-  
+
 using namespace Base;
- 
+
 namespace {
 
   /* The fixture for testing class TFd. */
@@ -50,10 +50,10 @@ namespace {
 
   const char *ExpectedData = "hello";
   const size_t ExpectedSize = strlen(ExpectedData);
-  
+
   const size_t MaxActualSize = 1024;
   char ActualData[MaxActualSize];
-  
+
   void Transact(const TFd &readable, const TFd &writeable) {
     WriteExactly(writeable, ExpectedData, ExpectedSize);
     Zero(ActualData);
@@ -61,20 +61,20 @@ namespace {
     ASSERT_EQ(actual_size, ExpectedSize);
     ASSERT_FALSE(strcmp(ActualData, ExpectedData));
   }
-  
+
   void CheckClose(const TFd &readable, TFd &writeable) {
     writeable.Reset();
     size_t actual_size = ReadAtMost(readable, ActualData, MaxActualSize);
     ASSERT_FALSE(actual_size);
   }
-  
+
   TEST_F(TFdTest, Pipe) {
     TFd readable, writeable;
     TFd::Pipe(readable, writeable);
     Transact(readable, writeable);
     CheckClose(readable, writeable);
   }
-  
+
   TEST_F(TFdTest, SocketPair) {
     TFd lhs, rhs;
     TFd::SocketPair(lhs, rhs, AF_UNIX, SOCK_STREAM, 0);

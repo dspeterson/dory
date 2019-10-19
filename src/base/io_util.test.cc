@@ -31,6 +31,7 @@
 
 #include <base/error_util.h>
 #include <base/fd.h>
+#include <base/wr/signal_util.h>
 #include <base/zero.h>
   
 #include <gtest/gtest.h>
@@ -66,7 +67,7 @@ namespace {
     Zero(ActualData);
     size_t actual_size = ReadAtMost(readable, ActualData, MaxActualSize);
     ASSERT_EQ(actual_size, ExpectedSize);
-    ASSERT_FALSE(strcmp(ActualData, ExpectedData));
+    ASSERT_FALSE(std::strcmp(ActualData, ExpectedData));
     bool timed_out = false;
 
     try {
@@ -86,7 +87,7 @@ namespace {
     struct sigaction action;
     Zero(action);
     action.sa_handler = [](int) {};
-    sigaction(SIGPIPE, &action, nullptr);
+    Wr::sigaction(SIGPIPE, &action, nullptr);
     TFd readable, writeable;
     TFd::Pipe(readable, writeable);
     readable.Reset();

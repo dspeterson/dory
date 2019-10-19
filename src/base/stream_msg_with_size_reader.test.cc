@@ -30,6 +30,7 @@
 
 #include <base/error_util.h>
 #include <base/field_access.h>
+#include <base/wr/fd_util.h>
 
 #include <gtest/gtest.h>
 
@@ -51,7 +52,7 @@ namespace {
       assert(this);
 
       if (Read >= 0) {
-        close(Read);
+        Wr::close(Read);
         Read = -1;
       }
     }
@@ -60,7 +61,7 @@ namespace {
       assert(this);
 
       if (Write >= 0) {
-        close(Write);
+        Wr::close(Write);
         Write = -1;
       }
     }
@@ -73,12 +74,13 @@ namespace {
 
   TPipe MakePipe(bool nonblocking = false) {
     int pipefd[2];
-    IfLt0(pipe2(pipefd, nonblocking ? O_NONBLOCK : 0));
+    Wr::pipe2(pipefd, nonblocking ? O_NONBLOCK : 0);
     return TPipe(pipefd[0], pipefd[1]);
   }
 
   void WritePipe(int pipefd, const std::string &s) {
-    ssize_t bytes = IfLt0(write(pipefd, s.data(), s.size()));
+    ssize_t bytes = Wr::write(Wr::TDisp::Nonfatal, {}, pipefd, s.data(),
+        s.size());
 
     if (static_cast<size_t>(bytes) != s.size()) {
       /* The amounts of data written in these tests will be small enough that
@@ -91,7 +93,8 @@ namespace {
   }
 
   void WritePipe(int pipefd, const void *data, size_t data_size) {
-    ssize_t bytes = IfLt0(write(pipefd, data, data_size));
+    ssize_t bytes = Wr::write(Wr::TDisp::Nonfatal, {}, pipefd, data,
+        data_size);
 
     if (static_cast<size_t>(bytes) != data_size) {
       /* The amounts of data written in these tests will be small enough that
