@@ -27,6 +27,18 @@
 
 using namespace Base;
 
+int Base::Wr::kill(TDisp disp, std::initializer_list<int> errors, pid_t pid,
+    int sig) noexcept {
+  const int ret = ::kill(pid, sig);
+
+  if ((ret != 0) && IsFatal(ret, disp, errors, true /* default_fatal */,
+      {EINVAL})) {
+    DieErrno("kill()", ret);
+  }
+
+  return ret;
+}
+
 int Base::Wr::pthread_kill(TDisp disp, std::initializer_list<int> errors,
     pthread_t thread, int sig) noexcept {
   const int ret = ::pthread_kill(thread, sig);

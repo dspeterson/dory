@@ -35,6 +35,8 @@
 #include <base/time_util.h>
 #include <base/tmp_file.h>
 #include <base/zero.h>
+#include <base/wr/process_util.h>
+#include <base/wr/signal_util.h>
 #include <test_util/test_logging.h>
 #include <thread/fd_managed_thread.h>
 
@@ -133,7 +135,7 @@ namespace {
 
     /* Send SIGUSR1 to self.  Then make sure our callback got called for
        SIGUSR1. */
-    int ret = kill(getpid(), SIGUSR1);
+    int ret = Wr::kill(Wr::TDisp::Nonfatal, {}, getpid(), SIGUSR1);
     ASSERT_EQ(ret, 0);
 
     for (size_t i = 0; i < 1000; ++i) {
@@ -154,7 +156,7 @@ namespace {
     /* fork() a child and cause the child to exit immediately.  This will cause
        us to get SIGCHLD.  Then make sure our callback got called for
        SIGCHLD. */
-    const pid_t pid = fork();
+    const pid_t pid = Wr::fork();
 
     switch (pid) {
       case -1: {
@@ -189,7 +191,7 @@ namespace {
 
     /* Try SIGUSR1 again to verify that we still get notified for a second
        signal. */
-    ret = kill(getpid(), SIGUSR1);
+    ret = Wr::kill(getpid(), SIGUSR1);
     ASSERT_EQ(ret, 0);
 
     for (size_t i = 0; i < 1000; ++i) {

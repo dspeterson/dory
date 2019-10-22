@@ -44,6 +44,7 @@
 #include <base/io_util.h>
 #include <base/no_copy_semantics.h>
 #include <base/tmp_file.h>
+#include <base/wr/net_util.h>
 #include <test_util/test_logging.h>
 
 using namespace Base;
@@ -175,40 +176,40 @@ namespace {
   };  // TStreamServerTest
 
   TFd Ipv4ConnectToLocalPort(in_port_t port) {
-    TFd fd(socket(AF_INET, SOCK_STREAM, 0));
+    TFd fd(Wr::socket(Wr::TDisp::Nonfatal, {}, AF_INET, SOCK_STREAM, 0));
     struct sockaddr_in servaddr;
     std::memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(port);
     servaddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    IfLt0(connect(fd, reinterpret_cast<struct sockaddr *>(&servaddr),
-        sizeof(servaddr)));
+    Wr::connect(Wr::TDisp::Nonfatal, {}, fd,
+        reinterpret_cast<struct sockaddr *>(&servaddr), sizeof(servaddr));
     return fd;
   }
 
   TFd Ipv6ConnectToLocalPort(in_port_t port) {
-    TFd fd(socket(AF_INET6, SOCK_STREAM, 0));
+    TFd fd(Wr::socket(Wr::TDisp::Nonfatal, {}, AF_INET6, SOCK_STREAM, 0));
     struct sockaddr_in6 servaddr;
     std::memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin6_flowinfo = 0;
     servaddr.sin6_family = AF_INET6;
     servaddr.sin6_port = htons(port);
     servaddr.sin6_addr/*.s6_addr*/ = in6addr_loopback;
-    IfLt0(connect(fd, reinterpret_cast<struct sockaddr *>(&servaddr),
-        sizeof(servaddr)));
+    Wr::connect(Wr::TDisp::Nonfatal, {}, fd,
+        reinterpret_cast<struct sockaddr *>(&servaddr), sizeof(servaddr));
     return fd;
   }
 
   TFd UnixStreamConnect(const char *path) {
-    TFd fd(socket(AF_LOCAL, SOCK_STREAM, 0));
+    TFd fd(Wr::socket(Wr::TDisp::Nonfatal, {}, AF_LOCAL, SOCK_STREAM, 0));
     struct sockaddr_un servaddr;
     std::memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sun_family = AF_LOCAL;
     assert(std::strlen(path) < sizeof(servaddr.sun_path));
     std::strncpy(servaddr.sun_path, path, sizeof(servaddr.sun_path));
     servaddr.sun_path[sizeof(servaddr.sun_path) - 1] = '\0';
-    IfLt0(connect(fd, reinterpret_cast<struct sockaddr *>(&servaddr),
-        sizeof(servaddr)));
+    Wr::connect(Wr::TDisp::Nonfatal, {}, fd,
+        reinterpret_cast<struct sockaddr *>(&servaddr), sizeof(servaddr));
     return fd;
   }
 

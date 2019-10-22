@@ -25,12 +25,20 @@
 #include <initializer_list>
 
 #include <signal.h>
+#include <sys/types.h>
 
 #include <base/wr/common.h>
 
 namespace Base {
 
   namespace Wr {
+
+    int kill(TDisp disp, std::initializer_list<int> errors, pid_t pid,
+        int sig) noexcept;
+
+    inline int kill(pid_t pid, int sig) noexcept {
+      return kill(TDisp::AddFatal, {}, pid, sig);
+    }
 
     int pthread_kill(TDisp disp, std::initializer_list<int> errors,
         pthread_t thread, int sig) noexcept;

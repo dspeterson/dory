@@ -32,7 +32,7 @@
 #include <base/error_util.h>
 #include <base/file_reader.h>
 #include <base/tmp_file.h>
-
+#include <base/wr/fd_util.h>
 #include <log/log_writer.h>
 #include <log/pri.h>
 
@@ -68,10 +68,10 @@ namespace {
     TTmpFile stdout_file(name_template, true /* delete_on_destroy */);
     TTmpFile stderr_file(name_template, true /* delete_on_destroy */);
     TTmpFile tmp_file(name_template, true /* delete_on_destroy */);
-    int saved_stdout = IfLt0(dup(1));
-    int saved_stderr = IfLt0(dup(2));
-    IfLt0(dup2(stdout_file.GetFd(), 1));
-    IfLt0(dup2(stderr_file.GetFd(), 2));
+    int saved_stdout = Wr::dup(1);
+    int saved_stderr = Wr::dup(2);
+    Wr::dup2(stdout_file.GetFd(), 1);
+    Wr::dup2(stderr_file.GetFd(), 2);
     SetLogMask(UpTo(TPri::NOTICE));
 
     SetLogWriter(false /* enable_stdout_stderr */, false /* enable_syslog */,
@@ -91,10 +91,10 @@ namespace {
        called only for the initial message. */
     LOG(TPri::WARNING) << msg3 << Foo();
 
-    IfLt0(dup2(saved_stdout, 1));
-    IfLt0(dup2(saved_stderr, 2));
-    IfLt0(close(saved_stdout));
-    IfLt0(close(saved_stderr));
+    Wr::dup2(saved_stdout, 1);
+    Wr::dup2(saved_stderr, 2);
+    Wr::close(saved_stdout);
+    Wr::close(saved_stderr);
     std::string stdout_contents = ReadFileIntoString(stdout_file.GetName());
     std::string stderr_contents = ReadFileIntoString(stderr_file.GetName());
     std::string file_contents = ReadFileIntoString(tmp_file.GetName());
@@ -108,10 +108,10 @@ namespace {
   TEST_F(TLogTest, StdoutStderrTest) {
     TTmpFile stdout_file(name_template, true /* delete_on_destroy */);
     TTmpFile stderr_file(name_template, true /* delete_on_destroy */);
-    int saved_stdout = IfLt0(dup(1));
-    int saved_stderr = IfLt0(dup(2));
-    IfLt0(dup2(stdout_file.GetFd(), 1));
-    IfLt0(dup2(stderr_file.GetFd(), 2));
+    int saved_stdout = Wr::dup(1);
+    int saved_stderr = Wr::dup(2);
+    Wr::dup2(stdout_file.GetFd(), 1);
+    Wr::dup2(stderr_file.GetFd(), 2);
     SetLogMask(UpTo(TPri::NOTICE));
     SetLogWriter(true /* enable_stdout_stderr */, false /* enable_syslog */,
         std::string());
@@ -126,10 +126,10 @@ namespace {
     std::string msg4("should go to stderr and file");
     LOG(TPri::NOTICE) << msg3;
     LOG(TPri::WARNING) << msg4;
-    IfLt0(dup2(saved_stdout, 1));
-    IfLt0(dup2(saved_stderr, 2));
-    IfLt0(close(saved_stdout));
-    IfLt0(close(saved_stderr));
+    Wr::dup2(saved_stdout, 1);
+    Wr::dup2(saved_stderr, 2);
+    Wr::close(saved_stdout);
+    Wr::close(saved_stderr);
     std::string stdout_contents = ReadFileIntoString(stdout_file.GetName());
     std::string stderr_contents = ReadFileIntoString(stderr_file.GetName());
     std::ostringstream os1;
@@ -143,10 +143,10 @@ namespace {
   TEST_F(TLogTest, NoLoggingTest) {
     TTmpFile stdout_file(name_template, true /* delete_on_destroy */);
     TTmpFile stderr_file(name_template, true /* delete_on_destroy */);
-    int saved_stdout = IfLt0(dup(1));
-    int saved_stderr = IfLt0(dup(2));
-    IfLt0(dup2(stdout_file.GetFd(), 1));
-    IfLt0(dup2(stderr_file.GetFd(), 2));
+    int saved_stdout = Wr::dup(1);
+    int saved_stderr = Wr::dup(2);
+    Wr::dup2(stdout_file.GetFd(), 1);
+    Wr::dup2(stderr_file.GetFd(), 2);
     SetLogMask(UpTo(TPri::NOTICE));
     SetLogWriter(false /* enable_stdout_stderr */, false /* enable_syslog */,
         std::string());
@@ -154,10 +154,10 @@ namespace {
     std::string msg2("second message to ignore");
     LOG(TPri::NOTICE) << msg1;
     LOG(TPri::WARNING) << msg2;
-    IfLt0(dup2(saved_stdout, 1));
-    IfLt0(dup2(saved_stderr, 2));
-    IfLt0(close(saved_stdout));
-    IfLt0(close(saved_stderr));
+    Wr::dup2(saved_stdout, 1);
+    Wr::dup2(saved_stderr, 2);
+    Wr::close(saved_stdout);
+    Wr::close(saved_stderr);
     std::string stdout_contents = ReadFileIntoString(stdout_file.GetName());
     std::string stderr_contents = ReadFileIntoString(stderr_file.GetName());
     ASSERT_EQ(stdout_contents, std::string());

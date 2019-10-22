@@ -21,13 +21,17 @@
 
 #include <fiber/dispatcher.h>
  
-#include <cstddef> 
+#include <atomic>
+#include <chrono>
+#include <cstddef>
 #include <sstream>
 #include <string>
 #include <thread>
+#include <utility>
   
 #include <base/error_util.h>
 #include <base/fd.h>
+#include <base/wr/net_util.h>
 #include <socket/address.h>
   
 #include <gtest/gtest.h>
@@ -75,11 +79,11 @@ namespace {
     /* See TDispatcher::Run(). */
     void Run() {
       assert(this);
-      Dispatcher.Run(seconds(2), {}, SignalNumber);
+      Dispatcher.Run(std::chrono::seconds(2), {}, SignalNumber);
     }
   
     /* See TDispatcher::Shutdown(). */
-    void Shutdown(thread &t) {
+    void Shutdown(std::thread &t) {
       assert(this);
       Dispatcher.Shutdown(t, SignalNumber);
     }
@@ -93,7 +97,7 @@ namespace {
          It passes us an already-connected socket, which we take ownership of.
          After that we accept messages from the client, which we echo back. */
       TWorker(TServer *server, TFd &&fd)
-          : Server(server), Fd(move(fd)), Limit(Buffer), Shutdown(false) {
+          : Server(server), Fd(std::move(fd)), Limit(Buffer), Shutdown(false) {
         /* Register as a handler of ready-to-read events on our socket. */
         assert(server);
         Register(&(server->Dispatcher), Fd, POLLIN);
@@ -120,7 +124,7 @@ namespace {
         if (Limit == Buffer) {
           /* Read data from the client.  If we get some, register to write it
              back. */
-          ssize_t result = recv(Fd, Buffer, sizeof(Buffer), 0);
+          ssize_t result = Wr::recv(Fd, Buffer, sizeof(Buffer), 0);
 
           if (result > 0) {
             /* We got some data.  Switch over to writing so we can echo it
@@ -135,7 +139,7 @@ namespace {
         } else {
           /* Write our data to the client.  If successful, register to read
              again. */
-          ssize_t result = send(Fd, Buffer, Limit - Buffer, MSG_NOSIGNAL);
+          ssize_t result = Wr::send(Fd, Buffer, Limit - Buffer, MSG_NOSIGNAL);
 
           if (result > 0) {
             /* We sent some data. */
@@ -202,12 +206,12 @@ namespace {
         assert(server);
         /* Make a socket on which to accept connections. */
         TAddress address(TAddress::IPv4Any);
-        Fd = TFd(socket(address.GetFamily(), SOCK_STREAM, 0));
+        Fd = TFd(Wr::socket(address.GetFamily(), SOCK_STREAM, 0));
         int flag = true;
-        IfLt0(setsockopt(Fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag)));
+        Wr::setsockopt(Fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
         /* Bind to a system-assigned port number and start listening. */
         Bind(Fd, address);
-        IfLt0(listen(Fd, 100));
+        IfLt0(Wr::listen(Fd, 100));
         /* Cache the port number we were assigned. */
         address = GetSockName(Fd);
         Port = address.GetPort();
@@ -232,7 +236,7 @@ namespace {
       /* Called by the dispatcher when our socket has a connection waiting. */
       virtual void OnEvent(int, short) {
         assert(this);
-        new TWorker(Server, TFd(accept(Fd, nullptr, nullptr)));
+        new TWorker(Server, TFd(Wr::accept(Fd, nullptr, nullptr)));
       }
   
       /* Called by the dispatcher when a shutdown begins. */
@@ -259,7 +263,8 @@ namespace {
   };  // TServer
   
   /* See declaration. */
-  const TServer::TWorker::TTimeout TServer::TWorker::Timeout = milliseconds(500);
+  const TServer::TWorker::TTimeout TServer::TWorker::Timeout =
+      std::chrono::milliseconds(500);
   
   /* Client threads enter here. */
   void ClientMain(
@@ -267,30 +272,30 @@ namespace {
       in_port_t port,  // the port on which the server is listening
       int io_count,  // the number of I/O rounds to try with the server, or -1
                      // to go forever
-      atomic_size_t &pass_count,  // counts successful I/O rounds
-      atomic_size_t &fail_count,  // counts unsuccessful I/O rounds
-      atomic_size_t &rude_count) { // counts number of threads which end rudely
+      std::atomic_size_t &pass_count,  // counts successful I/O rounds
+      std::atomic_size_t &fail_count,  // counts unsuccessful I/O rounds
+      std::atomic_size_t &rude_count) { // number of threads which end rudely
     try {
       /* Connect to the server. */
-      TFd fd(socket(AF_INET, SOCK_STREAM, 0));
+      TFd fd(Wr::socket(AF_INET, SOCK_STREAM, 0));
       Connect(fd, TAddress(TAddress::IPv4Any, port));
       /* Do some rounds of I/O. */
       char actual[1000];
 
       for (int i = 0; i < io_count || io_count < 0; ++i) {
         /* Compose a unique message to send. */
-        string expected;
+        std::string expected;
 
         /* extra */ {
-          ostringstream strm;
+          std::ostringstream strm;
           strm << "client #" << idx << ", call #" << i;
           expected = strm.str();
         }
 
         /* Send the message and expect to get it echoed back. */
-        IfLt0(send(fd, expected.data(), expected.size(), MSG_NOSIGNAL));
+        IfLt0(Wr::send(fd, expected.data(), expected.size(), MSG_NOSIGNAL));
         std::memset(actual, 0, sizeof(actual));
-        IfLt0(recv(fd, actual, sizeof(actual), 0));
+        IfLt0(Wr::recv(fd, actual, sizeof(actual), 0));
         ++((expected == actual) ? pass_count : fail_count);
       }
     } catch (...) {
@@ -324,16 +329,16 @@ namespace {
       /* Construct a server and launch it in a background thread. */
       in_port_t port;
       TServer server(port);
-      auto server_thread = thread(&TServer::Run, &server);
+      auto server_thread = std::thread(&TServer::Run, &server);
       /* Launch some client threads.
          These clients will disconnect on their own after completing their I/O
          rounds. */
-      atomic_size_t pass_count(0), fail_count(0), rude_count(0);
-      std::vector<thread> clients;
+      std::atomic_size_t pass_count(0), fail_count(0), rude_count(0);
+      std::vector<std::thread> clients;
 
       for (size_t idx = 0; idx < client_count; ++idx) {
-        clients.push_back(thread(ClientMain, idx, port, io_count,
-            ref(pass_count), ref(fail_count), ref(rude_count)));
+        clients.push_back(std::thread(ClientMain, idx, port, io_count,
+            std::ref(pass_count), std::ref(fail_count), std::ref(rude_count)));
       }
 
       /* Wait for the clients to finish. */
@@ -362,15 +367,15 @@ namespace {
       /* Construct a server and launch it in a background thread. */
       in_port_t port;
       TServer server(port);
-      auto server_thread = thread(&TServer::Run, &server);
+      auto server_thread = std::thread(&TServer::Run, &server);
       /* Launch some client threads.
          These clients will never voluntarily disconnect. */
-      atomic_size_t pass_count(0), fail_count(0), rude_count(0);
-      std::vector<thread> clients;
+      std::atomic_size_t pass_count(0), fail_count(0), rude_count(0);
+      std::vector<std::thread> clients;
 
       for (size_t idx = 0; idx < client_count; ++idx) {
-        clients.push_back(thread(ClientMain, idx, port, -1, ref(pass_count),
-            ref(fail_count), ref(rude_count)));
+        clients.push_back(std::thread(ClientMain, idx, port, -1,
+            std::ref(pass_count), std::ref(fail_count), std::ref(rude_count)));
       }
 
       /* Shut down the server and make sure it went cleanly. */
@@ -392,13 +397,13 @@ namespace {
       /* Construct a server and launch it in a background thread. */
     in_port_t port;
     TServer server(port);
-    auto server_thread = thread(&TServer::Run, &server);
+    auto server_thread = std::thread(&TServer::Run, &server);
     /* Connect to the server, do nothing for too long, and be hung up on. */
-    TFd fd(socket(AF_INET, SOCK_STREAM, 0));
+    TFd fd(Wr::socket(AF_INET, SOCK_STREAM, 0));
     Connect(fd, TAddress(TAddress::IPv4Any, port));
     sleep(1);
     char buf[1];
-    ASSERT_EQ(recv(fd, buf, sizeof(buf), 0), 0);
+    ASSERT_EQ(Wr::recv(fd, buf, sizeof(buf), 0), 0);
     /* Shut down the server and make sure it went cleanly. */
     server.Shutdown(server_thread);
     ASSERT_EQ(server.GetHandlerCount(), 0u);
