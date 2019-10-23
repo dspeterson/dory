@@ -34,7 +34,7 @@ int Base::Wr::chdir(TDisp disp, std::initializer_list<int> errors,
     const char *path) noexcept {
   const int ret = ::chdir(path);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, ENOMEM})) {
     DieErrno("chdir()", errno);
   }
@@ -46,7 +46,7 @@ int Base::Wr::chmod(TDisp disp, std::initializer_list<int> errors,
     const char *path, mode_t mode) noexcept {
   const int ret = ::chmod(path, mode);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, ENOMEM})) {
     DieErrno("chmod()", errno);
   }
@@ -58,7 +58,7 @@ int Base::Wr::closedir(TDisp disp, std::initializer_list<int> errors,
     DIR *dirp) noexcept {
   const int ret = ::closedir(dirp);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF})) {
     DieErrno("closedir()", errno);
   }
@@ -70,7 +70,7 @@ int Base::Wr::fstat(TDisp disp, std::initializer_list<int> errors, int fd,
     struct stat *buf) noexcept {
   const int ret = ::fstat(fd, buf);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, ENOMEM})) {
     DieErrno("fstat()", errno);
   }
@@ -82,7 +82,7 @@ int Base::Wr::ftruncate(TDisp disp, std::initializer_list<int> errors,
     int fd, off_t length) noexcept {
   const int ret = ::ftruncate(fd, length);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL, EBADF})) {
     DieErrno("ftruncate()", errno);
   }
@@ -94,8 +94,8 @@ char *Base::Wr::mkdtemp(TDisp disp, std::initializer_list<int> errors,
     char *tmpl) noexcept {
   char *const ret = ::mkdtemp(tmpl);
 
-  if ((ret == nullptr) && IsFatal(errno, disp, errors,
-      true /* default_fatal */, {EINVAL, EFAULT, ENOMEM})) {
+  if ((ret == nullptr) && IsFatal(errno, disp, errors, true /* list_fatal */,
+      {EINVAL, EFAULT, ENOMEM})) {
     DieErrno("mkdtemp()", errno);
   }
 
@@ -106,7 +106,7 @@ int Base::Wr::mkstemps(TDisp disp, std::initializer_list<int> errors,
     char *tmpl, int suffixlen) noexcept {
   const int ret = ::mkstemps(tmpl, suffixlen);
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EEXIST, EINVAL, EFAULT, EMFILE, ENFILE, ENOMEM})) {
     DieErrno("mkstemps()", errno);
   }
@@ -118,7 +118,7 @@ int Base::Wr::open(TDisp disp, std::initializer_list<int> errors,
     const char *pathname, int flags) noexcept {
   const int ret = ::open(pathname, flags);
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EMFILE, ENFILE, ENOMEM})) {
     DieErrno("open()", errno);
   }
@@ -130,7 +130,7 @@ int Base::Wr::open(TDisp disp, std::initializer_list<int> errors,
     const char *pathname, int flags, mode_t mode) noexcept {
   const int ret = ::open(pathname, flags, mode);
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EMFILE, ENFILE, ENOMEM})) {
     DieErrno("open()", errno);
   }
@@ -142,8 +142,8 @@ DIR *Base::Wr::opendir(TDisp disp, std::initializer_list<int> errors,
     const char *name) noexcept {
   DIR *const ret = ::opendir(name);
 
-  if ((ret == nullptr) && IsFatal(errno, disp, errors,
-      true /* default_fatal */, {EMFILE, ENFILE, ENOMEM})) {
+  if ((ret == nullptr) && IsFatal(errno, disp, errors, true /* list_fatal */,
+      {EMFILE, ENFILE, ENOMEM})) {
     DieErrno("opendir()", errno);
   }
 
@@ -154,7 +154,7 @@ int Base::Wr::readdir_r(TDisp disp, std::initializer_list<int> errors,
     DIR *dirp, dirent *entry, dirent **result) noexcept {
   const int ret = ::readdir_r(dirp, entry, result);
 
-  if ((ret != 0) && IsFatal(ret, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EBADF})) {
     DieErrno("readdir_r()", ret);
   }
@@ -166,7 +166,7 @@ int Base::Wr::rename(TDisp disp, std::initializer_list<int> errors,
     const char *oldpath, const char *newpath) noexcept {
   const int ret = ::rename(oldpath, newpath);
 
-  if ((ret != 0) && IsFatal(ret, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EFAULT, ENOMEM})) {
     DieErrno("rename()", ret);
   }
@@ -178,7 +178,7 @@ int Base::Wr::stat(TDisp disp, std::initializer_list<int> errors,
     const char *path, struct stat *buf) noexcept {
   const int ret = ::stat(path, buf);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, ENOMEM})) {
     DieErrno("stat()", errno);
   }
@@ -190,7 +190,7 @@ int Base::Wr::truncate(TDisp disp, std::initializer_list<int> errors,
     const char *path, off_t length) noexcept {
   const int ret = ::truncate(path, length);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL, EBADF})) {
     DieErrno("truncate()", errno);
   }
@@ -202,7 +202,7 @@ int Base::Wr::unlink(TDisp disp, std::initializer_list<int> errors,
     const char *pathname) noexcept {
   const int ret = ::unlink(pathname);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, ENOMEM})) {
     DieErrno("unlink()", errno);
   }

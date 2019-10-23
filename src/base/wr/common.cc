@@ -31,7 +31,7 @@ static bool contains(std::initializer_list<int> err_list, int err) noexcept {
 }
 
 bool Base::Wr::IsFatal(int err, TDisp disp,
-    std::initializer_list<int> err_list, bool default_fatal,
+    std::initializer_list<int> err_list, bool list_fatal,
     std::initializer_list<int> default_err_list) noexcept {
   bool fatal_if_found = false;
 
@@ -57,6 +57,6 @@ bool Base::Wr::IsFatal(int err, TDisp disp,
     NO_DEFAULT_CASE;
   }
 
-  return (contains(default_err_list, err) == default_fatal);
+  return (contains(default_err_list, err) == list_fatal);
 }
 

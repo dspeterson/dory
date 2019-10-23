@@ -33,7 +33,7 @@ int Base::Wr::gethostname(TDisp disp, std::initializer_list<int> errors,
     char *name, size_t len) noexcept {
   const int ret = ::gethostname(name, len);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL})) {
     DieErrno("gethostname()", errno);
   }

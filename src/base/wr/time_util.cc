@@ -31,7 +31,7 @@ int Base::Wr::clock_gettime(TDisp disp, std::initializer_list<int> errors,
     clockid_t clk_id, timespec *tp) noexcept {
   const int ret = ::clock_gettime(clk_id, tp);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL})) {
     DieErrno("clock_gettime()", errno);
   }
@@ -43,7 +43,7 @@ int Base::Wr::nanosleep(TDisp disp, std::initializer_list<int> errors,
     const timespec *req, timespec *rem) noexcept {
   const int ret = ::nanosleep(req, rem);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL})) {
     DieErrno("nanosleep()", errno);
   }

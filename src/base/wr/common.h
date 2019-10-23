@@ -51,8 +51,7 @@ namespace Base {
     };
 
     bool IsFatal(int err, TDisp disp, std::initializer_list<int> err_list,
-        bool default_fatal,
-        std::initializer_list<int> default_err_list) noexcept;
+        bool list_fatal, std::initializer_list<int> default_err_list) noexcept;
 
   }  // Wr
 

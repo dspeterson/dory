@@ -119,7 +119,7 @@ namespace Base {
         T arg) noexcept {
       const int ret = ::fcntl(fd, cmd, arg);
 
-      if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+      if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
           {EBADF, EFAULT, EINVAL, EMFILE})) {
         DieErrno("fcntl(fd, cmd, arg)", errno);
       }

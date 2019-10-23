@@ -31,7 +31,7 @@ int Base::Wr::kill(TDisp disp, std::initializer_list<int> errors, pid_t pid,
     int sig) noexcept {
   const int ret = ::kill(pid, sig);
 
-  if ((ret != 0) && IsFatal(ret, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EINVAL})) {
     DieErrno("kill()", ret);
   }
@@ -43,7 +43,7 @@ int Base::Wr::pthread_kill(TDisp disp, std::initializer_list<int> errors,
     pthread_t thread, int sig) noexcept {
   const int ret = ::pthread_kill(thread, sig);
 
-  if ((ret != 0) && IsFatal(ret, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EINVAL})) {
     DieErrno("pthread_kill()", ret);
   }
@@ -55,7 +55,7 @@ int Base::Wr::pthread_sigmask(TDisp disp, std::initializer_list<int> errors,
     int how, const sigset_t *set, sigset_t *oldset) noexcept {
   const int ret = ::pthread_sigmask(how, set, oldset);
 
-  if ((ret != 0) && IsFatal(ret, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL})) {
     DieErrno("pthread_sigmask()", ret);
   }
@@ -68,7 +68,7 @@ int Base::Wr::sigaction(TDisp disp, std::initializer_list<int> errors,
     struct sigaction *oldact) noexcept {
   const int ret = ::sigaction(signum, act, oldact);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL})) {
     DieErrno("sigaction()", errno);
   }
@@ -80,7 +80,7 @@ int Base::Wr::sigaddset(TDisp disp, std::initializer_list<int> errors,
     sigset_t *set, int signum) noexcept {
   const int ret = ::sigaddset(set, signum);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EINVAL})) {
     DieErrno("sigaddset()", errno);
   }
@@ -92,7 +92,7 @@ int Base::Wr::sigdelset(TDisp disp, std::initializer_list<int> errors,
     sigset_t *set, int signum) noexcept {
   const int ret = ::sigdelset(set, signum);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EINVAL})) {
     DieErrno("sigdelset()", errno);
   }
@@ -104,7 +104,7 @@ int Base::Wr::sigemptyset(TDisp disp, std::initializer_list<int> errors,
     sigset_t *set) noexcept {
   const int ret = ::sigemptyset(set);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EINVAL})) {
     DieErrno("sigemptyset()", errno);
   }
@@ -116,7 +116,7 @@ int Base::Wr::sigfillset(TDisp disp, std::initializer_list<int> errors,
     sigset_t *set) noexcept {
   const int ret = ::sigfillset(set);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EINVAL})) {
     DieErrno("sigfillset()", errno);
   }
@@ -128,7 +128,7 @@ int Base::Wr::sigismember(TDisp disp, std::initializer_list<int> errors,
     const sigset_t *set, int signum) noexcept {
   const int ret = ::sigismember(set, signum);
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EINVAL})) {
     DieErrno("sigismember()", errno);
   }
@@ -140,7 +140,7 @@ int Base::Wr::sigprocmask(TDisp disp, std::initializer_list<int> errors,
     int how, const sigset_t *set, sigset_t *oldset) noexcept {
   const int ret = ::sigprocmask(how, set, oldset);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL})) {
     DieErrno("sigprocmask()", ret);
   }

@@ -31,7 +31,7 @@ int Base::Wr::pthread_rwlock_destroy(TDisp disp,
     std::initializer_list<int> errors, pthread_rwlock_t *rwlock) noexcept {
   const int ret = ::pthread_rwlock_destroy(rwlock);
 
-  if ((ret != 0) && IsFatal(ret, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EBUSY, EINVAL})) {
     DieErrno("pthread_rwlock_destroy()", ret);
   }
@@ -45,7 +45,7 @@ int Base::Wr::pthread_rwlock_init(TDisp disp,
   const int ret = ::pthread_rwlock_init(rwlock, attr);
 
   if ((ret != 0) &&
-      IsFatal(ret, disp, errors, true /* default_fatal */,
+      IsFatal(ret, disp, errors, true /* list_fatal */,
           {EAGAIN, ENOMEM, EPERM, EBUSY, EINVAL})) {
     DieErrno("pthread_rwlock_init()", ret);
   }
@@ -57,7 +57,7 @@ int Base::Wr::pthread_rwlock_rdlock(TDisp disp,
     std::initializer_list<int> errors, pthread_rwlock_t *rwlock) noexcept {
   const int ret = ::pthread_rwlock_rdlock(rwlock);
 
-  if ((ret != 0) && IsFatal(ret, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EINVAL, EAGAIN, EDEADLK})) {
     DieErrno("pthread_rwlock_rdlock()", ret);
   }
@@ -69,7 +69,7 @@ int Base::Wr::pthread_rwlock_unlock(TDisp disp,
     std::initializer_list<int> errors, pthread_rwlock_t *rwlock) noexcept {
   const int ret = ::pthread_rwlock_unlock(rwlock);
 
-  if ((ret != 0) && IsFatal(ret, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EINVAL, EPERM})) {
     DieErrno("pthread_rwlock_unlock()", ret);
   }
@@ -81,7 +81,7 @@ int Base::Wr::pthread_rwlock_wrlock(TDisp disp,
     std::initializer_list<int> errors, pthread_rwlock_t *rwlock) noexcept {
   const int ret = ::pthread_rwlock_wrlock(rwlock);
 
-  if ((ret != 0) && IsFatal(ret, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EINVAL, EDEADLK})) {
     DieErrno("pthread_rwlock_wrlock()", ret);
   }

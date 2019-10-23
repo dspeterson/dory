@@ -37,7 +37,7 @@ int Base::Wr::accept(TDisp disp, std::initializer_list<int> errors, int sockfd,
   /* The man page says that ENOMEM often means that the memory allocation is
      limited by the socket buffer limits, not by the system memory.  Therefore
      treat ENOMEM as nonfatal. */
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL, EMFILE, ENFILE, ENOTSOCK, EOPNOTSUPP})) {
     DieErrno("accept()", errno);
   }
@@ -49,7 +49,7 @@ int Base::Wr::bind(TDisp disp, std::initializer_list<int> errors, int sockfd,
     const sockaddr *addr, socklen_t addrlen) noexcept {
   const int ret = ::bind(sockfd, addr, addrlen);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EINVAL, ENOTSOCK, EADDRNOTAVAIL, EFAULT, ENOMEM})) {
     DieErrno("bind()", errno);
   }
@@ -61,7 +61,7 @@ int Base::Wr::connect(TDisp disp, std::initializer_list<int> errors,
     int sockfd, const sockaddr *addr, socklen_t addrlen) noexcept {
   const int ret = ::connect(sockfd, addr, addrlen);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EAFNOSUPPORT, EADDRNOTAVAIL, EALREADY, EBADF, EFAULT, EISCONN,
           ENOTSOCK})) {
     DieErrno("connect()", errno);
@@ -84,7 +84,7 @@ int Base::Wr::getaddrinfo(TDisp disp, std::initializer_list<int> errors,
     /* The man page doesn't mention what kinds of errno values can occur in
        this case.  Just look for a handful that should be treated as fatal in
        just about any context. */
-    if (IsFatal(errno, errno_disp, errno_values, true /* default_fatal */,
+    if (IsFatal(errno, errno_disp, errno_values, true /* list_fatal */,
         {EBADF, EFAULT, EINVAL, ENOMEM, EMFILE, ENFILE, ENOPROTOOPT,
             EPROTONOSUPPORT, ESOCKTNOSUPPORT, EOPNOTSUPP, EPFNOSUPPORT,
             EAFNOSUPPORT})) {
@@ -98,7 +98,7 @@ int Base::Wr::getaddrinfo(TDisp disp, std::initializer_list<int> errors,
     DieNoStackTrace("getaddrinfo() failed with EAI_MEMORY (out of memory)");
   }
 
-  if (IsFatal(ret, disp, errors, true /* default_fatal */,
+  if (IsFatal(ret, disp, errors, true /* list_fatal */,
       {EAI_BADFLAGS, EAI_FAMILY, EAI_SERVICE, EAI_SOCKTYPE})) {
     std::string msg("getaddrinfo()failed with error code ");
     msg += std::to_string(ret);
@@ -125,7 +125,7 @@ int Base::Wr::getnameinfo(TDisp disp, std::initializer_list<int> errors,
     /* The man page doesn't mention what kinds of errno values can occur in
        this case.  Just look for a handful that should be treated as fatal in
        just about any context. */
-    if (IsFatal(errno, errno_disp, errno_values, true /* default_fatal */,
+    if (IsFatal(errno, errno_disp, errno_values, true /* list_fatal */,
         {EBADF, EFAULT, EINVAL, ENOMEM, EMFILE, ENFILE, ENOPROTOOPT,
             EPROTONOSUPPORT, ESOCKTNOSUPPORT, EOPNOTSUPP, EPFNOSUPPORT,
             EAFNOSUPPORT})) {
@@ -139,7 +139,7 @@ int Base::Wr::getnameinfo(TDisp disp, std::initializer_list<int> errors,
     DieNoStackTrace("getnameinfo() failed with EAI_MEMORY (out of memory)");
   }
 
-  if (IsFatal(ret, disp, errors, true /* default_fatal */,
+  if (IsFatal(ret, disp, errors, true /* list_fatal */,
       {EAI_BADFLAGS, EAI_FAMILY})) {
     std::string msg("getnameinfo()failed with error code ");
     msg += std::to_string(ret);
@@ -155,7 +155,7 @@ int Base::Wr::getpeername(TDisp disp, std::initializer_list<int> errors,
     int sockfd, sockaddr *addr, socklen_t *addrlen) noexcept {
   const int ret = ::getpeername(sockfd, addr, addrlen);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL, ENOBUFS, ENOTCONN, ENOTSOCK})) {
     DieErrno("getpeername()", errno);
   }
@@ -167,7 +167,7 @@ int Base::Wr::getsockname(TDisp disp, std::initializer_list<int> errors,
     int sockfd, sockaddr *addr, socklen_t *addrlen) noexcept {
   const int ret = ::getsockname(sockfd, addr, addrlen);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL, ENOBUFS, ENOTSOCK})) {
     DieErrno("getsockname()", errno);
   }
@@ -179,7 +179,7 @@ int Base::Wr::getsockopt(TDisp disp, std::initializer_list<int> errors,
     int sockfd, int level, int optname, void *optval, socklen_t *optlen) noexcept {
   const int ret = ::getsockopt(sockfd, level, optname, optval, optlen);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL, ENOPROTOOPT, ENOTSOCK})) {
     DieErrno("getsockopt()", errno);
   }
@@ -191,7 +191,7 @@ const char *Base::Wr::inet_ntop(TDisp disp, std::initializer_list<int> errors,
     int af, const void *src, char *dst, socklen_t size) noexcept {
   const char *const ret = ::inet_ntop(af, src, dst, size);
 
-  if (!ret && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if (!ret && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EAFNOSUPPORT})) {
     DieErrno("inet_ntop()", errno);
   }
@@ -203,7 +203,7 @@ int Base::Wr::inet_pton(TDisp disp, std::initializer_list<int> errors, int af,
     const char *src, void *dst) noexcept {
   const int ret = ::inet_pton(af, src, dst);
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EAFNOSUPPORT})) {
     DieErrno("inet_pton()", errno);
   }
@@ -215,7 +215,7 @@ int Base::Wr::listen(TDisp disp, std::initializer_list<int> errors, int sockfd,
     int backlog) noexcept {
   const int ret = ::listen(sockfd, backlog);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, ENOTSOCK, EOPNOTSUPP})) {
     DieErrno("listen()", errno);
   }
@@ -227,7 +227,7 @@ ssize_t Base::Wr::recv(TDisp disp, std::initializer_list<int> errors,
     int sockfd, void *buf, size_t len, int flags) noexcept {
   const ssize_t ret = ::recv(sockfd, buf, len, flags);
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL, ENOMEM, ENOTCONN, ENOTSOCK})) {
     DieErrno("recv()", errno);
   }
@@ -240,7 +240,7 @@ ssize_t Base::Wr::recvfrom(TDisp disp, std::initializer_list<int> errors,
     socklen_t *addrlen) noexcept {
   const ssize_t ret = ::recvfrom(sockfd, buf, len, flags, src_addr, addrlen);
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL, ENOMEM, ENOTCONN, ENOTSOCK})) {
     DieErrno("recvfrom()", errno);
   }
@@ -252,7 +252,7 @@ ssize_t Base::Wr::recvmsg(TDisp disp, std::initializer_list<int> errors,
     int sockfd, msghdr *msg, int flags) noexcept {
   const ssize_t ret = ::recvmsg(sockfd, msg, flags);
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL, ENOMEM, ENOTCONN, ENOTSOCK})) {
     DieErrno("recvmsg()", errno);
   }
@@ -264,7 +264,7 @@ ssize_t Base::Wr::send(TDisp disp, std::initializer_list<int> errors,
     int sockfd, const void *buf, size_t len, int flags) noexcept {
   const ssize_t ret = ::send(sockfd, buf, len, flags);
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EDESTADDRREQ, EFAULT, EINVAL, EISCONN, ENOMEM, ENOTCONN,
           ENOTSOCK, EOPNOTSUPP})) {
     DieErrno("send()", errno);
@@ -277,7 +277,7 @@ ssize_t Base::Wr::sendmsg(TDisp disp, std::initializer_list<int> errors,
     int sockfd, const msghdr *msg, int flags) noexcept {
   const ssize_t ret = ::sendmsg(sockfd, msg, flags);
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EDESTADDRREQ, EFAULT, EINVAL, EISCONN, ENOMEM, ENOTCONN,
           ENOTSOCK, EOPNOTSUPP})) {
     DieErrno("sendmsg()", errno);
@@ -291,7 +291,7 @@ ssize_t Base::Wr::sendto(TDisp disp, std::initializer_list<int> errors,
     socklen_t addrlen) noexcept {
   const ssize_t ret = ::sendto(sockfd, buf, len, flags, dest_addr, addrlen);
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EDESTADDRREQ, EFAULT, EINVAL, EISCONN, ENOMEM, ENOTCONN,
           ENOTSOCK, EOPNOTSUPP})) {
     DieErrno("sendto()", errno);
@@ -305,7 +305,7 @@ int Base::Wr::setsockopt(TDisp disp, std::initializer_list<int> errors,
     socklen_t optlen) noexcept {
   const int ret = ::setsockopt(sockfd, level, optname, optval, optlen);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL, ENOPROTOOPT, ENOTSOCK})) {
     DieErrno("setsockopt()", errno);
   }
@@ -317,7 +317,7 @@ int Base::Wr::socket(TDisp disp, std::initializer_list<int> errors, int domain,
     int type, int protocol) noexcept {
   const int ret = ::socket(domain, type, protocol);
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EAFNOSUPPORT, EINVAL, EMFILE, ENFILE, ENOBUFS, ENOMEM,
           EPROTONOSUPPORT})) {
     DieErrno("socket()", errno);
@@ -330,7 +330,7 @@ int Base::Wr::socketpair(TDisp disp, std::initializer_list<int> errors,
     int domain, int type, int protocol, int sv[2]) noexcept {
   const int ret = ::socketpair(domain, type, protocol, sv);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EAFNOSUPPORT, EFAULT, EMFILE, ENFILE, EOPNOTSUPP, EPROTONOSUPPORT})) {
     DieErrno("socketpair()", errno);
   }

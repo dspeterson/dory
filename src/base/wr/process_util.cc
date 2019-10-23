@@ -30,7 +30,7 @@ using namespace Base;
 pid_t Base::Wr::fork(TDisp disp, std::initializer_list<int> errors) noexcept {
   const pid_t ret = ::fork();
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EAGAIN, ENOMEM, ENOSYS})) {
     DieErrno("fork()", errno);
   }
@@ -42,7 +42,7 @@ int Base::Wr::getrlimit(TDisp disp, std::initializer_list<int> errors,
     int resource, rlimit *rlim) noexcept {
   const int ret = ::getrlimit(resource, rlim);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* default_fatal */,
+  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL})) {
     DieErrno("getrlimit()", errno);
   }
