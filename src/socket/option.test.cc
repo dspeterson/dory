@@ -26,6 +26,7 @@
 
 #include <base/fd.h>
 #include <base/tmp_file.h>
+#include <base/wr/net_util.h>
 #include <test_util/test_logging.h>
 
 #include <gtest/gtest.h>
@@ -52,7 +53,7 @@ namespace {
   };  // TSocketOptionTest
 
   TEST_F(TSocketOptionTest, LowLevelGetAndSet) {
-    TFd sock(socket(AF_INET, SOCK_STREAM, 0));
+    TFd sock(Wr::socket(Wr::TDisp::Nonfatal, {}, AF_INET, SOCK_STREAM, 0));
     int arg;
     GetSockOpt(sock, SO_REUSEADDR, arg);
     ASSERT_EQ(arg, 0);
@@ -65,7 +66,7 @@ namespace {
   }
 
   TEST_F(TSocketOptionTest, ConvBool) {
-    TFd sock(socket(AF_INET, SOCK_STREAM, 0));
+    TFd sock(Wr::socket(Wr::TDisp::Nonfatal, {}, AF_INET, SOCK_STREAM, 0));
     bool val;
     Conv<bool>::GetSockOpt(sock, SO_REUSEADDR, val);
     ASSERT_FALSE(val);
@@ -78,7 +79,7 @@ namespace {
   }
 
   TEST_F(TSocketOptionTest, ConvInt) {
-    TFd sock(socket(AF_INET, SOCK_STREAM, 0));
+    TFd sock(Wr::socket(Wr::TDisp::Nonfatal, {}, AF_INET, SOCK_STREAM, 0));
     int val;
     Conv<int>::GetSockOpt(sock, SO_REUSEADDR, val);
     ASSERT_EQ(val, 0);
@@ -91,7 +92,7 @@ namespace {
   }
 
   TEST_F(TSocketOptionTest, ConvLinger) {
-    TFd sock(socket(AF_INET, SOCK_STREAM, 0));
+    TFd sock(Wr::socket(Wr::TDisp::Nonfatal, {}, AF_INET, SOCK_STREAM, 0));
     Conv<TLinger>::SetSockOpt(sock, SO_LINGER, TLinger());
     TLinger val;
     Conv<TLinger>::GetSockOpt(sock, SO_LINGER, val);
@@ -104,7 +105,7 @@ namespace {
   }
 
   TEST_F(TSocketOptionTest, ConvTimeout) {
-    TFd sock(socket(AF_INET, SOCK_STREAM, 0));
+    TFd sock(Wr::socket(Wr::TDisp::Nonfatal, {}, AF_INET, SOCK_STREAM, 0));
     Conv<TTimeout>::SetSockOpt(sock, SO_RCVTIMEO, TTimeout(2000000));
     TTimeout val;
     Conv<TTimeout>::GetSockOpt(sock, SO_RCVTIMEO, val);
@@ -158,7 +159,7 @@ namespace {
   }
 
   TEST_F(TSocketOptionTest, StdObject) {
-    TFd sock(socket(AF_INET, SOCK_STREAM, 0));
+    TFd sock(Wr::socket(Wr::TDisp::Nonfatal, {}, AF_INET, SOCK_STREAM, 0));
     bool val = ReuseAddr.Get(sock);
     ASSERT_FALSE(val);
     ReuseAddr.Set(sock, true);

@@ -24,7 +24,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <base/tmp_file.h> 
+#include <base/tmp_file.h>
+#include <base/wr/file_util.h>
 #include <socket/address.h>
 #include <test_util/test_logging.h>
 
@@ -66,13 +67,13 @@ namespace {
     ASSERT_TRUE(sock.IsOpen());
     ASSERT_TRUE(sock.IsBound());
     struct stat buf;
-    int ret = stat(path, &buf);
+    int ret = Wr::stat(path, &buf);
     ASSERT_EQ(ret, 0);
     ASSERT_TRUE(S_ISSOCK(buf.st_mode));
     sock.Reset();
     ASSERT_FALSE(sock.IsOpen());
     ASSERT_FALSE(sock.IsBound());
-    ret = stat(path, &buf);
+    ret = Wr::stat(path, &buf);
     ASSERT_EQ(ret, -1);
 
     {
@@ -83,12 +84,12 @@ namespace {
       Bind(sock2, address2);
       ASSERT_TRUE(sock2.IsOpen());
       ASSERT_TRUE(sock2.IsBound());
-      ret = stat(path, &buf);
+      ret = Wr::stat(path, &buf);
       ASSERT_EQ(ret, 0);
       ASSERT_TRUE(S_ISSOCK(buf.st_mode));
     }
 
-    ret = stat(path, &buf);
+    ret = Wr::stat(path, &buf);
     ASSERT_EQ(ret, -1);
   }
 

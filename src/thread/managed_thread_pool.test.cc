@@ -31,6 +31,7 @@
 #include <exception>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <system_error>
 
 #include <unistd.h>
@@ -345,8 +346,9 @@ namespace {
   class TManagedThreadPoolTest : public ::testing::Test {
     protected:
     static void HandleFatalError(const char *msg) {
-      std::cerr << "Fatal thread pool error: " << msg << std::endl;
-      std::exit(EXIT_FAILURE);
+      std::string err_msg("Fatal thread pool error: ");
+      err_msg += msg;
+      Die(err_msg.c_str());
     }
 
     TManagedThreadPoolTest() = default;
