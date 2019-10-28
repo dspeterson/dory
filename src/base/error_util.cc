@@ -99,16 +99,6 @@ void Base::InitSecondaryFatalErrorLogging(TFatalMsgWriter msg_writer,
   SecondaryFatalStackTraceWriter = stack_trace_writer;
 }
 
-[[ noreturn ]] static void TerminateHandler() noexcept {
-  Die("Calling Die() on terminate");
-}
-
-void Base::DieOnTerminate() noexcept {
-  /* Arrange for Die() to be called on std::terminate() so we hopefully get a
-     stack trace before calling std::abort(). */
-  std::set_terminate(TerminateHandler);
-}
-
 static const int stderr_fd = 2;
 
 static void WriteFatalMsgToStderr(const char *msg) noexcept {
@@ -148,6 +138,21 @@ static void EmitStackTrace(const char *msg) {
   SecondaryFatalStackTraceWriter(trace_buf, trace_size);
 }
 
+void Base::LogFatal(const char *msg) noexcept {
+  WriteFatalMsgToStderr(msg);
+  SecondaryFatalMsgWriter(msg);
+}
+
+[[ noreturn ]] static void TerminateHandler() noexcept {
+  Die("Calling Die() on terminate");
+}
+
+void Base::DieOnTerminate() noexcept {
+  /* Arrange for Die() to be called on std::terminate() so we hopefully get a
+     stack trace before calling std::abort(). */
+  std::set_terminate(TerminateHandler);
+}
+
 /* First caller of Die() takes this flag. */
 static std::atomic_flag die_flag = ATOMIC_FLAG_INIT;
 
@@ -156,7 +161,7 @@ static std::atomic_flag die_flag = ATOMIC_FLAG_INIT;
 static std::atomic<pid_t> die_flag_holder(0);
 
 [[ noreturn ]] static void DieImpl(const char *msg,
-    bool stack_trace) noexcept {
+    bool stack_trace, TDebugDumpFn debug_dump_fn) noexcept {
   const pid_t my_tid = Gettid();
 
   if (!die_flag.test_and_set()) {
@@ -171,8 +176,11 @@ static std::atomic<pid_t> die_flag_holder(0);
     if (stack_trace) {
       EmitStackTrace(msg);  // implementation assumes no concurrency
     } else {
-      WriteFatalMsgToStderr(msg);
-      SecondaryFatalMsgWriter(msg);
+      LogFatal(msg);
+    }
+
+    if (debug_dump_fn) {
+      debug_dump_fn();
     }
 
     /* Unless we are running with libasan, this should cause a core dump.
@@ -217,16 +225,18 @@ static std::atomic<pid_t> die_flag_holder(0);
   }
 }
 
-[[ noreturn ]] void Base::Die(const char *msg) noexcept {
-  DieImpl(msg, true /* stack_trace */);
+[[ noreturn ]] void Base::Die(const char *msg,
+    TDebugDumpFn debug_dump_fn) noexcept {
+  DieImpl(msg, true /* stack_trace */, debug_dump_fn);
 }
 
-[[ noreturn ]] void Base::DieNoStackTrace(const char *msg) noexcept {
-  DieImpl(msg, false /* stack_trace */);
+[[ noreturn ]] void Base::DieNoStackTrace(const char *msg,
+    TDebugDumpFn debug_dump_fn) noexcept {
+  DieImpl(msg, false /* stack_trace */, debug_dump_fn);
 }
 
 [[ noreturn ]] void Base::DieErrno(const char *fn_name,
-    int errno_value) noexcept {
+    int errno_value, TDebugDumpFn debug_dump_fn) noexcept {
   if (errno_value == ENOMEM) {
     /* If we ran out of memory, a stack trace isn't useful and attempting to
        create one may fail.  Just log an error message that makes it obvious
@@ -241,10 +251,10 @@ static std::atomic<pid_t> die_flag_holder(0);
     msg += std::to_string(errno_value);
     msg += ": ";
     AppendStrerror(errno_value, msg);
-    Die(msg.c_str());
+    Die(msg.c_str(), debug_dump_fn);
   } catch (...) {
     /* We got an exception while creating the error message.  Just use the
        function name as the error message. */
-    Die(fn_name);
+    Die(fn_name, debug_dump_fn);
   }
 }

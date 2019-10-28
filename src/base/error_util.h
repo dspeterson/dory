@@ -181,27 +181,42 @@ namespace Base {
       void (*)(void *const *stack_trace_buffer,
           size_t stack_trace_size) noexcept>())>::type;
 
+  using TDebugDumpFn = std::remove_reference<decltype(std::declval<
+      void (*)(void) noexcept>())>::type;
+
   /* Install functions for secondary fatal error output (i.e. logging
      subsystem).  Functions should avoid writing to stdout/stderr since primary
      output always goes to stderr. */
   void InitSecondaryFatalErrorLogging(TFatalMsgWriter msg_writer,
       TFatalStackTraceWriter stack_trace_writer) noexcept;
 
+  /* Intended to be called by a function of type TDebugDumpFn to log debug info
+     during fatal error handling.  Writes to stderr, and additionally calls any
+     function specified by InitSecondaryFatalErrorLogging(). */
+  void LogFatal(const char *msg) noexcept;
+
   /* Call std::set_terminate() to install a std::terminate_handler that
      immediately calls Die(), which should generate a stack trace before
      calling std::abort(). */
   void DieOnTerminate() noexcept;
 
-  /* Generate a stack trace, log fatal error message, and dump core. */
-  [[ noreturn ]] void Die(const char *msg) noexcept;
+  /* Generate a stack trace, log fatal error message, and dump core.
+     Optionally call a caller-provided function for dumping debug
+     information. */
+  [[ noreturn ]] void Die(const char *msg,
+      TDebugDumpFn debug_dump_fn = nullptr) noexcept;
 
   /* Log fatal error message and dump core, but don't generate a stack
-     trace. */
-  [[ noreturn ]] void DieNoStackTrace(const char *msg) noexcept;
+     trace.  Optionally call a caller-provided function for dumping debug
+     information. */
+  [[ noreturn ]] void DieNoStackTrace(const char *msg,
+      TDebugDumpFn debug_dump_fn = nullptr) noexcept;
 
   /* fn_name is the name of a system call or library function (for instance,
      "fcntl()" or "socket()") that failed with the given errno value.  Die with
-     an appropriate error message. */
-  [[ noreturn ]] void DieErrno(const char *fn_name, int errno_value) noexcept;
+     an appropriate error message.  Optionally call a caller-provided function
+     for dumping debug information. */
+  [[ noreturn ]] void DieErrno(const char *fn_name, int errno_value,
+      TDebugDumpFn debug_dump_fn = nullptr) noexcept;
 
 }  // Base

@@ -21,8 +21,12 @@
 
 #include <base/wr/common.h>
 
+#include <algorithm>
+#include <cerrno>
+
 #include <base/error_util.h>
 #include <base/no_default_case.h>
+#include <base/wr/debug.h>
 
 using namespace Base;
 
@@ -60,3 +64,9 @@ bool Base::Wr::IsFatal(int err, TDisp disp,
   return (contains(default_err_list, err) == list_fatal);
 }
 
+[[ noreturn ]] void Base::Wr::DieErrnoWr(const char *fn_name,
+    int errno_value) noexcept {
+  DieErrno(fn_name, errno_value,
+      ((errno_value == EBADF) || (errno_value == ENOTSOCK)) ?
+          DumpFdTrackingBuffer : nullptr);
+}

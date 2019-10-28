@@ -21,9 +21,6 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cassert>
-#include <cerrno>
 #include <initializer_list>
 
 namespace Base {
@@ -52,6 +49,11 @@ namespace Base {
 
     bool IsFatal(int err, TDisp disp, std::initializer_list<int> err_list,
         bool list_fatal, std::initializer_list<int> default_err_list) noexcept;
+
+    /* Call DieErrno().  If errno_value is EBADF or ENOTSOCK, dump file
+       descriptor tracking buffer. */
+    [[ noreturn ]] void DieErrnoWr(const char *fn_name,
+        int errno_value) noexcept;
 
   }  // Wr
 

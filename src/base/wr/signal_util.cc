@@ -33,7 +33,7 @@ int Base::Wr::kill(TDisp disp, std::initializer_list<int> errors, pid_t pid,
 
   if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EINVAL})) {
-    DieErrno("kill()", ret);
+    DieErrnoWr("kill()", ret);
   }
 
   return ret;
@@ -45,7 +45,7 @@ int Base::Wr::pthread_kill(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EINVAL})) {
-    DieErrno("pthread_kill()", ret);
+    DieErrnoWr("pthread_kill()", ret);
   }
 
   return ret;
@@ -57,7 +57,7 @@ int Base::Wr::pthread_sigmask(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL})) {
-    DieErrno("pthread_sigmask()", ret);
+    DieErrnoWr("pthread_sigmask()", ret);
   }
 
   return ret;
@@ -70,7 +70,7 @@ int Base::Wr::sigaction(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL})) {
-    DieErrno("sigaction()", errno);
+    DieErrnoWr("sigaction()", errno);
   }
 
   return ret;
@@ -82,7 +82,7 @@ int Base::Wr::sigaddset(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EINVAL})) {
-    DieErrno("sigaddset()", errno);
+    DieErrnoWr("sigaddset()", errno);
   }
 
   return ret;
@@ -94,7 +94,7 @@ int Base::Wr::sigdelset(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EINVAL})) {
-    DieErrno("sigdelset()", errno);
+    DieErrnoWr("sigdelset()", errno);
   }
 
   return ret;
@@ -106,7 +106,7 @@ int Base::Wr::sigemptyset(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EINVAL})) {
-    DieErrno("sigemptyset()", errno);
+    DieErrnoWr("sigemptyset()", errno);
   }
 
   return ret;
@@ -118,7 +118,7 @@ int Base::Wr::sigfillset(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EINVAL})) {
-    DieErrno("sigfillset()", errno);
+    DieErrnoWr("sigfillset()", errno);
   }
 
   return ret;
@@ -130,7 +130,7 @@ int Base::Wr::sigismember(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EINVAL})) {
-    DieErrno("sigismember()", errno);
+    DieErrnoWr("sigismember()", errno);
   }
 
   return ret;
@@ -142,7 +142,7 @@ int Base::Wr::sigprocmask(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL})) {
-    DieErrno("sigprocmask()", ret);
+    DieErrnoWr("sigprocmask()", ret);
   }
 
   return ret;

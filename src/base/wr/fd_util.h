@@ -36,6 +36,7 @@
 
 #include <base/error_util.h>
 #include <base/wr/common.h>
+#include <base/wr/debug.h>
 
 namespace Base {
 
@@ -119,9 +120,13 @@ namespace Base {
         T arg) noexcept {
       const int ret = ::fcntl(fd, cmd, arg);
 
-      if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
-          {EBADF, EFAULT, EINVAL, EMFILE})) {
-        DieErrno("fcntl(fd, cmd, arg)", errno);
+      if (ret < 0) {
+        if (IsFatal(errno, disp, errors, true /* list_fatal */,
+            {EBADF, EFAULT, EINVAL, EMFILE})) {
+          DieErrnoWr("fcntl(fd, cmd, arg)", errno);
+        }
+      } else if ((arg == F_DUPFD) || (arg == F_DUPFD_CLOEXEC)) {
+        TrackFdOp(TFdOp::Dup, fd, ret);
       }
 
       return ret;

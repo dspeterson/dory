@@ -21,6 +21,9 @@
 
 #include <base/wr/fd_util.h>
 
+#include <algorithm>
+#include <string>
+
 #include <time.h>
 
 #include <base/sig_masker.h>
@@ -32,7 +35,9 @@ int Base::Wr::close(TDisp disp, std::initializer_list<int> errors,
     int fd) noexcept {
   int ret = ::close(fd);
 
-  if (ret != 0) {
+  if (ret == 0) {
+    TrackFdOp(TFdOp::Close, fd);
+  } else {
     if (errno == EINTR) {
       /* We were interrupted by a signal.  This should be rare.  Try again with
          all signals blocked.  It's important for close() to succeed so we
@@ -41,6 +46,7 @@ int Base::Wr::close(TDisp disp, std::initializer_list<int> errors,
       ret = ::close(fd);
 
       if (ret == 0) {
+        TrackFdOp(TFdOp::Close, fd);
         return 0;
       }
 
@@ -48,7 +54,7 @@ int Base::Wr::close(TDisp disp, std::initializer_list<int> errors,
     }
 
     if (IsFatal(errno, disp, errors, true /* list_fatal */, {EBADF, EIO})) {
-      DieErrno("close()", errno);
+      DieErrnoWr("close()", errno);
     }
   }
 
@@ -60,9 +66,13 @@ int Base::Wr::dup(TDisp disp, std::initializer_list<int> errors,
     int oldfd) noexcept {
   const int ret = ::dup(oldfd);
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
-      {EBADF, EMFILE})) {
-    DieErrno("dup()", errno);
+  if (ret < 0) {
+    if (IsFatal(errno, disp, errors, true /* list_fatal */,
+        {EBADF, EMFILE})) {
+      DieErrnoWr("dup()", errno);
+    }
+  } else {
+    TrackFdOp(TFdOp::Dup, oldfd, ret);
   }
 
   return ret;
@@ -86,6 +96,7 @@ int Base::Wr::dup2(TDisp disp, std::initializer_list<int> errors, int oldfd,
       } while ((ret < 0) && (errno == EBUSY));
 
       if (ret >= 0) {
+        TrackFdOp(TFdOp::Dup, oldfd, newfd);
         return ret;
       }
     }
@@ -94,8 +105,10 @@ int Base::Wr::dup2(TDisp disp, std::initializer_list<int> errors, int oldfd,
 
     if (IsFatal(errno, disp, errors, true /* list_fatal */,
         {EBADF, EINVAL, EMFILE})) {
-      DieErrno("dup2()", errno);
+      DieErrnoWr("dup2()", errno);
     }
+  } else {
+    TrackFdOp(TFdOp::Dup, oldfd, newfd);
   }
 
   return ret;
@@ -105,9 +118,13 @@ int Base::Wr::epoll_create1(TDisp disp, std::initializer_list<int> errors,
     int flags) noexcept {
   const int ret = ::epoll_create1(flags);
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
-      {EINVAL, EMFILE, ENFILE, ENOMEM})) {
-    DieErrno("epoll_create1()", errno);
+  if (ret < 0) {
+    if (IsFatal(errno, disp, errors, true /* list_fatal */,
+        {EINVAL, EMFILE, ENFILE, ENOMEM})) {
+      DieErrnoWr("epoll_create1()", errno);
+    }
+  } else {
+    TrackFdOp(TFdOp::Create1, ret);
   }
 
   return ret;
@@ -119,7 +136,7 @@ int Base::Wr::epoll_ctl(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EEXIST, EINVAL, ENOENT, ENOMEM, ENOSPC, EPERM})) {
-    DieErrno("epoll_ctl()", errno);
+    DieErrnoWr("epoll_ctl()", errno);
   }
 
   return ret;
@@ -131,7 +148,7 @@ int Base::Wr::epoll_wait(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL})) {
-    DieErrno("epoll_wait()", errno);
+    DieErrnoWr("epoll_wait()", errno);
   }
 
   return ret;
@@ -141,9 +158,13 @@ int Base::Wr::eventfd(TDisp disp, std::initializer_list<int> errors,
     unsigned int initval, int flags) noexcept {
   const int ret = ::eventfd(initval, flags);
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
-      {EINVAL, EMFILE, ENFILE, ENODEV, ENOMEM})) {
-    DieErrno("eventfd()", errno);
+  if (ret < 0) {
+    if (IsFatal(errno, disp, errors, true /* list_fatal */,
+        {EINVAL, EMFILE, ENFILE, ENODEV, ENOMEM})) {
+      DieErrnoWr("eventfd()", errno);
+    }
+  } else {
+    TrackFdOp(TFdOp::Create1, ret);
   }
 
   return ret;
@@ -160,7 +181,7 @@ int Base::Wr::eventfd_write(TDisp disp, std::initializer_list<int> errors,
      treat any resulting unexpected errno values as fatal. */
   if ((ret != 0) && IsFatal(errno, disp, errors, false /* list_fatal */,
       {EAGAIN, EWOULDBLOCK, EINTR})) {
-    DieErrno("eventfd_write()", errno);
+    DieErrnoWr("eventfd_write()", errno);
   }
 
   return ret;
@@ -168,11 +189,23 @@ int Base::Wr::eventfd_write(TDisp disp, std::initializer_list<int> errors,
 
 int Base::Wr::fcntl(TDisp disp, std::initializer_list<int> errors, int fd,
     int cmd) noexcept {
+  static const std::initializer_list<int> arg_cmd_list =
+      {F_DUPFD, F_DUPFD_CLOEXEC, F_SETFD, F_SETFL, F_SETLK, F_SETLKW, F_GETLK,
+          F_SETOWN, F_GETOWN_EX, F_SETOWN_EX, F_SETSIG, F_SETLEASE, F_NOTIFY,
+          F_SETPIPE_SZ};
+
+  if (std::find(arg_cmd_list.begin(), arg_cmd_list.end(), cmd) !=
+      arg_cmd_list.end()) {
+    std::string msg("Must provide arg with fcntl() cmd ");
+    msg += std::to_string(cmd);
+    Die(msg.c_str());
+  }
+
   const int ret = ::fcntl(fd, cmd);
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT})) {
-    DieErrno("fcntl(fd, cmd)", errno);
+    DieErrnoWr("fcntl(fd, cmd)", errno);
   }
 
   return ret;
@@ -182,9 +215,11 @@ int Base::Wr::pipe(TDisp disp, std::initializer_list<int> errors,
     int pipefd[2]) noexcept {
   const int ret = ::pipe(pipefd);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
+  if (ret == 0) {
+    TrackFdOp(TFdOp::Create2, pipefd[0], pipefd[1]);
+  } else if (IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EMFILE, ENFILE})) {
-    DieErrno("pipe()", errno);
+    DieErrnoWr("pipe()", errno);
   }
 
   return ret;
@@ -194,9 +229,11 @@ int Base::Wr::pipe2(TDisp disp, std::initializer_list<int> errors,
     int pipefd[2], int flags) noexcept {
   const int ret = ::pipe2(pipefd, flags);
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
+  if (ret == 0) {
+    TrackFdOp(TFdOp::Create2, pipefd[0], pipefd[1]);
+  } else if (IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL, EMFILE, ENFILE})) {
-    DieErrno("pipe2()", errno);
+    DieErrnoWr("pipe2()", errno);
   }
 
   return ret;
@@ -208,7 +245,7 @@ int Base::Wr::poll(TDisp disp, std::initializer_list<int> errors, pollfd *fds,
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL, ENOMEM})) {
-    DieErrno("poll()", errno);
+    DieErrnoWr("poll()", errno);
   }
 
   return ret;
@@ -221,7 +258,7 @@ int Base::Wr::ppoll(TDisp disp, std::initializer_list<int> errors, pollfd *fds,
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL, ENOMEM})) {
-    DieErrno("ppoll()", errno);
+    DieErrnoWr("ppoll()", errno);
   }
 
   return ret;
@@ -233,7 +270,7 @@ ssize_t Base::Wr::read(TDisp disp, std::initializer_list<int> errors, int fd,
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL})) {
-    DieErrno("read()", errno);
+    DieErrnoWr("read()", errno);
   }
 
   return ret;
@@ -243,9 +280,13 @@ int Base::Wr::timerfd_create(TDisp disp, std::initializer_list<int> errors,
     int clockid, int flags) noexcept {
   const int ret = ::timerfd_create(clockid, flags);
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
-      {EINVAL, EMFILE, ENFILE, ENODEV, ENOMEM})) {
-    DieErrno("timerfd_create()", errno);
+  if (ret < 0) {
+    if (IsFatal(errno, disp, errors, true /* list_fatal */,
+        {EINVAL, EMFILE, ENFILE, ENODEV, ENOMEM})) {
+      DieErrnoWr("timerfd_create()", errno);
+    }
+  } else {
+    TrackFdOp(TFdOp::Create1, ret);
   }
 
   return ret;
@@ -258,7 +299,7 @@ int Base::Wr::timerfd_settime(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL})) {
-    DieErrno("timerfd_settime()", errno);
+    DieErrnoWr("timerfd_settime()", errno);
   }
 
   return ret;
@@ -270,7 +311,7 @@ ssize_t Base::Wr::write(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EDESTADDRREQ, EFAULT, EINVAL})) {
-    DieErrno("write()", errno);
+    DieErrnoWr("write()", errno);
   }
 
   return ret;

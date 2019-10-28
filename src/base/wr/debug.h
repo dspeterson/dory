@@ -1,4 +1,4 @@
-/* <base/wr/sys_util.cc>
+/* <base/wr/debug.h>
 
    ----------------------------------------------------------------------------
    Copyright 2019 Dave Peterson <dave@dspeterson.com>
@@ -16,27 +16,30 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <base/wr/sys_util.h>.
+   Debug instrumentation for system/library call wrappers.
  */
 
-#include <base/wr/sys_util.h>
+#pragma once
 
-#include <cerrno>
+namespace Base {
 
-#include <unistd.h>
+  namespace Wr {
 
-#include <base/error_util.h>
+    enum class TFdOp {
+      Create1,
+      Create2,
+      Dup,
+      Close
+    };
 
-using namespace Base;
+    /* Track an operation that involves file descriptor creation or
+       destruction.  Operation will be logged internally to a circular buffer,
+       along with a partial stack trace. */
+    void TrackFdOp(TFdOp op, int fd1, int fd2 = -1) noexcept;
 
-int Base::Wr::gethostname(TDisp disp, std::initializer_list<int> errors,
-    char *name, size_t len) noexcept {
-  const int ret = ::gethostname(name, len);
+    /* Log entire contents of file descriptor tracking buffer. */
+    void DumpFdTrackingBuffer() noexcept;
 
-  if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
-      {EFAULT, EINVAL})) {
-    DieErrnoWr("gethostname()", errno);
-  }
+  };  // Wr
 
-  return ret;
-}
+}  // Base

@@ -33,7 +33,7 @@ int Base::Wr::pthread_rwlock_destroy(TDisp disp,
 
   if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EBUSY, EINVAL})) {
-    DieErrno("pthread_rwlock_destroy()", ret);
+    DieErrnoWr("pthread_rwlock_destroy()", ret);
   }
 
   return ret;
@@ -47,7 +47,7 @@ int Base::Wr::pthread_rwlock_init(TDisp disp,
   if ((ret != 0) &&
       IsFatal(ret, disp, errors, true /* list_fatal */,
           {EAGAIN, ENOMEM, EPERM, EBUSY, EINVAL})) {
-    DieErrno("pthread_rwlock_init()", ret);
+    DieErrnoWr("pthread_rwlock_init()", ret);
   }
 
   return ret;
@@ -59,7 +59,7 @@ int Base::Wr::pthread_rwlock_rdlock(TDisp disp,
 
   if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EINVAL, EAGAIN, EDEADLK})) {
-    DieErrno("pthread_rwlock_rdlock()", ret);
+    DieErrnoWr("pthread_rwlock_rdlock()", ret);
   }
 
   return ret;
@@ -71,7 +71,7 @@ int Base::Wr::pthread_rwlock_unlock(TDisp disp,
 
   if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EINVAL, EPERM})) {
-    DieErrno("pthread_rwlock_unlock()", ret);
+    DieErrnoWr("pthread_rwlock_unlock()", ret);
   }
 
   return ret;
@@ -83,7 +83,7 @@ int Base::Wr::pthread_rwlock_wrlock(TDisp disp,
 
   if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EINVAL, EDEADLK})) {
-    DieErrno("pthread_rwlock_wrlock()", ret);
+    DieErrnoWr("pthread_rwlock_wrlock()", ret);
   }
 
   return ret;

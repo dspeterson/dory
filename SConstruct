@@ -165,7 +165,8 @@ def set_debug_options():
     env.AppendUnique(CCFLAGS=['-g3', '-ggdb', '-fno-omit-frame-pointer',
                               '-fvisibility=hidden'])
     env.AppendUnique(CXXFLAGS=['-D_GLIBCXX_DEBUG',
-                               '-D_GLIBCXX_DEBUG_PEDANTIC'])
+                               '-D_GLIBCXX_DEBUG_PEDANTIC',
+                               '-DTRACK_FILE_DESCRIPTORS'])
     env.AppendUnique(LINKFLAGS=['-rdynamic'])
 
     if GetOption('asan') == 'yes':

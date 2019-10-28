@@ -27,6 +27,7 @@
 #include <unistd.h>
 
 #include <base/error_util.h>
+#include <base/wr/debug.h>
 
 using namespace Base;
 
@@ -36,7 +37,7 @@ int Base::Wr::chdir(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, ENOMEM})) {
-    DieErrno("chdir()", errno);
+    DieErrnoWr("chdir()", errno);
   }
 
   return ret;
@@ -48,7 +49,7 @@ int Base::Wr::chmod(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, ENOMEM})) {
-    DieErrno("chmod()", errno);
+    DieErrnoWr("chmod()", errno);
   }
 
   return ret;
@@ -60,7 +61,7 @@ int Base::Wr::closedir(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF})) {
-    DieErrno("closedir()", errno);
+    DieErrnoWr("closedir()", errno);
   }
 
   return ret;
@@ -72,7 +73,7 @@ int Base::Wr::fstat(TDisp disp, std::initializer_list<int> errors, int fd,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, ENOMEM})) {
-    DieErrno("fstat()", errno);
+    DieErrnoWr("fstat()", errno);
   }
 
   return ret;
@@ -84,7 +85,7 @@ int Base::Wr::ftruncate(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL, EBADF})) {
-    DieErrno("ftruncate()", errno);
+    DieErrnoWr("ftruncate()", errno);
   }
 
   return ret;
@@ -96,7 +97,7 @@ char *Base::Wr::mkdtemp(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret == nullptr) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EINVAL, EFAULT, ENOMEM})) {
-    DieErrno("mkdtemp()", errno);
+    DieErrnoWr("mkdtemp()", errno);
   }
 
   return ret;
@@ -108,7 +109,7 @@ int Base::Wr::mkstemps(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EEXIST, EINVAL, EFAULT, EMFILE, ENFILE, ENOMEM})) {
-    DieErrno("mkstemps()", errno);
+    DieErrnoWr("mkstemps()", errno);
   }
 
   return ret;
@@ -120,7 +121,7 @@ int Base::Wr::open(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EMFILE, ENFILE, ENOMEM})) {
-    DieErrno("open()", errno);
+    DieErrnoWr("open()", errno);
   }
 
   return ret;
@@ -130,9 +131,13 @@ int Base::Wr::open(TDisp disp, std::initializer_list<int> errors,
     const char *pathname, int flags, mode_t mode) noexcept {
   const int ret = ::open(pathname, flags, mode);
 
-  if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
-      {EFAULT, EMFILE, ENFILE, ENOMEM})) {
-    DieErrno("open()", errno);
+  if (ret < 0) {
+    if (IsFatal(errno, disp, errors, true /* list_fatal */,
+        {EFAULT, EMFILE, ENFILE, ENOMEM})) {
+      DieErrnoWr("open()", errno);
+    }
+  } else {
+    TrackFdOp(TFdOp::Create1, ret);
   }
 
   return ret;
@@ -144,7 +149,7 @@ DIR *Base::Wr::opendir(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret == nullptr) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EMFILE, ENFILE, ENOMEM})) {
-    DieErrno("opendir()", errno);
+    DieErrnoWr("opendir()", errno);
   }
 
   return ret;
@@ -156,7 +161,7 @@ int Base::Wr::readdir_r(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EBADF})) {
-    DieErrno("readdir_r()", ret);
+    DieErrnoWr("readdir_r()", ret);
   }
 
   return ret;
@@ -168,7 +173,7 @@ int Base::Wr::rename(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
       {EFAULT, ENOMEM})) {
-    DieErrno("rename()", ret);
+    DieErrnoWr("rename()", ret);
   }
 
   return ret;
@@ -180,7 +185,7 @@ int Base::Wr::stat(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, ENOMEM})) {
-    DieErrno("stat()", errno);
+    DieErrnoWr("stat()", errno);
   }
 
   return ret;
@@ -192,7 +197,7 @@ int Base::Wr::truncate(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL, EBADF})) {
-    DieErrno("truncate()", errno);
+    DieErrnoWr("truncate()", errno);
   }
 
   return ret;
@@ -204,7 +209,7 @@ int Base::Wr::unlink(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, ENOMEM})) {
-    DieErrno("unlink()", errno);
+    DieErrnoWr("unlink()", errno);
   }
 
   return ret;

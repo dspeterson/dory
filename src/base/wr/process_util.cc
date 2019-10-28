@@ -32,7 +32,7 @@ pid_t Base::Wr::fork(TDisp disp, std::initializer_list<int> errors) noexcept {
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EAGAIN, ENOMEM, ENOSYS})) {
-    DieErrno("fork()", errno);
+    DieErrnoWr("fork()", errno);
   }
 
   return ret;
@@ -44,7 +44,7 @@ int Base::Wr::getrlimit(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL})) {
-    DieErrno("getrlimit()", errno);
+    DieErrnoWr("getrlimit()", errno);
   }
 
   return ret;
