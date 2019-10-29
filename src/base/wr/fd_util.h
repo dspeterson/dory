@@ -123,9 +123,9 @@ namespace Base {
       if (ret < 0) {
         if (IsFatal(errno, disp, errors, true /* list_fatal */,
             {EBADF, EFAULT, EINVAL, EMFILE})) {
-          DieErrnoWr("fcntl(fd, cmd, arg)", errno);
+          DieErrnoWr("fcntl(fd, cmd, arg)", errno, fd);
         }
-      } else if ((arg == F_DUPFD) || (arg == F_DUPFD_CLOEXEC)) {
+      } else if ((cmd == F_DUPFD) || (cmd == F_DUPFD_CLOEXEC)) {
         TrackFdOp(TFdOp::Dup, fd, ret);
       }
 

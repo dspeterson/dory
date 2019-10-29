@@ -181,9 +181,6 @@ namespace Base {
       void (*)(void *const *stack_trace_buffer,
           size_t stack_trace_size) noexcept>())>::type;
 
-  using TDebugDumpFn = std::remove_reference<decltype(std::declval<
-      void (*)(void) noexcept>())>::type;
-
   /* Install functions for secondary fatal error output (i.e. logging
      subsystem).  Functions should avoid writing to stdout/stderr since primary
      output always goes to stderr. */
@@ -200,23 +197,36 @@ namespace Base {
      calling std::abort(). */
   void DieOnTerminate() noexcept;
 
+  class TDieHandler {
+    public:
+    TDieHandler() noexcept = default;
+
+    virtual ~TDieHandler()  = default;
+
+    /* Override this to perform custom action in Die() code path.  Call to this
+       method will be omitted if Die() is already in progress.  If called, this
+       method will be called only once by a single thread (no need to worry
+       about multiple threads calling it concurrently).  Implementation may
+       call LogFatal() as needed to emit debug output. */
+    virtual void operator()() noexcept;
+  };
+
   /* Generate a stack trace, log fatal error message, and dump core.
-     Optionally call a caller-provided function for dumping debug
-     information. */
+     Optionally call a caller-provided function for emitting debug output. */
   [[ noreturn ]] void Die(const char *msg,
-      TDebugDumpFn debug_dump_fn = nullptr) noexcept;
+      TDieHandler *die_handler = nullptr) noexcept;
 
   /* Log fatal error message and dump core, but don't generate a stack
-     trace.  Optionally call a caller-provided function for dumping debug
-     information. */
+     trace.  Optionally call a caller-provided function for emitting debug
+     output. */
   [[ noreturn ]] void DieNoStackTrace(const char *msg,
-      TDebugDumpFn debug_dump_fn = nullptr) noexcept;
+      TDieHandler *die_handler = nullptr) noexcept;
 
   /* fn_name is the name of a system call or library function (for instance,
      "fcntl()" or "socket()") that failed with the given errno value.  Die with
      an appropriate error message.  Optionally call a caller-provided function
-     for dumping debug information. */
+     for emitting debug output. */
   [[ noreturn ]] void DieErrno(const char *fn_name, int errno_value,
-      TDebugDumpFn debug_dump_fn = nullptr) noexcept;
+      TDieHandler *die_handler = nullptr) noexcept;
 
 }  // Base

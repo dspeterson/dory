@@ -41,7 +41,7 @@ int Base::Wr::accept(TDisp disp, std::initializer_list<int> errors, int sockfd,
        Therefore treat ENOMEM as nonfatal. */
     if (IsFatal(errno, disp, errors, true /* list_fatal */,
         {EBADF, EFAULT, EINVAL, EMFILE, ENFILE, ENOTSOCK, EOPNOTSUPP})) {
-      DieErrnoWr("accept()", errno);
+      DieErrnoWr("accept()", errno, sockfd);
     }
   } else {
     TrackFdOp(TFdOp::Create1, ret);
@@ -56,7 +56,7 @@ int Base::Wr::bind(TDisp disp, std::initializer_list<int> errors, int sockfd,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EINVAL, ENOTSOCK, EADDRNOTAVAIL, EFAULT, ENOMEM})) {
-    DieErrnoWr("bind()", errno);
+    DieErrnoWr("bind()", errno, sockfd);
   }
 
   return ret;
@@ -69,7 +69,7 @@ int Base::Wr::connect(TDisp disp, std::initializer_list<int> errors,
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EAFNOSUPPORT, EADDRNOTAVAIL, EALREADY, EBADF, EFAULT, EISCONN,
           ENOTSOCK})) {
-    DieErrnoWr("connect()", errno);
+    DieErrnoWr("connect()", errno, sockfd);
   }
 
   return ret;
@@ -162,7 +162,7 @@ int Base::Wr::getpeername(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL, ENOBUFS, ENOTCONN, ENOTSOCK})) {
-    DieErrnoWr("getpeername()", errno);
+    DieErrnoWr("getpeername()", errno, sockfd);
   }
 
   return ret;
@@ -174,19 +174,20 @@ int Base::Wr::getsockname(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL, ENOBUFS, ENOTSOCK})) {
-    DieErrnoWr("getsockname()", errno);
+    DieErrnoWr("getsockname()", errno, sockfd);
   }
 
   return ret;
 }
 
 int Base::Wr::getsockopt(TDisp disp, std::initializer_list<int> errors,
-    int sockfd, int level, int optname, void *optval, socklen_t *optlen) noexcept {
+    int sockfd, int level, int optname, void *optval,
+    socklen_t *optlen) noexcept {
   const int ret = ::getsockopt(sockfd, level, optname, optval, optlen);
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL, ENOPROTOOPT, ENOTSOCK})) {
-    DieErrnoWr("getsockopt()", errno);
+    DieErrnoWr("getsockopt()", errno, sockfd);
   }
 
   return ret;
@@ -222,7 +223,7 @@ int Base::Wr::listen(TDisp disp, std::initializer_list<int> errors, int sockfd,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, ENOTSOCK, EOPNOTSUPP})) {
-    DieErrnoWr("listen()", errno);
+    DieErrnoWr("listen()", errno, sockfd);
   }
 
   return ret;
@@ -234,7 +235,7 @@ ssize_t Base::Wr::recv(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL, ENOMEM, ENOTCONN, ENOTSOCK})) {
-    DieErrnoWr("recv()", errno);
+    DieErrnoWr("recv()", errno, sockfd);
   }
 
   return ret;
@@ -247,7 +248,7 @@ ssize_t Base::Wr::recvfrom(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL, ENOMEM, ENOTCONN, ENOTSOCK})) {
-    DieErrnoWr("recvfrom()", errno);
+    DieErrnoWr("recvfrom()", errno, sockfd);
   }
 
   return ret;
@@ -259,7 +260,7 @@ ssize_t Base::Wr::recvmsg(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL, ENOMEM, ENOTCONN, ENOTSOCK})) {
-    DieErrnoWr("recvmsg()", errno);
+    DieErrnoWr("recvmsg()", errno, sockfd);
   }
 
   return ret;
@@ -272,7 +273,7 @@ ssize_t Base::Wr::send(TDisp disp, std::initializer_list<int> errors,
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EDESTADDRREQ, EFAULT, EINVAL, EISCONN, ENOMEM, ENOTCONN,
           ENOTSOCK, EOPNOTSUPP})) {
-    DieErrnoWr("send()", errno);
+    DieErrnoWr("send()", errno, sockfd);
   }
 
   return ret;
@@ -285,21 +286,21 @@ ssize_t Base::Wr::sendmsg(TDisp disp, std::initializer_list<int> errors,
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EDESTADDRREQ, EFAULT, EINVAL, EISCONN, ENOMEM, ENOTCONN,
           ENOTSOCK, EOPNOTSUPP})) {
-    DieErrnoWr("sendmsg()", errno);
+    DieErrnoWr("sendmsg()", errno, sockfd);
   }
 
   return ret;
 }
 
 ssize_t Base::Wr::sendto(TDisp disp, std::initializer_list<int> errors,
-    int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr,
-    socklen_t addrlen) noexcept {
+    int sockfd, const void *buf, size_t len, int flags,
+    const sockaddr *dest_addr, socklen_t addrlen) noexcept {
   const ssize_t ret = ::sendto(sockfd, buf, len, flags, dest_addr, addrlen);
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EDESTADDRREQ, EFAULT, EINVAL, EISCONN, ENOMEM, ENOTCONN,
           ENOTSOCK, EOPNOTSUPP})) {
-    DieErrnoWr("sendto()", errno);
+    DieErrnoWr("sendto()", errno, sockfd);
   }
 
   return ret;
@@ -312,7 +313,7 @@ int Base::Wr::setsockopt(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL, ENOPROTOOPT, ENOTSOCK})) {
-    DieErrnoWr("setsockopt()", errno);
+    DieErrnoWr("setsockopt()", errno, sockfd);
   }
 
   return ret;

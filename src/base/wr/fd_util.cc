@@ -54,7 +54,7 @@ int Base::Wr::close(TDisp disp, std::initializer_list<int> errors,
     }
 
     if (IsFatal(errno, disp, errors, true /* list_fatal */, {EBADF, EIO})) {
-      DieErrnoWr("close()", errno);
+      DieErrnoWr("close()", errno, fd);
     }
   }
 
@@ -69,7 +69,7 @@ int Base::Wr::dup(TDisp disp, std::initializer_list<int> errors,
   if (ret < 0) {
     if (IsFatal(errno, disp, errors, true /* list_fatal */,
         {EBADF, EMFILE})) {
-      DieErrnoWr("dup()", errno);
+      DieErrnoWr("dup()", errno, oldfd);
     }
   } else {
     TrackFdOp(TFdOp::Dup, oldfd, ret);
@@ -105,7 +105,7 @@ int Base::Wr::dup2(TDisp disp, std::initializer_list<int> errors, int oldfd,
 
     if (IsFatal(errno, disp, errors, true /* list_fatal */,
         {EBADF, EINVAL, EMFILE})) {
-      DieErrnoWr("dup2()", errno);
+      DieErrnoWr("dup2()", errno, oldfd, newfd);
     }
   } else {
     TrackFdOp(TFdOp::Dup, oldfd, newfd);
@@ -136,7 +136,7 @@ int Base::Wr::epoll_ctl(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EEXIST, EINVAL, ENOENT, ENOMEM, ENOSPC, EPERM})) {
-    DieErrnoWr("epoll_ctl()", errno);
+    DieErrnoWr("epoll_ctl()", errno, epfd, fd);
   }
 
   return ret;
@@ -148,7 +148,7 @@ int Base::Wr::epoll_wait(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL})) {
-    DieErrnoWr("epoll_wait()", errno);
+    DieErrnoWr("epoll_wait()", errno, epfd);
   }
 
   return ret;
@@ -181,7 +181,7 @@ int Base::Wr::eventfd_write(TDisp disp, std::initializer_list<int> errors,
      treat any resulting unexpected errno values as fatal. */
   if ((ret != 0) && IsFatal(errno, disp, errors, false /* list_fatal */,
       {EAGAIN, EWOULDBLOCK, EINTR})) {
-    DieErrnoWr("eventfd_write()", errno);
+    DieErrnoWr("eventfd_write()", errno, fd);
   }
 
   return ret;
@@ -205,7 +205,7 @@ int Base::Wr::fcntl(TDisp disp, std::initializer_list<int> errors, int fd,
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT})) {
-    DieErrnoWr("fcntl(fd, cmd)", errno);
+    DieErrnoWr("fcntl(fd, cmd)", errno, fd);
   }
 
   return ret;
@@ -270,7 +270,7 @@ ssize_t Base::Wr::read(TDisp disp, std::initializer_list<int> errors, int fd,
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL})) {
-    DieErrnoWr("read()", errno);
+    DieErrnoWr("read()", errno, fd);
   }
 
   return ret;
@@ -299,7 +299,7 @@ int Base::Wr::timerfd_settime(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, EINVAL})) {
-    DieErrnoWr("timerfd_settime()", errno);
+    DieErrnoWr("timerfd_settime()", errno, fd);
   }
 
   return ret;
@@ -311,7 +311,7 @@ ssize_t Base::Wr::write(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret < 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EDESTADDRREQ, EFAULT, EINVAL})) {
-    DieErrnoWr("write()", errno);
+    DieErrnoWr("write()", errno, fd);
   }
 
   return ret;

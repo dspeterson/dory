@@ -73,7 +73,7 @@ int Base::Wr::fstat(TDisp disp, std::initializer_list<int> errors, int fd,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EBADF, EFAULT, ENOMEM})) {
-    DieErrnoWr("fstat()", errno);
+    DieErrnoWr("fstat()", errno, fd);
   }
 
   return ret;
@@ -85,7 +85,7 @@ int Base::Wr::ftruncate(TDisp disp, std::initializer_list<int> errors,
 
   if ((ret != 0) && IsFatal(errno, disp, errors, true /* list_fatal */,
       {EFAULT, EINVAL, EBADF})) {
-    DieErrnoWr("ftruncate()", errno);
+    DieErrnoWr("ftruncate()", errno, fd);
   }
 
   return ret;

@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <cerrno>
+#include <string>
 
 #include <base/error_util.h>
 #include <base/no_default_case.h>
@@ -65,8 +66,33 @@ bool Base::Wr::IsFatal(int err, TDisp disp,
 }
 
 [[ noreturn ]] void Base::Wr::DieErrnoWr(const char *fn_name,
-    int errno_value) noexcept {
-  DieErrno(fn_name, errno_value,
-      ((errno_value == EBADF) || (errno_value == ENOTSOCK)) ?
-          DumpFdTrackingBuffer : nullptr);
+    int errno_value, int fd1, int fd2) noexcept {
+  class wr_die_handler : public TDieHandler {
+    public:
+    wr_die_handler(int fd1, int fd2)
+        : Fd1(fd1),
+          Fd2(fd2) {
+    }
+
+    void operator()() noexcept override {
+      std::string msg("File descriptor info for debugging: fd1: ");
+      msg += std::to_string(Fd1);
+      msg += ", fd2: ";
+      msg += std::to_string(Fd2);
+      LogFatal(msg.c_str());
+      DumpFdTrackingBuffer();
+    }
+
+    private:
+    const int Fd1;
+
+    const int Fd2;
+  };
+
+  if ((errno_value == EBADF) || (errno_value == ENOTSOCK)) {
+    wr_die_handler die_handler(fd1, fd2);
+    DieErrno(fn_name, errno_value, &die_handler);
+  } else {
+    DieErrno(fn_name, errno_value);
+  }
 }

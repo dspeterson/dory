@@ -153,6 +153,10 @@ void Base::DieOnTerminate() noexcept {
   std::set_terminate(TerminateHandler);
 }
 
+void TDieHandler::operator()() noexcept {
+  /* default implementation is no-op */
+}
+
 /* First caller of Die() takes this flag. */
 static std::atomic_flag die_flag = ATOMIC_FLAG_INIT;
 
@@ -160,8 +164,8 @@ static std::atomic_flag die_flag = ATOMIC_FLAG_INIT;
    of 0. */
 static std::atomic<pid_t> die_flag_holder(0);
 
-[[ noreturn ]] static void DieImpl(const char *msg,
-    bool stack_trace, TDebugDumpFn debug_dump_fn) noexcept {
+[[ noreturn ]] static void DieImpl(const char *msg, bool stack_trace,
+    TDieHandler *die_handler) noexcept {
   const pid_t my_tid = Gettid();
 
   if (!die_flag.test_and_set()) {
@@ -179,8 +183,8 @@ static std::atomic<pid_t> die_flag_holder(0);
       LogFatal(msg);
     }
 
-    if (debug_dump_fn) {
-      debug_dump_fn();
+    if (die_handler) {
+      (*die_handler)();
     }
 
     /* Unless we are running with libasan, this should cause a core dump.
@@ -226,17 +230,17 @@ static std::atomic<pid_t> die_flag_holder(0);
 }
 
 [[ noreturn ]] void Base::Die(const char *msg,
-    TDebugDumpFn debug_dump_fn) noexcept {
-  DieImpl(msg, true /* stack_trace */, debug_dump_fn);
+    TDieHandler *die_handler) noexcept {
+  DieImpl(msg, true /* stack_trace */, die_handler);
 }
 
 [[ noreturn ]] void Base::DieNoStackTrace(const char *msg,
-    TDebugDumpFn debug_dump_fn) noexcept {
-  DieImpl(msg, false /* stack_trace */, debug_dump_fn);
+    TDieHandler *die_handler) noexcept {
+  DieImpl(msg, false /* stack_trace */, die_handler);
 }
 
 [[ noreturn ]] void Base::DieErrno(const char *fn_name,
-    int errno_value, TDebugDumpFn debug_dump_fn) noexcept {
+    int errno_value, TDieHandler *die_handler) noexcept {
   if (errno_value == ENOMEM) {
     /* If we ran out of memory, a stack trace isn't useful and attempting to
        create one may fail.  Just log an error message that makes it obvious
@@ -251,10 +255,10 @@ static std::atomic<pid_t> die_flag_holder(0);
     msg += std::to_string(errno_value);
     msg += ": ";
     AppendStrerror(errno_value, msg);
-    Die(msg.c_str(), debug_dump_fn);
+    Die(msg.c_str(), die_handler);
   } catch (...) {
     /* We got an exception while creating the error message.  Just use the
        function name as the error message. */
-    Die(fn_name, debug_dump_fn);
+    Die(fn_name, die_handler);
   }
 }

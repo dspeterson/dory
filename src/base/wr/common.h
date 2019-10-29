@@ -51,9 +51,11 @@ namespace Base {
         bool list_fatal, std::initializer_list<int> default_err_list) noexcept;
 
     /* Call DieErrno().  If errno_value is EBADF or ENOTSOCK, dump file
-       descriptor tracking buffer. */
+       descriptor tracking buffer.  If failure was due to a system/library call
+       that accepts one or two file descriptors as parameters, they may be
+       passed as fd1 and fd2 for more informative debug output. */
     [[ noreturn ]] void DieErrnoWr(const char *fn_name,
-        int errno_value) noexcept;
+        int errno_value, int fd1 = -1, int fd2 = -1) noexcept;
 
   }  // Wr
 
