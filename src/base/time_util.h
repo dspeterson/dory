@@ -25,11 +25,10 @@
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <ctime>
 #include <mutex>
 #include <stdexcept>
 #include <string>
-
-#include <time.h>
 
 #include <base/error_util.h>
 #include <base/no_copy_semantics.h>

@@ -22,9 +22,8 @@
 #include <base/wr/fd_util.h>
 
 #include <algorithm>
+#include <ctime>
 #include <string>
-
-#include <time.h>
 
 #include <base/sig_masker.h>
 #include <base/sig_set.h>

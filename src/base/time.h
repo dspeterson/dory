@@ -22,8 +22,7 @@
 #pragma once
 
 #include <cstddef>
-
-#include <time.h>
+#include <ctime>
 
 #include <base/no_copy_semantics.h>
 #include <base/wr/time_util.h>

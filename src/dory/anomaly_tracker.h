@@ -27,14 +27,13 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <ctime>
 #include <functional>
 #include <list>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <string>
-
-#include <time.h>
 
 #include <base/no_copy_semantics.h>
 #include <base/time_util.h>

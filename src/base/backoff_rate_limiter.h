@@ -25,9 +25,8 @@
 
 #include <cassert>
 #include <cstddef>
+#include <ctime>
 #include <functional>
-
-#include <time.h>
 
 #include <base/error_util.h>
 #include <base/random_exp_backoff.h>

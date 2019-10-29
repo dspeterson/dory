@@ -21,8 +21,9 @@
 
 #include <base/fd.h>
 
+#include <ctime>
+
 #include <poll.h>
-#include <time.h>
 
 #include <base/sig_set.h>
 #include <base/wr/fd_util.h>

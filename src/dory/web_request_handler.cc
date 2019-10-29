@@ -23,12 +23,12 @@
 
 #include <cassert>
 #include <cstring>
+#include <ctime>
 #include <iomanip>
 #include <memory>
 #include <string>
 
 #include <sys/types.h>
-#include <time.h>
 #include <unistd.h>
 
 #include <base/counter.h>

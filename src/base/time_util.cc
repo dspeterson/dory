@@ -23,8 +23,6 @@
 
 #include <cerrno>
 
-#include <time.h>
-
 #include <base/wr/time_util.h>
 
 using namespace Base;

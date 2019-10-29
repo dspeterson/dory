@@ -25,6 +25,7 @@
 #include <array>
 #include <cerrno>
 #include <cstdlib>
+#include <ctime>
 #include <limits>
 #include <memory>
 #include <set>
@@ -32,7 +33,6 @@
 #include <arpa/inet.h>
 #include <poll.h>
 #include <signal.h>
-#include <time.h>
 #include <unistd.h>
 
 #include <base/counter.h>

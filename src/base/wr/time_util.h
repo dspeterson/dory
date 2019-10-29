@@ -22,9 +22,8 @@
 #pragma once
 
 #include <cassert>
+#include <ctime>
 #include <initializer_list>
-
-#include <time.h>
 
 #include <base/wr/common.h>
 
