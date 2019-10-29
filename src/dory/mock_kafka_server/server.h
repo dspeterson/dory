@@ -28,6 +28,7 @@
 #include <vector>
 
 #include <netinet/in.h>
+#include <signal.h>
 
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
@@ -68,8 +69,9 @@ namespace Dory {
          'use_ephemeral_ports'.  When running as part of a unit test, true is
          passed for 'use_ephemeral_ports'. */
       TServer(const TConfig &config, bool use_ephemeral_ports,
-          bool track_received_requests)
+          bool track_received_requests, int shutdown_signum = SIGINT)
           : UseEphemeralPorts(use_ephemeral_ports),
+            ShutdownSignum(shutdown_signum),
             Ss(config, track_received_requests),
             PortMap(new TPortMap) {
       }
@@ -121,6 +123,8 @@ namespace Dory {
       /* See big comment in <dory/mock_kafka_server/port_map.h> for an
          explanation of this. */
       const bool UseEphemeralPorts;
+
+      const int ShutdownSignum;
 
       bool InitSucceeded = false;
 

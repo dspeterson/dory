@@ -34,8 +34,9 @@
 #include <dory/dory_server.h>
 #include <dory/config.h>
 #include <dory/util/arg_parse_error.h>
-#include <dory/util/handle_xml_errors.h>
 #include <dory/util/dory_xml_init.h>
+#include <dory/util/handle_xml_errors.h>
+#include <dory/util/misc_util.h>
 #include <log/log.h>
 #include <log_util/init_logging.h>
 #include <server/daemonize.h>
@@ -110,11 +111,17 @@ static int DoryMain(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
+  /* After this point, all signals will be blocked, and should remain blocked
+     for all threads except the signal handler thread for the lifetime of the
+     application. */
+  TSignalHandlerThreadStarter signal_handler_starter;
+
   LOG(TPri::NOTICE) << "Log started";
   std::unique_ptr<TDoryServer> dory;
 
   try {
-    dory.reset(new TDoryServer(std::move(*dory_config)));
+    dory.reset(new TDoryServer(std::move(*dory_config),
+        GetShutdownRequestedFd()));
   } catch (const std::bad_alloc &) {
     LOG(TPri::ERR)
         << "Failed to allocate memory during server initialization.  Try "
@@ -137,7 +144,6 @@ static int DoryMain(int argc, char *argv[]) {
 
   LOG(TPri::NOTICE) << "Pool block size is " << dory->GetPoolBlockSize()
       << " bytes";
-  TDoryServer::TSignalHandlerInstaller handler_installer;
   return dory->Run();
 }
 

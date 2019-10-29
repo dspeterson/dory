@@ -98,7 +98,7 @@ int TServer::Run() {
   }
 
   t_shutdown shutdown(*this);  // destructor calls ShutDownWorkers()
-  Ss.Dispatcher->Run(std::chrono::milliseconds(1), { });  // shutdown on SIGINT
+  Ss.Dispatcher->Run(std::chrono::milliseconds(1), { }, ShutdownSignum);
   ConnectHandlers.clear();
   ListenFdVec.clear();
   return EXIT_SUCCESS;

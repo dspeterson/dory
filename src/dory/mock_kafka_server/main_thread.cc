@@ -42,11 +42,11 @@ void TMainThread::RequestShutdown() {
   assert(this);
 
   /* The standalone executable version of the mock Kafka server expects to get
-     SIGINT, so here we mimic that behavior.
+     a shutdown signal, so here we mimic that behavior.
 
      TODO: Rethink this.
    */
-  IfLt0(pthread_kill(GetThread().native_handle(), SIGINT));
+  IfLt0(pthread_kill(GetThread().native_handle(), ShutdownSignum));
 
   TFdManagedThread::RequestShutdown();
 }

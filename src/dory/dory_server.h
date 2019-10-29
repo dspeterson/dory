@@ -26,7 +26,6 @@
 #include <exception>
 #include <list>
 #include <memory>
-#include <mutex>
 #include <stdexcept>
 
 #include <netinet/in.h>
@@ -134,29 +133,12 @@ namespace Dory {
       friend class TDoryServer;
     };  // TServerConfig
 
-    /* Caller should instantiate this class before calling the Run() method of
-       any TDoryServer instances. */
-    class TSignalHandlerInstaller final {
-      NO_COPY_SEMANTICS(TSignalHandlerInstaller);
-
-      public:
-      TSignalHandlerInstaller();
-
-      private:
-      Base::TSigHandlerInstaller SigintInstaller;
-
-      Base::TSigHandlerInstaller SigtermInstaller;
-    };  // TSignalHandlerInstaller
-
     static TServerConfig CreateConfig(int argc, char **argv,
         bool &large_sendbuf_required, bool allow_input_bind_ephemeral,
         bool enable_lz4, size_t pool_block_size = 128);
 
-    static void HandleShutdownSignal(int signum) noexcept;
-
-    explicit TDoryServer(TServerConfig &&config);
-
-    ~TDoryServer();
+    /* dory monitors shutdown_fd, and shuts down when it becomes readable. */
+    TDoryServer(TServerConfig &&config, const Base::TFd &shutdown_fd);
 
     /* Must not be called until _after_ InitConfig() has been called. */
     size_t GetPoolBlockSize() const noexcept {
@@ -206,18 +188,10 @@ namespace Dory {
 
     int Run();
 
-    /* Called by SIGINT/SIGTERM handler.  Also called by test code to shut down
-       dory. */
-    void RequestShutdown() noexcept;
-
     private:
     /* Thread pool type for handling local TCP and UNIX domain stream client
        connections. */
     using TWorkerPool = TStreamClientHandler::TWorkerPool;
-
-    static Base::TSigSet AllHandledSignals() noexcept;
-
-    static Base::TSigSet AllSignalsExceptHandled() noexcept;
 
     std::unique_ptr<Server::TStreamServerBase::TConnectionHandlerApi>
     CreateStreamClientHandler(bool is_tcp);
@@ -236,15 +210,6 @@ namespace Dory {
        TODO: consider providing command line option(s) for setting backlog. */
     static const int STREAM_BACKLOG = 16;
 
-    /* Protects 'ServerList' below. */
-    static std::mutex ServerListMutex;
-
-    /* Global list of all TDoryServer objects. */
-    static std::list<TDoryServer *> ServerList;
-
-    /* Points to item in 'ServerList' for this TDoryServer object. */
-    std::list<TDoryServer *>::iterator MyServerListItem;
-
     /* Configuration obtained from command line arguments. */
     const std::unique_ptr<const TConfig> Config;
 
@@ -252,6 +217,8 @@ namespace Dory {
     Conf::TConf Conf;
 
     const size_t PoolBlockSize;
+
+    const Base::TFd &ShutdownFd;
 
     bool Started = false;
 
@@ -303,18 +270,9 @@ namespace Dory {
 
     const TMetadataTimestamp &MetadataTimestamp;
 
-    /* Set when we get a shutdown signal or test code calls RequestShutdown().
-       Here we use atomic flag because test process might get signal while
-       calling RequestShutdown().
-     */
-    std::atomic_flag ShutdownRequested{false};
-
     /* Becomes readable when the server has finished initialization or is
        shutting down.  Test code monitors this. */
     Base::TEventSemaphore InitWaitSem;
-
-    /* SIGINT/SIGTERM handler pushes this. */
-    Base::TEventSemaphore ShutdownRequestSem;
   };  // TDoryServer
 
 }  // Dory

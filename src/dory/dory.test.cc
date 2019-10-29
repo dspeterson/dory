@@ -46,12 +46,12 @@
 #include <dory/client/unix_dg_sender.h>
 #include <dory/client/unix_stream_sender.h>
 #include <dory/compress/compression_type.h>
-#include <dory/config.h>
 #include <dory/dory_server.h>
 #include <dory/kafka_proto/produce/version_util.h>
 #include <dory/msg_state_tracker.h>
 #include <dory/test_util/mock_kafka_config.h>
 #include <dory/util/misc_util.h>
+#include <log/pri.h>
 #include <test_util/test_logging.h>
 #include <thread/fd_managed_thread.h>
 #include <xml/test/xml_test_initializer.h>
@@ -69,6 +69,7 @@ using namespace Dory::KafkaProto::Produce;
 using namespace Dory::MockKafkaServer;
 using namespace Dory::TestUtil;
 using namespace Dory::Util;
+using namespace Log;
 using namespace ::TestUtil;
 using namespace Thread;
 using namespace Xml;
@@ -217,7 +218,8 @@ namespace {
       dory_config.MakeKnown(TDoryServer::CreateConfig(
           args.size() - 1, const_cast<char **>(&args[0]),
           large_sendbuf_required, true, true));
-      Dory.reset(new TDoryServer(std::move(*dory_config)));
+      Dory.reset(new TDoryServer(std::move(*dory_config),
+          GetShutdownRequestedFd()));
       dory_config.Reset();
       Start();
     } catch (const std::exception &x) {
@@ -239,15 +241,7 @@ namespace {
 
   void TDoryTestServer::RequestShutdown() {
     assert(this);
-
-    /* We must do this because the server thread isn't paying attention to the
-       FD returned by TFdManagedThread::GetShutdownRequestFd(). */
-    Dory->RequestShutdown();
-
-    /* In this case, we don't really need to call this method, but calling it
-       does no harm, and it follows the usual pattern for dealing with
-       TFdManagedThread objects. */
-    TFdManagedThread::RequestShutdown();
+    Dory::Util::RequestShutdown();
   }
 
   void TDoryTestServer::Run() {
@@ -413,6 +407,7 @@ namespace {
     ~TDoryTest() override = default;
 
     void SetUp() override {
+      ClearShutdownRequest();
     }
 
     void TearDown() override {
@@ -1804,6 +1799,11 @@ namespace {
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
+
+  /* Initialize logging and start signal handler thread only once, before any
+     tests run.  Then stop thread after all tests have finished. */
   TTmpFile test_logfile = InitTestLogging(argv[0]);
+  TSignalHandlerThreadStarter signal_handler_starter;
+
   return RUN_ALL_TESTS();
 }

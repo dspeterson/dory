@@ -32,7 +32,6 @@
 
 #include <arpa/inet.h>
 #include <poll.h>
-#include <signal.h>
 #include <unistd.h>
 
 #include <base/counter.h>
@@ -72,7 +71,6 @@ using namespace Server;
 using namespace Socket;
 using namespace Thread;
 
-DEFINE_COUNTER(GotShutdownSignal);
 DEFINE_COUNTER(StreamClientWorkerStdException);
 DEFINE_COUNTER(StreamClientWorkerUnknownException);
 
@@ -115,11 +113,6 @@ static bool CheckUnixDgSize(const TConfig &cfg) {
   }
 
   return large_sendbuf_required;
-}
-
-TDoryServer::TSignalHandlerInstaller::TSignalHandlerInstaller()
-    : SigintInstaller(SIGINT, AllHandledSignals(), &HandleShutdownSignal),
-      SigtermInstaller(SIGTERM, AllHandledSignals(), &HandleShutdownSignal) {
 }
 
 TDoryServer::TServerConfig
@@ -193,15 +186,6 @@ TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
       std::move(batch_config), pool_block_size);
 }
 
-void TDoryServer::HandleShutdownSignal(int /*signum*/) noexcept {
-  std::lock_guard<std::mutex> lock(ServerListMutex);
-
-  for (TDoryServer *server: ServerList) {
-    assert(server);
-    server->RequestShutdown();
-  }
-}
-
 [[ noreturn ]] static void WorkerPoolFatalErrorHandler(
     const char *msg) noexcept {
   LOG(TPri::ERR) << "Fatal worker pool error: " << msg;
@@ -225,10 +209,11 @@ ComputeBlockCount(size_t max_buffer_kb, size_t block_size) {
   return std::max<size_t>(1, (1024 * max_buffer_kb) / block_size);
 }
 
-TDoryServer::TDoryServer(TServerConfig &&config)
+TDoryServer::TDoryServer(TServerConfig &&config, const TFd &shutdown_fd)
     : Config(std::move(config.Config)),
       Conf(std::move(config.Conf)),
       PoolBlockSize(config.PoolBlockSize),
+      ShutdownFd(shutdown_fd),
       Pool(PoolBlockSize,
            ComputeBlockCount(Config->MsgBufferMax, PoolBlockSize),
            Capped::TPool::TSync::Mutexed),
@@ -271,16 +256,6 @@ TDoryServer::TDoryServer(TServerConfig &&config)
   }
 
   config.BatchConfig.Clear();
-  std::lock_guard<std::mutex> lock(ServerListMutex);
-  ServerList.push_front(this);
-  MyServerListItem = ServerList.begin();
-}
-
-TDoryServer::~TDoryServer() {
-  assert(this);
-  std::lock_guard<std::mutex> lock(ServerListMutex);
-  assert(*MyServerListItem == this);
-  ServerList.erase(MyServerListItem);
 }
 
 void TDoryServer::BindStatusSocket(bool bind_ephemeral) {
@@ -317,14 +292,6 @@ int TDoryServer::Run() {
   }
 
   Started = true;
-
-  /* The main thread handles all signals, and keeps them all blocked except in
-     specific places where it is ready to handle them.  This simplifies signal
-     handling.  It is important that we have all signals blocked when creating
-     threads, since they inherit our signal mask, and we want them to block all
-     signals. */
-  TSigMasker block_all(*TSigSet(TSigSet::TListInit::Exclude, {}));
-
   LOG(TPri::NOTICE) << "Server started";
 
   /* The destructor shuts down Dory's web interface if we start it below.  We
@@ -348,45 +315,18 @@ int TDoryServer::Run() {
     TmpStatusSocket.Reset();
 
     LOG(TPri::NOTICE)
-        << "Started web interface, waiting for signals and errors";
+        << "Started web interface, waiting for shutdown request or errors";
 
     init_notifier.Notify();
 
-    /* Wait for signals and fatal errors.  Return when it is time for the
-       server to shut down. */
+    /* Wait for shutdown request or fatal error.  Return when it is time for
+       the server to shut down. */
     if (!HandleEvents()) {
       no_error = false;
     }
   }
 
   return Shutdown() && no_error ? EXIT_SUCCESS : EXIT_FAILURE;
-}
-
-void TDoryServer::RequestShutdown() noexcept {
-  assert(this);
-
-  try {
-    if (!ShutdownRequested.test_and_set()) {
-      GotShutdownSignal.Increment();
-      ShutdownRequestSem.Push();
-    }
-  } catch (const std::exception &x) {
-    LOG(TPri::ERR) << "Fatal exception in TDoryServer::RequestShutdown(): "
-        << x.what();
-    Die("Terminating on fatal error");
-  } catch (...) {
-    LOG(TPri::ERR)
-        << "Fatal unknown exception in TDoryServer::RequestShutdown()";
-    Die("Terminating on fatal error");
-  }
-}
-
-TSigSet TDoryServer::AllHandledSignals() noexcept {
-  return TSigSet(TSigSet::TListInit::Include, {SIGINT, SIGTERM });
-}
-
-TSigSet TDoryServer::AllSignalsExceptHandled() noexcept {
-  return TSigSet(TSigSet::TListInit::Exclude, {SIGINT, SIGTERM });
 }
 
 std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>
@@ -513,7 +453,7 @@ bool TDoryServer::HandleEvents() {
   tcp_input_agent_error.events = POLLIN;
   router_thread_error.fd = RouterThread.GetShutdownWaitFd();
   router_thread_error.events = POLLIN;
-  shutdown_request.fd = ShutdownRequestSem.GetFd();
+  shutdown_request.fd = ShutdownFd;
   shutdown_request.events = POLLIN;
 
   if (StreamClientWorkerPool.IsKnown()) {
@@ -533,10 +473,10 @@ bool TDoryServer::HandleEvents() {
       item.revents = 0;
     }
 
-    int ret = Wr::ppoll(&events[0], events.size(), nullptr,
-        AllSignalsExceptHandled().Get());
-    assert(ret);
-    assert((ret > 0) || (errno == EINTR));
+    /* Treat EINTR as fatal because all signals should be blocked. */
+    const int ret = Wr::poll(Wr::TDisp::AddFatal, {EINTR}, &events[0],
+        events.size(), -1 /* infinite timeout */);
+    assert(ret > 0);
 
     if (unix_dg_input_agent_error.revents) {
       assert(UnixDgInputAgent.IsKnown());
@@ -707,7 +647,3 @@ bool TDoryServer::Shutdown() {
 }
 
 const int TDoryServer::STREAM_BACKLOG;
-
-std::mutex TDoryServer::ServerListMutex;
-
-std::list<TDoryServer *> TDoryServer::ServerList;

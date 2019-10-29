@@ -25,6 +25,7 @@
 #include <list>
 
 #include <netinet/in.h>
+#include <signal.h>
 
 #include <base/event_semaphore.h>
 #include <base/fd.h>
@@ -45,9 +46,10 @@ namespace Dory {
       NO_COPY_SEMANTICS(TMainThread);
 
       public:
-      explicit TMainThread(const TConfig &config)
-          : Server(config, true, true) {
-      }
+      explicit TMainThread(const TConfig &config, int shutdown_signum = SIGINT)
+          : ShutdownSignum(shutdown_signum),
+            Server(config, true, true, shutdown_signum) {
+       }
 
       ~TMainThread() override;
 
@@ -104,6 +106,8 @@ namespace Dory {
       void Run() override;
 
       private:
+      const int ShutdownSignum;
+
       /* Indicates whether the mock Kafka server terminated normally or with an
          error.  */
       bool OkShutdown = true;

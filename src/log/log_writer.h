@@ -43,18 +43,24 @@ namespace Log {
       const std::string &file_path,
       mode_t file_mode = TFileLogWriter::DEFAULT_FILE_MODE);
 
+  /* This is intended to be called only by unit tests.  It destroys any
+     existing log writer. */
+  void DropLogWriter();
+
   /* If a log writer has already been set (via a call to SetLogWriter() above),
      and it was configured to write to a file, this will attempt to reopen the
-     logfile.  Otherwise, this is a no-op.  If an attempted reopen fails,
-     std::system_error will be thrown and the call will otherwise have no
-     effect (i.e. the previous logfile descriptor will remain in use).  A
-     successful call that causes the logfile to be reopened will replace the
-     internally held log writer object, so that subsequent calls to
-     GetLogWriter() will return the new log writer.  Any prior callers of
-     GetLogWriter() that still hold references to the old log writer will
-     continue to use it (and therefore the old file descriptor) until they drop
-     their references. */
-  void HandleLogRotateRequest();
+     logfile, and true will be returned, assuming that no exception is thrown.
+     Otherwise, this is a no-op and false will be returned.
+
+     If an attempted reopen fails, std::system_error will be thrown and the
+     call will otherwise have no effect (i.e. the previous logfile descriptor
+     will remain in use).  A successful call that causes the logfile to be
+     reopened will replace the internally held log writer object, so that
+     subsequent calls to GetLogWriter() will return the new log writer.  Any
+     prior callers of GetLogWriter() that still hold references to the old log
+     writer will continue to use it (and therefore the old file descriptor)
+     until they drop their references. */
+  bool HandleLogfileReopenRequest();
 
   /* Get a reference to the current global log writer.  If SetLogWriter() has
      not yet been called, returns a default log writer that logs only to

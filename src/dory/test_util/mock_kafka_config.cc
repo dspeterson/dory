@@ -21,6 +21,7 @@
 
 #include <dory/test_util/mock_kafka_config.h>
 
+#include <signal.h>
 #include <unistd.h>
 
 #include <base/error_util.h>
@@ -48,14 +49,15 @@ TMockKafkaConfig::TMockKafkaConfig(
   Args.push_back(nullptr);
   Cfg.reset(new Dory::MockKafkaServer::TConfig(
       static_cast<int>(Args.size() - 1), const_cast<char **>(&Args[0])));
-  MainThread.reset(new Dory::MockKafkaServer::TMainThread(*Cfg));
+  MainThread.reset(new Dory::MockKafkaServer::TMainThread(*Cfg,
+      SIGUSR2 /* shutdown_signum */));
 }
 
 void TMockKafkaConfig::StartKafka() {
   if (!KafkaStarted) {
     MainThread->Start();
     MainThread->GetInitWaitFd().IsReadableIntr(-1);
-    bool success =Inj.Connect("localhost", MainThread->GetCmdPort());
+    bool success = Inj.Connect("localhost", MainThread->GetCmdPort());
     ASSERT_TRUE(success);
     KafkaStarted = true;
   }

@@ -87,7 +87,8 @@ namespace Log {
        suppress stdout/stderr output from logging in this case.  If errno_value
        is nonzero, a strerror() message will be appended to the log entry. */
     TLogEntry(std::shared_ptr<TLogWriterBase> &&log_writer,
-        TPri level, bool no_stdout_stderr = false, int errno_value = 0) noexcept
+        TPri level, bool no_stdout_stderr = false,
+        int errno_value = 0) noexcept
         : TArrayOstreamBase<BufSize, PrefixSpace, 2 /* SuffixSpace */>(),
           LogWriter(std::move(log_writer)),
           Level(level),

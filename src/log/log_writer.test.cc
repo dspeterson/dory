@@ -50,6 +50,8 @@ namespace {
     virtual ~TLogWriterTest() = default;
 
     virtual void SetUp() {
+      /* Destroy any log writer left behind by a prior test. */
+      DropLogWriter();
     }
 
     virtual void TearDown() {
@@ -92,7 +94,8 @@ namespace {
 
     /* Tell logging subsystem to reopen tmp_filename_1.  This recreates the
        file that was renamed above. */
-    HandleLogRotateRequest();
+    const bool reopened = HandleLogfileReopenRequest();
+    ASSERT_TRUE(reopened);
 
     /* Writes to new_writer will go to recreated tmp_filename_1. */
     std::shared_ptr<TLogWriterBase> new_writer = GetLogWriter();
@@ -109,6 +112,24 @@ namespace {
     const std::string file_2_contents = ReadFileIntoString(tmp_filename_2);
     ASSERT_EQ(file_1_contents, line_3 + "\n");
     ASSERT_EQ(file_2_contents, line_1 + "\n" + line_2 + "\n");
+  }
+
+  TEST_F(TLogWriterTest, NoLogRotate) {
+    SetLogMask(UpTo(TPri::INFO));
+
+    /* This should be a no-op and return false, since log writer has not yet
+       been created. */
+    bool reopened = HandleLogfileReopenRequest();
+    ASSERT_FALSE(reopened);
+
+    /* Create log writer with file logging disabled. */
+    SetLogWriter(false /* enable_stdout_stderr */, false /* enable_syslog */,
+        std::string() /* file_path */);
+
+    /* This should be a no-op and return false, since log writer has been
+       created but file logging is disabled. */
+    reopened = HandleLogfileReopenRequest();
+    ASSERT_FALSE(reopened);
   }
 
 }  // namespace
