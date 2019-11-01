@@ -121,7 +121,7 @@ Opts = None
 # Print a message and exit with the given exit code.
 ###############################################################################
 def Die(exit_code, msg):
-    print msg
+    print(msg)
     sys.exit(exit_code)
 ###############################################################################
 
@@ -176,7 +176,7 @@ def RunningInManualMode():
 # code.
 ###############################################################################
 def ReportProblem(nagios_code, msg):
-    print NagiosCodeToString(nagios_code) + ': ' + msg
+    print(NagiosCodeToString(nagios_code) + ': ' + msg)
 ###############################################################################
 
 ###############################################################################
@@ -627,7 +627,7 @@ def CheckSocketErrorDeltas(deltas, old_nagios_code):
 
     if print_counters:
         for name in nonzero_counter_names:
-            print '    ' + name + '=' + str(deltas[name])
+            print('    ' + name + '=' + str(deltas[name]))
 
     return new_nagios_code
 ###############################################################################
@@ -1103,13 +1103,13 @@ def main():
     # Nagios expects some sort of output even in the case of a successful
     # result.
     if nagios_code == EC_SUCCESS:
-        print "Ok"
+        print("Ok")
 
     # Manual mode is used by a human being to view the details of problems
     # previously reported by this script while being executed by Nagios.  In
     # this case, deleting old counter files is not a desired behavior.
     if RunningInManualMode():
-        print 'Nagios code: ' + NagiosCodeToString(nagios_code)
+        print('Nagios code: ' + NagiosCodeToString(nagios_code))
     else:
         DeleteOldCounterFiles(work_path, now, old_counter_file_times)
 
@@ -1125,6 +1125,6 @@ except Exception:
     # Write stack trace to standard output, since that's where Nagios expects
     # error output to go.
     for elem in lines:
-        print elem
+        print(elem)
 
     sys.exit(EC_UNKNOWN)

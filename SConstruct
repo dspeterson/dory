@@ -107,7 +107,7 @@ if not is_path_prefix(src.get_abspath(), GetLaunchDir()):
     sys.exit(1)
 
 if not BUILD_TARGETS:
-    print 'No build target specified'
+    print('No build target specified')
     sys.exit(0)
 
 

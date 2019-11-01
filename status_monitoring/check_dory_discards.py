@@ -134,7 +134,7 @@ Opts = None
 # Print a message and exit with the given exit code.
 ###############################################################################
 def Die(exit_code, msg):
-    print msg
+    print(msg)
     sys.exit(exit_code)
 ###############################################################################
 
@@ -808,14 +808,14 @@ def DoPersistDiscardReportImpl(con, cur, report):
 
     if report_id == None:
         if Opts.Verbose:
-            print 'Report already persisted'
+            print('Report already persisted')
 
         # Report is already in database, which is typically due to a recent
         # previous run of this script.  This is not an error.
         return
 
     if Opts.Verbose:
-        print 'Creating report ID ' + str(report_id)
+        print('Creating report ID ' + str(report_id))
 
     # Add rows to DORY_MALFORMED_MSG table.
     InsertStringRows(cur, report_id, 'DORY_MALFORMED_MSG(ID, MSG)', 4000,
@@ -862,7 +862,7 @@ def DoPersistDiscardReportImpl(con, cur, report):
     con.commit()
 
     if Opts.Verbose:
-        print 'Committed report ID ' + str(report_id)
+        print('Committed report ID ' + str(report_id))
 ###############################################################################
 
 ###############################################################################
@@ -892,15 +892,15 @@ def PersistDiscardReportImpl(report, username, password):
         # These errors are not reported by Oracle, but by logic within this
         # script.
         result = 'Persist error: ' + x.message
-        print result
+        print(result)
     except cx_Oracle.Error, x:
         result = 'Database error: ' + str(x)
-        print result
+        print(result)
     except cx_Oracle.Warning, x:
         # Here we make the conservative assumption that in the case of a
         # warning, the database transaction failed.
         result = 'Database warning: ' + str(x)
-        print result
+        print(result)
     finally:
         if cur != None:
             cur.close()
@@ -909,7 +909,7 @@ def PersistDiscardReportImpl(report, username, password):
             con.close()
 
     if result != '':
-        print 'Database transaction will be attempted again later'
+        print('Database transaction will be attempted again later')
 
     return result
 ###############################################################################
@@ -1019,10 +1019,10 @@ def CheckDiscardReportFileAges(timestamp_list):
         oldest = timestamp_list[0]
 
         if (oldest < now) and ((now - oldest) > Opts.MaxReportAge):
-            print 'Oldest discard report file timestamp ' + str(oldest) + \
+            print('Oldest discard report file timestamp ' + str(oldest) + \
                     ' exceeds ' + str(Opts.MaxReportAge) + \
                     ' seconds: database appears to be down for extended ' + \
-                    'period of time'
+                    'period of time')
             return EC_WARNING
 
     return EC_SUCCESS
@@ -1034,13 +1034,13 @@ def CheckDiscardReportFileAges(timestamp_list):
 ###############################################################################
 def RetryPersistDiscardReport(filename, timestamp, username, password):
     if Opts.Verbose:
-        print 'Retrying persist of discard report ' + str(timestamp)
+        print('Retrying persist of discard report ' + str(timestamp))
 
     response = ParseDiscardResponse(ReadFileContents(filename), None, None)
 
     if 'finished_report' not in response:
-        print 'Failed to obtain finished report from saved discard ' + \
-                'response ' + str(timestamp)
+        print('Failed to obtain finished report from saved discard ' + \
+                'response ' + str(timestamp))
         return False
 
     err_msg = PersistDiscardReport(response['finished_report'], username,
@@ -1048,12 +1048,12 @@ def RetryPersistDiscardReport(filename, timestamp, username, password):
 
     if err_msg != '':
         if Opts.Verbose:
-            print 'Persist discard report ' + str(timestamp) + ' retry failed'
+            print('Persist discard report ' + str(timestamp) + ' retry failed')
 
         return False
 
     if Opts.Verbose:
-        print 'Persist discard report ' + str(timestamp) + ' retry succeeded'
+        print('Persist discard report ' + str(timestamp) + ' retry succeeded')
 
     return True
 ###############################################################################
@@ -1078,12 +1078,12 @@ def CheckPriorPersistFailures(work_path, username, password):
             try:
                 os.remove(filename)
             except OSError as e:
-                print 'Failed to delete old discard report file [' + \
-                        filename + ']: ' + e.strerror
+                print('Failed to delete old discard report file [' + \
+                        filename + ']: ' + e.strerror)
                 return EC_WARNING
             except IOError as e:
-                print 'Failed to delete old discard report file [' + \
-                        filename + ']: ' + e.strerror
+                print('Failed to delete old discard report file [' + \
+                        filename + ']: ' + e.strerror)
                 return EC_WARNING
         else:
             failed_timestamp_list = []
@@ -1099,15 +1099,16 @@ def CheckPriorPersistFailures(work_path, username, password):
 ###############################################################################
 def HandlePersistFailure(work_path, report_start, response, err_msg):
     if Opts.Verbose:
-        print 'Handling failure to persist discard report ' + str(report_start)
+        print('Handling failure to persist discard report ' + \
+                str(report_start))
 
     file_list = FindDiscardFileTimes(work_path)
 
     for item in file_list:
         if item == report_start:
             if Opts.Verbose:
-                print 'Discard report ' + str(report_start) + \
-                        ' already saved to local file system'
+                print('Discard report ' + str(report_start) + \
+                        ' already saved to local file system')
 
             return CheckDiscardReportFileAges(file_list)
 
@@ -1121,20 +1122,20 @@ def HandlePersistFailure(work_path, report_start, response, err_msg):
         is_open = True
         outfile.write(json_response)
     except OSError as e:
-        print 'Failed to create discard report file [' + filename + ']: ' + \
-                e.strerror
+        print('Failed to create discard report file [' + filename + ']: ' + \
+                e.strerror)
         return EC_CRITICAL
     except IOError as e:
-        print 'Failed to create discard report file [' + filename + ']: ' + \
-                e.strerror
+        print('Failed to create discard report file [' + filename + ']: ' + \
+                e.strerror)
         return EC_CRITICAL
     finally:
         if is_open:
             outfile.close()
 
     if Opts.Verbose:
-        print 'Discard report ' + str(report_start) + \
-                ' has been saved to local file system'
+        print('Discard report ' + str(report_start) + \
+                ' has been saved to local file system')
 
     return CheckDiscardReportFileAges(file_list)
 ###############################################################################
@@ -1398,8 +1399,8 @@ def main():
         # Get canonicalized hostname.
         host = CanonicalizeHost(Opts.DoryHost)
     except socket.error, x:
-        print 'Failed to canonicalize dory host ' + Opts.DoryHost + ': ' + \
-                str(x)
+        print('Failed to canonicalize dory host ' + Opts.DoryHost + ': ' + \
+                str(x))
         sys.exit(EC_CRITICAL)
 
     if Opts.Testfile == '':
@@ -1428,7 +1429,7 @@ def main():
                     AnalyzeDiscardReport(finished_report, ignore_topics))
 
     if Opts.Verbose:
-        print SerializeToJson(response)
+        print(SerializeToJson(response))
 
     if Opts.Dbhost != '' and finished_report != None:
         # Store latest finished discard report in database.
@@ -1453,20 +1454,20 @@ def main():
 
     if nagios_code != EC_SUCCESS:
         if nagios_code_from_reports != EC_SUCCESS:
-            print NagiosCodeToString(nagios_code_from_reports) + \
-                    ': discards found'
+            print(NagiosCodeToString(nagios_code_from_reports) + \
+                    ': discards found')
 
         if nagios_code_from_persist != EC_SUCCESS:
-            print NagiosCodeToString(nagios_code_from_persist) + \
-                    ': failed to store discard report in database'
+            print(NagiosCodeToString(nagios_code_from_persist) + \
+                    ': failed to store discard report in database')
 
-        print ''
+        print('')
         sys.stdout.write(json_response)
 
     # Nagios expects some sort of output even in the case of a successful
     # result.
     if nagios_code == EC_SUCCESS:
-        print "Ok"
+        print("Ok")
 
     sys.exit(nagios_code)
 ###############################################################################
@@ -1480,6 +1481,6 @@ except Exception:
     # Write stack trace to standard output, since that's where Nagios expects
     # error output to go.
     for elem in lines:
-        print elem
+        print(elem)
 
     sys.exit(EC_UNKNOWN)

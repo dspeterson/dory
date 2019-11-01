@@ -103,6 +103,10 @@ def get_version_from_file():
         if line == '':
             return None
     except OSError as e:
+        if e.errno == errno.ENOENT:
+            # The file does not exist, so we will get the version from Git.
+            return None
+
         sys.stderr.write('Error reading from "version.txt": ' + e.strerror + \
                 '\n')
         sys.exit(1)
@@ -169,6 +173,11 @@ def check_generated_file(path):
     try:
         infile = open(path, 'r')
     except OSError as e:
+        if e.errno == errno.ENOENT:
+            # The version file does not exist.  It will be generated later in
+            # the build.
+            return
+
         sys.stderr.write('Failed to open generated version file for ' + \
                 'reading: ' + e.strerror + '\n')
         sys.exit(1)
@@ -228,7 +237,7 @@ if not os.path.isfile('SConstruct') or not os.path.isdir('src'):
     sys.exit(1)
 
 if args.query:
-    print get_version()
+    print(get_version())
 elif args.generate:
     generate_version_dot_c()
 elif args.check is not None:

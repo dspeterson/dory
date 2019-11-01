@@ -119,9 +119,9 @@ def build_targets(targets, path_filter, verbose, mode, import_path, asan,
     scons_path = get_scons_path()
 
     for tgt in filtered_targets:
-        print '------------------------------------------------------------'
-        print 'Building target ' + tgt + ':'
-        print ''
+        print('------------------------------------------------------------')
+        print('Building target ' + tgt + ':')
+        print('')
         tgt = 'src/' + tgt
         os.chdir(os.path.dirname(tgt))
 
@@ -154,10 +154,10 @@ def build_targets(targets, path_filter, verbose, mode, import_path, asan,
             sys.exit(1)
 
         os.chdir(root)
-        print '------------------------------------------------------------'
+        print('------------------------------------------------------------')
 
     if run_tests:
-        print 'All tests passed'
+        print('All tests passed')
 
 
 args = parse_args()
@@ -205,30 +205,30 @@ root = os.getcwd()
 
 for target in target_set:
     if target == 'apps':
-        print '============================================================'
-        print 'Building apps:'
-        print ''
+        print('============================================================')
+        print('Building apps:')
+        print('')
         build_targets(all_apps, args.path_filter, args.verbose, args.mode,
                       args.import_path, args.asan, False)
-        print '============================================================'
+        print('============================================================')
     elif target == 'client_libs':
-        print '============================================================'
-        print 'Building client_libs:'
-        print ''
+        print('============================================================')
+        print('Building client_libs:')
+        print('')
         build_targets(client_libs, args.path_filter, args.verbose, args.mode,
                       args.import_path, args.asan, False)
-        print '============================================================'
+        print('============================================================')
     elif target == 'tests':
-        print '============================================================'
-        print 'Building tests:'
-        print ''
+        print('============================================================')
+        print('Building tests:')
+        print('')
         build_targets(get_test_targets(), args.path_filter, args.verbose,
                       args.mode, args.import_path, args.asan, False)
-        print '============================================================'
+        print('============================================================')
     elif target == 'run_tests':
-        print '============================================================'
-        print 'Building and running tests:'
-        print ''
+        print('============================================================')
+        print('Building and running tests:')
+        print('')
         build_targets(get_test_targets(), args.path_filter, args.verbose,
                       args.mode, args.import_path, args.asan, True)
-        print '============================================================'
+        print('============================================================')

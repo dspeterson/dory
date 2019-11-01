@@ -89,14 +89,14 @@ generated_source_map = {}
 def get_one_dep_source(target_path, dep_suffixes, cwd_rel, dep_libs):
     (prefix, suffix) = os.path.splitext(target_path)
 
-    if lib_header_map.has_key(target_path):
+    if target_path in lib_header_map:
         # Handle case where 'target_path' is a header for a library that we
         # must build.  Here, the library gets added to a set of libraries that
         # will become additional targets to build.
         dep_libs.add(lib_header_map[target_path])
         return None
 
-    if generated_source_map.has_key(target_path):
+    if target_path in generated_source_map:
         # Handle case where corresponding non-header is a generated file.
         result = generated_source_map[target_path]
     else:
