@@ -50,13 +50,11 @@ bool TDirIter::TryRefresh() const noexcept {
   assert(this);
 
   while (Pos == NotFresh) {
-    dirent *ptr;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    Wr::readdir_r(Handle, &DirEnt, &ptr);
-#pragma GCC diagnostic pop
+    dirent *const ptr = Wr::readdir(Handle);
 
     if (ptr) {
+      DirEnt = *ptr;
+
       if (DirEnt.d_type != DT_DIR || (std::strcmp(DirEnt.d_name, "..") &&
           std::strcmp(DirEnt.d_name, "."))) {
         Pos = AtEntry;

@@ -22,6 +22,7 @@
 #pragma once
 
 #include <cassert>
+#include <cerrno>
 #include <initializer_list>
 
 #include <dirent.h>
@@ -107,12 +108,20 @@ namespace Base {
       return opendir(TDisp::AddFatal, {}, name);
     }
 
-    int readdir_r(TDisp disp, std::initializer_list<int> errors, DIR *dirp,
-        dirent *entry, dirent **result) noexcept;
+    /* glibc guarantees that readdir() is thread safe as long as the same DIR
+       object is not shared by multiple threads.  readdir_r() is deprecated so
+       readdir() is preferred.  This wrapper sets errno to 0 before making the
+       call, so if nullptr is returned, end of directory stream can be
+       distinguished from an error by checking errno. */
+    dirent *readdir(TDisp disp, std::initializer_list<int> errors,
+        DIR *dirp) noexcept;
 
-    inline void readdir_r(DIR *dirp, dirent *entry, dirent **result) noexcept {
-      const int ret = readdir_r(TDisp::AddFatal, {}, dirp, entry, result);
-      assert(ret == 0);
+    /* Here we treat EBADF as fatal, so if this overload returns, we know that
+       no error occurred, and ernno is 0 (see above). */
+    inline dirent *readdir(DIR *dirp) noexcept {
+      dirent *const ret = readdir(TDisp::AddFatal, {}, dirp);
+      assert(errno == 0);
+      return ret;
     }
 
     int rename(TDisp disp, std::initializer_list<int> errors,

@@ -21,7 +21,6 @@
 
 #include <base/wr/file_util.h>
 
-#include <cerrno>
 #include <cstdio>
 
 #include <unistd.h>
@@ -155,13 +154,18 @@ DIR *Base::Wr::opendir(TDisp disp, std::initializer_list<int> errors,
   return ret;
 }
 
-int Base::Wr::readdir_r(TDisp disp, std::initializer_list<int> errors,
-    DIR *dirp, dirent *entry, dirent **result) noexcept {
-  const int ret = ::readdir_r(dirp, entry, result);
+dirent *Base::Wr::readdir(TDisp disp, std::initializer_list<int> errors,
+    DIR *dirp) noexcept {
+  /* On error, nullptr is returned and errno is set.  If the end of the
+     directory stream is reached, nullptr is returned and errno is left
+     unchanged.  Clear errno before making the call, so if nullptr is returned,
+     we can distinguish end of directory stream from an error. */
+  errno = 0;
+  dirent *const ret = ::readdir(dirp);
 
-  if ((ret != 0) && IsFatal(ret, disp, errors, true /* list_fatal */,
-      {EBADF})) {
-    DieErrnoWr("readdir_r()", ret);
+  if ((ret == nullptr) && errno && IsFatal(errno, disp, errors,
+      true /* list_fatal */, {EBADF})) {
+    DieErrnoWr("readdir()", errno);
   }
 
   return ret;
