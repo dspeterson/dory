@@ -75,25 +75,29 @@ namespace {
 
 };
 
-#endif
-
 void Base::Wr::TrackFdOp(Base::Wr::TFdOp op, int fd1, int fd2) noexcept {
-#ifdef TRACK_FILE_DESCRIPTORS
-  FdLogEntry entry(op, fd1, fd2);
-  backtrace(entry.Trace, static_cast<int>(TRACE_DEPTH));
-
   std::lock_guard<std::mutex> lock(BufMutex);
 
   if (!Dumping) {
     FdLogEntry &dst = Buf[OpCount % BUF_SIZE];
-    std::memcpy(&dst, &entry, sizeof(entry));
     dst.OpNum = OpCount;
     ++OpCount;
-  }
-#endif
-}
+    dst.Op = op;
+    dst.Fd1 = fd1;
+    dst.Fd2 = fd2;
 
-#ifdef TRACK_FILE_DESCRIPTORS
+    /* TODO: Measure how long a typical call to backtrace() takes, and consider
+       creating stack trace before acquiring lock and then copying it using
+       memcpy() while lock is held.  For now, do things this way because the
+       other approach triggers an apparently spurious address sanitizer
+       stack-use-after-scope failure when using gcc (GCC) 8.2.1 20180905
+       (Red Hat 8.2.1-3). */
+    const size_t num_frames = static_cast<size_t>(backtrace(dst.Trace,
+        static_cast<int>(TRACE_DEPTH)));
+    std::memset(&dst.Trace[num_frames], 0,
+        (TRACE_DEPTH - num_frames) * sizeof(dst.Trace[0]));
+  }
+}
 
 static const char *ToString(Wr::TFdOp op) {
   switch (op) {
@@ -139,10 +143,7 @@ static void DumpEntry(const FdLogEntry &entry) {
   }
 }
 
-#endif
-
 void Base::Wr::DumpFdTrackingBuffer() noexcept {
-#ifdef TRACK_FILE_DESCRIPTORS
   bool WasDumping = false;
 
   {
@@ -170,5 +171,17 @@ void Base::Wr::DumpFdTrackingBuffer() noexcept {
     --entry_count;
     DumpEntry(Buf[entry_count % BUF_SIZE]);
   }
-#endif
 }
+
+#else
+
+void Base::Wr::TrackFdOp(Base::Wr::TFdOp /*op*/, int /*fd1*/,
+    int /*fd2*/) noexcept {
+  /* no-op */
+}
+
+void Base::Wr::DumpFdTrackingBuffer() noexcept {
+  /* no-op */
+}
+
+#endif
