@@ -36,7 +36,7 @@ namespace Base {
     /* Function that takes a byte as input, and returns true if it is
        printable, or false otherwise.  If a byte is nonprintable, a substitute
        character will be printed instead. */
-    using TIsPrintableFn = std::function<bool(uint8_t) noexcept>;
+    using TIsPrintableFn = std::function<bool(uint8_t)>;
 
     /* A client-supplied function for printing a string.  The first parameter
        is the string to print.  A true value for the second parameter indicates

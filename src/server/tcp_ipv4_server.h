@@ -42,12 +42,7 @@ namespace Server {
        htonl(INADDR_ANY).  To bind to an ephemeral port, pass a value of 0 for
        'port'. */
     TTcpIpv4Server(int backlog, in_addr_t bind_addr, in_port_t port,
-        std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
-        const TFatalErrorHandler &fatal_error_handler);
-
-    TTcpIpv4Server(int backlog, in_addr_t bind_addr, in_port_t port,
-        std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
-        TFatalErrorHandler &&fatal_error_handler);
+        std::unique_ptr<TConnectionHandlerApi> &&connection_handler);
 
     ~TTcpIpv4Server() override = default;
 

@@ -127,36 +127,14 @@ namespace Thread {
       friend class TManagedThreadPool;
     };  // TReadyWorker
 
-    /* Construct thread pool with given fatal error handler and configuration.
+    /* Construct thread pool with given configuration.
      */
-    TManagedThreadPool(const TFatalErrorHandler &fatal_error_handler,
-        const TManagedThreadPoolConfig &cfg)
-        : TManagedThreadPoolBase(fatal_error_handler, cfg) {
+    explicit TManagedThreadPool(const TManagedThreadPoolConfig &cfg)
+        : TManagedThreadPoolBase(cfg) {
     }
 
-    /* Construct thread pool with given fatal error handler and configuration.
-     */
-    TManagedThreadPool(TFatalErrorHandler &&fatal_error_handler,
-        const TManagedThreadPoolConfig &cfg)
-        : TManagedThreadPoolBase(std::move(fatal_error_handler), cfg) {
-    }
-
-    /* Construct thread pool with given fatal error handler and default
-       configuration. */
-    explicit TManagedThreadPool(const TFatalErrorHandler &fatal_error_handler)
-        : TManagedThreadPoolBase(fatal_error_handler) {
-    }
-
-    /* Construct thread pool with given fatal error handler and default
-       configuration. */
-    explicit TManagedThreadPool(TFatalErrorHandler &&fatal_error_handler)
-        : TManagedThreadPoolBase(std::move(fatal_error_handler)) {
-    }
-
-    /* After calling Start(), pool should not be destroyed until it has been
-       properly shut down (see RequestShutdown(), GetShutdownWaitFd(), and
-       WaitForShutdown()). */
-    ~TManagedThreadPool() override = default;
+    /* Construct thread pool with default configuration. */
+    TManagedThreadPool() = default;
 
     /* Allocate a worker from the pool and return a wrapper object containing
        it.  If the pool idle list is empty prior to successful allocation, a

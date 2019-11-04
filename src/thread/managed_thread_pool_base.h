@@ -89,10 +89,6 @@ namespace Thread {
     NO_COPY_SEMANTICS(TManagedThreadPoolBase);
 
     public:
-    /* Fatal error handler.  Function should report error and terminate
-       program immediately. */
-    using TFatalErrorHandler = std::function<void(const char *) noexcept>;
-
     class TPoolNotReady final : public std::runtime_error {
       public:
       TPoolNotReady()
@@ -409,12 +405,6 @@ namespace Thread {
          the idle state.  Otherwise the worker is not started. */
       TWorkerBase(TManagedThreadPoolBase &my_pool, bool start);
 
-      /* Provided as a convenience for subclasses. */
-      void HandleFatalError(const char *msg) const noexcept {
-        assert(this);
-        MyPool.HandleFatalError(msg);
-      }
-
       /* Subclasses must implement this method to give the worker threads
          something to do. */
       virtual void DoWork() = 0;
@@ -515,32 +505,12 @@ namespace Thread {
 
     /* Subclasses call this to construct thread pool with given fatal error
        handler and configuration. */
-    TManagedThreadPoolBase(const TFatalErrorHandler &fatal_error_handler,
-        const TManagedThreadPoolConfig &cfg);
-
-    /* Subclasses call this to construct thread pool with given fatal error
-       handler and configuration. */
-    TManagedThreadPoolBase(TFatalErrorHandler &&fatal_error_handler,
-        const TManagedThreadPoolConfig &cfg);
+    explicit TManagedThreadPoolBase(const TManagedThreadPoolConfig &cfg);
 
     /* Subclasses call this to construct thread pool with given fatal error
        handler.  Default configuration is used, as specifie by default
        constructor for TManagedThreadPoolConfig. */
-    explicit TManagedThreadPoolBase(
-        const TFatalErrorHandler &fatal_error_handler);
-
-    /* Subclasses call this to construct thread pool with given fatal error
-       handler.  Default configuration is used, as specifie by default
-       constructor for TManagedThreadPoolConfig. */
-    explicit TManagedThreadPoolBase(TFatalErrorHandler &&fatal_error_handler);
-
-    /* Called by thread pool implementation when fatal error occurs.  Handles
-       error by calling client-suplied error handler, which should report the
-       error and immediately terminate the program. */
-    void HandleFatalError(const char *msg) const noexcept {
-      assert(this);
-      FatalErrorHandler(msg);
-    }
+    TManagedThreadPoolBase();
 
     /* Derived class implements this to create new worker (a subclass of
        TWorkerBase).  If 'start' is true then the worker is started and
@@ -608,10 +578,6 @@ namespace Thread {
        must hold 'PoolLock'. */
     TWorkerBase *AddToBusyList(
         std::list<TWorkerBasePtr> &ready_worker) noexcept;
-
-    /* Client-supplied fatal error handler.  This should report error and
-       immediately terminate program. */
-    const TFatalErrorHandler FatalErrorHandler;
 
     /* list of idle workers */
     TSegmentedList<TWorkerBasePtr> IdleList;

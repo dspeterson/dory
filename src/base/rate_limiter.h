@@ -54,8 +54,9 @@ namespace Base {
   template <typename TTimePoint, typename TDuration>
   class TRateLimiter final {
     public:
-    /* A function that, when called, tells you the current time. */
-    using TClockFn = std::function<TTimePoint() noexcept>;
+    /* A function that, when called, tells you the current time.  Should not
+       throw exceptions. */
+    using TClockFn = std::function<TTimePoint()>;
 
     /* Construct a rate limiter that uses 'clock_fn' as its clock and allows
        events to occur no more frequently than once every 'min_interval'. */

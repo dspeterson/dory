@@ -157,9 +157,9 @@ void TManagedThreadPoolBase::WaitForShutdown() {
     } catch (const std::exception &y) {
       std::string msg("Thread pool manager threw exception: ");
       msg += y.what();
-      HandleFatalError(msg.c_str());
+      Die(msg.c_str());
     } catch (...) {
-      HandleFatalError("Thread pool manager threw unknown exception");
+      Die("Thread pool manager threw unknown exception");
     }
   }
 
@@ -186,10 +186,6 @@ void TManagedThreadPoolBase::TWorkerBase::PutBack(
      exceptions escape. */
   assert(worker);
 
-  /* Get pool here, since worker may no longer exist when we need to use pool
-     below.  This is guaranteed not to throw. */
-  TManagedThreadPoolBase &pool = worker->GetPool();
-
   try {
     DoPutBack(worker);
     /* At this point, the worker may no longer exist. */
@@ -197,10 +193,9 @@ void TManagedThreadPoolBase::TWorkerBase::PutBack(
     std::string msg(
         "Fatal exception when releasing unused thread pool worker: ");
     msg += x.what();
-    pool.HandleFatalError(msg.c_str());
+    Die(msg.c_str());
   } catch (...) {
-    pool.HandleFatalError(
-        "Fatal unknown exception when releasing unused thread pool worker");
+    Die("Fatal unknown exception when releasing unused thread pool worker");
   }
 }
 
@@ -352,10 +347,9 @@ void TManagedThreadPoolBase::TWorkerBase::ClearClientState() noexcept {
     std::string msg(
         "Fatal exception while clearing thread pool worker state: ");
     msg += x.what();
-    HandleFatalError(msg.c_str());
+    Die(msg.c_str());
   } catch (...) {
-    HandleFatalError(
-        "Fatal unknown exception while clearing thread pool worker state");
+    Die("Fatal unknown exception while clearing thread pool worker state");
   }
 }
 
@@ -496,9 +490,9 @@ void TManagedThreadPoolBase::TWorkerBase::BusyRun() {
   } catch (const std::exception &x) {
     std::string msg("Fatal exception in thread pool worker: ");
     msg += x.what();
-    MyPool.HandleFatalError(msg.c_str());
+    Die(msg.c_str());
   } catch (...) {
-    MyPool.HandleFatalError("Fatal unknown exception in thread pool worker");
+    Die("Fatal unknown exception in thread pool worker");
   }
 }
 
@@ -517,37 +511,20 @@ void TManagedThreadPoolBase::TWorkerBase::IdleRun() {
   } catch (const std::exception &x) {
     std::string msg("Fatal exception in thread pool worker: ");
     msg += x.what();
-    MyPool.HandleFatalError(msg.c_str());
+    Die(msg.c_str());
   } catch (...) {
-    MyPool.HandleFatalError("Fatal unknown exception in thread pool worker");
+    Die("Fatal unknown exception in thread pool worker");
   }
 }
 
 TManagedThreadPoolBase::TManagedThreadPoolBase(
-    const TFatalErrorHandler &fatal_error_handler,
     const TManagedThreadPoolConfig &cfg)
-    : FatalErrorHandler(fatal_error_handler),
-      Config(cfg),
+    : Config(cfg),
       Manager(*this) {
 }
 
-TManagedThreadPoolBase::TManagedThreadPoolBase(
-    TFatalErrorHandler &&fatal_error_handler,
-    const TManagedThreadPoolConfig &cfg)
-    : FatalErrorHandler(std::move(fatal_error_handler)),
-      Config(cfg),
-      Manager(*this) {
-}
-
-TManagedThreadPoolBase::TManagedThreadPoolBase(
-    const TFatalErrorHandler &fatal_error_handler)
-    : TManagedThreadPoolBase(fatal_error_handler, TManagedThreadPoolConfig()) {
-}
-
-TManagedThreadPoolBase::TManagedThreadPoolBase(
-    TFatalErrorHandler &&fatal_error_handler)
-    : TManagedThreadPoolBase(std::move(fatal_error_handler),
-          TManagedThreadPoolConfig()) {
+TManagedThreadPoolBase::TManagedThreadPoolBase()
+    : TManagedThreadPoolBase(TManagedThreadPoolConfig()) {
 }
 
 TManagedThreadPoolBase::TWorkerBase *
@@ -618,9 +595,9 @@ void TManagedThreadPoolBase::TManager::Run() {
   } catch (const std::exception &x) {
     std::string msg("Fatal exception in thread pool manager: ");
     msg += x.what();
-    MyPool.HandleFatalError(msg.c_str());
+    Die(msg.c_str());
   } catch (...) {
-    MyPool.HandleFatalError("Fatal unknown exception in thread pool manager");
+    Die("Fatal unknown exception in thread pool manager");
   }
 }
 

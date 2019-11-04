@@ -100,29 +100,12 @@ void TStreamServerBase::Reset() {
 
 TStreamServerBase::TStreamServerBase(int backlog, struct sockaddr *addr,
     socklen_t addr_space,
-    std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
-    const TFatalErrorHandler &fatal_error_handler)
-    : FatalErrorHandler(fatal_error_handler),
-      Backlog(backlog),
+    std::unique_ptr<TConnectionHandlerApi> &&connection_handler)
+    : Backlog(backlog),
       Addr(addr),
       AddrSpace(addr_space),
       SyncStartSuccess(false),
       SyncStartNotify(nullptr),
-      ConnectionHandler(std::move(connection_handler)) {
-  assert(ConnectionHandler);
-
-  /* not strictly necessary */
-  std::memset(Addr, 0, AddrSpace);
-}
-
-TStreamServerBase::TStreamServerBase(int backlog, struct sockaddr *addr,
-    socklen_t addr_space,
-    std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
-    TFatalErrorHandler &&fatal_error_handler)
-    : FatalErrorHandler(std::move(fatal_error_handler)),
-      Backlog(backlog),
-      Addr(addr),
-      AddrSpace(addr_space),
       ConnectionHandler(std::move(connection_handler)) {
   assert(ConnectionHandler);
   std::memset(Addr, 0, AddrSpace);  // not strictly necessary
@@ -137,11 +120,7 @@ void TStreamServerBase::Run() {
   assert(this);
   auto close_socket = OnDestroy(
       [this]() noexcept {
-        try {
-          CloseListeningSocket(ListeningSocket);
-        } catch (...) {
-          FatalErrorHandler("Failed to close listening socket");
-        }
+        CloseListeningSocket(ListeningSocket);
       });
 
   try {
@@ -152,11 +131,7 @@ void TStreamServerBase::Run() {
     IfLt0(Wr::listen(ListeningSocket, Backlog));
   } catch (...) {
     if (SyncStartNotify) {
-      try {
-        SyncStartNotify->Push();
-      } catch (...) {
-        FatalErrorHandler("Failed to notify on error starting stream server");
-      }
+      SyncStartNotify->Push();
     }
 
     throw;

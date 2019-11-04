@@ -217,10 +217,7 @@ namespace {
     std::list<TConnectionWorker> workers;
     TTcpIpv4Server server(16, htonl(INADDR_LOOPBACK), 0,
         std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>(
-            new TTestServerConnectionHandler(workers)),
-        [](const char *) noexcept {
-          ASSERT_TRUE(false);
-        });
+            new TTestServerConnectionHandler(workers)));
     ASSERT_FALSE(server.IsBound());
     server.Bind();
     ASSERT_TRUE(server.IsBound());
@@ -275,10 +272,7 @@ namespace {
     std::list<TConnectionWorker> workers;
     TTcpIpv6Server server(16, in6addr_loopback, 0,
         std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>(
-            new TTestServerConnectionHandler(workers)),
-        [](const char *) noexcept {
-          ASSERT_TRUE(false);
-        });
+            new TTestServerConnectionHandler(workers)));
     ASSERT_FALSE(server.IsBound());
     server.Bind();
     ASSERT_TRUE(server.IsBound());
@@ -335,10 +329,7 @@ namespace {
         true /* delete_on_destroy */);
     TUnixStreamServer server(16, tmp_file.GetName().c_str(),
         std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>(
-            new TTestServerConnectionHandler(workers)),
-        [](const char *) noexcept {
-          ASSERT_TRUE(false);
-        });
+            new TTestServerConnectionHandler(workers)));
     ASSERT_FALSE(server.IsBound());
     server.Bind();
     ASSERT_TRUE(server.IsBound());
@@ -393,10 +384,7 @@ namespace {
     char bad_path[] = "/nonexistent/path";
     TUnixStreamServer server(16, bad_path,
         std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>(
-            new TTestServerConnectionHandler(workers)),
-        [](const char *) noexcept {
-          ASSERT_TRUE(false);
-        });
+            new TTestServerConnectionHandler(workers)));
     ASSERT_FALSE(server.IsBound());
     ASSERT_EQ(server.GetPath(), bad_path);
     ASSERT_FALSE(server.IsStarted());

@@ -186,24 +186,6 @@ TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
       std::move(batch_config), pool_block_size);
 }
 
-[[ noreturn ]] static void WorkerPoolFatalErrorHandler(
-    const char *msg) noexcept {
-  LOG(TPri::ERR) << "Fatal worker pool error: " << msg;
-  Die("Terminating on fatal error");
-}
-
-[[ noreturn ]] static void UnixStreamServerFatalErrorHandler(
-    const char *msg) noexcept {
-  LOG(TPri::ERR) << "Fatal UNIX stream input agent error: " << msg;
-  Die("Terminating on fatal error");
-}
-
-[[ noreturn ]] static void TcpServerFatalErrorHandler(
-    const char *msg) noexcept {
-  LOG(TPri::ERR) << "Fatal TCP input agent error: " << msg;
-  Die("Terminating on fatal error");
-}
-
 static inline size_t
 ComputeBlockCount(size_t max_buffer_kb, size_t block_size) {
   return std::max<size_t>(1, (1024 * max_buffer_kb) / block_size);
@@ -230,7 +212,7 @@ TDoryServer::TDoryServer(TServerConfig &&config, const TFd &shutdown_fd)
   if (!Config->ReceiveStreamSocketName.empty() ||
       Config->InputPort.IsKnown()) {
     /* Create thread pool if UNIX stream or TCP input is enabled. */
-    StreamClientWorkerPool.MakeKnown(WorkerPoolFatalErrorHandler);
+    StreamClientWorkerPool.MakeKnown();
   }
 
   if (!Config->ReceiveSocketName.empty()) {
@@ -242,7 +224,7 @@ TDoryServer::TDoryServer(TServerConfig &&config, const TFd &shutdown_fd)
     assert(StreamClientWorkerPool.IsKnown());
     UnixStreamInputAgent.MakeKnown(STREAM_BACKLOG,
         Config->ReceiveStreamSocketName.c_str(),
-        CreateStreamClientHandler(false), UnixStreamServerFatalErrorHandler);
+        CreateStreamClientHandler(false));
 
     if (Config->ReceiveStreamSocketMode.IsKnown()) {
       UnixStreamInputAgent->SetMode(*Config->ReceiveStreamSocketMode);
@@ -251,8 +233,7 @@ TDoryServer::TDoryServer(TServerConfig &&config, const TFd &shutdown_fd)
 
   if (Config->InputPort.IsKnown()) {
     TcpInputAgent.MakeKnown(STREAM_BACKLOG, htonl(INADDR_LOOPBACK),
-        *Config->InputPort, CreateStreamClientHandler(true),
-        TcpServerFatalErrorHandler);
+        *Config->InputPort, CreateStreamClientHandler(true));
   }
 
   config.BatchConfig.Clear();

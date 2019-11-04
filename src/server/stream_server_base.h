@@ -46,10 +46,6 @@ namespace Server {
     NO_COPY_SEMANTICS(TStreamServerBase);
 
     public:
-    /* Fatal error handler.  Function should report error and terminate
-       program immediately. */
-    using TFatalErrorHandler = std::function<void(const char *) noexcept>;
-
     /* Defines API of caller-supplied class for handling new client
        connections. */
     class TConnectionHandlerApi {
@@ -125,13 +121,7 @@ namespace Server {
      */
     TStreamServerBase(int backlog, struct sockaddr *addr,
         socklen_t addr_space,
-        std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
-        const TFatalErrorHandler &fatal_error_handler);
-
-    TStreamServerBase(int backlog, struct sockaddr *addr,
-        socklen_t addr_space,
-        std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
-        TFatalErrorHandler &&fatal_error_handler);
+        std::unique_ptr<TConnectionHandlerApi> &&connection_handler);
 
     /* On entry, 'sock' is empty.  Derived class calles socket() and bind() in
        here.  Must throw if operation fails. */
@@ -151,10 +141,6 @@ namespace Server {
 
     private:
     void AcceptClients();
-
-    /* Client-supplied fatal error handler.  This should report error and
-       immediately terminate program. */
-    const TFatalErrorHandler FatalErrorHandler;
 
     const int Backlog;
 

@@ -162,19 +162,9 @@ namespace {
     Cfg.reset(new TConfig(static_cast<int>(Args.size() - 1),
         const_cast<char **>(&Args[0]), true));
     OutputQueue.reset(new TGate<TMsg::TPtr>);
-    StreamClientWorkerPool.reset(new TWorkerPool(
-        [](const char *msg) {
-          std::cerr << "Stream client worker pool fatal error: " << msg
-              << std::endl;
-          ASSERT_TRUE(false);
-        }));
+    StreamClientWorkerPool.reset(new TWorkerPool);
     UnixStreamServer.reset(new TUnixStreamServer(16,
-        Cfg->ReceiveStreamSocketName.c_str(), CreateStreamClientHandler(),
-        [](const char *msg) {
-          std::cerr << "UNIX stream server fatal error: " << msg
-              << std::endl;
-          ASSERT_TRUE(false);
-        }));
+        Cfg->ReceiveStreamSocketName.c_str(), CreateStreamClientHandler()));
   }
 
   void MakeDg(std::vector<uint8_t> &dg, const std::string &topic,

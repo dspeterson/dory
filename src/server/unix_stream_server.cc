@@ -34,23 +34,10 @@ using namespace Base;
 using namespace Server;
 
 TUnixStreamServer::TUnixStreamServer(int backlog, const char *path,
-    std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
-    const TFatalErrorHandler &fatal_error_handler)
+    std::unique_ptr<TConnectionHandlerApi> &&connection_handler)
     : TStreamServerBase(backlog,
           reinterpret_cast<struct sockaddr *>(&ClientAddr), sizeof(ClientAddr),
-          std::move(connection_handler), fatal_error_handler),
-      Path(path) {
-  if (std::strlen(path) >= sizeof(ClientAddr.sun_path)) {
-    ThrowSystemError(ENAMETOOLONG);
-  }
-}
-
-TUnixStreamServer::TUnixStreamServer(int backlog, const char *path,
-    std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
-    TFatalErrorHandler &&fatal_error_handler)
-    : TStreamServerBase(backlog,
-          reinterpret_cast<struct sockaddr *>(&ClientAddr), sizeof(ClientAddr),
-          std::move(connection_handler), std::move(fatal_error_handler)),
+          std::move(connection_handler)),
       Path(path) {
   if (std::strlen(path) >= sizeof(ClientAddr.sun_path)) {
     ThrowSystemError(ENAMETOOLONG);

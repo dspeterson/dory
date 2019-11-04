@@ -44,12 +44,7 @@ namespace Server {
 
     public:
     TUnixStreamServer(int backlog, const char *path,
-        std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
-        const TFatalErrorHandler &fatal_error_handler);
-
-    TUnixStreamServer(int backlog, const char *path,
-        std::unique_ptr<TConnectionHandlerApi> &&connection_handler,
-        TFatalErrorHandler &&fatal_error_handler);
+        std::unique_ptr<TConnectionHandlerApi> &&connection_handler);
 
     ~TUnixStreamServer() override = default;
 

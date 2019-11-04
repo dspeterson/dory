@@ -345,12 +345,6 @@ namespace {
   /* The fixture for testing class TManagedThreadPool. */
   class TManagedThreadPoolTest : public ::testing::Test {
     protected:
-    static void HandleFatalError(const char *msg) {
-      std::string err_msg("Fatal thread pool error: ");
-      err_msg += msg;
-      Die(err_msg.c_str());
-    }
-
     TManagedThreadPoolTest() = default;
 
     ~TManagedThreadPoolTest() override = default;
@@ -363,7 +357,7 @@ namespace {
   };  // TManagedThreadPoolTest
 
   TEST_F(TManagedThreadPoolTest, ReadyWorkerTest) {
-    TManagedThreadStdFnPool pool(TManagedThreadPoolTest::HandleFatalError);
+    TManagedThreadStdFnPool pool;
     ASSERT_FALSE(pool.IsStarted());
     pool.Start();
     ASSERT_TRUE(pool.IsStarted());
@@ -417,8 +411,7 @@ namespace {
     TSimpleWorkFn work_fn(counter);
     TManagedThreadPoolConfig config;
     config.SetMaxPruneFraction(0);  // disable pruning
-    TManagedThreadStdFnPool pool(TManagedThreadPoolTest::HandleFatalError,
-        config);
+    TManagedThreadStdFnPool pool(config);
     ASSERT_FALSE(pool.IsStarted());
     pool.Start();
     ASSERT_TRUE(pool.IsStarted());
@@ -538,8 +531,7 @@ namespace {
   TEST_F(TManagedThreadPoolTest, FnPtrTest) {
     TManagedThreadPoolConfig config;
     config.SetMaxPruneFraction(0);  // disable pruning
-    TManagedThreadFnPtrPool pool(TManagedThreadPoolTest::HandleFatalError,
-        config);
+    TManagedThreadFnPtrPool pool(config);
     pool.Start();
     CalledThreadWorkFn = false;
     TManagedThreadFnPtrPool::TReadyWorker w = pool.GetReadyWorker();
@@ -597,8 +589,7 @@ namespace {
     TManagedThreadPoolConfig config;
     config.SetMinPoolSize(2);
     config.SetMaxPruneFraction(0);  // disable pruning
-    TManagedThreadStdFnPool pool(TManagedThreadPoolTest::HandleFatalError,
-        config);
+    TManagedThreadStdFnPool pool(config);
     const TFd &error_fd = pool.GetErrorPendingFd();
     pool.Start();
     TManagedThreadPoolStats stats;
@@ -718,8 +709,7 @@ namespace {
   TEST_F(TManagedThreadPoolTest, SizeLimitTest) {
     TManagedThreadPoolConfig config;
     config.SetMaxPoolSize(1);
-    TManagedThreadStdFnPool pool(TManagedThreadPoolTest::HandleFatalError,
-        config);
+    TManagedThreadStdFnPool pool(config);
     pool.Start();
     TManagedThreadStdFnPool::TReadyWorker w1 = pool.GetReadyWorker();
     TManagedThreadStdFnPool::TReadyWorker w2 = pool.GetReadyWorker();
@@ -774,8 +764,7 @@ namespace {
 
     config.SetPruneQuantumMs(300);
     config.SetPruneQuantumCount(5);
-    TManagedThreadStdFnPool pool(TManagedThreadPoolTest::HandleFatalError,
-        config);
+    TManagedThreadStdFnPool pool(config);
     pool.Start();
     std::vector<TManagedThreadStdFnPool::TReadyWorker>
         initial_workers(initial_thread_count);
@@ -840,8 +829,7 @@ namespace {
     TManagedThreadPoolConfig config;
     config.SetPruneQuantumMs(300);
     config.SetPruneQuantumCount(5);
-    TManagedThreadFnObjPool pool(TManagedThreadPoolTest::HandleFatalError,
-        config);
+    TManagedThreadFnObjPool pool(config);
     pool.Start();
     std::vector<TManagedThreadFnObjPool::TReadyWorker>
         initial_workers(initial_thread_count);
