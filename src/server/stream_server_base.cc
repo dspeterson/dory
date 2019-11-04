@@ -135,15 +135,14 @@ void TStreamServerBase::CloseListeningSocket(TFd &sock) {
 
 void TStreamServerBase::Run() {
   assert(this);
-  TOnDestroy close_socket(
+  auto close_socket = OnDestroy(
       [this]() noexcept {
         try {
           CloseListeningSocket(ListeningSocket);
         } catch (...) {
           FatalErrorHandler("Failed to close listening socket");
         }
-      }
-  );
+      });
 
   try {
     if (!IsBound()) {

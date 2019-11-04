@@ -62,7 +62,7 @@ namespace {
     SetLogMask(UpTo(TPri::INFO));
     const std::string tmp_filename_1 = MakeTmpFilename(
         "/tmp/log_writer_test.XXXXXX");
-    TOnDestroy file_1_deleter(
+    auto file_1_deleter = OnDestroy(
         [&tmp_filename_1]() noexcept {
           unlink(tmp_filename_1.c_str());
         });
@@ -73,7 +73,7 @@ namespace {
 
     const std::string tmp_filename_2 = MakeTmpFilename(
         "/tmp/log_writer_test.XXXXXX");
-    TOnDestroy file_2_deleter(
+    auto file_2_deleter = OnDestroy(
         [&tmp_filename_2]() noexcept {
           unlink(tmp_filename_2.c_str());
         });

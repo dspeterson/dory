@@ -105,7 +105,7 @@ namespace {
 
     /* Make sure signal handler thread gets shut down, no matter what happens
        during test. */
-    TOnDestroy thread_stop(
+    auto thread_stop = OnDestroy(
       [&handler_thread]() noexcept {
         if (handler_thread.IsStarted()) {
           try {

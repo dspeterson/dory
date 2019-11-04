@@ -153,11 +153,10 @@ static size_t DoUncompress(const void *compressed_data, size_t compressed_size,
   z_stream strm;
   std::memset(&strm, 0, sizeof(strm));
   CheckStatus(inflateInit2(&strm, 15 + 32), strm, "inflateInit2");
-  TOnDestroy destroy_strm(
+  auto destroy_strm = OnDestroy(
       [&strm]() noexcept {
         inflateEnd(&strm);
-      }
-  );
+      });
   strm.next_in =
       reinterpret_cast<Bytef *>(const_cast<void *>(compressed_data));
   strm.avail_in = static_cast<uInt>(compressed_size);

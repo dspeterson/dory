@@ -23,23 +23,56 @@
 #pragma once
 
 #include <cassert>
-#include <functional>
+#include <utility>
 
 #include <base/no_copy_semantics.h>
 
 namespace Base {
 
+  /* RAII class template that calls the provided lambda on destruction.  To
+     use, call OnDestroy() helper function below. */
+  template <typename Lambda>
   class TOnDestroy final {
     NO_COPY_SEMANTICS(TOnDestroy);
 
     public:
-    explicit TOnDestroy(const std::function<void() noexcept> &action)
-        : Action(action) {
+    /* noexcept if Lambda copy constructor is noexcept.  Note that due to
+       reference collapsing, std::declval<const Lambda &>() is of type
+       const lambda &. */
+    explicit TOnDestroy(Lambda const &fn)
+        noexcept(noexcept(Lambda(std::declval<const Lambda &>())))
+        : Fn(fn) {
+    }
+
+    /* noexcept if Lambda move constructor is noexcept. */
+    explicit TOnDestroy(Lambda &&fn)
+        noexcept(noexcept(Lambda(std::declval<Lambda>())))
+        : Fn(std::move(fn)) {
+    }
+
+    /* noexcept if Lambda move constructor is noexcept. */
+    TOnDestroy(TOnDestroy<Lambda> &&other)
+    noexcept(noexcept(Lambda(std::declval<Lambda>())))
+        : Fn(std::move(other.Fn)),
+          Active(other.Active) {
+      other.Active = false;
+    }
+
+    /* noexcept if Lambda move constructor is noexcept. */
+    TOnDestroy &operator=(TOnDestroy &&other)
+        noexcept(noexcept(Lambda(std::declval<Lambda>()))) {
+      if (&other != this) {
+        Fn = std::move(other.Fn);
+        Active = other.Active;
+        other.Active = false;
+      }
+
+      return *this;
     }
 
     ~TOnDestroy() {
       if (Active) {
-        Action();
+        Fn();
       }
     }
 
@@ -49,9 +82,14 @@ namespace Base {
     }
 
     private:
-    const std::function<void() noexcept> Action;
+    Lambda Fn;
 
     bool Active = true;
   };  // TOnDestroy
+
+  template <typename Lambda>
+  TOnDestroy<Lambda> OnDestroy(Lambda &&action) {
+    return TOnDestroy<Lambda>(std::forward<Lambda>(action));
+  }
 
 }  // Base

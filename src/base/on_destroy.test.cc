@@ -44,33 +44,31 @@ namespace {
   };  // TOnDestroyTest
 
   TEST_F(TOnDestroyTest, Test1) {
-    bool called = false;
+    size_t call_count = 0;
 
     {
-      TOnDestroy on_destroy(
-          [&called]() noexcept {
-            called = true;
-          }
-      );
+      auto on_destroy = OnDestroy(
+          [&call_count]() noexcept {
+            ++call_count;
+          });
     }
 
-    ASSERT_TRUE(called);
+    ASSERT_EQ(call_count, 1U);
   }
 
   TEST_F(TOnDestroyTest, Test2) {
-    bool called = false;
+    size_t call_count = 0;
 
     {
-      TOnDestroy on_destroy(
-          [&called]() noexcept {
-            called = true;
-          }
-      );
+      auto on_destroy = OnDestroy(
+          [&call_count]() noexcept {
+            ++call_count;
+          });
 
       on_destroy.Cancel();
     }
 
-    ASSERT_FALSE(called);
+    ASSERT_EQ(call_count, 0U);
   }
 
 }  // namespace

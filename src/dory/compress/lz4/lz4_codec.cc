@@ -99,11 +99,10 @@ size_t TLz4Codec::ComputeUncompressedResultBufSpace(
   CheckLz4Status(LZ4F_createDecompressionContext(&dctx, LZ4F_VERSION),
       "LZ4F_createDecompressionContext");
   assert(dctx);
-  TOnDestroy destroy_ctx(
+  auto destroy_ctx = OnDestroy(
       [dctx]() noexcept {
         LZ4F_freeDecompressionContext(dctx);
-      }
-  );
+      });
 
   LZ4F_frameInfo_t frame_info;
   size_t src_size = compressed_size;
@@ -178,11 +177,10 @@ size_t TLz4Codec::Uncompress(const void *input_buf, size_t input_buf_size,
   CheckLz4Status(LZ4F_createDecompressionContext(&dctx, LZ4F_VERSION),
       "LZ4F_createDecompressionContext");
   assert(dctx);
-  TOnDestroy destroy_ctx(
+  auto destroy_ctx = OnDestroy(
       [dctx]() noexcept {
         LZ4F_freeDecompressionContext(dctx);
-      }
-  );
+      });
 
   const auto *in_buf = reinterpret_cast<const uint8_t *>(input_buf);
   auto *out_buf = reinterpret_cast<uint8_t *>(output_buf);
@@ -250,11 +248,10 @@ size_t TLz4Codec::DoCompress(const void *input_buf, size_t input_buf_size,
   CheckLz4Status(LZ4F_createCompressionContext(&cctx, LZ4F_VERSION),
       "LZ4F_createCompressionContext");
   assert(cctx);
-  TOnDestroy destroy_ctx(
+  auto destroy_ctx = OnDestroy(
       [cctx]() noexcept {
         LZ4F_freeCompressionContext(cctx);
-      }
-  );
+      });
 
   LZ4F_preferences_t prefs;
   std::memset(&prefs, 0, sizeof(prefs));

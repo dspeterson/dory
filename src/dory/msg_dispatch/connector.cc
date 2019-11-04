@@ -212,11 +212,10 @@ void TConnector::Run() {
   long broker_id = ~0;
 
   try {
-    TOnDestroy close_socket(
+    auto close_socket = OnDestroy(
         [this]() noexcept {
           Sock.Reset();  // close TCP connection to broker if open
-        }
-    );
+        });
     assert(MyBrokerIndex < Metadata->GetBrokers().size());
     broker_id = MyBrokerId();
     LOG(TPri::NOTICE) << "Coonnector thread " << Gettid() << " (index "
