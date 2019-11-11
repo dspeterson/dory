@@ -28,7 +28,6 @@
 #include <string>
 #include <unordered_map>
 
-#include <base/no_copy_semantics.h>
 #include <base/opt.h>
 #include <dory/conf/conf_error.h>
 
@@ -73,7 +72,11 @@ namespace Dory {
 
         TTopicConf(const TTopicConf &) = default;
 
+        TTopicConf(TTopicConf &&) = default;
+
         TTopicConf &operator=(const TTopicConf &) = default;
+
+        TTopicConf &operator=(TTopicConf &&) = default;
       };  // TTopicConf
 
       using TTopicMap = std::unordered_map<std::string, TTopicConf>;
@@ -148,8 +151,6 @@ namespace Dory {
     };  // TBatchConf
 
     class TBatchConf::TBuilder {
-      NO_COPY_SEMANTICS(TBuilder);
-
       public:
       /* Exception base class. */
       class TErrorBase : public TConfError {
@@ -275,14 +276,20 @@ namespace Dory {
         }
       };  // TMissingDefaultTopic
 
-      TBuilder()
-          : GotProduceRequestDataLimit(false),
-            GotMessageMaxBytes(false),
-            GotCombinedTopics(false),
-            GotDefaultTopic(false) {
-      }
+      TBuilder() = default;
 
-      void Reset();
+      TBuilder(const TBuilder &) = default;
+
+      TBuilder(TBuilder &&) = default;
+
+      TBuilder &operator=(const TBuilder &) = default;
+
+      TBuilder &operator=(TBuilder &&) = default;
+
+      void Reset() {
+        assert(this);
+        *this = TBuilder();
+      }
 
       void AddNamedConfig(const std::string &name, const TBatchValues &values);
 
@@ -307,13 +314,13 @@ namespace Dory {
 
       TBatchConf BuildResult;
 
-      bool GotProduceRequestDataLimit;
+      bool GotProduceRequestDataLimit = false;
 
-      bool GotMessageMaxBytes;
+      bool GotMessageMaxBytes = false;
 
-      bool GotCombinedTopics;
+      bool GotCombinedTopics = false;
 
-      bool GotDefaultTopic;
+      bool GotDefaultTopic = false;
     };  // TBatchConf::TBuilder
 
   }  // Conf

@@ -79,8 +79,7 @@ namespace Log {
        so it should be set before concurrent access is possible. */
     static void SetErrorHandler(TWriteErrorHandler handler) noexcept;
 
-    static const mode_t DEFAULT_FILE_MODE =
-        S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    static const mode_t DEFAULT_FILE_MODE;
 
     /* Throws std::system_error on error opening file.  An empty path disables
        the writer.  If nonempty, the path must be absolute (i.e. it must start

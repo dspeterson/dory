@@ -29,7 +29,6 @@
 #include <string>
 #include <unordered_map>
 
-#include <base/no_copy_semantics.h>
 #include <base/opt.h>
 #include <dory/compress/compression_type.h>
 #include <dory/conf/conf_error.h>
@@ -63,7 +62,11 @@ namespace Dory {
 
         TConf(const TConf &) = default;
 
+        TConf(TConf &&) = default;
+
         TConf &operator=(const TConf &) = default;
+
+        TConf &operator=(TConf &&) = default;
       };  // TConf
 
       using TTopicMap = std::unordered_map<std::string, TConf>;
@@ -110,8 +113,6 @@ namespace Dory {
     };  // TCompressionConf
 
     class TCompressionConf::TBuilder {
-      NO_COPY_SEMANTICS(TBuilder);
-
       public:
       /* Exception base class. */
       class TErrorBase : public TConfError {
@@ -195,12 +196,20 @@ namespace Dory {
         }
       };  // TMissingDefaultTopic
 
-      TBuilder()
-          : GotSizeThresholdPercent(false),
-            GotDefaultTopic(false) {
-      }
+      TBuilder() = default;
 
-      void Reset();
+      TBuilder(const TBuilder &) = default;
+
+      TBuilder(TBuilder &&) = default;
+
+      TBuilder &operator=(const TBuilder &) = default;
+
+      TBuilder &operator=(TBuilder &&) = default;
+
+      void Reset() {
+        assert(this);
+        *this = TBuilder();
+      }
 
       void AddNamedConfig(const std::string &name,
           Compress::TCompressionType type, size_t min_size,
@@ -220,9 +229,9 @@ namespace Dory {
 
       TCompressionConf BuildResult;
 
-      bool GotSizeThresholdPercent;
+      bool GotSizeThresholdPercent = false;
 
-      bool GotDefaultTopic;
+      bool GotDefaultTopic = false;
     };  // TCompressionConf::TBuilder
 
   }  // Conf

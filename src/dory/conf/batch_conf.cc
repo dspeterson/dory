@@ -94,16 +94,6 @@ std::string TBatchConf::TBuilder::TUnknownTopicConfig::CreateMsg(
   return msg;
 }
 
-void TBatchConf::TBuilder::Reset() {
-  assert(this);
-  NamedConfigs.clear();
-  BuildResult = TBatchConf();
-  GotProduceRequestDataLimit = false;
-  GotMessageMaxBytes = false;
-  GotCombinedTopics = false;
-  GotDefaultTopic = false;
-}
-
 void TBatchConf::TBuilder::AddNamedConfig(const std::string &name,
     const TBatchValues &values) {
   assert(this);
@@ -228,12 +218,7 @@ TBatchConf TBatchConf::TBuilder::Build() {
     throw TMissingDefaultTopic();
   }
 
-  NamedConfigs.clear();
-  GotProduceRequestDataLimit = false;
-  GotMessageMaxBytes = false;
-  GotCombinedTopics = false;
-  GotDefaultTopic = false;
   TBatchConf result = std::move(BuildResult);
-  BuildResult = TBatchConf();
+  Reset();
   return result;
 }

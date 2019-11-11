@@ -76,15 +76,6 @@ TConf TConf::TBuilder::Build(const char *config_filename) {
   return result;
 }
 
-void TConf::TBuilder::Reset() {
-  assert(this);
-  XmlDoc.reset();
-  BuildResult = TConf();
-  BatchingConfBuilder.Reset();
-  CompressionConfBuilder.Reset();
-  TopicRateConfBuilder.Reset();
-}
-
 void TConf::TBuilder::ProcessSingleBatchingNamedConfig(
     const DOMElement &config_elem) {
   assert(this);
@@ -371,6 +362,51 @@ void TConf::TBuilder::ProcessTopicRateElem(const DOMElement &topic_rate_elem) {
   BuildResult.TopicRateConf = TopicRateConfBuilder.Build();
 }
 
+void TConf::TBuilder::ProcessLoggingElem(const DOMElement &logging_elem) {
+  assert(this);
+  auto subsection_map = GetSubsectionElements(logging_elem,
+      {
+        {"stdoutStderr", false}, {"syslog", false}, {"file", false}
+      }, false);
+
+  if (subsection_map.count("stdoutStderr")) {
+    const DOMElement &elem = *subsection_map["stdoutStderr"];
+    RequireLeaf(elem);
+    LoggingConfBuilder.SetStdoutStderrConf(TAttrReader::GetBool(
+        elem, "enable"));
+  }
+
+  if (subsection_map.count("syslog")) {
+    const DOMElement &elem = *subsection_map["syslog"];
+    RequireLeaf(elem);
+    LoggingConfBuilder.SetSyslogConf(TAttrReader::GetBool(elem, "enable"));
+  }
+
+  if (subsection_map.count("file")) {
+    const DOMElement &elem = *subsection_map["file"];
+    bool enable = TAttrReader::GetBool(elem, "enable");
+    RequireAllChildElementLeaves(elem);
+    auto file_subsection_map = GetSubsectionElements(elem,
+        {{"path", true}, {"mode", true}}, false);
+    const DOMElement &path_elem = *file_subsection_map["path"];
+    std::string path = TAttrReader::GetString(path_elem, "value");
+    const DOMElement &mode_elem = *file_subsection_map["mode"];
+    mode_t mode = TAttrReader::GetUnsigned<mode_t >(mode_elem, "value",
+        0 | TBase::BIN | TBase::OCT);
+
+    /* Validate path (i.e. make sure it is empty or absolute) even if enable is
+       false. */
+    LoggingConfBuilder.SetFileConf(path, mode);
+
+    if (!enable) {
+      path.clear();
+      LoggingConfBuilder.SetFileConf(path, mode);
+    }
+  }
+
+  BuildResult.LoggingConf = LoggingConfBuilder.Build();
+}
+
 void TConf::TBuilder::ProcessInitialBrokersElem(
     const DOMElement &initial_brokers_elem) {
   assert(this);
@@ -401,7 +437,8 @@ void TConf::TBuilder::ProcessRootElem(const DOMElement &root_elem) {
   auto subsection_map = GetSubsectionElements(root_elem,
       {
         {"batching", true}, {"compression", true},
-        {"topicRateLimiting", false}, {"initialBrokers", true}
+        {"topicRateLimiting", false}, {"logging", false},
+        {"initialBrokers", true}
       },
       false);
 
@@ -416,6 +453,10 @@ void TConf::TBuilder::ProcessRootElem(const DOMElement &root_elem) {
     TopicRateConfBuilder.AddUnlimitedNamedConfig("unlimited");
     TopicRateConfBuilder.SetDefaultTopicConfig("unlimited");
     BuildResult.TopicRateConf = TopicRateConfBuilder.Build();
+  }
+
+  if (subsection_map.count("logging")) {
+    ProcessLoggingElem(*subsection_map["logging"]);
   }
 
   ProcessInitialBrokersElem(*subsection_map["initialBrokers"]);

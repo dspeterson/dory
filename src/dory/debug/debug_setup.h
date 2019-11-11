@@ -47,7 +47,7 @@ namespace Dory {
         MSG_GOT_ACK = 2
       };  // TLogId
 
-      static const size_t NUM_LOG_FILES = 3;
+      static constexpr size_t NUM_LOG_FILES = 3;
 
       static size_t ToIndex(TLogId id) noexcept {
         auto index = static_cast<size_t>(id);
@@ -148,7 +148,7 @@ namespace Dory {
       };  // TSettings
 
       /* For convenience. */
-      static const size_t MAX_LIMIT = std::numeric_limits<size_t>::max();
+      static constexpr size_t MAX_LIMIT = std::numeric_limits<size_t>::max();
 
       TDebugSetup(const char *debug_dir, size_t kill_switch_limit_seconds,
           size_t kill_switch_limit_bytes)

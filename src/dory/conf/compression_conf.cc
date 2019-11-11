@@ -25,13 +25,10 @@
 
 #include <strings.h>
 
-#include <dory/util/misc_util.h>
-
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::Conf;
-using namespace Dory::Util;
 
 bool TCompressionConf::StringToType(const char *s,
     TCompressionType &result) noexcept {
@@ -94,12 +91,6 @@ std::string TCompressionConf::TBuilder::TUnknownTopicConfig::CreateMsg(
   msg += config_name;
   msg += "]";
   return msg;
-}
-
-void TCompressionConf::TBuilder::Reset() {
-  assert(this);
-  BuildResult = TCompressionConf();
-  GotDefaultTopic = false;
 }
 
 void TCompressionConf::TBuilder::AddNamedConfig(const std::string &name,
@@ -176,10 +167,7 @@ TCompressionConf TCompressionConf::TBuilder::Build() {
     throw TMissingDefaultTopic();
   }
 
-  NamedConfigs.clear();
-  GotSizeThresholdPercent = false;
-  GotDefaultTopic = false;
   TCompressionConf result = std::move(BuildResult);
-  BuildResult = TCompressionConf();
+  Reset();
   return result;
 }

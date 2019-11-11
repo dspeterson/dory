@@ -29,7 +29,6 @@
 #include <string>
 #include <unordered_map>
 
-#include <base/no_copy_semantics.h>
 #include <base/opt.h>
 #include <dory/conf/conf_error.h>
 
@@ -62,7 +61,11 @@ namespace Dory {
 
         TConf(const TConf &) = default;
 
+        TConf(TConf &&) = default;
+
         TConf &operator=(const TConf &) = default;
+
+        TConf &operator=(TConf &&) = default;
       };  // TConf
 
       using TTopicMap = std::unordered_map<std::string, TConf>;
@@ -94,8 +97,6 @@ namespace Dory {
     };  // TTopicRateConf
 
     class TTopicRateConf::TBuilder {
-      NO_COPY_SEMANTICS(TBuilder);
-
       public:
       /* Exception base class. */
       class TErrorBase : public TConfError {
@@ -175,7 +176,18 @@ namespace Dory {
 
       TBuilder() = default;
 
-      void Reset();
+      TBuilder(const TBuilder &) = default;
+
+      TBuilder(TBuilder &&) = default;
+
+      TBuilder &operator=(const TBuilder &) = default;
+
+      TBuilder &operator=(TBuilder &&) = default;
+
+      void Reset() {
+        assert(this);
+        *this = TBuilder();
+      }
 
       /* Add a named config with a finite maximum count. */
       void AddBoundedNamedConfig(const std::string &name, size_t interval,

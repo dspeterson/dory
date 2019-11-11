@@ -29,9 +29,9 @@
 #include <xercesc/dom/DOMDocument.hpp>
 #include <xercesc/dom/DOMElement.hpp>
 
-#include <base/no_copy_semantics.h>
 #include <dory/conf/batch_conf.h>
 #include <dory/conf/compression_conf.h>
+#include <dory/conf/logging_conf.h>
 #include <dory/conf/topic_rate_conf.h>
 #include <dory/util/host_and_port.h>
 
@@ -60,10 +60,25 @@ namespace Dory {
         return TopicRateConf;
       }
 
+      const TLoggingConf &GetLoggingConf() const noexcept {
+        assert(this);
+        return LoggingConf;
+      }
+
       const std::vector<TBroker> &GetInitialBrokers() const noexcept {
         assert(this);
         return InitialBrokers;
       }
+
+      TConf() = default;
+
+      TConf(const TConf &) = default;
+
+      TConf(TConf &&) = default;
+
+      TConf &operator=(const TConf &) = default;
+
+      TConf &operator=(TConf &&) = default;
 
       private:
       TBatchConf BatchConf;
@@ -72,18 +87,29 @@ namespace Dory {
 
       TTopicRateConf TopicRateConf;
 
+      TLoggingConf LoggingConf;
+
       std::vector<TBroker> InitialBrokers;
     };  // TConf
 
     class TConf::TBuilder {
-      NO_COPY_SEMANTICS(TBuilder);
-
       public:
-      explicit TBuilder(bool enable_lz4);
+      explicit TBuilder(bool enable_lz4 = false);
+
+      TBuilder(const TBuilder &) = default;
+
+      TBuilder(TBuilder &&) = default;
+
+      TBuilder &operator=(const TBuilder &) = default;
+
+      TBuilder &operator=(TBuilder &&) = default;
 
       TConf Build(const char *config_filename);
 
-      void Reset();
+      void Reset() {
+        assert(this);
+        *this = TBuilder(EnableLz4);
+      }
 
       private:
       using TDomDocHandle =
@@ -107,6 +133,8 @@ namespace Dory {
 
       void ProcessTopicRateElem(const xercesc::DOMElement &topic_rate_elem);
 
+      void ProcessLoggingElem(const xercesc::DOMElement &logging_elem);
+
       void ProcessInitialBrokersElem(
           const xercesc::DOMElement &initial_brokers_elem);
 
@@ -121,6 +149,8 @@ namespace Dory {
       TBatchConf::TBuilder BatchingConfBuilder;
 
       TCompressionConf::TBuilder CompressionConfBuilder;
+
+      TLoggingConf::TBuilder LoggingConfBuilder;
 
       TTopicRateConf::TBuilder TopicRateConfBuilder;
     };  // TConf::TBuilder

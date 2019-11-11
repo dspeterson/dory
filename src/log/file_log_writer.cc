@@ -77,6 +77,9 @@ void TFileLogWriter::SetErrorHandler(TWriteErrorHandler handler) noexcept {
   ErrorHandler = handler;
 }
 
+const mode_t TFileLogWriter::DEFAULT_FILE_MODE =
+    S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+
 TFileLogWriter::TFileLogWriter(const std::string &path, mode_t open_mode)
     : TLogWriterBase(),
       Path(ValidateFilePathAndMode(path, open_mode)),

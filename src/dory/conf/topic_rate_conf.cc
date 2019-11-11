@@ -23,11 +23,8 @@
 
 #include <utility>
 
-#include <dory/util/misc_util.h>
-
 using namespace Dory;
 using namespace Dory::Conf;
-using namespace Dory::Util;
 
 std::string TTopicRateConf::TBuilder::TDuplicateNamedConfig::CreateMsg(
     const std::string &config_name) {
@@ -73,12 +70,6 @@ std::string TTopicRateConf::TBuilder::TUnknownTopicConfig::CreateMsg(
   msg += config_name;
   msg += "]";
   return msg;
-}
-
-void TTopicRateConf::TBuilder::Reset() {
-  assert(this);
-  BuildResult = TTopicRateConf();
-  GotDefaultTopic = false;
 }
 
 void TTopicRateConf::TBuilder::AddBoundedNamedConfig(const std::string &name,
@@ -150,9 +141,7 @@ TTopicRateConf TTopicRateConf::TBuilder::Build() {
     throw TMissingDefaultTopic();
   }
 
-  NamedConfigs.clear();
-  GotDefaultTopic = false;
   TTopicRateConf result = std::move(BuildResult);
-  BuildResult = TTopicRateConf();
+  Reset();
   return result;
 }

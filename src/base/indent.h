@@ -30,9 +30,9 @@ namespace Base {
 
   class TIndent final {
     public:
-    static const char DEFAULT_INDENT_CHAR = ' ';
+    static constexpr char DEFAULT_INDENT_CHAR = ' ';
 
-    static const size_t DEFAULT_INDENT_COUNT = 2;
+    static constexpr size_t DEFAULT_INDENT_COUNT = 2;
 
     enum class StartAt {
       Zero,
