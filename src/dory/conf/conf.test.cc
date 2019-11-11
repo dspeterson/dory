@@ -26,6 +26,7 @@
 #include <base/tmp_file.h>
 #include <dory/compress/compression_type.h>
 #include <log/file_log_writer.h>
+#include <log/pri.h>
 #include <test_util/test_logging.h>
 #include <xml/test/xml_test_initializer.h>
 
@@ -285,6 +286,7 @@ namespace {
     ASSERT_EQ(*rate_topic_iter->second.MaxCount, 4096U);
 
     const TLoggingConf &logging_conf = conf.GetLoggingConf();
+    ASSERT_EQ(logging_conf.GetPri(), TPri::NOTICE);
     ASSERT_FALSE(logging_conf.GetEnableStdoutStderr());
     ASSERT_TRUE(logging_conf.GetEnableSyslog());
     ASSERT_TRUE(logging_conf.GetFilePath().empty());
@@ -394,6 +396,7 @@ namespace {
         << "    </topicRateLimiting>" << std::endl
         << std::endl
         << "    <logging>" << std::endl
+        << "        <level value=\"INFO\" />" << std::endl
         << "        <stdoutStderr enable=\"true\" />" << std::endl
         << "        <syslog enable=\"false\" />" << std::endl
         << std::endl
@@ -414,10 +417,136 @@ namespace {
     TConf conf = builder.Build(tmp_file.GetName().c_str());
 
     const TLoggingConf &logging_conf = conf.GetLoggingConf();
+    ASSERT_EQ(logging_conf.GetPri(), TPri::INFO);
     ASSERT_TRUE(logging_conf.GetEnableStdoutStderr());
     ASSERT_FALSE(logging_conf.GetEnableSyslog());
     ASSERT_EQ(logging_conf.GetFilePath(), "/var/log/dory/dory.log");
     ASSERT_EQ(logging_conf.GetFileMode(), 0666);
+  }
+
+  TEST_F(TConfTest, LoggingTestInvalidLevel) {
+    TTmpFile tmp_file("/tmp/dory_conf_test.XXXXXX",
+        true /* delete_on_destroy */);
+    std::ofstream ofs(tmp_file.GetName());
+    ofs << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+        << "<doryConfig>" << std::endl
+        << "<!-- this is a comment -->" << std::endl
+        << "    <batching>" << std::endl
+        << "        <namedConfigs>" << std::endl
+        << "            <config name=\"config1\">" << std::endl
+        << "                <time value=\"50\" />" << std::endl
+        << "                <messages value=\"100\" />" << std::endl
+        << "                <bytes value=\"200\" />" << std::endl
+        << "            </config>" << std::endl
+        << "            <config name=\"config2\">" << std::endl
+        << "                <time value=\"5\" />" << std::endl
+        << "                <messages value=\"disable\" />" << std::endl
+        << "                <bytes value=\"20k\" />" << std::endl
+        << "            </config>" << std::endl
+        << "        </namedConfigs>" << std::endl
+        << std::endl
+        << "        <produceRequestDataLimit value=\"100\" />" << std::endl
+        << std::endl
+        << "        <messageMaxBytes value=\"200\" />" << std::endl
+        << std::endl
+        << "        <combinedTopics enable=\"true\" config=\"config1\" />"
+        << std::endl
+        << std::endl
+        << "        <defaultTopic action=\"perTopic\" config=\"config2\" />"
+        << std::endl
+        << std::endl
+        << "        <topicConfigs>" << std::endl
+        << "            <topic name=\"topic1\" action=\"perTopic\" "
+        << "config=\"config1\" />" << std::endl
+        << "            <topic name=\"topic2\" action=\"perTopic\" "
+        << "config=\"config2\" />" << std::endl
+        << "        </topicConfigs>" << std::endl
+        << "    </batching>" << std::endl
+        << std::endl
+        << "    <compression>" << std::endl
+        << "        <namedConfigs>" << std::endl
+        << "            <config name=\"noComp\" type=\"none\" />" << std::endl
+        << "            <config name=\"snappy1\" type=\"snappy\" "
+        << "minSize=\"1024\" />" << std::endl
+        << "            <config name=\"snappy2\" type=\"snappy\" "
+        << "minSize=\"2k\" />" << std::endl
+        << "            <config name=\"gzip1\" type=\"gzip\" "
+        << "minSize=\"4096\" />" << std::endl
+        << "            <config name=\"gzip2\" type=\"gzip\" level=\"3\" "
+        << "minSize=\"8192\" />" << std::endl
+        << "            <config name=\"lz4_1\" type=\"lz4\" "
+        << "minSize=\"16384\" />" << std::endl
+        << "            <config name=\"lz4_2\" type=\"lz4\" level=\"5\" "
+        << "minSize=\"32768\" />" << std::endl
+        << "        </namedConfigs>" << std::endl
+        << std::endl
+        << "        <sizeThresholdPercent value=\"75\" />" << std::endl
+        << std::endl
+        << "        <defaultTopic config=\"snappy1\" />" << std::endl
+        << std::endl
+        << "        <topicConfigs>" << std::endl
+        << "            <topic name=\"topic1\" config=\"noComp\" />"
+        << std::endl
+        << "            <topic name=\"topic2\" config=\"snappy2\" />"
+        << "            <topic name=\"topic3\" config=\"gzip1\" />"
+        << "            <topic name=\"topic4\" config=\"gzip2\" />"
+        << "            <topic name=\"topic5\" config=\"lz4_1\" />"
+        << "            <topic name=\"topic6\" config=\"lz4_2\" />"
+        << std::endl
+        << "        </topicConfigs>" << std::endl
+        << "    </compression>" << std::endl
+        << std::endl
+        << "    <topicRateLimiting>" << std::endl
+        << "        <namedConfigs>" << std::endl
+        << "            <config name=\"zero\" interval=\"1\" maxCount=\"0\" />"
+        << std::endl
+        << "            <config name=\"infinity\" interval=\"1\" "
+        << "maxCount=\"unlimited\" />" << std::endl
+        << "            <config name=\"config1\" interval=\"10000\" "
+        << "maxCount=\"500\" />" << std::endl
+        << "            <config name=\"config2\" interval=\"20000\" "
+        << "maxCount=\"4k\" />" << std::endl
+        << "        </namedConfigs>" << std::endl
+        << "" << std::endl
+        << "        <defaultTopic config=\"config1\" />" << std::endl
+        << "" << std::endl
+        << "        <topicConfigs>" << std::endl
+        << "            <topic name=\"topic1\" config=\"zero\" />" << std::endl
+        << "            <topic name=\"topic2\" config=\"infinity\" />"
+        << std::endl
+        << "            <topic name=\"topic3\" config=\"config2\" />"
+        << std::endl
+        << "        </topicConfigs>" << std::endl
+        << "    </topicRateLimiting>" << std::endl
+        << std::endl
+        << "    <logging>" << std::endl
+        << "        <level value=\"BLAH\" />" << std::endl
+        << "        <stdoutStderr enable=\"true\" />" << std::endl
+        << "        <syslog enable=\"false\" />" << std::endl
+        << std::endl
+        << "        <file enable=\"true\">" << std::endl
+        << "            <path value=\"/var/log/dory/dory.log\" />" << std::endl
+        << "            <mode value=\"0666\" />" << std::endl
+        << "" << std::endl
+        << "        </file>" << std::endl
+        << "    </logging>" << std::endl
+        << std::endl
+        << "    <initialBrokers>" << std::endl
+        << "        <broker host=\"host1\" port=\"9092\" />" << std::endl
+        << "        <broker host=\"host2\" port=\"9093\" />" << std::endl
+        << "    </initialBrokers>" << std::endl
+        << "</doryConfig>" << std::endl;
+    ofs.close();
+    TConf::TBuilder builder(true);
+    bool caught = false;
+
+    try {
+      TConf conf = builder.Build(tmp_file.GetName().c_str());
+    } catch (const TLoggingConf::TBuilder::TInvalidLevel &) {
+      caught = true;
+    }
+
+    ASSERT_TRUE(caught);
   }
 
   TEST_F(TConfTest, LoggingTestRelativePath) {

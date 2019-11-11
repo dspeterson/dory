@@ -30,6 +30,7 @@
 #include <base/opt.h>
 #include <dory/conf/conf_error.h>
 #include <log/file_log_writer.h>
+#include <log/pri.h>
 
 namespace Dory {
 
@@ -45,9 +46,10 @@ namespace Dory {
 
       TLoggingConf(TLoggingConf &&) = default;
 
-      TLoggingConf(bool enable_stdout_stderr, bool enable_syslog,
-          const std::string &file_path, mode_t file_mode)
-          : EnableStdoutStderr(enable_stdout_stderr),
+      TLoggingConf(Log::TPri pri, bool enable_stdout_stderr,
+          bool enable_syslog, const std::string &file_path, mode_t file_mode)
+          : Pri(pri),
+            EnableStdoutStderr(enable_stdout_stderr),
             EnableSyslog(enable_syslog),
             FilePath(file_path),
             FileMode(file_mode) {
@@ -56,6 +58,11 @@ namespace Dory {
       TLoggingConf &operator=(const TLoggingConf &) = default;
 
       TLoggingConf &operator=(TLoggingConf &&) = default;
+
+      Log::TPri GetPri() const noexcept {
+        assert(this);
+        return Pri;
+      }
 
       bool GetEnableStdoutStderr() const noexcept {
         assert(this);
@@ -78,6 +85,8 @@ namespace Dory {
       }
 
       private:
+      Log::TPri Pri = Log::TPri::NOTICE;
+
       bool EnableStdoutStderr = false;
 
       bool EnableSyslog = true;
@@ -98,6 +107,14 @@ namespace Dory {
             : TConfError(std::move(msg)) {
         }
       };  // TErrorBase
+
+      class TInvalidLevel final : public TErrorBase {
+        public:
+        TInvalidLevel()
+            : TErrorBase("Log level must be one of {\"ERR\", \"WARNING\", "
+                  "\"NOTICE\", \"INFO\", \"DEBUG\"}") {
+        }
+      };  // TInvalidLevel
 
       class TRelativeFilePath final : public TErrorBase {
         public:
@@ -128,9 +145,20 @@ namespace Dory {
         *this = TBuilder();
       }
 
-      void SetStdoutStderrConf(bool enable_stdout_stderr);
+      void SetPri(Log::TPri pri) noexcept {
+        assert(this);
+        BuildResult.Pri = pri;
+      }
 
-      void SetSyslogConf(bool enable_syslog);
+      void SetStdoutStderrConf(bool enable_stdout_stderr) noexcept {
+        assert(this);
+        BuildResult.EnableStdoutStderr = enable_stdout_stderr;
+      }
+
+      void SetSyslogConf(bool enable_syslog) noexcept {
+        assert(this);
+        BuildResult.EnableSyslog = enable_syslog;
+      }
 
       void SetFileConf(const std::string &path, mode_t mode);
 

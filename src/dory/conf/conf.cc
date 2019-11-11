@@ -21,6 +21,8 @@
 
 #include <dory/conf/conf.h>
 
+#include <stdexcept>
+
 #include <netinet/in.h>
 
 #include <base/file_reader.h>
@@ -28,6 +30,7 @@
 #include <base/opt.h>
 #include <base/to_integer.h>
 #include <dory/compress/compression_type.h>
+#include <log/pri.h>
 #include <xml/config/config_errors.h>
 #include <xml/config/config_util.h>
 #include <xml/dom_document_util.h>
@@ -40,6 +43,7 @@ using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::Conf;
 using namespace Dory::Util;
+using namespace Log;
 using namespace Xml;
 using namespace Xml::Config;
 
@@ -366,8 +370,25 @@ void TConf::TBuilder::ProcessLoggingElem(const DOMElement &logging_elem) {
   assert(this);
   auto subsection_map = GetSubsectionElements(logging_elem,
       {
-        {"stdoutStderr", false}, {"syslog", false}, {"file", false}
+          {"level", false}, {"stdoutStderr", false}, {"syslog", false},
+          {"file", false}
       }, false);
+
+  TPri pri = TPri::NOTICE;
+
+  if (subsection_map.count("level")) {
+    const DOMElement &elem = *subsection_map["level"];
+    RequireLeaf(elem);
+    const std::string level = TAttrReader::GetString(elem, "value");
+
+    try {
+      pri = ToPri(level);
+    } catch (const std::range_error &) {
+      throw TLoggingConf::TBuilder::TInvalidLevel();
+    }
+
+    LoggingConfBuilder.SetPri(pri);
+  }
 
   if (subsection_map.count("stdoutStderr")) {
     const DOMElement &elem = *subsection_map["stdoutStderr"];

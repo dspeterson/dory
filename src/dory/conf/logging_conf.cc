@@ -25,16 +25,6 @@ using namespace Base;
 using namespace Dory;
 using namespace Dory::Conf;
 
-void TLoggingConf::TBuilder::SetStdoutStderrConf(bool enable_stdout_stderr) {
-  assert(this);
-  BuildResult.EnableStdoutStderr = enable_stdout_stderr;
-}
-
-void TLoggingConf::TBuilder::SetSyslogConf(bool enable_syslog) {
-  assert(this);
-  BuildResult.EnableSyslog = enable_syslog;
-}
-
 void TLoggingConf::TBuilder::SetFileConf(const std::string &path,
     mode_t mode) {
   assert(this);
