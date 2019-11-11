@@ -412,7 +412,7 @@ void TConf::TBuilder::ProcessLoggingElem(const DOMElement &logging_elem) {
     const DOMElement &path_elem = *file_subsection_map["path"];
     std::string path = TAttrReader::GetString(path_elem, "value");
     const DOMElement &mode_elem = *file_subsection_map["mode"];
-    mode_t mode = TAttrReader::GetUnsigned<mode_t >(mode_elem, "value",
+    mode_t mode = TAttrReader::GetUnsigned<mode_t>(mode_elem, "value",
         0 | TBase::BIN | TBase::OCT);
 
     /* Validate path (i.e. make sure it is empty or absolute) even if enable is
