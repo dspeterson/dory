@@ -21,7 +21,7 @@
 
 #include <dory/conf/conf.h>
 
-#include <fstream>
+#include <sstream>
 
 #include <base/tmp_file.h>
 #include <dory/compress/compression_type.h>
@@ -60,10 +60,8 @@ namespace {
   };  // TConfTest
 
   TEST_F(TConfTest, BasicTest) {
-    TTmpFile tmp_file("/tmp/dory_conf_test.XXXXXX",
-        true /* delete_on_destroy */);
-    std::ofstream ofs(tmp_file.GetName());
-    ofs << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    std::ostringstream os;
+    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<doryConfig>" << std::endl
         << "<!-- this is a comment -->" << std::endl
         << "    <batching>" << std::endl
@@ -159,9 +157,8 @@ namespace {
         << "        <broker host=\"host2\" port=\"9093\" />" << std::endl
         << "    </initialBrokers>" << std::endl
         << "</doryConfig>" << std::endl;
-    ofs.close();
     TConf::TBuilder builder(true);
-    TConf conf = builder.Build(tmp_file.GetName().c_str());
+    TConf conf = builder.Build(os.str());
 
     ASSERT_EQ(conf.BatchConf.ProduceRequestDataLimit, 100U);
     ASSERT_EQ(conf.BatchConf.MessageMaxBytes, 200U);
@@ -287,10 +284,8 @@ namespace {
   }
 
   TEST_F(TConfTest, BasicLoggingTest) {
-    TTmpFile tmp_file("/tmp/dory_conf_test.XXXXXX",
-        true /* delete_on_destroy */);
-    std::ofstream ofs(tmp_file.GetName());
-    ofs << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    std::ostringstream os;
+    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<doryConfig>" << std::endl
         << "<!-- this is a comment -->" << std::endl
         << "    <batching>" << std::endl
@@ -398,9 +393,8 @@ namespace {
         << "        <broker host=\"host2\" port=\"9093\" />" << std::endl
         << "    </initialBrokers>" << std::endl
         << "</doryConfig>" << std::endl;
-    ofs.close();
     TConf::TBuilder builder(true);
-    TConf conf = builder.Build(tmp_file.GetName().c_str());
+    TConf conf = builder.Build(os.str());
 
     ASSERT_EQ(conf.LoggingConf.Pri, TPri::INFO);
     ASSERT_TRUE(conf.LoggingConf.EnableStdoutStderr);
@@ -410,10 +404,8 @@ namespace {
   }
 
   TEST_F(TConfTest, LoggingTestInvalidLevel) {
-    TTmpFile tmp_file("/tmp/dory_conf_test.XXXXXX",
-        true /* delete_on_destroy */);
-    std::ofstream ofs(tmp_file.GetName());
-    ofs << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    std::ostringstream os;
+    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<doryConfig>" << std::endl
         << "<!-- this is a comment -->" << std::endl
         << "    <batching>" << std::endl
@@ -521,12 +513,11 @@ namespace {
         << "        <broker host=\"host2\" port=\"9093\" />" << std::endl
         << "    </initialBrokers>" << std::endl
         << "</doryConfig>" << std::endl;
-    ofs.close();
     TConf::TBuilder builder(true);
     bool caught = false;
 
     try {
-      TConf conf = builder.Build(tmp_file.GetName().c_str());
+      TConf conf = builder.Build(os.str());
     } catch (const TLoggingInvalidLevel &) {
       caught = true;
     }
@@ -535,10 +526,8 @@ namespace {
   }
 
   TEST_F(TConfTest, LoggingTestRelativePath) {
-    TTmpFile tmp_file("/tmp/dory_conf_test.XXXXXX",
-        true /* delete_on_destroy */);
-    std::ofstream ofs(tmp_file.GetName());
-    ofs << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    std::ostringstream os;
+    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<doryConfig>" << std::endl
         << "<!-- this is a comment -->" << std::endl
         << "    <batching>" << std::endl
@@ -645,12 +634,11 @@ namespace {
         << "        <broker host=\"host2\" port=\"9093\" />" << std::endl
         << "    </initialBrokers>" << std::endl
         << "</doryConfig>" << std::endl;
-    ofs.close();
     TConf::TBuilder builder(true);
     bool caught = false;
 
     try {
-      TConf conf = builder.Build(tmp_file.GetName().c_str());
+      TConf conf = builder.Build(os.str());
     } catch (const TLoggingRelativePath &) {
       caught = true;
     }
@@ -659,10 +647,8 @@ namespace {
   }
 
   TEST_F(TConfTest, LoggingTestInvalidMode) {
-    TTmpFile tmp_file("/tmp/dory_conf_test.XXXXXX",
-        true /* delete_on_destroy */);
-    std::ofstream ofs(tmp_file.GetName());
-    ofs << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    std::ostringstream os;
+    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<doryConfig>" << std::endl
         << "<!-- this is a comment -->" << std::endl
         << "    <batching>" << std::endl
@@ -769,12 +755,11 @@ namespace {
         << "        <broker host=\"host2\" port=\"9093\" />" << std::endl
         << "    </initialBrokers>" << std::endl
         << "</doryConfig>" << std::endl;
-    ofs.close();
     TConf::TBuilder builder(true);
     bool caught = false;
 
     try {
-      TConf conf = builder.Build(tmp_file.GetName().c_str());
+      TConf conf = builder.Build(os.str());
     } catch (const TLoggingInvalidFileMode &) {
       caught = true;
     }

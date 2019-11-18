@@ -54,16 +54,11 @@ TConf::TBuilder::TBuilder(bool enable_lz4)
       XmlDoc(MakeEmptyDomDocumentUniquePtr()) {
 }
 
-TConf TConf::TBuilder::Build(const char *config_filename) {
+TConf TConf::TBuilder::Build(const void *buf, size_t buf_size) {
   assert(this);
-  assert(config_filename);
+  assert(buf);
   Reset();
-
-  {
-    const std::string xml = ReadFileIntoString(config_filename);
-    XmlDoc.reset(ParseXmlConfig(xml.data(), xml.size(), "US-ASCII"));
-  }
-
+  XmlDoc.reset(ParseXmlConfig(buf, buf_size, "US-ASCII"));
   const DOMElement *root = XmlDoc->getDocumentElement();
   assert(root);
   const std::string name = TranscodeToString(root->getNodeName());

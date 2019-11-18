@@ -36,6 +36,7 @@
 
 #include <base/counter.h>
 #include <base/error_util.h>
+#include <base/file_reader.h>
 #include <base/no_default_case.h>
 #include <base/sig_masker.h>
 #include <base/wr/fd_util.h>
@@ -167,7 +168,7 @@ TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
   }
 
   Conf::TConf conf = Conf::TConf::TBuilder(enable_lz4).Build(
-      cfg->ConfigPath.c_str());
+      ReadFileIntoString(cfg->ConfigPath));
   TGlobalBatchConfig batch_config =
       TBatchConfigBuilder().BuildFromConf(conf.BatchConf);
 

@@ -22,6 +22,7 @@
 #pragma once
 
 #include <cassert>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <utility>
@@ -91,7 +92,15 @@ namespace Dory {
       public:
       explicit TBuilder(bool enable_lz4 = false);
 
-      TConf Build(const char *config_filename);
+      TConf Build(const void *buf, size_t buf_size);
+
+      TConf Build(const char *xml) {
+        return Build(xml, std::strlen(xml));
+      }
+
+      TConf Build(const std::string &xml) {
+        return Build(xml.data(), xml.size());
+      }
 
       void Reset() {
         assert(this);
