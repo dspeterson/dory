@@ -1,4 +1,4 @@
-/* <dory/conf/logging_conf.cc>
+/* <dory/conf/input_sources_conf.cc>
 
    ----------------------------------------------------------------------------
    Copyright 2019 Dave Peterson <dave@dspeterson.com>
@@ -16,28 +16,47 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <dory/conf/logging_conf.h>.
+   Implements <dory/conf/input_sources_conf.h>.
  */
 
-#include <dory/conf/logging_conf.h>
+#include <dory/conf/input_sources_conf.h>
 
-#include <cassert>
-
+using namespace Base;
 using namespace Dory;
 using namespace Dory::Conf;
 
-void TLoggingConf::SetFileConf(const std::string &path,
+void TInputSourcesConf::SetUnixDgConf(const std::string &path, mode_t mode) {
+  assert(this);
+
+  if (!path.empty() && (path[0] != '/')) {
+    throw TInputSourcesRelativeUnixDgPath();
+  }
+
+  if (mode > 0777) {
+    throw TInputSourcesInvalidUnixDgFileMode();
+  }
+
+  UnixDgPath = path;
+  UnixDgMode = mode;
+}
+
+void TInputSourcesConf::SetUnixStreamConf(const std::string &path,
     mode_t mode) {
   assert(this);
 
   if (!path.empty() && (path[0] != '/')) {
-    throw TLoggingRelativePath();
+    throw TInputSourcesRelativeUnixStreamPath();
   }
 
   if (mode > 0777) {
-    throw TLoggingInvalidFileMode();
+    throw TInputSourcesInvalidUnixStreamFileMode();
   }
 
-  FilePath = path;
-  FileMode = mode;
+  UnixStreamPath = path;
+  UnixStreamMode = mode;
+}
+
+void TInputSourcesConf::SetTcpConf(const TOpt<in_port_t> &port) {
+  assert(this);
+  LocalTcpPort = port;
 }

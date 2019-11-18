@@ -76,8 +76,8 @@ DEFINE_COUNTER(StreamClientWorkerUnknownException);
 
 static void LoadCompressionLibraries(const TCompressionConf &conf) {
   std::set<TCompressionType> in_use;
-  in_use.insert(conf.GetDefaultTopicConfig().Type);
-  const TCompressionConf::TTopicMap &topic_map = conf.GetTopicConfigs();
+  in_use.insert(conf.DefaultTopicConfig.Type);
+  const TCompressionConf::TTopicMap &topic_map = conf.TopicConfigs;
 
   for (const auto &item : topic_map) {
     in_use.insert(item.second.Type);
@@ -169,12 +169,12 @@ TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
   Conf::TConf conf = Conf::TConf::TBuilder(enable_lz4).Build(
       cfg->ConfigPath.c_str());
   TGlobalBatchConfig batch_config =
-      TBatchConfigBuilder().BuildFromConf(conf.GetBatchConf());
+      TBatchConfigBuilder().BuildFromConf(conf.BatchConf);
 
   /* Load any compression libraries we need, according to the compression info
      from our config file.  This will throw if a library fails to load.  We
      want to fail early if there is a problem loading a library. */
-  LoadCompressionLibraries(conf.GetCompressionConf());
+  LoadCompressionLibraries(conf.CompressionConf);
 
   /* The TDoryServer constructor will use the random number generator, so
      initialize it now. */
@@ -204,7 +204,7 @@ TDoryServer::TDoryServer(TServerConfig &&config, const TFd &shutdown_fd)
       StatusPort(0),
       DebugSetup(Config->DebugDir.c_str(), Config->MsgDebugTimeLimit,
                  Config->MsgDebugByteLimit),
-      Dispatcher(*Config, Conf.GetCompressionConf(), MsgStateTracker,
+      Dispatcher(*Config, Conf.CompressionConf, MsgStateTracker,
           AnomalyTracker, config.BatchConfig, DebugSetup),
       RouterThread(*Config, Conf, AnomalyTracker, MsgStateTracker,
           config.BatchConfig, DebugSetup, Dispatcher),

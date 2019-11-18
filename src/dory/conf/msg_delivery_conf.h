@@ -1,4 +1,4 @@
-/* <dory/conf/logging_conf.cc>
+/* <dory/conf/msg_delivery_conf.h>
 
    ----------------------------------------------------------------------------
    Copyright 2019 Dave Peterson <dave@dspeterson.com>
@@ -16,28 +16,39 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <dory/conf/logging_conf.h>.
+   Class representing message delivery section from Dory's config file.
  */
 
-#include <dory/conf/logging_conf.h>
+#pragma once
 
-#include <cassert>
+#include <cstddef>
 
-using namespace Dory;
-using namespace Dory::Conf;
+namespace Dory {
 
-void TLoggingConf::SetFileConf(const std::string &path,
-    mode_t mode) {
-  assert(this);
+  namespace Conf {
 
-  if (!path.empty() && (path[0] != '/')) {
-    throw TLoggingRelativePath();
-  }
+    struct TMsgDeliveryConf final {
+      bool TopicAutocreate = false;
 
-  if (mode > 0777) {
-    throw TLoggingInvalidFileMode();
-  }
+      size_t MaxFailedDeliveryAttempts = 5;
 
-  FilePath = path;
-  FileMode = mode;
-}
+      size_t ShutdownMaxDelay = 30000;
+
+      size_t DispatcherRestartMaxDelay = 5000;
+
+      size_t MetadataRefreshInterval = 15;
+
+      bool CompareMetadataOnRefresh = true;
+
+      size_t KafkaSocketTimeout = 60;
+
+      size_t PauseRateLimitInitial = 5000;
+
+      size_t PauseRateLimitMaxDouble = 4;
+
+      size_t MinPauseDelay = 5000;
+    };  // TMsgDeliveryConf
+
+  };  // Conf
+
+}  // Dory

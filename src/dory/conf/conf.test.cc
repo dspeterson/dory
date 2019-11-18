@@ -163,31 +163,29 @@ namespace {
     TConf::TBuilder builder(true);
     TConf conf = builder.Build(tmp_file.GetName().c_str());
 
-    const TBatchConf &batch_conf = conf.GetBatchConf();
-    ASSERT_EQ(batch_conf.GetProduceRequestDataLimit(), 100U);
-    ASSERT_EQ(batch_conf.GetMessageMaxBytes(), 200U);
-    ASSERT_TRUE(batch_conf.CombinedTopicsBatchingIsEnabled());
-    TBatchConf::TBatchValues values = batch_conf.GetCombinedTopicsConfig();
+    ASSERT_EQ(conf.BatchConf.ProduceRequestDataLimit, 100U);
+    ASSERT_EQ(conf.BatchConf.MessageMaxBytes, 200U);
+    ASSERT_TRUE(conf.BatchConf.CombinedTopicsBatchingEnabled);
+    TBatchConf::TBatchValues values = conf.BatchConf.CombinedTopicsConfig;
     ASSERT_TRUE(values.OptTimeLimit.IsKnown());
     ASSERT_EQ(*values.OptTimeLimit, 50U);
     ASSERT_TRUE(values.OptMsgCount.IsKnown());
     ASSERT_EQ(*values.OptMsgCount, 100U);
     ASSERT_TRUE(values.OptByteCount.IsKnown());
     ASSERT_EQ(*values.OptByteCount, 200U);
-    ASSERT_TRUE(batch_conf.GetDefaultTopicAction() ==
+    ASSERT_TRUE(conf.BatchConf.DefaultTopicAction ==
         TBatchConf::TTopicAction::PerTopic);
-    values = batch_conf.GetDefaultTopicConfig();
+    values = conf.BatchConf.DefaultTopicConfig;
     ASSERT_TRUE(values.OptTimeLimit.IsKnown());
     ASSERT_EQ(*values.OptTimeLimit, 5U);
     ASSERT_FALSE(values.OptMsgCount.IsKnown());
     ASSERT_TRUE(values.OptByteCount.IsKnown());
     ASSERT_EQ(*values.OptByteCount, 20U * 1024U);
 
-    const TBatchConf::TTopicMap &topic_map = batch_conf.GetTopicConfigs();
-    ASSERT_EQ(topic_map.size(), 2U);
+    ASSERT_EQ(conf.BatchConf.TopicConfigs.size(), 2U);
 
-    auto iter = topic_map.find("topic1");
-    ASSERT_TRUE(iter != topic_map.end());
+    auto iter = conf.BatchConf.TopicConfigs.find("topic1");
+    ASSERT_TRUE(iter != conf.BatchConf.TopicConfigs.end());
     TBatchConf::TTopicConf topic_conf = iter->second;
     ASSERT_TRUE(topic_conf.Action == TBatchConf::TTopicAction::PerTopic);
     values = topic_conf.BatchValues;
@@ -198,8 +196,8 @@ namespace {
     ASSERT_TRUE(values.OptByteCount.IsKnown());
     ASSERT_EQ(*values.OptByteCount, 200U);
 
-    iter = topic_map.find("topic2");
-    ASSERT_TRUE(iter != topic_map.end());
+    iter = conf.BatchConf.TopicConfigs.find("topic2");
+    ASSERT_TRUE(iter != conf.BatchConf.TopicConfigs.end());
     topic_conf = iter->second;
     ASSERT_TRUE(topic_conf.Action == TBatchConf::TTopicAction::PerTopic);
     values = topic_conf.BatchValues;
@@ -209,95 +207,83 @@ namespace {
     ASSERT_TRUE(values.OptByteCount.IsKnown());
     ASSERT_EQ(*values.OptByteCount, 20U * 1024U);
 
-    const TCompressionConf &compression_conf = conf.GetCompressionConf();
-    ASSERT_EQ(compression_conf.GetSizeThresholdPercent(), 75U);
-    const TCompressionConf::TConf &default_topic_compression_conf =
-        compression_conf.GetDefaultTopicConfig();
-    ASSERT_TRUE(default_topic_compression_conf.Type ==
+    ASSERT_EQ(conf.CompressionConf.SizeThresholdPercent, 75U);
+    ASSERT_TRUE(conf.CompressionConf.DefaultTopicConfig.Type ==
                 TCompressionType::Snappy);
-    ASSERT_EQ(default_topic_compression_conf.MinSize, 1024U);
-    ASSERT_TRUE(default_topic_compression_conf.Level.IsUnknown());
-    const TCompressionConf::TTopicMap &compression_topic_configs =
-        compression_conf.GetTopicConfigs();
-    ASSERT_EQ(compression_topic_configs.size(), 6U);
+    ASSERT_EQ(conf.CompressionConf.DefaultTopicConfig.MinSize, 1024U);
+    ASSERT_TRUE(conf.CompressionConf.DefaultTopicConfig.Level.IsUnknown());
+    ASSERT_EQ(conf.CompressionConf.TopicConfigs.size(), 6U);
 
     TCompressionConf::TTopicMap::const_iterator comp_topic_iter =
-        compression_topic_configs.find("topic1");
-    ASSERT_TRUE(comp_topic_iter != compression_topic_configs.end());
+        conf.CompressionConf.TopicConfigs.find("topic1");
+    ASSERT_TRUE(comp_topic_iter != conf.CompressionConf.TopicConfigs.end());
     ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::None);
     ASSERT_TRUE(comp_topic_iter->second.MinSize == 0U);
     ASSERT_TRUE(comp_topic_iter->second.Level.IsUnknown());
 
-    comp_topic_iter = compression_topic_configs.find("topic2");
-    ASSERT_TRUE(comp_topic_iter != compression_topic_configs.end());
+    comp_topic_iter = conf.CompressionConf.TopicConfigs.find("topic2");
+    ASSERT_TRUE(comp_topic_iter != conf.CompressionConf.TopicConfigs.end());
     ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::Snappy);
     ASSERT_TRUE(comp_topic_iter->second.MinSize == 2048U);
     ASSERT_TRUE(comp_topic_iter->second.Level.IsUnknown());
 
-    comp_topic_iter = compression_topic_configs.find("topic3");
-    ASSERT_TRUE(comp_topic_iter != compression_topic_configs.end());
+    comp_topic_iter = conf.CompressionConf.TopicConfigs.find("topic3");
+    ASSERT_TRUE(comp_topic_iter != conf.CompressionConf.TopicConfigs.end());
     ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::Gzip);
     ASSERT_TRUE(comp_topic_iter->second.MinSize == 4096U);
     ASSERT_TRUE(comp_topic_iter->second.Level.IsUnknown());
 
-    comp_topic_iter = compression_topic_configs.find("topic4");
-    ASSERT_TRUE(comp_topic_iter != compression_topic_configs.end());
+    comp_topic_iter = conf.CompressionConf.TopicConfigs.find("topic4");
+    ASSERT_TRUE(comp_topic_iter != conf.CompressionConf.TopicConfigs.end());
     ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::Gzip);
     ASSERT_TRUE(comp_topic_iter->second.MinSize == 8192U);
     ASSERT_TRUE(comp_topic_iter->second.Level.IsKnown());
     ASSERT_EQ(*comp_topic_iter->second.Level, 3);
 
-    comp_topic_iter = compression_topic_configs.find("topic5");
-    ASSERT_TRUE(comp_topic_iter != compression_topic_configs.end());
+    comp_topic_iter = conf.CompressionConf.TopicConfigs.find("topic5");
+    ASSERT_TRUE(comp_topic_iter != conf.CompressionConf.TopicConfigs.end());
     ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::Lz4);
     ASSERT_TRUE(comp_topic_iter->second.MinSize == 16384U);
     ASSERT_TRUE(comp_topic_iter->second.Level.IsUnknown());
 
-    comp_topic_iter = compression_topic_configs.find("topic6");
-    ASSERT_TRUE(comp_topic_iter != compression_topic_configs.end());
+    comp_topic_iter = conf.CompressionConf.TopicConfigs.find("topic6");
+    ASSERT_TRUE(comp_topic_iter != conf.CompressionConf.TopicConfigs.end());
     ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::Lz4);
     ASSERT_TRUE(comp_topic_iter->second.MinSize == 32768U);
     ASSERT_TRUE(comp_topic_iter->second.Level.IsKnown());
     ASSERT_EQ(*comp_topic_iter->second.Level, 5);
 
-    const TTopicRateConf &topic_rate_conf = conf.GetTopicRateConf();
-    const TTopicRateConf::TConf &default_topic_rate_conf =
-        topic_rate_conf.GetDefaultTopicConfig();
-    ASSERT_EQ(default_topic_rate_conf.Interval, 10000U);
-    ASSERT_TRUE(default_topic_rate_conf.MaxCount.IsKnown());
-    ASSERT_EQ(*default_topic_rate_conf.MaxCount, 500U);
-    const TTopicRateConf::TTopicMap &topic_rate_configs =
-        topic_rate_conf.GetTopicConfigs();
-    ASSERT_EQ(topic_rate_configs.size(), 3U);
+    ASSERT_EQ(conf.TopicRateConf.DefaultTopicConfig.Interval, 10000U);
+    ASSERT_TRUE(conf.TopicRateConf.DefaultTopicConfig.MaxCount.IsKnown());
+    ASSERT_EQ(*conf.TopicRateConf.DefaultTopicConfig.MaxCount, 500U);
+    ASSERT_EQ(conf.TopicRateConf.TopicConfigs.size(), 3U);
     TTopicRateConf::TTopicMap::const_iterator rate_topic_iter =
-        topic_rate_configs.find("topic1");
-    ASSERT_TRUE(rate_topic_iter != topic_rate_configs.end());
+        conf.TopicRateConf.TopicConfigs.find("topic1");
+    ASSERT_TRUE(rate_topic_iter != conf.TopicRateConf.TopicConfigs.end());
     ASSERT_EQ(rate_topic_iter->second.Interval, 1U);
     ASSERT_TRUE(rate_topic_iter->second.MaxCount.IsKnown());
     ASSERT_EQ(*rate_topic_iter->second.MaxCount, 0U);
-    rate_topic_iter = topic_rate_configs.find("topic2");
-    ASSERT_TRUE(rate_topic_iter != topic_rate_configs.end());
+    rate_topic_iter = conf.TopicRateConf.TopicConfigs.find("topic2");
+    ASSERT_TRUE(rate_topic_iter != conf.TopicRateConf.TopicConfigs.end());
     ASSERT_EQ(rate_topic_iter->second.Interval, 1U);
     ASSERT_TRUE(rate_topic_iter->second.MaxCount.IsUnknown());
-    rate_topic_iter = topic_rate_configs.find("topic3");
-    ASSERT_TRUE(rate_topic_iter != topic_rate_configs.end());
+    rate_topic_iter = conf.TopicRateConf.TopicConfigs.find("topic3");
+    ASSERT_TRUE(rate_topic_iter != conf.TopicRateConf.TopicConfigs.end());
     ASSERT_EQ(rate_topic_iter->second.Interval, 20000U);
     ASSERT_TRUE(rate_topic_iter->second.MaxCount.IsKnown());
     ASSERT_EQ(*rate_topic_iter->second.MaxCount, 4096U);
 
-    const TLoggingConf &logging_conf = conf.GetLoggingConf();
-    ASSERT_EQ(logging_conf.GetPri(), TPri::NOTICE);
-    ASSERT_FALSE(logging_conf.GetEnableStdoutStderr());
-    ASSERT_TRUE(logging_conf.GetEnableSyslog());
-    ASSERT_TRUE(logging_conf.GetFilePath().empty());
-    ASSERT_EQ(logging_conf.GetFileMode(), TFileLogWriter::DEFAULT_FILE_MODE);
+    ASSERT_EQ(conf.LoggingConf.Pri, TPri::NOTICE);
+    ASSERT_FALSE(conf.LoggingConf.EnableStdoutStderr);
+    ASSERT_TRUE(conf.LoggingConf.EnableSyslog);
+    ASSERT_TRUE(conf.LoggingConf.FilePath.empty());
+    ASSERT_EQ(conf.LoggingConf.FileMode, TFileLogWriter::DEFAULT_FILE_MODE);
 
-    const std::vector<TConf::TBroker> &broker_vec = conf.GetInitialBrokers();
-    ASSERT_EQ(broker_vec.size(), 2U);
-    ASSERT_EQ(broker_vec[0].Host, "host1");
-    ASSERT_EQ(broker_vec[0].Port, 9092U);
-    ASSERT_EQ(broker_vec[1].Host, "host2");
-    ASSERT_EQ(broker_vec[1].Port, 9093U);
+    ASSERT_EQ(conf.InitialBrokers.size(), 2U);
+    ASSERT_EQ(conf.InitialBrokers[0].Host, "host1");
+    ASSERT_EQ(conf.InitialBrokers[0].Port, 9092U);
+    ASSERT_EQ(conf.InitialBrokers[1].Host, "host2");
+    ASSERT_EQ(conf.InitialBrokers[1].Port, 9093U);
   }
 
   TEST_F(TConfTest, BasicLoggingTest) {
@@ -416,12 +402,11 @@ namespace {
     TConf::TBuilder builder(true);
     TConf conf = builder.Build(tmp_file.GetName().c_str());
 
-    const TLoggingConf &logging_conf = conf.GetLoggingConf();
-    ASSERT_EQ(logging_conf.GetPri(), TPri::INFO);
-    ASSERT_TRUE(logging_conf.GetEnableStdoutStderr());
-    ASSERT_FALSE(logging_conf.GetEnableSyslog());
-    ASSERT_EQ(logging_conf.GetFilePath(), "/var/log/dory/dory.log");
-    ASSERT_EQ(logging_conf.GetFileMode(), 0666);
+    ASSERT_EQ(conf.LoggingConf.Pri, TPri::INFO);
+    ASSERT_TRUE(conf.LoggingConf.EnableStdoutStderr);
+    ASSERT_FALSE(conf.LoggingConf.EnableSyslog);
+    ASSERT_EQ(conf.LoggingConf.FilePath, "/var/log/dory/dory.log");
+    ASSERT_EQ(conf.LoggingConf.FileMode, 0666);
   }
 
   TEST_F(TConfTest, LoggingTestInvalidLevel) {
@@ -542,7 +527,7 @@ namespace {
 
     try {
       TConf conf = builder.Build(tmp_file.GetName().c_str());
-    } catch (const TLoggingConf::TBuilder::TInvalidLevel &) {
+    } catch (const TLoggingInvalidLevel &) {
       caught = true;
     }
 
@@ -666,7 +651,7 @@ namespace {
 
     try {
       TConf conf = builder.Build(tmp_file.GetName().c_str());
-    } catch (const TLoggingConf::TBuilder::TRelativeFilePath &) {
+    } catch (const TLoggingRelativePath &) {
       caught = true;
     }
 
@@ -790,7 +775,7 @@ namespace {
 
     try {
       TConf conf = builder.Build(tmp_file.GetName().c_str());
-    } catch (const TLoggingConf::TBuilder::TInvalidFileMode &) {
+    } catch (const TLoggingInvalidFileMode &) {
       caught = true;
     }
 

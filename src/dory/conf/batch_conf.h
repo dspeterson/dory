@@ -35,8 +35,129 @@ namespace Dory {
 
   namespace Conf {
 
-    class TBatchConf {
+    class TBatchDuplicateNamedConfig final : public TConfError {
       public:
+      explicit TBatchDuplicateNamedConfig(const std::string &config_name)
+          : TConfError(CreateMsg(config_name)) {
+      }
+
+      private:
+      static std::string CreateMsg(const std::string &config_name);
+    };  // TBatchDuplicateNamedConfig
+
+    class TBatchDuplicateProduceRequestDataLimit final : public TConfError {
+      public:
+      TBatchDuplicateProduceRequestDataLimit()
+          : TConfError(
+                "Batching config contains duplicate produceRequestDataLimit "
+                "definition") {
+      }
+    };  // TBatchDuplicateProduceRequestDataLimit
+
+    class TBatchDuplicateMessageMaxBytes final : public TConfError {
+      public:
+      TBatchDuplicateMessageMaxBytes()
+          : TConfError(
+                "Batching config contains duplicate messageMaxBytes "
+                "definition") {
+      }
+    };  // TBatchDuplicateMessageMaxBytes
+
+    class TBatchDuplicateCombinedTopicsConfig final : public TConfError {
+      public:
+      TBatchDuplicateCombinedTopicsConfig()
+          : TConfError(
+                "Batching config contains duplicate combinedTopics "
+                "definition") {
+      }
+    };  // TBatchDuplicateCombinedTopicsConfig
+
+    class TBatchUnknownCombinedTopicsConfig final : public TConfError {
+      public:
+      explicit TBatchUnknownCombinedTopicsConfig(
+          const std::string &config_name)
+          : TConfError(CreateMsg(config_name)) {
+      }
+
+      private:
+      static std::string CreateMsg(const std::string &config_name);
+    };  // TBatchUnknownCombinedTopicsConfig
+
+    class TBatchDuplicateDefaultTopicConfig final : public TConfError {
+      public:
+      TBatchDuplicateDefaultTopicConfig()
+          : TConfError(
+                "Batching config contains duplicate defaultTopic "
+                "definition") {
+      }
+    };  // TBatchDuplicateDefaultTopicConfig
+
+    class TBatchUnknownDefaultTopicConfig final : public TConfError {
+      public:
+      explicit TBatchUnknownDefaultTopicConfig(const std::string &config_name)
+          : TConfError(CreateMsg(config_name)) {
+      }
+
+      private:
+      static std::string CreateMsg(const std::string &config_name);
+    };  // TBatchUnknownDefaultTopicConfig
+
+    class TBatchDuplicateTopicConfig final : public TConfError {
+      public:
+      explicit TBatchDuplicateTopicConfig(const std::string &topic)
+          : TConfError(CreateMsg(topic)) {
+      }
+
+      private:
+      static std::string CreateMsg(const std::string &topic);
+    };  // TBatchDuplicateTopicConfig
+
+    class TBatchUnknownTopicConfig final : public TConfError {
+      public:
+      TBatchUnknownTopicConfig(const std::string &topic,
+          const std::string &config_name)
+          : TConfError(CreateMsg(topic, config_name)) {
+      }
+
+      private:
+      static std::string CreateMsg(const std::string &topic,
+          const std::string &config_name);
+    };  // TBatchUnknownTopicConfig
+
+    class TBatchMissingProduceRequestDataLimit final : public TConfError {
+      public:
+      TBatchMissingProduceRequestDataLimit()
+          : TConfError(
+                "Batching config is missing produceRequestDataLimit "
+                "definition") {
+      }
+    };  // TBatchMissingProduceRequestDataLimit
+
+    class TBatchMissingMessageMaxBytes final : public TConfError {
+      public:
+      TBatchMissingMessageMaxBytes()
+          : TConfError(
+                "Batching config is missing messageMaxBytes definition") {
+      }
+    };  // TBatchMissingMessageMaxBytes
+
+    class TBatchMissingCombinedTopics final : public TConfError {
+      public:
+      TBatchMissingCombinedTopics()
+          : TConfError(
+                "Batching config is missing combinedTopics definition") {
+      }
+    };  // TBatchMissingCombinedTopics
+
+    class TBatchMissingDefaultTopic final : public TConfError {
+      public:
+      TBatchMissingDefaultTopic()
+          : TConfError(
+                "Batching config is missing defaultTopic definition") {
+      }
+    };  // TBatchMissingDefaultTopic
+
+    struct TBatchConf final {
       class TBuilder;
 
       enum class TTopicAction {
@@ -47,7 +168,7 @@ namespace Dory {
 
       /* For each member 'm' below, m.IsUnknown() indicates that "disable" was
          specified in the config file. */
-      struct TBatchValues {
+      struct TBatchValues final {
         Base::TOpt<size_t> OptTimeLimit;
 
         Base::TOpt<size_t> OptMsgCount;
@@ -55,7 +176,7 @@ namespace Dory {
         Base::TOpt<size_t> OptByteCount;
       };  // TBatchValues
 
-      struct TTopicConf {
+      struct TTopicConf final {
         TTopicAction Action;
 
         TBatchValues BatchValues;
@@ -89,52 +210,6 @@ namespace Dory {
         return StringToTopicAction(s.c_str(), result);
       }
 
-      TBatchConf() = default;
-
-      TBatchConf(const TBatchConf &) = default;
-
-      TBatchConf(TBatchConf &&) = default;
-
-      TBatchConf &operator=(const TBatchConf &) = default;
-
-      TBatchConf &operator=(TBatchConf &&) = default;
-
-      size_t GetProduceRequestDataLimit() const noexcept {
-        assert(this);
-        return ProduceRequestDataLimit;
-      }
-
-      size_t GetMessageMaxBytes() const noexcept {
-        assert(this);
-        return MessageMaxBytes;
-      }
-
-      bool CombinedTopicsBatchingIsEnabled() const noexcept {
-        assert(this);
-        return CombinedTopicsBatchingEnabled;
-      }
-
-      const TBatchValues &GetCombinedTopicsConfig() const noexcept {
-        assert(this);
-        return CombinedTopicsConfig;
-      }
-
-      TTopicAction GetDefaultTopicAction() const noexcept {
-        assert(this);
-        return DefaultTopicAction;
-      }
-
-      const TBatchValues &GetDefaultTopicConfig() const noexcept {
-        assert(this);
-        return DefaultTopicConfig;
-      }
-
-      const TTopicMap &GetTopicConfigs() const noexcept {
-        assert(this);
-        return TopicConfigs;
-      }
-
-      private:
       size_t ProduceRequestDataLimit = 0;
 
       size_t MessageMaxBytes = 0;
@@ -150,141 +225,9 @@ namespace Dory {
       TTopicMap TopicConfigs;
     };  // TBatchConf
 
-    class TBatchConf::TBuilder {
+    class TBatchConf::TBuilder final {
       public:
-      /* Exception base class. */
-      class TErrorBase : public TConfError {
-        protected:
-        explicit TErrorBase(std::string &&msg)
-            : TConfError(std::move(msg)) {
-        }
-      };  // TErrorBase
-
-      class TDuplicateNamedConfig final : public TErrorBase {
-        public:
-        explicit TDuplicateNamedConfig(const std::string &config_name)
-            : TErrorBase(CreateMsg(config_name)) {
-        }
-
-        private:
-        static std::string CreateMsg(const std::string &config_name);
-      };  // TDuplicateNamedConfig
-
-      class TDuplicateProduceRequestDataLimit final : public TErrorBase {
-        public:
-        TDuplicateProduceRequestDataLimit()
-            : TErrorBase(
-                  "Batching config contains duplicate produceRequestDataLimit definition") {
-        }
-      };  // TDuplicateProduceRequestDataLimit
-
-      class TDuplicateMessageMaxBytes final : public TErrorBase {
-        public:
-        TDuplicateMessageMaxBytes()
-            : TErrorBase(
-                  "Batching config contains duplicate messageMaxBytes definition") {
-        }
-      };  // TDuplicateMessageMaxBytes
-
-      class TDuplicateCombinedTopicsConfig final : public TErrorBase {
-        public:
-        TDuplicateCombinedTopicsConfig()
-            : TErrorBase(
-                  "Batching config contains duplicate combinedTopics definition") {
-        }
-      };  // TDuplicateCombinedTopicsConfig
-
-      class TUnknownCombinedTopicsConfig final : public TErrorBase {
-        public:
-        explicit TUnknownCombinedTopicsConfig(const std::string &config_name)
-            : TErrorBase(CreateMsg(config_name)) {
-        }
-
-        private:
-        static std::string CreateMsg(const std::string &config_name);
-      };  // TUnknownCombinedTopicsConfig
-
-      class TDuplicateDefaultTopicConfig final : public TErrorBase {
-        public:
-        TDuplicateDefaultTopicConfig()
-            : TErrorBase(
-                  "Batching config contains duplicate defaultTopic definition") {
-        }
-      };  // TDuplicateDefaultTopicConfig
-
-      class TUnknownDefaultTopicConfig final : public TErrorBase {
-        public:
-        explicit TUnknownDefaultTopicConfig(const std::string &config_name)
-            : TErrorBase(CreateMsg(config_name)) {
-        }
-
-        private:
-        static std::string CreateMsg(const std::string &config_name);
-      };  // TUnknownDefaultTopicConfig
-
-      class TDuplicateTopicConfig final : public TErrorBase {
-        public:
-        explicit TDuplicateTopicConfig(const std::string &topic)
-            : TErrorBase(CreateMsg(topic)) {
-        }
-
-        private:
-        static std::string CreateMsg(const std::string &topic);
-      };  // TDuplicateTopicConfig
-
-      class TUnknownTopicConfig final : public TErrorBase {
-        public:
-        TUnknownTopicConfig(const std::string &topic,
-            const std::string &config_name)
-            : TErrorBase(CreateMsg(topic, config_name)) {
-        }
-
-        private:
-        static std::string CreateMsg(const std::string &topic,
-            const std::string &config_name);
-      };  // TUnknownTopicConfig
-
-      class TMissingProduceRequestDataLimit final : public TErrorBase {
-        public:
-        TMissingProduceRequestDataLimit()
-            : TErrorBase(
-                  "Batching config is missing produceRequestDataLimit definition") {
-        }
-      };  // TMissingProduceRequestDataLimit
-
-      class TMissingMessageMaxBytes final : public TErrorBase {
-        public:
-        TMissingMessageMaxBytes()
-            : TErrorBase(
-                  "Batching config is missing messageMaxBytes definition") {
-        }
-      };  // TMissingMessageMaxBytes
-
-      class TMissingCombinedTopics final : public TErrorBase {
-        public:
-        TMissingCombinedTopics()
-            : TErrorBase(
-                  "Batching config is missing combinedTopics definition") {
-        }
-      };  // TMissingCombinedTopics
-
-      class TMissingDefaultTopic final : public TErrorBase {
-        public:
-        TMissingDefaultTopic()
-            : TErrorBase(
-                  "Batching config is missing defaultTopic definition") {
-        }
-      };  // TMissingDefaultTopic
-
       TBuilder() = default;
-
-      TBuilder(const TBuilder &) = default;
-
-      TBuilder(TBuilder &&) = default;
-
-      TBuilder &operator=(const TBuilder &) = default;
-
-      TBuilder &operator=(TBuilder &&) = default;
 
       void Reset() {
         assert(this);

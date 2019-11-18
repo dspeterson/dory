@@ -26,7 +26,7 @@
 using namespace Dory;
 using namespace Dory::Conf;
 
-std::string TTopicRateConf::TBuilder::TDuplicateNamedConfig::CreateMsg(
+std::string TTopicRateDuplicateNamedConfig::CreateMsg(
     const std::string &config_name) {
   std::string msg(
       "Topic rate limiting config contains duplicate named config: [");
@@ -35,7 +35,7 @@ std::string TTopicRateConf::TBuilder::TDuplicateNamedConfig::CreateMsg(
   return msg;
 }
 
-std::string TTopicRateConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
+std::string TTopicRateUnknownDefaultTopicConfig::CreateMsg(
     const std::string &config_name) {
   std::string msg(
       "Topic rate limiting config defaultTopic definition references unknown named config: [");
@@ -44,7 +44,7 @@ std::string TTopicRateConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
   return msg;
 }
 
-std::string TTopicRateConf::TBuilder::TDuplicateTopicConfig::CreateMsg(
+std::string TTopicRateDuplicateTopicConfig::CreateMsg(
     const std::string &topic) {
   std::string msg(
       "Topic rate limiting config contains duplicate specification for topic [");
@@ -53,7 +53,7 @@ std::string TTopicRateConf::TBuilder::TDuplicateTopicConfig::CreateMsg(
   return msg;
 }
 
-std::string TTopicRateConf::TBuilder::TZeroRateLimitInterval::CreateMsg(
+std::string TTopicRateZeroRateLimitInterval::CreateMsg(
     const std::string &topic) {
   std::string msg(
       "Topic rate limiting config contains interval of zero for topic [");
@@ -62,7 +62,7 @@ std::string TTopicRateConf::TBuilder::TZeroRateLimitInterval::CreateMsg(
   return msg;
 }
 
-std::string TTopicRateConf::TBuilder::TUnknownTopicConfig::CreateMsg(
+std::string TTopicRateUnknownTopicConfig::CreateMsg(
     const std::string &topic, const std::string &config_name) {
   std::string msg("Topic rate limiting config for topic [");
   msg += topic;
@@ -77,25 +77,25 @@ void TTopicRateConf::TBuilder::AddBoundedNamedConfig(const std::string &name,
   assert(this);
 
   if (interval == 0) {
-    throw TZeroRateLimitInterval(name);
+    throw TTopicRateZeroRateLimitInterval(name);
   }
 
-  auto result =
+  const auto result =
       NamedConfigs.insert(std::make_pair(name, TConf(interval, max_count)));
 
   if (!result.second) {
-    throw TDuplicateNamedConfig(name);
+    throw TTopicRateDuplicateNamedConfig(name);
   }
 }
 
 void TTopicRateConf::TBuilder::AddUnlimitedNamedConfig(
     const std::string &name) {
   assert(this);
-  auto result =
+  const auto result =
       NamedConfigs.insert(std::make_pair(name, TConf()));
 
   if (!result.second) {
-    throw TDuplicateNamedConfig(name);
+    throw TTopicRateDuplicateNamedConfig(name);
   }
 }
 
@@ -104,13 +104,13 @@ void TTopicRateConf::TBuilder::SetDefaultTopicConfig(
   assert(this);
 
   if (GotDefaultTopic) {
-    throw TDuplicateDefaultTopicConfig();
+    throw TTopicRateDuplicateDefaultTopicConfig();
   }
 
-  auto iter = NamedConfigs.find(config_name);
+  const auto iter = NamedConfigs.find(config_name);
 
   if (iter == NamedConfigs.end()) {
-    throw TUnknownDefaultTopicConfig(config_name);
+    throw TTopicRateUnknownDefaultTopicConfig(config_name);
   }
 
   BuildResult.DefaultTopicConfig = iter->second;
@@ -122,13 +122,13 @@ void TTopicRateConf::TBuilder::SetTopicConfig(const std::string &topic,
   assert(this);
 
   if (BuildResult.TopicConfigs.find(topic) != BuildResult.TopicConfigs.end()) {
-    throw TDuplicateTopicConfig(topic);
+    throw TTopicRateDuplicateTopicConfig(topic);
   }
 
-  auto iter = NamedConfigs.find(config_name);
+  const auto iter = NamedConfigs.find(config_name);
 
   if (iter == NamedConfigs.end()) {
-    throw TUnknownTopicConfig(topic, config_name);
+    throw TTopicRateUnknownTopicConfig(topic, config_name);
   }
 
   BuildResult.TopicConfigs.insert(std::make_pair(topic, iter->second));
@@ -138,7 +138,7 @@ TTopicRateConf TTopicRateConf::TBuilder::Build() {
   assert(this);
 
   if (!GotDefaultTopic) {
-    throw TMissingDefaultTopic();
+    throw TTopicRateMissingDefaultTopic();
   }
 
   TTopicRateConf result = std::move(BuildResult);

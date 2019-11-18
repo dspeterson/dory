@@ -49,7 +49,7 @@ bool TBatchConf::StringToTopicAction(const char *s,
   return false;
 }
 
-std::string TBatchConf::TBuilder::TDuplicateNamedConfig::CreateMsg(
+std::string TBatchDuplicateNamedConfig::CreateMsg(
     const std::string &config_name) {
   std::string msg("Batching config contains duplicate named config: [");
   msg += config_name;
@@ -57,7 +57,7 @@ std::string TBatchConf::TBuilder::TDuplicateNamedConfig::CreateMsg(
   return msg;
 }
 
-std::string TBatchConf::TBuilder::TUnknownCombinedTopicsConfig::CreateMsg(
+std::string TBatchUnknownCombinedTopicsConfig::CreateMsg(
     const std::string &config_name) {
   std::string msg(
       "Batching config combinedTopics definition references unknown named config: [");
@@ -66,7 +66,7 @@ std::string TBatchConf::TBuilder::TUnknownCombinedTopicsConfig::CreateMsg(
   return msg;
 }
 
-std::string TBatchConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
+std::string TBatchUnknownDefaultTopicConfig::CreateMsg(
     const std::string &config_name) {
   std::string msg(
       "Batching config defaultTopic definition references unknown named config: [");
@@ -75,7 +75,7 @@ std::string TBatchConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
   return msg;
 }
 
-std::string TBatchConf::TBuilder::TDuplicateTopicConfig::CreateMsg(
+std::string TBatchDuplicateTopicConfig::CreateMsg(
     const std::string &topic) {
   std::string msg(
       "Batching config contains duplicate specification for topic [");
@@ -84,7 +84,7 @@ std::string TBatchConf::TBuilder::TDuplicateTopicConfig::CreateMsg(
   return msg;
 }
 
-std::string TBatchConf::TBuilder::TUnknownTopicConfig::CreateMsg(
+std::string TBatchUnknownTopicConfig::CreateMsg(
     const std::string &topic, const std::string &config_name) {
   std::string msg("Batching config for topic [");
   msg += topic;
@@ -97,10 +97,10 @@ std::string TBatchConf::TBuilder::TUnknownTopicConfig::CreateMsg(
 void TBatchConf::TBuilder::AddNamedConfig(const std::string &name,
     const TBatchValues &values) {
   assert(this);
-  auto result = NamedConfigs.insert(std::make_pair(name, values));
+  const auto result = NamedConfigs.insert(std::make_pair(name, values));
 
   if (!result.second) {
-    throw TDuplicateNamedConfig(name);
+    throw TBatchDuplicateNamedConfig(name);
   }
 }
 
@@ -108,7 +108,7 @@ void TBatchConf::TBuilder::SetProduceRequestDataLimit(size_t limit) {
   assert(this);
 
   if (GotProduceRequestDataLimit) {
-    throw TDuplicateProduceRequestDataLimit();
+    throw TBatchDuplicateProduceRequestDataLimit();
   }
 
   BuildResult.ProduceRequestDataLimit = limit;
@@ -119,7 +119,7 @@ void TBatchConf::TBuilder::SetMessageMaxBytes(size_t message_max_bytes) {
   assert(this);
 
   if (GotMessageMaxBytes) {
-    throw TDuplicateMessageMaxBytes();
+    throw TBatchDuplicateMessageMaxBytes();
   }
 
   BuildResult.MessageMaxBytes = message_max_bytes;
@@ -132,7 +132,7 @@ void TBatchConf::TBuilder::SetCombinedTopicsConfig(bool enabled,
   assert(!enabled || config_name);
 
   if (GotCombinedTopics) {
-    throw TDuplicateCombinedTopicsConfig();
+    throw TBatchDuplicateCombinedTopicsConfig();
   }
 
   BuildResult.CombinedTopicsBatchingEnabled = enabled;
@@ -141,7 +141,7 @@ void TBatchConf::TBuilder::SetCombinedTopicsConfig(bool enabled,
     auto iter = NamedConfigs.find(*config_name);
 
     if (iter == NamedConfigs.end()) {
-      throw TUnknownCombinedTopicsConfig(*config_name);
+      throw TBatchUnknownCombinedTopicsConfig(*config_name);
     }
 
     BuildResult.CombinedTopicsConfig = iter->second;
@@ -156,7 +156,7 @@ void TBatchConf::TBuilder::SetDefaultTopicConfig(TTopicAction action,
   assert((action != TTopicAction::PerTopic) || config_name);
 
   if (GotDefaultTopic) {
-    throw TDuplicateDefaultTopicConfig();
+    throw TBatchDuplicateDefaultTopicConfig();
   }
 
   BuildResult.DefaultTopicAction = action;
@@ -165,7 +165,7 @@ void TBatchConf::TBuilder::SetDefaultTopicConfig(TTopicAction action,
     auto iter = NamedConfigs.find(*config_name);
 
     if (iter == NamedConfigs.end()) {
-      throw TUnknownDefaultTopicConfig(*config_name);
+      throw TBatchUnknownDefaultTopicConfig(*config_name);
     }
 
     BuildResult.DefaultTopicConfig = iter->second;
@@ -180,7 +180,7 @@ void TBatchConf::TBuilder::SetTopicConfig(const std::string &topic,
   assert((action != TTopicAction::PerTopic) || config_name);
 
   if (BuildResult.TopicConfigs.find(topic) != BuildResult.TopicConfigs.end()) {
-    throw TDuplicateTopicConfig(topic);
+    throw TBatchDuplicateTopicConfig(topic);
   }
 
   TBatchValues values;
@@ -189,7 +189,7 @@ void TBatchConf::TBuilder::SetTopicConfig(const std::string &topic,
     auto iter = NamedConfigs.find(*config_name);
 
     if (iter == NamedConfigs.end()) {
-      throw TUnknownTopicConfig(topic, *config_name);
+      throw TBatchUnknownTopicConfig(topic, *config_name);
     }
 
     values = iter->second;
@@ -203,19 +203,19 @@ TBatchConf TBatchConf::TBuilder::Build() {
   assert(this);
 
   if (!GotProduceRequestDataLimit) {
-    throw TMissingProduceRequestDataLimit();
+    throw TBatchMissingProduceRequestDataLimit();
   }
 
   if (!GotMessageMaxBytes) {
-    throw TMissingMessageMaxBytes();
+    throw TBatchMissingMessageMaxBytes();
   }
 
   if (!GotCombinedTopics) {
-    throw TMissingCombinedTopics();
+    throw TBatchMissingCombinedTopics();
   }
 
   if (!GotDefaultTopic) {
-    throw TMissingDefaultTopic();
+    throw TBatchMissingDefaultTopic();
   }
 
   TBatchConf result = std::move(BuildResult);

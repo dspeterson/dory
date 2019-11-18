@@ -62,10 +62,10 @@ TProduceRequestFactory::TProduceRequestFactory(const TConfig &config,
       ProduceRequestDataLimit(batch_config.GetProduceRequestDataLimit()),
       MessageMaxBytes(batch_config.GetMessageMaxBytes()),
       SingleMsgOverhead(produce_protocol->GetSingleMsgOverhead()),
-      MaxCompressionRatio(compression_conf.GetSizeThresholdPercent() / 100.0f),
+      MaxCompressionRatio(compression_conf.SizeThresholdPercent / 100.0f),
       RequestWriter(produce_protocol->CreateProduceRequestWriter()),
       MsgSetWriter(produce_protocol->CreateMsgSetWriter()),
-      DefaultTopicCompressionInfo(compression_conf.GetDefaultTopicConfig()) {
+      DefaultTopicCompressionInfo(compression_conf.DefaultTopicConfig) {
   InitTopicDataMap(compression_conf);
 }
 
@@ -74,7 +74,7 @@ void TProduceRequestFactory::Init(
     const std::shared_ptr<TMetadata> &md) {
   assert(this);
   DefaultTopicCompressionInfo =
-      TCompressionInfo(compression_conf.GetDefaultTopicConfig());
+      TCompressionInfo(compression_conf.DefaultTopicConfig);
   Metadata = md;
   CorrIdCounter = 0;
   InitTopicDataMap(compression_conf);
@@ -177,8 +177,7 @@ void TProduceRequestFactory::InitTopicDataMap(
     const TCompressionConf &compression_conf) {
   assert(this);
   TopicDataMap.clear();
-  const TCompressionConf::TTopicMap &topic_map =
-      compression_conf.GetTopicConfigs();
+  const TCompressionConf::TTopicMap &topic_map = compression_conf.TopicConfigs;
 
   for (const auto &item : topic_map) {
     TopicDataMap.insert(std::make_pair(item.first, TTopicData(item.second)));

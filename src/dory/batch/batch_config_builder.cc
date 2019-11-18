@@ -145,15 +145,15 @@ static TBatchConfig ToBatchConfig(const TBatchConf::TBatchValues &values) {
 
 TGlobalBatchConfig TBatchConfigBuilder::BuildFromConf(const TBatchConf &conf) {
   assert(this);
-  SetProduceRequestDataLimit(conf.GetProduceRequestDataLimit());
-  SetMessageMaxBytes(conf.GetMessageMaxBytes());
-  TBatchConfig config = ToBatchConfig(conf.GetCombinedTopicsConfig());
-  SetBrokerConfig(conf.CombinedTopicsBatchingIsEnabled() ? &config : nullptr);
+  SetProduceRequestDataLimit(conf.ProduceRequestDataLimit);
+  SetMessageMaxBytes(conf.MessageMaxBytes);
+  TBatchConfig config = ToBatchConfig(conf.CombinedTopicsConfig);
+  SetBrokerConfig(conf.CombinedTopicsBatchingEnabled ? &config : nullptr);
   const TBatchConfig *cp = nullptr;
 
-  switch (conf.GetDefaultTopicAction()) {
+  switch (conf.DefaultTopicAction) {
     case TBatchConf::TTopicAction::PerTopic: {
-      config = ToBatchConfig(conf.GetDefaultTopicConfig());
+      config = ToBatchConfig(conf.DefaultTopicConfig);
       cp = &config;
       break;
     }
@@ -168,7 +168,7 @@ TGlobalBatchConfig TBatchConfigBuilder::BuildFromConf(const TBatchConf &conf) {
   }
 
   SetDefaultTopic(cp);
-  const TBatchConf::TTopicMap &m = conf.GetTopicConfigs();
+  const TBatchConf::TTopicMap &m = conf.TopicConfigs;
 
   for (const std::pair<const std::string, TBatchConf::TTopicConf> &item : m) {
     cp = nullptr;

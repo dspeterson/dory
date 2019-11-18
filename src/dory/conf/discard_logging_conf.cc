@@ -1,4 +1,4 @@
-/* <dory/conf/logging_conf.cc>
+/* <dory/conf/discard_logging_conf.cc>
 
    ----------------------------------------------------------------------------
    Copyright 2019 Dave Peterson <dave@dspeterson.com>
@@ -16,28 +16,22 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <dory/conf/logging_conf.h>.
+   Implements <dory/conf/discard_logging_conf.h>.
  */
 
-#include <dory/conf/logging_conf.h>
+#include <dory/conf/discard_logging_conf.h>
 
 #include <cassert>
 
 using namespace Dory;
 using namespace Dory::Conf;
 
-void TLoggingConf::SetFileConf(const std::string &path,
-    mode_t mode) {
+void TDiscardLoggingConf::SetPath(const std::string &path) {
   assert(this);
 
   if (!path.empty() && (path[0] != '/')) {
-    throw TLoggingRelativePath();
+    throw TDiscardLoggingRelativePath();
   }
 
-  if (mode > 0777) {
-    throw TLoggingInvalidFileMode();
-  }
-
-  FilePath = path;
-  FileMode = mode;
+  Path = path;
 }

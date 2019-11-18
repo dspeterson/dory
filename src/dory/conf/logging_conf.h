@@ -21,13 +21,10 @@
 
 #pragma once
 
-#include <cassert>
 #include <string>
-#include <utility>
 
 #include <sys/types.h>
 
-#include <base/opt.h>
 #include <dory/conf/conf_error.h>
 #include <log/file_log_writer.h>
 #include <log/pri.h>
@@ -36,55 +33,21 @@ namespace Dory {
 
   namespace Conf {
 
-    class TLoggingConf {
+    class TLoggingRelativePath final : public TConfError {
       public:
-      class TBuilder;
-
-      TLoggingConf() = default;
-
-      TLoggingConf(const TLoggingConf &) = default;
-
-      TLoggingConf(TLoggingConf &&) = default;
-
-      TLoggingConf(Log::TPri pri, bool enable_stdout_stderr,
-          bool enable_syslog, const std::string &file_path, mode_t file_mode)
-          : Pri(pri),
-            EnableStdoutStderr(enable_stdout_stderr),
-            EnableSyslog(enable_syslog),
-            FilePath(file_path),
-            FileMode(file_mode) {
+      TLoggingRelativePath()
+          : TConfError("Logfile path must be absolute") {
       }
+    };  // TLoggingRelativePath
 
-      TLoggingConf &operator=(const TLoggingConf &) = default;
-
-      TLoggingConf &operator=(TLoggingConf &&) = default;
-
-      Log::TPri GetPri() const noexcept {
-        assert(this);
-        return Pri;
+    class TLoggingInvalidFileMode final : public TConfError {
+      public:
+      TLoggingInvalidFileMode()
+          : TConfError("Invalid logfile mode") {
       }
+    };  // TLoggingInvalidFileMode
 
-      bool GetEnableStdoutStderr() const noexcept {
-        assert(this);
-        return EnableStdoutStderr;
-      }
-
-      bool GetEnableSyslog() const noexcept {
-        assert(this);
-        return EnableSyslog;
-      }
-
-      const std::string &GetFilePath() const noexcept {
-        assert(this);
-        return FilePath;
-      }
-
-      mode_t GetFileMode() const noexcept {
-        assert(this);
-        return FileMode;
-      }
-
-      private:
+    struct TLoggingConf final {
       Log::TPri Pri = Log::TPri::NOTICE;
 
       bool EnableStdoutStderr = false;
@@ -96,77 +59,11 @@ namespace Dory {
       std::string FilePath;
 
       mode_t FileMode = Log::TFileLogWriter::DEFAULT_FILE_MODE;
-    };  // TLoggingConf
 
-    class TLoggingConf::TBuilder {
-      public:
-      /* Exception base class. */
-      class TErrorBase : public TConfError {
-        protected:
-        explicit TErrorBase(std::string &&msg)
-            : TConfError(std::move(msg)) {
-        }
-      };  // TErrorBase
-
-      class TInvalidLevel final : public TErrorBase {
-        public:
-        TInvalidLevel()
-            : TErrorBase("Log level must be one of {\"ERR\", \"WARNING\", "
-                  "\"NOTICE\", \"INFO\", \"DEBUG\"}") {
-        }
-      };  // TInvalidLevel
-
-      class TRelativeFilePath final : public TErrorBase {
-        public:
-        TRelativeFilePath()
-            : TErrorBase("Logfile path must be absolute") {
-        }
-      };  // TRelativeFilePath
-
-      class TInvalidFileMode final : public TErrorBase {
-        public:
-        TInvalidFileMode()
-            : TErrorBase("Invalid logfile mode") {
-        }
-      };  // TInvalidFileMode
-
-      TBuilder() = default;
-
-      TBuilder(const TBuilder &) = default;
-
-      TBuilder(TBuilder &&) = default;
-
-      TBuilder &operator=(const TBuilder &) = default;
-
-      TBuilder &operator=(TBuilder &&) = default;
-
-      void Reset() {
-        assert(this);
-        *this = TBuilder();
-      }
-
-      void SetPri(Log::TPri pri) noexcept {
-        assert(this);
-        BuildResult.Pri = pri;
-      }
-
-      void SetStdoutStderrConf(bool enable_stdout_stderr) noexcept {
-        assert(this);
-        BuildResult.EnableStdoutStderr = enable_stdout_stderr;
-      }
-
-      void SetSyslogConf(bool enable_syslog) noexcept {
-        assert(this);
-        BuildResult.EnableSyslog = enable_syslog;
-      }
+      bool LogDiscards = true;
 
       void SetFileConf(const std::string &path, mode_t mode);
-
-      TLoggingConf Build();
-
-      private:
-      TLoggingConf BuildResult;
-    };  // TLoggingConf::TBuilder
+    };  // TLoggingConf
 
   }  // Conf
 

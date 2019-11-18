@@ -1,4 +1,4 @@
-/* <dory/conf/logging_conf.cc>
+/* <dory/conf/input_config_conf.h>
 
    ----------------------------------------------------------------------------
    Copyright 2019 Dave Peterson <dave@dspeterson.com>
@@ -16,28 +16,27 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <dory/conf/logging_conf.h>.
+   Class representing input config section from Dory's config file.
  */
 
-#include <dory/conf/logging_conf.h>
+#pragma once
 
-#include <cassert>
+#include <cstddef>
 
-using namespace Dory;
-using namespace Dory::Conf;
+namespace Dory {
 
-void TLoggingConf::SetFileConf(const std::string &path,
-    mode_t mode) {
-  assert(this);
+  namespace Conf {
 
-  if (!path.empty() && (path[0] != '/')) {
-    throw TLoggingRelativePath();
-  }
+    struct TInputConfigConf final {
+      size_t MaxBuffer = 16 * 1024 * 1024;
 
-  if (mode > 0777) {
-    throw TLoggingInvalidFileMode();
-  }
+      size_t MaxDatagramMsgSize = 64 * 1024;
 
-  FilePath = path;
-  FileMode = mode;
-}
+      bool AllowLargeUnixDatagrams = false;
+
+      size_t MaxStreamMsgSize = 2 * 1024 * 1024;
+    };  // TInputConfigConf
+
+  };  // Conf
+
+}  // Dory

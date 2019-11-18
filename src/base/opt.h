@@ -65,6 +65,8 @@ namespace Base {
   template <typename TVal>
   class TOpt final {
     public:
+    using TValueType = TVal;
+
     /* Default-construct as an unknown. */
     TOpt() noexcept = default;
 

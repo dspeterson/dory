@@ -1,4 +1,4 @@
-/* <dory/conf/logging_conf.cc>
+/* <dory/conf/http_interface_conf.h>
 
    ----------------------------------------------------------------------------
    Copyright 2019 Dave Peterson <dave@dspeterson.com>
@@ -16,28 +16,29 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <dory/conf/logging_conf.h>.
+   Class representing HTTP interface config section from Dory's config file.
  */
 
-#include <dory/conf/logging_conf.h>
+#pragma once
 
-#include <cassert>
+#include <cstddef>
 
-using namespace Dory;
-using namespace Dory::Conf;
+#include <netinet/in.h>
 
-void TLoggingConf::SetFileConf(const std::string &path,
-    mode_t mode) {
-  assert(this);
+namespace Dory {
 
-  if (!path.empty() && (path[0] != '/')) {
-    throw TLoggingRelativePath();
-  }
+  namespace Conf {
 
-  if (mode > 0777) {
-    throw TLoggingInvalidFileMode();
-  }
+    struct THttpInterfaceConf final {
+      in_port_t Port = 9090;
 
-  FilePath = path;
-  FileMode = mode;
-}
+      bool LoopbackOnly = false;
+
+      size_t DiscardReportInterval = 600;
+
+      size_t BadMsgPrefixSize = 256;
+    };  // THttpInterfaceConf
+
+  };  // Conf
+
+}  // Dory

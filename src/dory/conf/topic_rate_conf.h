@@ -36,11 +36,81 @@ namespace Dory {
 
   namespace Conf {
 
-    class TTopicRateConf {
+    class TTopicRateDuplicateNamedConfig final : public TConfError {
       public:
+      explicit TTopicRateDuplicateNamedConfig(const std::string &config_name)
+          : TConfError(CreateMsg(config_name)) {
+      }
+
+      private:
+      static std::string CreateMsg(const std::string &config_name);
+    };  // TTopicRateDuplicateNamedConfig
+
+    class TTopicRateZeroRateLimitInterval final : public TConfError {
+      public:
+      explicit TTopicRateZeroRateLimitInterval(const std::string &config_name)
+          : TConfError(CreateMsg(config_name)) {
+      }
+
+      private:
+      static std::string CreateMsg(const std::string &config_name);
+    };  // TTopicRateZeroRateLimitInterval
+
+    class TTopicRateDuplicateDefaultTopicConfig final : public TConfError {
+      public:
+      TTopicRateDuplicateDefaultTopicConfig()
+          : TConfError(
+                "Topic rate limiting config contains duplicate defaultTopic "
+                "definition") {
+      }
+    };  // TTopicRateDuplicateDefaultTopicConfig
+
+    class TTopicRateUnknownDefaultTopicConfig final : public TConfError {
+      public:
+      explicit TTopicRateUnknownDefaultTopicConfig(
+          const std::string &config_name)
+          : TConfError(CreateMsg(config_name)) {
+      }
+
+      private:
+      static std::string CreateMsg(const std::string &config_name);
+    };  // TTopicRateUnknownDefaultTopicConfig
+
+    class TTopicRateDuplicateTopicConfig final : public TConfError {
+      public:
+      explicit TTopicRateDuplicateTopicConfig(const std::string &topic)
+          : TConfError(CreateMsg(topic)) {
+      }
+
+      private:
+      static std::string CreateMsg(const std::string &topic);
+    };  // TTopicRateDuplicateTopicConfig
+
+    class TTopicRateUnknownTopicConfig final : public TConfError {
+      public:
+      TTopicRateUnknownTopicConfig(const std::string &topic,
+          const std::string &config_name)
+          : TConfError(CreateMsg(topic, config_name)) {
+      }
+
+      private:
+      static std::string CreateMsg(const std::string &topic,
+          const std::string &config_name);
+    };  // TTopicRateUnknownTopicConfig
+
+    class TTopicRateMissingDefaultTopic final : public TConfError {
+      public:
+      TTopicRateMissingDefaultTopic()
+          : TConfError(
+                "Topic rate limiting config is missing defaultTopic "
+                "definition") {
+      }
+    };  // TTopicRateMissingDefaultTopic
+
+    struct TTopicRateConf final {
       class TBuilder;
 
-      struct TConf {
+      struct TConf final {
         /* This number must be > 0.  It specifies a time interval length in
            milliseconds for rate limit enforcement. */
         size_t Interval = 1;
@@ -70,119 +140,14 @@ namespace Dory {
 
       using TTopicMap = std::unordered_map<std::string, TConf>;
 
-      TTopicRateConf() = default;
-
-      TTopicRateConf(const TTopicRateConf &) = default;
-
-      TTopicRateConf(TTopicRateConf &&) = default;
-
-      TTopicRateConf &operator=(const TTopicRateConf &) = default;
-
-      TTopicRateConf &operator=(TTopicRateConf &&) = default;
-
-      const TConf &GetDefaultTopicConfig() const noexcept {
-        assert(this);
-        return DefaultTopicConfig;
-      }
-
-      const TTopicMap &GetTopicConfigs() const noexcept {
-        assert(this);
-        return TopicConfigs;
-      }
-
-      private:
       TConf DefaultTopicConfig;
 
       TTopicMap TopicConfigs;
     };  // TTopicRateConf
 
-    class TTopicRateConf::TBuilder {
+    class TTopicRateConf::TBuilder final {
       public:
-      /* Exception base class. */
-      class TErrorBase : public TConfError {
-        protected:
-        explicit TErrorBase(std::string &&msg)
-            : TConfError(std::move(msg)) {
-        }
-      };  // TErrorBase
-
-      class TDuplicateNamedConfig final : public TErrorBase {
-        public:
-        explicit TDuplicateNamedConfig(const std::string &config_name)
-            : TErrorBase(CreateMsg(config_name)) {
-        }
-
-        private:
-        static std::string CreateMsg(const std::string &config_name);
-      };  // TDuplicateNamedConfig
-
-      class TZeroRateLimitInterval final : public TErrorBase {
-        public:
-        explicit TZeroRateLimitInterval(const std::string &config_name)
-            : TErrorBase(CreateMsg(config_name)) {
-        }
-
-        private:
-        static std::string CreateMsg(const std::string &config_name);
-      };  // TZeroRateLimitInterval
-
-      class TDuplicateDefaultTopicConfig final : public TErrorBase {
-        public:
-        TDuplicateDefaultTopicConfig()
-            : TErrorBase(
-                  "Topic rate limiting config contains duplicate defaultTopic definition") {
-        }
-      };  // TDuplicateDefaultTopicConfig
-
-      class TUnknownDefaultTopicConfig final : public TErrorBase {
-        public:
-        explicit TUnknownDefaultTopicConfig(const std::string &config_name)
-            : TErrorBase(CreateMsg(config_name)) {
-        }
-
-        private:
-        static std::string CreateMsg(const std::string &config_name);
-      };  // TUnknownDefaultTopicConfig
-
-      class TDuplicateTopicConfig final : public TErrorBase {
-        public:
-        explicit TDuplicateTopicConfig(const std::string &topic)
-            : TErrorBase(CreateMsg(topic)) {
-        }
-
-        private:
-        static std::string CreateMsg(const std::string &topic);
-      };  // TDuplicateTopicConfig
-
-      class TUnknownTopicConfig final : public TErrorBase {
-        public:
-        TUnknownTopicConfig(const std::string &topic,
-            const std::string &config_name)
-            : TErrorBase(CreateMsg(topic, config_name)) {
-        }
-
-        private:
-        static std::string CreateMsg(const std::string &topic,
-            const std::string &config_name);
-      };  // TUnknownTopicConfig
-
-      class TMissingDefaultTopic final : public TErrorBase {
-        public:
-        TMissingDefaultTopic()
-            : TErrorBase(
-                  "Topic rate limiting config is missing defaultTopic definition") {
-        }
-      };  // TMissingDefaultTopic
-
       TBuilder() = default;
-
-      TBuilder(const TBuilder &) = default;
-
-      TBuilder(TBuilder &&) = default;
-
-      TBuilder &operator=(const TBuilder &) = default;
-
-      TBuilder &operator=(TBuilder &&) = default;
 
       void Reset() {
         assert(this);

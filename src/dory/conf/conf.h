@@ -24,14 +24,24 @@
 #include <cassert>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include <sys/types.h>
 #include <xercesc/dom/DOMDocument.hpp>
 #include <xercesc/dom/DOMElement.hpp>
 
 #include <dory/conf/batch_conf.h>
 #include <dory/conf/compression_conf.h>
+#include <dory/conf/conf_error.h>
+#include <dory/conf/discard_logging_conf.h>
+#include <dory/conf/http_interface_conf.h>
+#include <dory/conf/input_config_conf.h>
+#include <dory/conf/input_sources_conf.h>
+#include <dory/conf/kafka_config_conf.h>
 #include <dory/conf/logging_conf.h>
+#include <dory/conf/msg_debug_conf.h>
+#include <dory/conf/msg_delivery_conf.h>
 #include <dory/conf/topic_rate_conf.h>
 #include <dory/util/host_and_port.h>
 
@@ -39,70 +49,47 @@ namespace Dory {
 
   namespace Conf {
 
-    class TConf {
+    class TLoggingInvalidLevel final : public TConfError {
       public:
+      TLoggingInvalidLevel()
+          : TConfError("Log level must be one of {\"ERR\", \"WARNING\", "
+                "\"NOTICE\", \"INFO\", \"DEBUG\"}") {
+      }
+    };  // TLoggingInvalidLevel
+
+    struct TConf final {
       class TBuilder;
 
       using TBroker = Util::THostAndPort;
 
-      const TBatchConf &GetBatchConf() const noexcept {
-        assert(this);
-        return BatchConf;
-      }
-
-      const TCompressionConf &GetCompressionConf() const noexcept {
-        assert(this);
-        return CompressionConf;
-      }
-
-      const TTopicRateConf &GetTopicRateConf() const noexcept {
-        assert(this);
-        return TopicRateConf;
-      }
-
-      const TLoggingConf &GetLoggingConf() const noexcept {
-        assert(this);
-        return LoggingConf;
-      }
-
-      const std::vector<TBroker> &GetInitialBrokers() const noexcept {
-        assert(this);
-        return InitialBrokers;
-      }
-
-      TConf() = default;
-
-      TConf(const TConf &) = default;
-
-      TConf(TConf &&) = default;
-
-      TConf &operator=(const TConf &) = default;
-
-      TConf &operator=(TConf &&) = default;
-
-      private:
       TBatchConf BatchConf;
 
       TCompressionConf CompressionConf;
 
       TTopicRateConf TopicRateConf;
 
+      TInputSourcesConf InputSourcesConf;
+
+      TInputConfigConf InputConfigConf;
+
+      TMsgDeliveryConf MsgDeliveryConf;
+
+      THttpInterfaceConf HttpInterfaceConf;
+
+      TDiscardLoggingConf DiscardLoggingConf;
+
+      TKafkaConfigConf KafkaConfigConf;
+
+      TMsgDebugConf MsgDebugConf;
+
       TLoggingConf LoggingConf;
 
       std::vector<TBroker> InitialBrokers;
     };  // TConf
 
-    class TConf::TBuilder {
+    class TConf::TBuilder final {
       public:
       explicit TBuilder(bool enable_lz4 = false);
-
-      TBuilder(const TBuilder &) = default;
-
-      TBuilder(TBuilder &&) = default;
-
-      TBuilder &operator=(const TBuilder &) = default;
-
-      TBuilder &operator=(TBuilder &&) = default;
 
       TConf Build(const char *config_filename);
 
@@ -115,8 +102,6 @@ namespace Dory {
       using TDomDocHandle =
           std::unique_ptr<xercesc::DOMDocument,
               void (*)(xercesc::DOMDocument *)>;
-
-      enum { DEFAULT_BROKER_PORT = 9092 };
 
       void ProcessSingleBatchingNamedConfig(
           const xercesc::DOMElement &config_elem);
@@ -132,6 +117,29 @@ namespace Dory {
       void ProcessCompressionElem(const xercesc::DOMElement &compression_elem);
 
       void ProcessTopicRateElem(const xercesc::DOMElement &topic_rate_elem);
+
+      std::pair<std::string, mode_t> ProcessFileSectionElem(
+          const xercesc::DOMElement &elem);
+
+      void ProcessInputSourcesElem(
+          const xercesc::DOMElement &input_sources_elem);
+
+      void ProcessInputConfigElem(
+          const xercesc::DOMElement &input_config_elem);
+
+      void ProcessMsgDeliveryElem(
+          const xercesc::DOMElement &msg_delivery_elem);
+
+      void ProcessHttpInterfaceElem(
+          const xercesc::DOMElement &http_interface_elem);
+
+      void ProcessDiscardLoggingElem(
+          const xercesc::DOMElement &discard_logging_elem);
+
+      void ProcessKafkaConfigElem(
+          const xercesc::DOMElement &kafka_config_elem);
+
+      void ProcessMsgDebugElem(const xercesc::DOMElement &msg_debug_elem);
 
       void ProcessLoggingElem(const xercesc::DOMElement &logging_elem);
 
@@ -149,8 +157,6 @@ namespace Dory {
       TBatchConf::TBuilder BatchingConfBuilder;
 
       TCompressionConf::TBuilder CompressionConfBuilder;
-
-      TLoggingConf::TBuilder LoggingConfBuilder;
 
       TTopicRateConf::TBuilder TopicRateConfBuilder;
     };  // TConf::TBuilder

@@ -1,4 +1,4 @@
-/* <dory/conf/logging_conf.cc>
+/* <dory/conf/msg_debug_conf.h>
 
    ----------------------------------------------------------------------------
    Copyright 2019 Dave Peterson <dave@dspeterson.com>
@@ -16,28 +16,37 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <dory/conf/logging_conf.h>.
+   Class representing message debug section from Dory's config file.
  */
 
-#include <dory/conf/logging_conf.h>
+#pragma once
 
-#include <cassert>
+#include <cstddef>
+#include <string>
 
-using namespace Dory;
-using namespace Dory::Conf;
+#include <dory/conf/conf_error.h>
 
-void TLoggingConf::SetFileConf(const std::string &path,
-    mode_t mode) {
-  assert(this);
+namespace Dory {
 
-  if (!path.empty() && (path[0] != '/')) {
-    throw TLoggingRelativePath();
-  }
+  namespace Conf {
 
-  if (mode > 0777) {
-    throw TLoggingInvalidFileMode();
-  }
+    class TMsgDebugRelativePath final : public TConfError {
+      public:
+      TMsgDebugRelativePath()
+          : TConfError("Message debug path must be absolute") {
+      }
+    };  // TMsgDebugRelativePath
 
-  FilePath = path;
-  FileMode = mode;
-}
+    struct TMsgDebugConf final {
+      std::string Path;
+
+      size_t TimeLimit = 3600;
+
+      size_t ByteLimit = 2 * 1024 * 1024;
+
+      void SetPath(const std::string &path);
+    };  // TMsgDebugConf
+
+  };  // Conf
+
+}  // Dory

@@ -1,4 +1,4 @@
-/* <dory/conf/logging_conf.cc>
+/* <dory/conf/kafka_config_conf.h>
 
    ----------------------------------------------------------------------------
    Copyright 2019 Dave Peterson <dave@dspeterson.com>
@@ -16,28 +16,24 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <dory/conf/logging_conf.h>.
+   Class representing Kafka config section from Dory's config file.
  */
 
-#include <dory/conf/logging_conf.h>
+#pragma once
 
-#include <cassert>
+#include <cstddef>
+#include <string>
 
-using namespace Dory;
-using namespace Dory::Conf;
+namespace Dory {
 
-void TLoggingConf::SetFileConf(const std::string &path,
-    mode_t mode) {
-  assert(this);
+  namespace Conf {
 
-  if (!path.empty() && (path[0] != '/')) {
-    throw TLoggingRelativePath();
-  }
+    struct TKafkaConfigConf final {
+      std::string ClientId = "dory";
 
-  if (mode > 0777) {
-    throw TLoggingInvalidFileMode();
-  }
+      size_t ReplicationTimeout = 10000;
+    };  // TKafkaConfigConf
 
-  FilePath = path;
-  FileMode = mode;
-}
+  };  // Conf
+
+}  // Dory

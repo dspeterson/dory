@@ -37,11 +37,88 @@ namespace Dory {
 
   namespace Conf {
 
-    class TCompressionConf {
+    class TCompressionDuplicateNamedConfig final : public TConfError {
       public:
+      explicit TCompressionDuplicateNamedConfig(const std::string &config_name)
+          : TConfError(CreateMsg(config_name)) {
+      }
+
+      private:
+      static std::string CreateMsg(const std::string &config_name);
+    };  // TCompressionDuplicateNamedConfig
+
+    class TCompressionDuplicateSizeThresholdPercent final : public TConfError {
+      public:
+      TCompressionDuplicateSizeThresholdPercent()
+          : TConfError(
+                "Compression config contains duplicate sizeThresholdPercent "
+                "definition") {
+      }
+    };  // TCompressionDuplicateSizeThresholdPercent
+
+    class TCompressionBadSizeThresholdPercent final : public TConfError {
+      public:
+      TCompressionBadSizeThresholdPercent()
+          : TConfError(
+                "Compression config contains bad sizeThresholdPercent value: "
+                "must be <= 100") {
+      }
+    };  // TCompressionBadSizeThresholdPercent
+
+    class TCompressionDuplicateDefaultTopicConfig final : public TConfError {
+      public:
+      TCompressionDuplicateDefaultTopicConfig()
+          : TConfError(
+                "Compression config contains duplicate defaultTopic "
+                "definition") {
+      }
+    };  // TCompressionDuplicateDefaultTopicConfig
+
+    class TCompressionUnknownDefaultTopicConfig final : public TConfError {
+      public:
+      explicit TCompressionUnknownDefaultTopicConfig(
+          const std::string &config_name)
+          : TConfError(CreateMsg(config_name)) {
+      }
+
+      private:
+      static std::string CreateMsg(const std::string &config_name);
+    };  // TCompressionUnknownDefaultTopicConfig
+
+    class TCompressionDuplicateTopicConfig final : public TConfError {
+      public:
+      explicit TCompressionDuplicateTopicConfig(const std::string &topic)
+          : TConfError(CreateMsg(topic)) {
+      }
+
+      private:
+      static std::string CreateMsg(const std::string &topic);
+    };  // TCompressionDuplicateTopicConfig
+
+    class TCompressionUnknownTopicConfig final : public TConfError {
+      public:
+      TCompressionUnknownTopicConfig(const std::string &topic,
+          const std::string &config_name)
+          : TConfError(CreateMsg(topic, config_name)) {
+      }
+
+      private:
+      static std::string CreateMsg(const std::string &topic,
+          const std::string &config_name);
+    };  // TCompressionUnknownTopicConfig
+
+    class TCompressionMissingDefaultTopic final : public TConfError {
+      public:
+      TCompressionMissingDefaultTopic()
+          : TConfError(
+                "Compression config is missing defaultTopic definition") {
+      }
+    };  // TCompressionMissingDefaultTopic
+
+    struct TCompressionConf final {
       class TBuilder;
 
-      struct TConf {
+      struct TConf final {
         Compress::TCompressionType Type = Compress::TCompressionType::None;
 
         /* Minimum total size of uncompressed message bodies required for
@@ -79,32 +156,6 @@ namespace Dory {
         return StringToType(s.c_str(), result);
       }
 
-      TCompressionConf() = default;
-
-      TCompressionConf(const TCompressionConf &) = default;
-
-      TCompressionConf(TCompressionConf &&) = default;
-
-      TCompressionConf &operator=(const TCompressionConf &) = default;
-
-      TCompressionConf &operator=(TCompressionConf &&) = default;
-
-      size_t GetSizeThresholdPercent() const noexcept {
-        assert(this);
-        return SizeThresholdPercent;
-      }
-
-      const TConf &GetDefaultTopicConfig() const noexcept {
-        assert(this);
-        return DefaultTopicConfig;
-      }
-
-      const TTopicMap &GetTopicConfigs() const noexcept {
-        assert(this);
-        return TopicConfigs;
-      }
-
-      private:
       size_t SizeThresholdPercent = 100;
 
       TConf DefaultTopicConfig;
@@ -112,99 +163,9 @@ namespace Dory {
       TTopicMap TopicConfigs;
     };  // TCompressionConf
 
-    class TCompressionConf::TBuilder {
+    class TCompressionConf::TBuilder final {
       public:
-      /* Exception base class. */
-      class TErrorBase : public TConfError {
-        protected:
-        explicit TErrorBase(std::string &&msg)
-            : TConfError(std::move(msg)) {
-        }
-      };  // TErrorBase
-
-      class TDuplicateNamedConfig final : public TErrorBase {
-        public:
-        explicit TDuplicateNamedConfig(const std::string &config_name)
-            : TErrorBase(CreateMsg(config_name)) {
-        }
-
-        private:
-        static std::string CreateMsg(const std::string &config_name);
-      };  // TDuplicateNamedConfig
-
-      class TDuplicateSizeThresholdPercent final : public TErrorBase {
-        public:
-        TDuplicateSizeThresholdPercent()
-            : TErrorBase(
-                  "Compression config contains duplicate sizeThresholdPercent definition") {
-        }
-      };  // TDuplicateSizeThresholdPercent
-
-      class TBadSizeThresholdPercent final : public TErrorBase {
-        public:
-        TBadSizeThresholdPercent()
-            : TErrorBase(
-                  "Compression config contains bad sizeThresholdPercent value: must be <= 100") {
-        }
-      };  // TBadSizeThresholdPercent
-
-      class TDuplicateDefaultTopicConfig final : public TErrorBase {
-        public:
-        TDuplicateDefaultTopicConfig()
-            : TErrorBase(
-                  "Compression config contains duplicate defaultTopic definition") {
-        }
-      };  // TDuplicateDefaultTopicConfig
-
-      class TUnknownDefaultTopicConfig final : public TErrorBase {
-        public:
-        explicit TUnknownDefaultTopicConfig(const std::string &config_name)
-            : TErrorBase(CreateMsg(config_name)) {
-        }
-
-        private:
-        static std::string CreateMsg(const std::string &config_name);
-      };  // TUnknownDefaultTopicConfig
-
-      class TDuplicateTopicConfig final : public TErrorBase {
-        public:
-        explicit TDuplicateTopicConfig(const std::string &topic)
-            : TErrorBase(CreateMsg(topic)) {
-        }
-
-        private:
-        static std::string CreateMsg(const std::string &topic);
-      };  // TDuplicateTopicConfig
-
-      class TUnknownTopicConfig final : public TErrorBase {
-        public:
-        TUnknownTopicConfig(const std::string &topic,
-            const std::string &config_name)
-            : TErrorBase(CreateMsg(topic, config_name)) {
-        }
-
-        private:
-        static std::string CreateMsg(const std::string &topic,
-            const std::string &config_name);
-      };  // TUnknownTopicConfig
-
-      class TMissingDefaultTopic final : public TErrorBase {
-        public:
-        TMissingDefaultTopic()
-            : TErrorBase(
-                  "Compression config is missing defaultTopic definition") {
-        }
-      };  // TMissingDefaultTopic
-
       TBuilder() = default;
-
-      TBuilder(const TBuilder &) = default;
-
-      TBuilder(TBuilder &&) = default;
-
-      TBuilder &operator=(const TBuilder &) = default;
-
-      TBuilder &operator=(TBuilder &&) = default;
 
       void Reset() {
         assert(this);

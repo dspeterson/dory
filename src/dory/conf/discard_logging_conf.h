@@ -1,4 +1,4 @@
-/* <dory/conf/logging_conf.cc>
+/* <dory/conf/discard_logging_conf.h>
 
    ----------------------------------------------------------------------------
    Copyright 2019 Dave Peterson <dave@dspeterson.com>
@@ -16,28 +16,39 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <dory/conf/logging_conf.h>.
+   Class representing discard logging section from Dory's config file.
  */
 
-#include <dory/conf/logging_conf.h>
+#pragma once
 
-#include <cassert>
+#include <cstddef>
+#include <string>
 
-using namespace Dory;
-using namespace Dory::Conf;
+#include <dory/conf/conf_error.h>
 
-void TLoggingConf::SetFileConf(const std::string &path,
-    mode_t mode) {
-  assert(this);
+namespace Dory {
 
-  if (!path.empty() && (path[0] != '/')) {
-    throw TLoggingRelativePath();
-  }
+  namespace Conf {
 
-  if (mode > 0777) {
-    throw TLoggingInvalidFileMode();
-  }
+    class TDiscardLoggingRelativePath final : public TConfError {
+      public:
+      TDiscardLoggingRelativePath()
+          : TConfError("Discard logging path must be absolute") {
+      }
+    };  // TDiscardLoggingRelativePath
 
-  FilePath = path;
-  FileMode = mode;
-}
+    struct TDiscardLoggingConf final {
+      std::string Path;
+
+      size_t MaxFileSize = 1024 * 1024;
+
+      size_t MaxArchiveSize = 8 * 1024 * 1024;
+
+      size_t BadMsgPrefixSize = 256;
+
+      void SetPath(const std::string &path);
+    };  // TDiscardLoggingConf
+
+  };  // Conf
+
+}  // Dory

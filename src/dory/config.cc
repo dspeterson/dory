@@ -305,7 +305,7 @@ static void ParseArgs(int argc, char *argv[], TConfig &config,
         arg_discard_log_max_file_size("", "discard_log_max_file_size",
               "Maximum size (in Kb) of discard logfile.  When the next log "
               "entry e would exceed the maximum, the logfile (with name f) is "
-              "renamed to f.N wnere N is the current time in milliseconds "
+              "renamed to f.N where N is the current time in milliseconds "
               "since the epoch.  Then a new file f is opened, and e is "
               "written to f.  See also discard_log_max_archive_size.", false,
               config.DiscardLogMaxFileSize, "MAX_KB");

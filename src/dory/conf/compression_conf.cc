@@ -57,7 +57,7 @@ bool TCompressionConf::StringToType(const char *s,
   return false;
 }
 
-std::string TCompressionConf::TBuilder::TDuplicateNamedConfig::CreateMsg(
+std::string TCompressionDuplicateNamedConfig::CreateMsg(
     const std::string &config_name) {
   std::string msg("Compression config contains duplicate named config: [");
   msg += config_name;
@@ -65,7 +65,7 @@ std::string TCompressionConf::TBuilder::TDuplicateNamedConfig::CreateMsg(
   return msg;
 }
 
-std::string TCompressionConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
+std::string TCompressionUnknownDefaultTopicConfig::CreateMsg(
     const std::string &config_name) {
   std::string msg(
       "Compression config defaultTopic definition references unknown named config: [");
@@ -74,7 +74,7 @@ std::string TCompressionConf::TBuilder::TUnknownDefaultTopicConfig::CreateMsg(
   return msg;
 }
 
-std::string TCompressionConf::TBuilder::TDuplicateTopicConfig::CreateMsg(
+std::string TCompressionDuplicateTopicConfig::CreateMsg(
     const std::string &topic) {
   std::string msg(
       "Compression config contains duplicate specification for topic [");
@@ -83,8 +83,8 @@ std::string TCompressionConf::TBuilder::TDuplicateTopicConfig::CreateMsg(
   return msg;
 }
 
-std::string TCompressionConf::TBuilder::TUnknownTopicConfig::CreateMsg(
-    const std::string &topic, const std::string &config_name) {
+std::string TCompressionUnknownTopicConfig::CreateMsg(const std::string &topic,
+    const std::string &config_name) {
   std::string msg("Compression config for topic [");
   msg += topic;
   msg += "] references unknown named config: [";
@@ -105,7 +105,7 @@ void TCompressionConf::TBuilder::AddNamedConfig(const std::string &name,
       NamedConfigs.insert(std::make_pair(name, TConf(type, min_size, level)));
 
   if (!result.second) {
-    throw TDuplicateNamedConfig(name);
+    throw TCompressionDuplicateNamedConfig(name);
   }
 }
 
@@ -114,11 +114,11 @@ void TCompressionConf::TBuilder::SetSizeThresholdPercent(
   assert(this);
 
   if (GotSizeThresholdPercent) {
-    throw TDuplicateSizeThresholdPercent();
+    throw TCompressionDuplicateSizeThresholdPercent();
   }
 
   if (size_threshold_percent > 100) {
-    throw TBadSizeThresholdPercent();
+    throw TCompressionBadSizeThresholdPercent();
   }
 
   BuildResult.SizeThresholdPercent = size_threshold_percent;
@@ -130,13 +130,13 @@ void TCompressionConf::TBuilder::SetDefaultTopicConfig(
   assert(this);
 
   if (GotDefaultTopic) {
-    throw TDuplicateDefaultTopicConfig();
+    throw TCompressionDuplicateDefaultTopicConfig();
   }
 
   auto iter = NamedConfigs.find(config_name);
 
   if (iter == NamedConfigs.end()) {
-    throw TUnknownDefaultTopicConfig(config_name);
+    throw TCompressionUnknownDefaultTopicConfig(config_name);
   }
 
   BuildResult.DefaultTopicConfig = iter->second;
@@ -148,13 +148,13 @@ void TCompressionConf::TBuilder::SetTopicConfig(const std::string &topic,
   assert(this);
 
   if (BuildResult.TopicConfigs.find(topic) != BuildResult.TopicConfigs.end()) {
-    throw TDuplicateTopicConfig(topic);
+    throw TCompressionDuplicateTopicConfig(topic);
   }
 
-  auto iter = NamedConfigs.find(config_name);
+  const auto iter = NamedConfigs.find(config_name);
 
   if (iter == NamedConfigs.end()) {
-    throw TUnknownTopicConfig(topic, config_name);
+    throw TCompressionUnknownTopicConfig(topic, config_name);
   }
 
   BuildResult.TopicConfigs.insert(std::make_pair(topic, iter->second));
@@ -164,7 +164,7 @@ TCompressionConf TCompressionConf::TBuilder::Build() {
   assert(this);
 
   if (!GotDefaultTopic) {
-    throw TMissingDefaultTopic();
+    throw TCompressionMissingDefaultTopic();
   }
 
   TCompressionConf result = std::move(BuildResult);
