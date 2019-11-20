@@ -33,8 +33,8 @@
 #include <base/no_copy_semantics.h>
 #include <dory/anomaly_tracker.h>
 #include <dory/batch/global_batch_config.h>
+#include <dory/cmd_line_args.h>
 #include <dory/conf/compression_conf.h>
-#include <dory/config.h>
 #include <dory/debug/debug_setup.h>
 #include <dory/kafka_proto/produce/produce_protocol.h>
 #include <dory/msg.h>
@@ -48,7 +48,7 @@ namespace Dory {
     struct TDispatcherSharedState {
       NO_COPY_SEMANTICS(TDispatcherSharedState);
 
-      const TConfig &Config;
+      const TCmdLineArgs &Config;
 
       Conf::TCompressionConf CompressionConf;
 
@@ -64,7 +64,7 @@ namespace Dory {
 
       const Batch::TGlobalBatchConfig BatchConfig;
 
-      TDispatcherSharedState(const TConfig &config,
+      TDispatcherSharedState(const TCmdLineArgs &config,
           const Conf::TCompressionConf &compression_conf,
           TMsgStateTracker &msg_state_tracker,
           TAnomalyTracker &anomaly_tracker,

@@ -33,7 +33,7 @@
 #include <base/no_copy_semantics.h>
 #include <dory/anomaly_tracker.h>
 #include <dory/batch/batch_config.h>
-#include <dory/config.h>
+#include <dory/cmd_line_args.h>
 #include <dory/debug/debug_setup.h>
 #include <dory/metadata.h>
 #include <dory/msg.h>
@@ -50,7 +50,7 @@ namespace Dory {
       NO_COPY_SEMANTICS(TMockKafkaDispatcher);
 
       public:
-      TMockKafkaDispatcher(const TConfig &config,
+      TMockKafkaDispatcher(const TCmdLineArgs &config,
           TMsgStateTracker &msg_state_tracker,
           TAnomalyTracker &anomaly_tracker,
           const Batch::TBatchConfig &batch_config,

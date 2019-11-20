@@ -41,8 +41,8 @@
 #include <capped/pool.h>
 #include <dory/anomaly_tracker.h>
 #include <dory/batch/global_batch_config.h>
+#include <dory/cmd_line_args.h>
 #include <dory/conf/conf.h>
-#include <dory/config.h>
 #include <dory/debug/debug_setup.h>
 #include <dory/discard_file_logger.h>
 #include <dory/unix_dg_input_agent.h>
@@ -107,13 +107,13 @@ namespace Dory {
 
       TServerConfig &operator=(TServerConfig &&) = default;
 
-      const TConfig &GetCmdLineConfig() const noexcept {
+      const TCmdLineArgs &GetCmdLineConfig() const noexcept {
         assert(this);
         return *Config;
       }
 
       private:
-      TServerConfig(std::unique_ptr<const TConfig> &&config,
+      TServerConfig(std::unique_ptr<const TCmdLineArgs> &&config,
           Conf::TConf &&conf, Batch::TGlobalBatchConfig &&batch_config,
           size_t pool_block_size)
           : Config(std::move(config)),
@@ -122,7 +122,7 @@ namespace Dory {
             PoolBlockSize(pool_block_size) {
       }
 
-      std::unique_ptr<const TConfig> Config;
+      std::unique_ptr<const TCmdLineArgs> Config;
 
       Conf::TConf Conf;
 
@@ -146,7 +146,7 @@ namespace Dory {
       return PoolBlockSize;
     }
 
-    const TConfig &GetConfig() const noexcept {
+    const TCmdLineArgs &GetConfig() const noexcept {
       assert(this);
       return *Config;
     }
@@ -211,7 +211,7 @@ namespace Dory {
     static const int STREAM_BACKLOG = 16;
 
     /* Configuration obtained from command line arguments. */
-    const std::unique_ptr<const TConfig> Config;
+    const std::unique_ptr<const TCmdLineArgs> Config;
 
     /* Configuration obtained from config file. */
     Conf::TConf Conf;

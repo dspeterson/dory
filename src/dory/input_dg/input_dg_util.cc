@@ -42,7 +42,7 @@ using namespace Log;
 DEFINE_COUNTER(InputAgentDiscardMsgUnsupportedApiKey);
 
 TMsg::TPtr Dory::InputDg::BuildMsgFromDg(const void *dg, size_t dg_size,
-    const TConfig &config, Capped::TPool &pool,
+    const TCmdLineArgs &config, Capped::TPool &pool,
     TAnomalyTracker &anomaly_tracker, TMsgStateTracker &msg_state_tracker) {
   assert(dg);
   const auto *dg_bytes = reinterpret_cast<const uint8_t *>(dg);

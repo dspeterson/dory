@@ -47,7 +47,7 @@ using namespace Thread;
 
 DEFINE_COUNTER(UnixDgInputAgentForwardMsg);
 
-TUnixDgInputAgent::TUnixDgInputAgent(const TConfig &config, TPool &pool,
+TUnixDgInputAgent::TUnixDgInputAgent(const TCmdLineArgs &config, TPool &pool,
     TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
     TGatePutApi<TMsg::TPtr> &output_queue)
     : Config(config),

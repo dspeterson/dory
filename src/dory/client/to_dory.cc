@@ -100,7 +100,7 @@ struct TConfig {
   bool Bad = false;
 
   size_t Print = 0;
-};  // TConfig
+};  // TCmdLineArgs
 
 static void ParseArgs(int argc, char *argv[], TConfig &config) {
   using namespace TCLAP;
@@ -111,7 +111,8 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
   try {
     CmdLine cmd("Utility for sending messages to Dory.", ' ', dory_build_id);
     ValueArg<decltype(config.SocketPath)> arg_socket_path("", "socket_path",
-        "Pathname of UNIX domain datagram socket for sending messages to Dory.",
+        "Pathname of UNIX domain datagram socket for sending messages to "
+        "Dory.",
         false, config.SocketPath, "PATH");
     cmd.add(arg_socket_path);
     ValueArg<decltype(config.StreamSocketPath)> arg_stream_socket_path("",
@@ -143,7 +144,8 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
         "Number of messages to send.", false, config.Count, "COUNT");
     cmd.add(arg_count);
     ValueArg<decltype(config.Interval)> arg_interval("", "interval",
-        "Message interval in microseconds.  A value of 0 means \"send messages as fast as possible\".",
+        "Message interval in microseconds.  A value of 0 means \"send "
+        "messages as fast as possible\".",
         false, config.Interval, "INTERVAL");
     cmd.add(arg_interval);
     SwitchArg arg_seq("", "seq",
@@ -197,7 +199,8 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
 
     if (input_type_count != 1) {
       throw TArgParseError(
-          "Exactly one of (--socket_path, --stream_socket_path, --port) options must be specified.");
+          "Exactly one of (--socket_path, --stream_socket_path, --port) "
+          "options must be specified.");
     }
   } catch (const ArgException &x) {
     throw TArgParseError(x.error(), x.argId());

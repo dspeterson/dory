@@ -51,7 +51,7 @@ DEFINE_COUNTER(SerializeMsgSet);
 DEFINE_COUNTER(SerializeProduceRequest);
 DEFINE_COUNTER(SerializeTopicGroup);
 
-TProduceRequestFactory::TProduceRequestFactory(const TConfig &config,
+TProduceRequestFactory::TProduceRequestFactory(const TCmdLineArgs &config,
     const TGlobalBatchConfig &batch_config,
     const TCompressionConf &compression_conf,
     const std::shared_ptr<TProduceProtocol> &produce_protocol,

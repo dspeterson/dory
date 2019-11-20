@@ -90,7 +90,7 @@ static unsigned GetRandomNumber() {
   return std::rand();
 }
 
-TRouterThread::TRouterThread(const TConfig &config, const TConf &conf,
+TRouterThread::TRouterThread(const TCmdLineArgs &config, const TConf &conf,
     TAnomalyTracker &anomaly_tracker, TMsgStateTracker &msg_state_tracker,
     const Batch::TGlobalBatchConfig &batch_config,
     const Debug::TDebugSetup &debug_setup,

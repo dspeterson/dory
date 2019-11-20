@@ -1,4 +1,4 @@
-/* <dory/config.cc>
+/* <dory/cmd_line_args.cc>
 
    ----------------------------------------------------------------------------
    Copyright 2013-2014 if(we)
@@ -16,10 +16,10 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <dory/config.h>.
+   Implements <dory/cmd_line_args.h>.
  */
 
-#include <dory/config.h>
+#include <dory/cmd_line_args.h>
 
 #include <cstdio>
 #include <cstdlib>
@@ -117,7 +117,7 @@ static TPri StringToLogLevel(const char * level_string) {
   throw std::range_error("Bad log level string");
 }
 
-static void ParseArgs(int argc, char *argv[], TConfig &config,
+static void ParseArgs(int argc, char *argv[], TCmdLineArgs &config,
     bool allow_input_bind_ephemeral) {
   using namespace TCLAP;
   const std::string prog_name = Basename(argv[0]);
@@ -416,22 +416,31 @@ static void ParseArgs(int argc, char *argv[], TConfig &config,
 
     if (!arg_receive_socket_name.isSet() &&
         !arg_receive_stream_socket_name.isSet() && !arg_input_port.isSet()) {
-      throw TArgParseError("At least one of (--receive_socket_name, --receive_stream_socket_name, --input_port) options must be specified.");
+      throw TArgParseError(
+          "At least one of (--receive_socket_name, "
+          "--receive_stream_socket_name, --input_port) options must be "
+          "specified.");
     }
 
     if (!arg_receive_socket_name.isSet()) {
       if (arg_receive_socket_mode.isSet()) {
-        throw TArgParseError("Option --receive_socket_mode is only allowed when --receive_socket_name is specified.");
+        throw TArgParseError(
+            "Option --receive_socket_mode is only allowed when "
+            "--receive_socket_name is specified.");
       }
 
       if (arg_allow_large_unix_datagrams.isSet()) {
-        throw TArgParseError("Option --allow_large_unix_datagrams is only allowed when --receive_socket_name is specified.");
+        throw TArgParseError(
+            "Option --allow_large_unix_datagrams is only allowed when "
+            "--receive_socket_name is specified.");
       }
     }
 
     if (!arg_receive_stream_socket_name.isSet() &&
         arg_receive_stream_socket_mode.isSet()) {
-      throw TArgParseError("Option --receive_stream_socket_mode is only allowed when --receive_stream_socket_name is specified.");
+      throw TArgParseError(
+          "Option --receive_stream_socket_mode is only allowed when "
+          "--receive_stream_socket_name is specified.");
     }
   } catch (const ArgException &x) {
     throw TArgParseError(x.error(), x.argId());
@@ -442,7 +451,8 @@ static void ParseArgs(int argc, char *argv[], TConfig &config,
   }
 }
 
-TConfig::TConfig(int argc, char *argv[], bool allow_input_bind_ephemeral) {
+TCmdLineArgs::TCmdLineArgs(int argc, char *argv[],
+    bool allow_input_bind_ephemeral) {
   ParseArgs(argc, argv, *this, allow_input_bind_ephemeral);
 }
 
@@ -459,7 +469,7 @@ static std::string BuildModeString(const TOpt<mode_t> &opt_mode) {
   return socket_mode;
 }
 
-void Dory::LogConfig(const TConfig &config) {
+void Dory::LogCmdLineArgs(const TCmdLineArgs &config) {
   if (config.ClientIdWasEmpty) {
     LOG(TPri::WARNING) << "Using \"dory\" for client ID since none was "
         << "specified with --client_id option.  This is a workaround for a "

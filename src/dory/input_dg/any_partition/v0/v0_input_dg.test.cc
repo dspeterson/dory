@@ -35,7 +35,7 @@
 #include <capped/reader.h>
 #include <dory/anomaly_tracker.h>
 #include <dory/client/status_codes.h>
-#include <dory/config.h>
+#include <dory/cmd_line_args.h>
 #include <dory/msg.h>
 #include <dory/msg_state_tracker.h>
 #include <dory/test_util/misc_util.h>
@@ -55,7 +55,7 @@ namespace {
   struct TTestConfig {
     std::vector<const char *> Args;
 
-    std::unique_ptr<Dory::TConfig> Cfg;
+    std::unique_ptr<Dory::TCmdLineArgs> Cfg;
 
     std::unique_ptr<TPool> Pool;
 
@@ -80,8 +80,8 @@ namespace {
     Args.push_back("--receive_socket_name");
     Args.push_back("dummy_value");
     Args.push_back(nullptr);
-    Cfg.reset(new Dory::TConfig(Args.size() - 1, const_cast<char **>(&Args[0]),
-        true));
+    Cfg.reset(new Dory::TCmdLineArgs(Args.size() - 1,
+        const_cast<char **>(&Args[0]), true));
   }
 
   /* The fixture for testing reading/writing of v0 AnyPartition input

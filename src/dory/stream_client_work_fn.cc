@@ -120,7 +120,7 @@ void TStreamClientWorkFn::operator()() {
   } while (!shutdown_item.revents && HandleSockReadReady());
 }
 
-void TStreamClientWorkFn::SetState(bool is_tcp, const TConfig &config,
+void TStreamClientWorkFn::SetState(bool is_tcp, const TCmdLineArgs &config,
     TPool &pool, TMsgStateTracker &msg_state_tracker,
     TAnomalyTracker &anomaly_tracker, TGatePutApi<TMsg::TPtr> &output_queue,
     const TFd &shutdown_request_fd, TFd &&client_socket) noexcept {

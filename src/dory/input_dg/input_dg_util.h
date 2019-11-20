@@ -26,7 +26,7 @@
 
 #include <capped/pool.h>
 #include <dory/anomaly_tracker.h>
-#include <dory/config.h>
+#include <dory/cmd_line_args.h>
 #include <dory/msg.h>
 #include <dory/msg_state_tracker.h>
 
@@ -35,7 +35,7 @@ namespace Dory {
   namespace InputDg {
 
     TMsg::TPtr BuildMsgFromDg(const void *dg, size_t dg_size,
-        const TConfig &config, Capped::TPool &pool,
+        const TCmdLineArgs &config, Capped::TPool &pool,
         TAnomalyTracker &anomaly_tracker, TMsgStateTracker &msg_state_tracker);
 
   }  // InputDg

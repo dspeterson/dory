@@ -1,4 +1,4 @@
-/* <dory/config.h>
+/* <dory/cmd_line_args.h>
 
    ----------------------------------------------------------------------------
    Copyright 2013-2014 if(we)
@@ -16,7 +16,7 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Configuration options for dory daemon.
+   Command line arguments for dory daemon.
  */
 
 #pragma once
@@ -33,9 +33,9 @@
 
 namespace Dory {
 
-  struct TConfig {
+  struct TCmdLineArgs {
     /* Throws TArgParseError on error parsing args. */
-    TConfig(int argc, char *argv[], bool allow_input_bind_ephemeral);
+    TCmdLineArgs(int argc, char *argv[], bool allow_input_bind_ephemeral);
 
     std::string ConfigPath;
 
@@ -121,8 +121,8 @@ namespace Dory {
     size_t DiscardReportBadMsgPrefixSize = 256;
 
     bool TopicAutocreate = false;
-  };  // TConfig
+  };  // TCmdLineArgs
 
-  void LogConfig(const TConfig &config);
+  void LogCmdLineArgs(const TCmdLineArgs &config);
 
 }  // Dory

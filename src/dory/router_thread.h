@@ -44,9 +44,9 @@
 #include <dory/anomaly_tracker.h>
 #include <dory/batch/global_batch_config.h>
 #include <dory/batch/per_topic_batcher.h>
+#include <dory/cmd_line_args.h>
 #include <dory/conf/conf.h>
 #include <dory/conf/topic_rate_conf.h>
-#include <dory/config.h>
 #include <dory/debug/debug_logger.h>
 #include <dory/debug/debug_setup.h>
 #include <dory/metadata_timestamp.h>
@@ -68,7 +68,7 @@ namespace Dory {
     NO_COPY_SEMANTICS(TRouterThread);
 
     public:
-    TRouterThread(const TConfig &config, const Conf::TConf &conf,
+    TRouterThread(const TCmdLineArgs &config, const Conf::TConf &conf,
         TAnomalyTracker &anomaly_tracker, TMsgStateTracker &msg_state_tracker,
         const Batch::TGlobalBatchConfig &batch_config,
         const Debug::TDebugSetup &debug_setup,
@@ -291,7 +291,7 @@ namespace Dory {
     void SetMetadata(std::shared_ptr<TMetadata> &&meta,
         bool record_update = true);
 
-    const TConfig &Config;
+    const TCmdLineArgs &Config;
 
     /* Configuration for per-topic message rate limiting. */
     Conf::TTopicRateConf TopicRateConf;

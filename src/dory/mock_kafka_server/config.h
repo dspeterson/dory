@@ -50,7 +50,7 @@ namespace Dory {
       in_port_t CmdPort = 9080;
 
       bool SingleOutputFile = false;
-    };  // TConfig
+    };  // TCmdLineArgs
 
   }  // MockKafkaServer
 

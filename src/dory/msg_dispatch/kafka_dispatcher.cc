@@ -46,7 +46,7 @@ DEFINE_COUNTER(StartDispatcherJoinAll);
 DEFINE_COUNTER(StartDispatcherSlowShutdown);
 DEFINE_COUNTER(StartKafkaDispatcher);
 
-TKafkaDispatcher::TKafkaDispatcher(const TConfig &config,
+TKafkaDispatcher::TKafkaDispatcher(const TCmdLineArgs &config,
     const TCompressionConf &compression_conf,
     TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
     const TGlobalBatchConfig &batch_config, const TDebugSetup &debug_setup)

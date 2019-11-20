@@ -29,7 +29,7 @@ using namespace Dory::KafkaProto;
 using namespace Dory::MsgDispatch;
 using namespace Dory::TestUtil;
 
-TMockKafkaDispatcher::TMockKafkaDispatcher(const TConfig &/*config*/,
+TMockKafkaDispatcher::TMockKafkaDispatcher(const TCmdLineArgs &/*config*/,
     TMsgStateTracker &/*msg_state_tracker*/,
     TAnomalyTracker &/*anomaly_trackeri*/,
     const TBatchConfig &/*batch_config*/,

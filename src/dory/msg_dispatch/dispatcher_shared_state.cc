@@ -36,7 +36,7 @@ using namespace Log;
 
 DEFINE_COUNTER(AllDispatcherThreadsFinished);
 
-TDispatcherSharedState::TDispatcherSharedState(const TConfig &config,
+TDispatcherSharedState::TDispatcherSharedState(const TCmdLineArgs &config,
      const TCompressionConf &compression_conf,
      TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
      const TDebugSetup &debug_setup, const TGlobalBatchConfig &batch_config)

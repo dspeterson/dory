@@ -31,8 +31,8 @@
 
 #include <base/error_util.h>
 #include <base/opt.h>
+#include <dory/cmd_line_args.h>
 #include <dory/dory_server.h>
-#include <dory/config.h>
 #include <dory/util/arg_parse_error.h>
 #include <dory/util/dory_xml_init.h>
 #include <dory/util/handle_xml_errors.h>
@@ -79,7 +79,7 @@ static int DoryMain(int argc, char *argv[]) {
       return EXIT_FAILURE;
     }
 
-    const TConfig &config = dory_config->GetCmdLineConfig();
+    const TCmdLineArgs &config = dory_config->GetCmdLineConfig();
 
     if (config.Daemon) {
       pid_t pid = Server::Daemonize();
@@ -134,7 +134,7 @@ static int DoryMain(int argc, char *argv[]) {
   /* Fail early if server is already running. */
   dory->BindStatusSocket(false);
 
-  LogConfig(dory->GetConfig());
+  LogCmdLineArgs(dory->GetConfig());
 
   if (large_sendbuf_required) {
     LOG(TPri::WARNING)

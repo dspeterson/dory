@@ -35,7 +35,7 @@
 #include <capped/reader.h>
 #include <dory/anomaly_tracker.h>
 #include <dory/client/status_codes.h>
-#include <dory/config.h>
+#include <dory/cmd_line_args.h>
 #include <dory/msg.h>
 #include <dory/msg_state_tracker.h>
 #include <dory/test_util/misc_util.h>
@@ -55,7 +55,7 @@ namespace {
   struct TTestConfig {
     std::vector<const char *> Args;
 
-    std::unique_ptr<Dory::TConfig> Cfg;
+    std::unique_ptr<Dory::TCmdLineArgs> Cfg;
 
     std::unique_ptr<TPool> Pool;
 
@@ -80,7 +80,7 @@ namespace {
     Args.push_back("--receive_socket_name");
     Args.push_back("dummy_value");
     Args.push_back(nullptr);
-    Cfg.reset(new Dory::TConfig(static_cast<int>(Args.size() - 1),
+    Cfg.reset(new Dory::TCmdLineArgs(static_cast<int>(Args.size() - 1),
         const_cast<char **>(&Args[0]), true));
   }
 
@@ -112,9 +112,9 @@ namespace {
         key.size(), value.size());
     ASSERT_EQ(result, DORY_OK);
     buf.resize(dg_size);
-    input_dg_p_key_v0_write_msg(&buf[0], timestamp, partition_key, topic.data(),
-        topic.data() + topic.size(), key.data(), key.data() + key.size(),
-        value.data(), value.data() + value.size());
+    input_dg_p_key_v0_write_msg(&buf[0], timestamp, partition_key,
+        topic.data(), topic.data() + topic.size(), key.data(),
+        key.data() + key.size(), value.data(), value.data() + value.size());
     TMsg::TPtr msg = BuildMsgFromDg(&buf[0], buf.size(), *cfg.Cfg, *cfg.Pool,
         cfg.AnomalyTracker, cfg.MsgStateTracker);
     ASSERT_TRUE(!!msg);

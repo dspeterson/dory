@@ -30,7 +30,7 @@
 #include <capped/pool.h>
 #include <capped/reader.h>
 #include <dory/anomaly_tracker.h>
-#include <dory/config.h>
+#include <dory/cmd_line_args.h>
 #include <dory/debug/debug_setup.h>
 #include <dory/kafka_proto/choose_proto.h>
 #include <dory/kafka_proto/wire_protocol.h>

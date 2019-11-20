@@ -32,10 +32,10 @@ using namespace Dory;
 using namespace Log;
 using namespace Thread;
 
-TStreamClientHandler::TStreamClientHandler(bool is_tcp, const TConfig &config,
-    TPool &pool, TMsgStateTracker &msg_state_tracker,
-    TAnomalyTracker &anomaly_tracker, TGatePutApi<TMsg::TPtr> &output_queue,
-    TWorkerPool &worker_pool) noexcept
+TStreamClientHandler::TStreamClientHandler(bool is_tcp,
+    const TCmdLineArgs &config, TPool &pool,
+    TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
+    TGatePutApi<TMsg::TPtr> &output_queue, TWorkerPool &worker_pool) noexcept
     : IsTcp(is_tcp),
       Config(config),
       Pool(pool),

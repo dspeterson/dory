@@ -91,7 +91,7 @@ static void LoadCompressionLibraries(const TCompressionConf &conf) {
   }
 }
 
-static bool CheckUnixDgSize(const TConfig &cfg) {
+static bool CheckUnixDgSize(const TCmdLineArgs &cfg) {
   bool large_sendbuf_required = false;
 
   if (!cfg.ReceiveSocketName.empty()) {
@@ -119,8 +119,8 @@ static bool CheckUnixDgSize(const TConfig &cfg) {
 TDoryServer::TServerConfig
 TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
     bool allow_input_bind_ephemeral, bool enable_lz4, size_t pool_block_size) {
-  std::unique_ptr<TConfig> cfg(
-      new TConfig(argc, argv, allow_input_bind_ephemeral));
+  std::unique_ptr<TCmdLineArgs> cfg(
+      new TCmdLineArgs(argc, argv, allow_input_bind_ephemeral));
   large_sendbuf_required = CheckUnixDgSize(*cfg);
 
   if (cfg->DiscardReportInterval < 1) {

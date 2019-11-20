@@ -40,7 +40,7 @@
 #include <dory/client/dory_client.h>
 #include <dory/client/dory_client_socket.h>
 #include <dory/client/status_codes.h>
-#include <dory/config.h>
+#include <dory/cmd_line_args.h>
 #include <dory/debug/debug_setup.h>
 #include <dory/discard_file_logger.h>
 #include <dory/metadata_timestamp.h>
@@ -74,7 +74,7 @@ namespace {
 
     std::vector<const char *> Args;
 
-    std::unique_ptr<TConfig> Cfg;
+    std::unique_ptr<TCmdLineArgs> Cfg;
 
     TPool Pool;
 
@@ -140,7 +140,7 @@ namespace {
     Args.push_back(UnixSocketName.c_str());
     Args.push_back(nullptr);
     Cfg.reset(
-        new TConfig(static_cast<int>(Args.size() - 1),
+        new TCmdLineArgs(static_cast<int>(Args.size() - 1),
             const_cast<char **>(&Args[0]), true));
     OutputQueue.reset(new TGate<TMsg::TPtr>);
     UnixDgInputAgent.reset(new TUnixDgInputAgent(*Cfg, Pool, MsgStateTracker,
