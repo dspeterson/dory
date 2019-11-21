@@ -25,6 +25,7 @@
 #include <memory>
 #include <new>
 #include <string>
+#include <utility>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -32,6 +33,7 @@
 #include <base/error_util.h>
 #include <base/opt.h>
 #include <dory/cmd_line_args.h>
+#include <dory/conf/conf.h>
 #include <dory/dory_server.h>
 #include <dory/util/arg_parse_error.h>
 #include <dory/util/dory_xml_init.h>
@@ -45,6 +47,7 @@ using namespace xercesc;
 
 using namespace Base;
 using namespace Dory;
+using namespace Dory::Conf;
 using namespace Dory::Util;
 using namespace Log;
 using namespace LogUtil;
@@ -52,7 +55,8 @@ using namespace Xml;
 
 static int DoryMain(int argc, char *argv[]) {
   TDoryXmlInit xml_init;
-  TOpt<TDoryServer::TServerConfig> dory_config;
+  TCmdLineArgs args;
+  TConf conf;
   bool large_sendbuf_required = false;
 
   try {
@@ -69,8 +73,10 @@ static int DoryMain(int argc, char *argv[]) {
              for details. */
           bool enable_lz4 = false;
 
-          dory_config.MakeKnown(TDoryServer::CreateConfig(argc, argv,
-              large_sendbuf_required, false, enable_lz4));
+          auto dory_config = TDoryServer::CreateConfig(argc, argv,
+              large_sendbuf_required, false, enable_lz4);
+          args = std::move(dory_config.first);
+          conf = std::move(dory_config.second);
         }
     );
 
@@ -78,8 +84,6 @@ static int DoryMain(int argc, char *argv[]) {
       std::cerr << *opt_err_msg << std::endl;
       return EXIT_FAILURE;
     }
-
-    const TCmdLineArgs &args = dory_config->GetCmdLineArgs();
 
     if (args.Daemon) {
       pid_t pid = Server::Daemonize();
@@ -120,7 +124,7 @@ static int DoryMain(int argc, char *argv[]) {
   std::unique_ptr<TDoryServer> dory;
 
   try {
-    dory.reset(new TDoryServer(std::move(*dory_config),
+    dory.reset(new TDoryServer(std::move(args), std::move(conf),
         GetShutdownRequestedFd()));
   } catch (const std::bad_alloc &) {
     LOG(TPri::ERR)
@@ -128,8 +132,6 @@ static int DoryMain(int argc, char *argv[]) {
         << "specifying a smaller value for the --msg_buffer_max option.";
     return EXIT_FAILURE;
   }
-
-  dory_config.Reset();
 
   /* Fail early if server is already running. */
   dory->BindStatusSocket(false);

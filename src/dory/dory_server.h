@@ -27,6 +27,7 @@
 #include <list>
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 #include <netinet/in.h>
 
@@ -40,6 +41,7 @@
 #include <base/thrower.h>
 #include <capped/pool.h>
 #include <dory/anomaly_tracker.h>
+#include <dory/batch/batch_config_builder.h>
 #include <dory/batch/global_batch_config.h>
 #include <dory/cmd_line_args.h>
 #include <dory/conf/conf.h>
@@ -99,46 +101,26 @@ namespace Dory {
         "message size.  To disable discard logfile generation, leave "
         "discard_log_path unspecified.");
 
-    class TServerConfig final {
-      NO_COPY_SEMANTICS(TServerConfig);
-
-      public:
-      TServerConfig(TServerConfig &&) = default;
-
-      TServerConfig &operator=(TServerConfig &&) = default;
-
-      const TCmdLineArgs &GetCmdLineArgs() const noexcept {
-        assert(this);
-        return *CmdLineArgs;
-      }
-
-      private:
-      TServerConfig(std::unique_ptr<const TCmdLineArgs> &&args,
-          Conf::TConf &&conf, Batch::TGlobalBatchConfig &&batch_config)
-          : CmdLineArgs(std::move(args)),
-            Conf(std::move(conf)),
-            BatchConfig(std::move(batch_config)) {
-      }
-
-      std::unique_ptr<const TCmdLineArgs> CmdLineArgs;
-
-      Conf::TConf Conf;
-
-      Batch::TGlobalBatchConfig BatchConfig;
-
-      friend class TDoryServer;
-    };  // TServerConfig
-
-    static TServerConfig CreateConfig(int argc, char **argv,
-        bool &large_sendbuf_required, bool allow_input_bind_ephemeral,
-        bool enable_lz4);
+    static std::pair<TCmdLineArgs, Conf::TConf> CreateConfig(int argc,
+        char **argv, bool &large_sendbuf_required,
+        bool allow_input_bind_ephemeral, bool enable_lz4);
 
     /* dory monitors shutdown_fd, and shuts down when it becomes readable. */
-    TDoryServer(TServerConfig &&config, const Base::TFd &shutdown_fd);
+    TDoryServer(TCmdLineArgs &&args, Conf::TConf &&conf,
+        const Base::TFd &shutdown_fd)
+        : TDoryServer(std::move(args), std::move(conf),
+            Batch::TBatchConfigBuilder().BuildFromConf(conf.BatchConf),
+            shutdown_fd) {
+    }
 
     const TCmdLineArgs &GetCmdLineArgs() const noexcept {
       assert(this);
-      return *CmdLineArgs;
+      return CmdLineArgs;
+    }
+
+    const Conf::TConf &GetConf() const noexcept {
+      assert(this);
+      return Conf;
     }
 
     /* Used for testing. */
@@ -179,6 +161,11 @@ namespace Dory {
     int Run();
 
     private:
+    /* Public constructor delegates to this one. */
+    TDoryServer(TCmdLineArgs &&args, Conf::TConf &&conf,
+        const Batch::TGlobalBatchConfig &batch_config,
+        const Base::TFd &shutdown_fd);
+
     /* Thread pool type for handling local TCP and UNIX domain stream client
        connections. */
     using TWorkerPool = TStreamClientHandler::TWorkerPool;
@@ -201,10 +188,10 @@ namespace Dory {
     static const int STREAM_BACKLOG = 16;
 
     /* Configuration obtained from command line arguments. */
-    const std::unique_ptr<const TCmdLineArgs> CmdLineArgs;
+    const TCmdLineArgs CmdLineArgs;
 
     /* Configuration obtained from config file. */
-    Conf::TConf Conf;
+    const Conf::TConf Conf;
 
     const size_t PoolBlockSize;
 

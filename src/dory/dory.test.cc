@@ -46,6 +46,7 @@
 #include <dory/client/unix_dg_sender.h>
 #include <dory/client/unix_stream_sender.h>
 #include <dory/compress/compression_type.h>
+#include <dory/conf/conf.h>
 #include <dory/dory_server.h>
 #include <dory/kafka_proto/produce/version_util.h>
 #include <dory/msg_state_tracker.h>
@@ -63,6 +64,7 @@ using namespace Capped;
 using namespace Dory;
 using namespace Dory::Client;
 using namespace Dory::Compress;
+using namespace Dory::Conf;
 using namespace Dory::Debug;
 using namespace Dory::KafkaProto;
 using namespace Dory::KafkaProto::Produce;
@@ -211,16 +213,12 @@ namespace {
     args.push_back("--status_loopback_only");
     args.push_back(nullptr);
 
-    TOpt<TDoryServer::TServerConfig> dory_config;
-
     try {
       bool large_sendbuf_required = false;
-      dory_config.MakeKnown(TDoryServer::CreateConfig(
-          args.size() - 1, const_cast<char **>(&args[0]),
-          large_sendbuf_required, true, true));
-      Dory.reset(new TDoryServer(std::move(*dory_config),
-          GetShutdownRequestedFd()));
-      dory_config.Reset();
+      auto dory_config = TDoryServer::CreateConfig( args.size() - 1,
+          const_cast<char **>(&args[0]), large_sendbuf_required, true, true);
+      Dory.reset(new TDoryServer(std::move(dory_config.first),
+          std::move(dory_config.second), GetShutdownRequestedFd()));
       Start();
     } catch (const std::exception &x) {
       std::cerr << "Server error: " << x.what() << std::endl;

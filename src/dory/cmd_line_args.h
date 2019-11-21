@@ -34,6 +34,8 @@
 namespace Dory {
 
   struct TCmdLineArgs {
+    TCmdLineArgs() = default;
+
     /* Throws TArgParseError on error parsing args. */
     TCmdLineArgs(int argc, char *argv[], bool allow_input_bind_ephemeral);
 
