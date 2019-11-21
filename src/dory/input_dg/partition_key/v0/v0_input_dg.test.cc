@@ -81,7 +81,7 @@ namespace {
     Args.push_back("dummy_value");
     Args.push_back(nullptr);
     Cfg.reset(new Dory::TCmdLineArgs(static_cast<int>(Args.size() - 1),
-        const_cast<char **>(&Args[0]), true));
+        &Args[0], true));
   }
 
   /* The fixture for testing reading/writing of v0 PartitionKey input

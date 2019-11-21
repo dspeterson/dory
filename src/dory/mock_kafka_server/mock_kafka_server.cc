@@ -40,7 +40,7 @@ using namespace Dory::Util;
 using namespace Log;
 using namespace LogUtil;
 
-int mock_kafka_server_main(int argc, char **argv) {
+int mock_kafka_server_main(int argc, const char *const *argv) {
   std::unique_ptr<TConfig> cfg;
 
   try {
@@ -62,7 +62,7 @@ int mock_kafka_server_main(int argc, char **argv) {
   return TServer(*cfg, false, false).Run();
 }
 
-int main(int argc, char **argv) {
+int main(int argc, const char *const *argv) {
   int ret = EXIT_SUCCESS;
 
   try {

@@ -102,7 +102,7 @@ namespace Dory {
         "discard_log_path unspecified.");
 
     static std::pair<TCmdLineArgs, Conf::TConf> CreateConfig(int argc,
-        char **argv, bool &large_sendbuf_required,
+        const char *const *argv, bool &large_sendbuf_required,
         bool allow_input_bind_ephemeral, bool enable_lz4);
 
     /* dory monitors shutdown_fd, and shuts down when it becomes readable. */

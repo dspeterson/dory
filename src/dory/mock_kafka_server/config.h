@@ -33,7 +33,7 @@ namespace Dory {
 
     struct TConfig {
       /* Throws TArgParseError on error parsing args. */
-      TConfig(int argc, char *argv[]);
+      TConfig(int argc, const char *const argv[]);
 
       bool LogEcho = false;
 

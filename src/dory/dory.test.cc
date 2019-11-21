@@ -215,8 +215,8 @@ namespace {
 
     try {
       bool large_sendbuf_required = false;
-      auto dory_config = TDoryServer::CreateConfig( args.size() - 1,
-          const_cast<char **>(&args[0]), large_sendbuf_required, true, true);
+      auto dory_config = TDoryServer::CreateConfig( args.size() - 1, &args[0],
+          large_sendbuf_required, true, true);
       Dory.reset(new TDoryServer(std::move(dory_config.first),
           std::move(dory_config.second), GetShutdownRequestedFd()));
       Start();

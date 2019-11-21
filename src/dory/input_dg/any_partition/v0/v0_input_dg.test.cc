@@ -80,8 +80,7 @@ namespace {
     Args.push_back("--receive_socket_name");
     Args.push_back("dummy_value");
     Args.push_back(nullptr);
-    Cfg.reset(new Dory::TCmdLineArgs(Args.size() - 1,
-        const_cast<char **>(&Args[0]), true));
+    Cfg.reset(new Dory::TCmdLineArgs(Args.size() - 1, &Args[0], true));
   }
 
   /* The fixture for testing reading/writing of v0 AnyPartition input

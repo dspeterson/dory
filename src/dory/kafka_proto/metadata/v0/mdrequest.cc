@@ -58,7 +58,7 @@ using namespace Rpc;
 
 struct TConfig {
   /* Throws TArgParseError on error parsing args. */
-  TConfig(int argc, char *argv[]);
+  TConfig(int argc, const char *const argv[]);
 
   std::string BrokerHost;
 
@@ -69,7 +69,7 @@ struct TConfig {
   size_t RequestCount = 1;
 };  // TConfig
 
-static void ParseArgs(int argc, char *argv[], TConfig &config) {
+static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
   using namespace TCLAP;
   const std::string prog_name = Basename(argv[0]);
   std::vector<const char *> arg_vec(&argv[0], &argv[0] + argc);
@@ -103,7 +103,7 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
   }
 }
 
-TConfig::TConfig(int argc, char *argv[]) {
+TConfig::TConfig(int argc, const char *const argv[]) {
   ParseArgs(argc, argv, *this);
 }
 
@@ -366,7 +366,7 @@ void TResponsePrinter::WriteTopics(TIndent &ind0) {
   Out << ind1 << "]" << std::endl;
 }
 
-static int mdrequest_main(int argc, char **argv) {
+static int mdrequest_main(int argc, const char *const *argv) {
   std::unique_ptr<TConfig> cfg;
 
   try {
@@ -399,7 +399,7 @@ static int mdrequest_main(int argc, char **argv) {
   return EXIT_SUCCESS;
 }
 
-int main(int argc, char **argv) {
+int main(int argc, const char *const *argv) {
   int ret = EXIT_SUCCESS;
 
   try {

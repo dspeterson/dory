@@ -117,8 +117,9 @@ static bool CheckUnixDgSize(const TCmdLineArgs &args) {
 }
 
 std::pair<TCmdLineArgs, TConf>
-TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
-    bool allow_input_bind_ephemeral, bool enable_lz4) {
+TDoryServer::CreateConfig(int argc, const char *const *argv,
+    bool &large_sendbuf_required, bool allow_input_bind_ephemeral,
+    bool enable_lz4) {
   TCmdLineArgs args(argc, argv, allow_input_bind_ephemeral);
   large_sendbuf_required = CheckUnixDgSize(args);
 

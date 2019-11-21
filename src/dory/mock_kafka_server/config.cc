@@ -31,7 +31,7 @@ using namespace Dory;
 using namespace Dory::MockKafkaServer;
 using namespace Dory::Util;
 
-static void ParseArgs(int argc, char *argv[], TConfig &config) {
+static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
   using namespace TCLAP;
   const std::string prog_name = Basename(argv[0]);
   std::vector<const char *> arg_vec(&argv[0], &argv[0] + argc);
@@ -82,6 +82,6 @@ static void ParseArgs(int argc, char *argv[], TConfig &config) {
   }
 }
 
-TConfig::TConfig(int argc, char *argv[]) {
+TConfig::TConfig(int argc, const char *const argv[]) {
   ParseArgs(argc, argv, *this);
 }

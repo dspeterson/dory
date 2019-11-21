@@ -117,7 +117,7 @@ static TPri StringToLogLevel(const char * level_string) {
   throw std::range_error("Bad log level string");
 }
 
-static void ParseArgs(int argc, char *argv[], TCmdLineArgs &args,
+static void ParseArgs(int argc, const char *const argv[], TCmdLineArgs &args,
     bool allow_input_bind_ephemeral) {
   using namespace TCLAP;
   const std::string prog_name = Basename(argv[0]);
@@ -451,7 +451,7 @@ static void ParseArgs(int argc, char *argv[], TCmdLineArgs &args,
   }
 }
 
-TCmdLineArgs::TCmdLineArgs(int argc, char *argv[],
+TCmdLineArgs::TCmdLineArgs(int argc, const char *const argv[],
     bool allow_input_bind_ephemeral) {
   ParseArgs(argc, argv, *this, allow_input_bind_ephemeral);
 }

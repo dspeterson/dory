@@ -140,8 +140,7 @@ namespace {
     Args.push_back(UnixSocketName.c_str());
     Args.push_back(nullptr);
     Cfg.reset(
-        new TCmdLineArgs(static_cast<int>(Args.size() - 1),
-            const_cast<char **>(&Args[0]), true));
+        new TCmdLineArgs(static_cast<int>(Args.size() - 1), &Args[0], true));
     OutputQueue.reset(new TGate<TMsg::TPtr>);
     UnixDgInputAgent.reset(new TUnixDgInputAgent(*Cfg, Pool, MsgStateTracker,
         AnomalyTracker, *OutputQueue));

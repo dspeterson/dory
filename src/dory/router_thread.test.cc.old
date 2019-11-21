@@ -139,8 +139,7 @@ TRouterThreadConfig::TRouterThreadConfig(in_port_t broker_port,
   Args.push_back("--log_all");
   Args.push_back("--log_echo");
   Args.push_back(nullptr);
-  Cfg.reset(new Dory::TConfig(Args.size() - 1,
-                               const_cast<char **>(&Args[0])));
+  Cfg.reset(new Dory::TConfig(Args.size() - 1, &Args[0]));
   Pool.reset(
       new TPool(POOL_BLOCK_SIZE,
                 ComputeBlockCount(Cfg->MsgBufferMax, POOL_BLOCK_SIZE),

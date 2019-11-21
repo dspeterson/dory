@@ -53,7 +53,7 @@ using namespace Log;
 using namespace LogUtil;
 using namespace Xml;
 
-static int DoryMain(int argc, char *argv[]) {
+static int DoryMain(int argc, char *const argv[]) {
   TDoryXmlInit xml_init;
   TCmdLineArgs args;
   TConf conf;
