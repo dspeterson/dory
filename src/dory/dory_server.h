@@ -114,12 +114,10 @@ namespace Dory {
 
       private:
       TServerConfig(std::unique_ptr<const TCmdLineArgs> &&config,
-          Conf::TConf &&conf, Batch::TGlobalBatchConfig &&batch_config,
-          size_t pool_block_size)
+          Conf::TConf &&conf, Batch::TGlobalBatchConfig &&batch_config)
           : Config(std::move(config)),
             Conf(std::move(conf)),
-            BatchConfig(std::move(batch_config)),
-            PoolBlockSize(pool_block_size) {
+            BatchConfig(std::move(batch_config)) {
       }
 
       std::unique_ptr<const TCmdLineArgs> Config;
@@ -128,14 +126,12 @@ namespace Dory {
 
       Batch::TGlobalBatchConfig BatchConfig;
 
-      size_t PoolBlockSize;
-
       friend class TDoryServer;
     };  // TServerConfig
 
     static TServerConfig CreateConfig(int argc, char **argv,
         bool &large_sendbuf_required, bool allow_input_bind_ephemeral,
-        bool enable_lz4, size_t pool_block_size = 128);
+        bool enable_lz4);
 
     /* dory monitors shutdown_fd, and shuts down when it becomes readable. */
     TDoryServer(TServerConfig &&config, const Base::TFd &shutdown_fd);

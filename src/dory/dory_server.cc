@@ -118,7 +118,7 @@ static bool CheckUnixDgSize(const TCmdLineArgs &cfg) {
 
 TDoryServer::TServerConfig
 TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
-    bool allow_input_bind_ephemeral, bool enable_lz4, size_t pool_block_size) {
+    bool allow_input_bind_ephemeral, bool enable_lz4) {
   std::unique_ptr<TCmdLineArgs> cfg(
       new TCmdLineArgs(argc, argv, allow_input_bind_ephemeral));
   large_sendbuf_required = CheckUnixDgSize(*cfg);
@@ -184,7 +184,7 @@ TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
   std::srand(static_cast<unsigned>(t.tv_sec ^ t.tv_nsec));
 
   return TServerConfig(std::move(cfg), std::move(conf),
-      std::move(batch_config), pool_block_size);
+      std::move(batch_config));
 }
 
 static inline size_t
@@ -195,7 +195,7 @@ ComputeBlockCount(size_t max_buffer_kb, size_t block_size) {
 TDoryServer::TDoryServer(TServerConfig &&config, const TFd &shutdown_fd)
     : Config(std::move(config.Config)),
       Conf(std::move(config.Conf)),
-      PoolBlockSize(config.PoolBlockSize),
+      PoolBlockSize(128),
       ShutdownFd(shutdown_fd),
       Pool(PoolBlockSize,
            ComputeBlockCount(Config->MsgBufferMax, PoolBlockSize),
