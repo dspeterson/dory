@@ -117,7 +117,7 @@ static TPri StringToLogLevel(const char * level_string) {
   throw std::range_error("Bad log level string");
 }
 
-static void ParseArgs(int argc, char *argv[], TCmdLineArgs &config,
+static void ParseArgs(int argc, char *argv[], TCmdLineArgs &args,
     bool allow_input_bind_ephemeral) {
   using namespace TCLAP;
   const std::string prog_name = Basename(argv[0]);
@@ -126,28 +126,28 @@ static void ParseArgs(int argc, char *argv[], TCmdLineArgs &config,
 
   try {
     CmdLine cmd("Producer daemon for Apache Kafka", ' ', dory_build_id);
-    ValueArg<decltype(config.ConfigPath)> arg_config_path("", "config_path",
-        "Pathname of config file.", true, config.ConfigPath, "PATH");
+    ValueArg<decltype(args.ConfigPath)> arg_config_path("", "config_path",
+        "Pathname of config file.", true, args.ConfigPath, "PATH");
     cmd.add(arg_config_path);
     std::vector<std::string> log_levels({"LOG_ERR", "LOG_WARNING",
         "LOG_NOTICE", "LOG_INFO", "LOG_DEBUG"});
     ValuesConstraint<std::string> log_levels_constraint(log_levels);
     ValueArg<std::string> arg_log_level("", "log_level", "Log level.", false,
-        LogLevelToString(config.LogLevel), &log_levels_constraint);
+        LogLevelToString(args.LogLevel), &log_levels_constraint);
     cmd.add(arg_log_level);
     SwitchArg arg_log_echo("", "log_echo", "Echo syslog messages to standard "
-        "error.", cmd, config.LogEcho);
-    ValueArg<decltype(config.ReceiveSocketName)> arg_receive_socket_name("",
+        "error.", cmd, args.LogEcho);
+    ValueArg<decltype(args.ReceiveSocketName)> arg_receive_socket_name("",
         "receive_socket_name", "Pathname of UNIX domain datagram socket for "
-        "receiving messages from clients", false, config.ReceiveSocketName,
+        "receiving messages from clients", false, args.ReceiveSocketName,
         "PATH");
     cmd.add(arg_receive_socket_name);
-    ValueArg<decltype(config.ReceiveStreamSocketName)>
+    ValueArg<decltype(args.ReceiveStreamSocketName)>
         arg_receive_stream_socket_name("", "receive_stream_socket_name",
         "Pathname of UNIX domain stream socket for receiving messages from "
-        "clients", false, config.ReceiveStreamSocketName, "PATH");
+        "clients", false, args.ReceiveStreamSocketName, "PATH");
     cmd.add(arg_receive_stream_socket_name);
-    ValueArg<std::remove_reference<decltype(*config.InputPort)>::type>
+    ValueArg<std::remove_reference<decltype(*args.InputPort)>::type>
         arg_input_port("", "input_port", "Port for receiving TCP connections "
             "from local clients that wish to send messages.", false, 0,
             "PORT");
@@ -166,33 +166,33 @@ static void ParseArgs(int argc, char *argv[], TCmdLineArgs &config,
         "value, you must use a 0 prefix.  For instance, specify 0777 rather "
         "than 777 for unrestricted access.", false, "", "MODE");
     cmd.add(arg_receive_stream_socket_mode);
-    ValueArg<std::remove_reference<decltype(*config.MetadataApiVersion)>::type>
+    ValueArg<std::remove_reference<decltype(*args.MetadataApiVersion)>::type>
         arg_metadata_api_version("", "metadata_api_version",
         "Version of Kafka metadata API to use.", false, 0, "VERSION");
     cmd.add(arg_metadata_api_version);
-    ValueArg<std::remove_reference<decltype(*config.ProduceApiVersion)>::type>
+    ValueArg<std::remove_reference<decltype(*args.ProduceApiVersion)>::type>
         arg_produce_api_version("", "produce_api_version",
         "Version of Kafka produce API to use.", false, 0, "VERSION");
     cmd.add(arg_produce_api_version);
-    ValueArg<decltype(config.StatusPort)> arg_status_port("", "status_port",
-        "HTTP Status monitoring port.", false, config.StatusPort, "PORT");
+    ValueArg<decltype(args.StatusPort)> arg_status_port("", "status_port",
+        "HTTP Status monitoring port.", false, args.StatusPort, "PORT");
     cmd.add(arg_status_port);
     SwitchArg arg_status_loopback_only("", "status_loopback_only",
         "Make web interface available only on loopback interface.", cmd,
-        config.StatusLoopbackOnly);
-    ValueArg<decltype(config.MsgBufferMax)> arg_msg_buffer_max("",
+        args.StatusLoopbackOnly);
+    ValueArg<decltype(args.MsgBufferMax)> arg_msg_buffer_max("",
         "msg_buffer_max", "Maximum amount of memory in Kb to use for "
-        "buffering messages.", true, config.MsgBufferMax, "MAX_KB");
+        "buffering messages.", true, args.MsgBufferMax, "MAX_KB");
     cmd.add(arg_msg_buffer_max);
-    ValueArg<decltype(config.MaxInputMsgSize)> arg_max_input_msg_size("",
+    ValueArg<decltype(args.MaxInputMsgSize)> arg_max_input_msg_size("",
         "max_input_msg_size", "Maximum input message size in bytes expected "
         "from clients sending UNIX domain datagrams.  This limit does NOT "
         "apply to messages sent by UNIX domain stream socket or local TCP "
         "(see max_stream_input_msg_size).  Input datagrams larger than this "
-        "value will be discarded.", false, config.MaxInputMsgSize,
+        "value will be discarded.", false, args.MaxInputMsgSize,
         "MAX_BYTES");
     cmd.add(arg_max_input_msg_size);
-    ValueArg<decltype(config.MaxStreamInputMsgSize)>
+    ValueArg<decltype(args.MaxStreamInputMsgSize)>
         arg_max_stream_input_msg_size("", "max_stream_input_msg_size",
         "Maximum input message size in bytes expected from clients using UNIX "
         "domain stream sockets or local TCP.  Input messages larger than this "
@@ -203,114 +203,114 @@ static void ParseArgs(int argc, char *argv[], TCmdLineArgs &config,
         "still be discarded if it is too large to send in a single produce "
         "request.  However, in this case Dory will still leave the connection "
         "open and continue reading messages.", false,
-        config.MaxStreamInputMsgSize, "MAX_BYTES");
+        args.MaxStreamInputMsgSize, "MAX_BYTES");
     cmd.add(arg_max_stream_input_msg_size);
     SwitchArg arg_allow_large_unix_datagrams("", "allow_large_unix_datagrams",
         "Allow large enough values for max_input_msg_size that a client "
         "sending a UNIX domain datagram of the maximum allowed size will need "
         "to increase its SO_SNDBUF socket option above the default value.",
-        cmd, config.AllowLargeUnixDatagrams);
-    ValueArg<decltype(config.MaxFailedDeliveryAttempts)>
+        cmd, args.AllowLargeUnixDatagrams);
+    ValueArg<decltype(args.MaxFailedDeliveryAttempts)>
         arg_max_failed_delivery_attempts("", "max_failed_delivery_attempts",
         "Maximum number of failed delivery attempts allowed before a message "
-        "is discarded.", false, config.MaxFailedDeliveryAttempts,
+        "is discarded.", false, args.MaxFailedDeliveryAttempts,
         "MAX_ATTEMPTS");
     cmd.add(arg_max_failed_delivery_attempts);
-    SwitchArg arg_daemon("", "daemon", "Run as daemon.", cmd, config.Daemon);
-    ValueArg<decltype(config.ClientId)> arg_client_id("", "client_id",
+    SwitchArg arg_daemon("", "daemon", "Run as daemon.", cmd, args.Daemon);
+    ValueArg<decltype(args.ClientId)> arg_client_id("", "client_id",
         "Client ID string to send in produce requests.", false,
-        config.ClientId, "CLIENT_ID");
+        args.ClientId, "CLIENT_ID");
     cmd.add(arg_client_id);
-    ValueArg<decltype(config.RequiredAcks)> arg_required_acks("",
+    ValueArg<decltype(args.RequiredAcks)> arg_required_acks("",
         "required_acks", "Required ACKs value to send in produce requests.",
-        false, config.RequiredAcks, "REQUIRED_ACKS");
+        false, args.RequiredAcks, "REQUIRED_ACKS");
     cmd.add(arg_required_acks);
-    ValueArg<decltype(config.ReplicationTimeout)> arg_replication_timeout("",
+    ValueArg<decltype(args.ReplicationTimeout)> arg_replication_timeout("",
         "replication_timeout", "Replication timeout value in millisceonds to "
-        "send in produce requests.", false, config.ReplicationTimeout,
+        "send in produce requests.", false, args.ReplicationTimeout,
         "TIMEOUT");
     cmd.add(arg_replication_timeout);
-    ValueArg<decltype(config.ShutdownMaxDelay)> arg_shutdown_max_delay("",
+    ValueArg<decltype(args.ShutdownMaxDelay)> arg_shutdown_max_delay("",
         "shutdown_max_delay", "Maximum delay in milliseconds for sending "
         "buffered messages once shutdown signal is received.", false,
-        config.ShutdownMaxDelay, "MAX_DELAY_MS");
+        args.ShutdownMaxDelay, "MAX_DELAY_MS");
     cmd.add(arg_shutdown_max_delay);
-    ValueArg<decltype(config.DispatcherRestartMaxDelay)>
+    ValueArg<decltype(args.DispatcherRestartMaxDelay)>
         arg_dispatcher_restart_max_delay("", "dispatcher_restart_max_delay",
         "Max dispatcher shutdown delay in milliseconds when restarting "
         "dispatcher for metadata update", false,
-        config.DispatcherRestartMaxDelay, "MAX_DELAY_MS");
+        args.DispatcherRestartMaxDelay, "MAX_DELAY_MS");
     cmd.add(arg_dispatcher_restart_max_delay);
-    ValueArg<decltype(config.MetadataRefreshInterval)>
+    ValueArg<decltype(args.MetadataRefreshInterval)>
         arg_metadata_refresh_interval("", "metadata_refresh_interval",
         "Interval in minutes (plus or minus a bit of randomness) between "
-        "periodic metadata updates", false, config.MetadataRefreshInterval,
+        "periodic metadata updates", false, args.MetadataRefreshInterval,
         "INTERVAL_MINUTES");
     cmd.add(arg_metadata_refresh_interval);
-    ValueArg<decltype(config.KafkaSocketTimeout)> arg_kafka_socket_timeout("",
+    ValueArg<decltype(args.KafkaSocketTimeout)> arg_kafka_socket_timeout("",
         "kafka_socket_timeout", "Socket timeout in seconds to use when "
-        "communicating with Kafka broker.", false, config.KafkaSocketTimeout,
+        "communicating with Kafka broker.", false, args.KafkaSocketTimeout,
         "TIMEOUT_SECONDS");
     cmd.add(arg_kafka_socket_timeout);
-    ValueArg<decltype(config.PauseRateLimitInitial)>
+    ValueArg<decltype(args.PauseRateLimitInitial)>
         arg_pause_rate_limit_initial("", "pause_rate_limit_initial", "Initial "
         "delay value in milliseconds between consecutive metadata fetches due "
         "to Kafka-related errors.  The actual value has some randomness "
-        "added.", false, config.PauseRateLimitInitial, "DELAY_MS");
+        "added.", false, args.PauseRateLimitInitial, "DELAY_MS");
     cmd.add(arg_pause_rate_limit_initial);
-    ValueArg<decltype(config.PauseRateLimitMaxDouble)>
+    ValueArg<decltype(args.PauseRateLimitMaxDouble)>
         arg_pause_rate_limit_max_double("", "pause_rate_limit_max_double",
         "Maximum number of times to double pause_rate_limit_initial on "
-        "repeated errors.", false, config.PauseRateLimitMaxDouble,
+        "repeated errors.", false, args.PauseRateLimitMaxDouble,
         "MAX_DOUBLE");
     cmd.add(arg_pause_rate_limit_max_double);
-    ValueArg<decltype(config.MinPauseDelay)> arg_min_pause_delay("",
+    ValueArg<decltype(args.MinPauseDelay)> arg_min_pause_delay("",
         "min_pause_delay", "Minimum delay in milliseconds before fetching new "
         "metadata from Kafka in response to an error.", false,
-        config.MinPauseDelay, "MIN_DELAY_MS");
+        args.MinPauseDelay, "MIN_DELAY_MS");
     cmd.add(arg_min_pause_delay);
-    ValueArg<decltype(config.DiscardReportInterval)>
+    ValueArg<decltype(args.DiscardReportInterval)>
         arg_discard_report_interval("", "discard_report_interval",
         "Discard reporting interval in seconds.", false,
-        config.DiscardReportInterval, "INTERVAL_SECONDS");
+        args.DiscardReportInterval, "INTERVAL_SECONDS");
     cmd.add(arg_discard_report_interval);
     SwitchArg arg_no_log_discard("", "no_log_discard", "Do not write syslog "
         "messages when discards occur.  Discard information will still be "
-        "available through the web interface.", cmd, config.NoLogDiscard);
-    ValueArg<decltype(config.DebugDir)> arg_debug_dir("", "debug_dir",
-        "Directory for debug instrumentation files.", false, config.DebugDir,
+        "available through the web interface.", cmd, args.NoLogDiscard);
+    ValueArg<decltype(args.DebugDir)> arg_debug_dir("", "debug_dir",
+        "Directory for debug instrumentation files.", false, args.DebugDir,
         "DIR");
     cmd.add(arg_debug_dir);
-    ValueArg<decltype(config.MsgDebugTimeLimit)> arg_msg_debug_time_limit("",
+    ValueArg<decltype(args.MsgDebugTimeLimit)> arg_msg_debug_time_limit("",
         "msg_debug_time_limit", "Message debugging time limit in seconds.",
-        false, config.MsgDebugTimeLimit, "LIMIT_SECONDS");
+        false, args.MsgDebugTimeLimit, "LIMIT_SECONDS");
     cmd.add(arg_msg_debug_time_limit);
-    ValueArg<decltype(config.MsgDebugByteLimit)> arg_msg_debug_byte_limit("",
+    ValueArg<decltype(args.MsgDebugByteLimit)> arg_msg_debug_byte_limit("",
         "msg_debug_byte_limit", "Message debugging byte limit.", false,
-        config.MsgDebugByteLimit, "MAX_BYTES");
+        args.MsgDebugByteLimit, "MAX_BYTES");
     cmd.add(arg_msg_debug_byte_limit);
     SwitchArg arg_skip_compare_metadata_on_refresh("",
         "skip_compare_metadata_on_refresh", "On metadata refresh, don't "
         "compare new metadata to old metadata.  Always replace the metadata "
         "even if it is unchanged.  This should be disabled for normal "
         "operation, but enabling it may be useful for testing.", cmd,
-        config.SkipCompareMetadataOnRefresh);
-    ValueArg<decltype(config.DiscardLogPath)> arg_discard_log_path("",
+        args.SkipCompareMetadataOnRefresh);
+    ValueArg<decltype(args.DiscardLogPath)> arg_discard_log_path("",
         "discard_log_path", "Absolute pathname of local file where discards "
         "will be logged.  This is intended for debugging.  If unspecified, "
         "logging of discards to a file will be disabled.", false,
-        config.DiscardLogPath, "PATH");
+        args.DiscardLogPath, "PATH");
     cmd.add(arg_discard_log_path);
-    ValueArg<decltype(config.DiscardLogMaxFileSize)>
+    ValueArg<decltype(args.DiscardLogMaxFileSize)>
         arg_discard_log_max_file_size("", "discard_log_max_file_size",
               "Maximum size (in Kb) of discard logfile.  When the next log "
               "entry e would exceed the maximum, the logfile (with name f) is "
               "renamed to f.N where N is the current time in milliseconds "
               "since the epoch.  Then a new file f is opened, and e is "
               "written to f.  See also discard_log_max_archive_size.", false,
-              config.DiscardLogMaxFileSize, "MAX_KB");
+              args.DiscardLogMaxFileSize, "MAX_KB");
     cmd.add(arg_discard_log_max_file_size);
-    ValueArg<decltype(config.DiscardLogMaxArchiveSize)>
+    ValueArg<decltype(args.DiscardLogMaxArchiveSize)>
         arg_discard_log_max_archive_size("", "discard_log_max_archive_size",
         "See description of discard_log_max_file_size.  Once a discard "
         "logfile is renamed from f to f.N due to the size restriction imposed "
@@ -319,29 +319,29 @@ static void ParseArgs(int argc, char *argv[], TCmdLineArgs &config,
         "exceeds discard_log_max_archive_size (specified in Kb), then old "
         "logfiles are deleted, starting with the oldest, until their combined "
         "size no longer exceeds the maximum.", false,
-        config.DiscardLogMaxArchiveSize, "MAX_KB");
+        args.DiscardLogMaxArchiveSize, "MAX_KB");
     cmd.add(arg_discard_log_max_archive_size);
-    ValueArg<decltype(config.DiscardLogBadMsgPrefixSize)>
+    ValueArg<decltype(args.DiscardLogBadMsgPrefixSize)>
         arg_discard_log_bad_msg_prefix_size("",
         "discard_log_bad_msg_prefix_size", "Maximum bad message prefix size "
         "in bytes to write to discard logfile when discarding", false,
-        config.DiscardLogBadMsgPrefixSize, "MAX_BYTES");
+        args.DiscardLogBadMsgPrefixSize, "MAX_BYTES");
     cmd.add(arg_discard_log_bad_msg_prefix_size);
-    ValueArg<decltype(config.DiscardReportBadMsgPrefixSize)>
+    ValueArg<decltype(args.DiscardReportBadMsgPrefixSize)>
         arg_discard_report_bad_msg_prefix_size("",
         "discard_report_bad_msg_prefix_size", "Maximum bad message prefix "
         "size in bytes to write to discard report", false,
-        config.DiscardReportBadMsgPrefixSize, "MAX_BYTES");
+        args.DiscardReportBadMsgPrefixSize, "MAX_BYTES");
     cmd.add(arg_discard_report_bad_msg_prefix_size);
     SwitchArg arg_topic_autocreate("", "topic_autocreate", "Enable support "
         "for automatic topic creation.  The Kafka brokers must also be "
-        "configured to support this.", cmd, config.TopicAutocreate);
+        "configured to support this.", cmd, args.TopicAutocreate);
     cmd.parse(argc, &arg_vec[0]);
-    config.ConfigPath = arg_config_path.getValue();
-    config.LogLevel = StringToLogLevel(arg_log_level.getValue().c_str());
-    config.LogEcho = arg_log_echo.getValue();
-    config.ReceiveSocketName = arg_receive_socket_name.getValue();
-    config.ReceiveStreamSocketName = arg_receive_stream_socket_name.getValue();
+    args.ConfigPath = arg_config_path.getValue();
+    args.LogLevel = StringToLogLevel(arg_log_level.getValue().c_str());
+    args.LogEcho = arg_log_echo.getValue();
+    args.ReceiveSocketName = arg_receive_socket_name.getValue();
+    args.ReceiveStreamSocketName = arg_receive_stream_socket_name.getValue();
 
     if (arg_input_port.isSet()) {
       in_port_t port = arg_input_port.getValue();
@@ -352,67 +352,67 @@ static void ParseArgs(int argc, char *argv[], TCmdLineArgs &config,
         throw TArgParseError("Invalid input port");
       }
 
-      config.InputPort.MakeKnown(port);
+      args.InputPort.MakeKnown(port);
     }
 
     ProcessModeArg(arg_receive_socket_mode.getValue(), "receive_socket_mode",
-        config.ReceiveSocketMode);
+        args.ReceiveSocketMode);
     ProcessModeArg(arg_receive_stream_socket_mode.getValue(),
-        "receive_stream_socket_mode", config.ReceiveStreamSocketMode);
+        "receive_stream_socket_mode", args.ReceiveStreamSocketMode);
 
     if (arg_metadata_api_version.isSet()) {
-      config.MetadataApiVersion.MakeKnown(arg_metadata_api_version.getValue());
+      args.MetadataApiVersion.MakeKnown(arg_metadata_api_version.getValue());
     }
 
     if (arg_produce_api_version.isSet()) {
-      config.ProduceApiVersion.MakeKnown(arg_produce_api_version.getValue());
+      args.ProduceApiVersion.MakeKnown(arg_produce_api_version.getValue());
     }
 
-    config.StatusPort = arg_status_port.getValue();
-    config.StatusLoopbackOnly = arg_status_loopback_only.getValue();
-    config.MsgBufferMax = arg_msg_buffer_max.getValue();
-    config.MaxInputMsgSize = arg_max_input_msg_size.getValue();
-    config.MaxStreamInputMsgSize = arg_max_stream_input_msg_size.getValue();
-    config.AllowLargeUnixDatagrams = arg_allow_large_unix_datagrams.getValue();
-    config.MaxFailedDeliveryAttempts =
+    args.StatusPort = arg_status_port.getValue();
+    args.StatusLoopbackOnly = arg_status_loopback_only.getValue();
+    args.MsgBufferMax = arg_msg_buffer_max.getValue();
+    args.MaxInputMsgSize = arg_max_input_msg_size.getValue();
+    args.MaxStreamInputMsgSize = arg_max_stream_input_msg_size.getValue();
+    args.AllowLargeUnixDatagrams = arg_allow_large_unix_datagrams.getValue();
+    args.MaxFailedDeliveryAttempts =
         arg_max_failed_delivery_attempts.getValue();
-    config.Daemon = arg_daemon.getValue();
-    config.ClientId = arg_client_id.getValue();
-    config.ClientIdWasEmpty = config.ClientId.empty();
+    args.Daemon = arg_daemon.getValue();
+    args.ClientId = arg_client_id.getValue();
+    args.ClientIdWasEmpty = args.ClientId.empty();
 
-    if (config.ClientIdWasEmpty) {
+    if (args.ClientIdWasEmpty) {
       /* Workaround for bug in Kafka 0.9.0.0.  See
          https://issues.apache.org/jira/browse/KAFKA-3088 for details. */
-      config.ClientId = "dory";
+      args.ClientId = "dory";
     }
 
-    config.RequiredAcks = arg_required_acks.getValue();
-    config.ReplicationTimeout = arg_replication_timeout.getValue();
-    config.ShutdownMaxDelay = arg_shutdown_max_delay.getValue();
-    config.DispatcherRestartMaxDelay =
+    args.RequiredAcks = arg_required_acks.getValue();
+    args.ReplicationTimeout = arg_replication_timeout.getValue();
+    args.ShutdownMaxDelay = arg_shutdown_max_delay.getValue();
+    args.DispatcherRestartMaxDelay =
         arg_dispatcher_restart_max_delay.getValue();
-    config.MetadataRefreshInterval = arg_metadata_refresh_interval.getValue();
-    config.KafkaSocketTimeout = arg_kafka_socket_timeout.getValue();
-    config.PauseRateLimitInitial = arg_pause_rate_limit_initial.getValue();
-    config.PauseRateLimitMaxDouble =
+    args.MetadataRefreshInterval = arg_metadata_refresh_interval.getValue();
+    args.KafkaSocketTimeout = arg_kafka_socket_timeout.getValue();
+    args.PauseRateLimitInitial = arg_pause_rate_limit_initial.getValue();
+    args.PauseRateLimitMaxDouble =
         arg_pause_rate_limit_max_double.getValue();
-    config.MinPauseDelay = arg_min_pause_delay.getValue();
-    config.DiscardReportInterval = arg_discard_report_interval.getValue();
-    config.NoLogDiscard = arg_no_log_discard.getValue();
-    config.DebugDir = arg_debug_dir.getValue();
-    config.MsgDebugTimeLimit = arg_msg_debug_time_limit.getValue();
-    config.MsgDebugByteLimit = arg_msg_debug_byte_limit.getValue();
-    config.SkipCompareMetadataOnRefresh =
+    args.MinPauseDelay = arg_min_pause_delay.getValue();
+    args.DiscardReportInterval = arg_discard_report_interval.getValue();
+    args.NoLogDiscard = arg_no_log_discard.getValue();
+    args.DebugDir = arg_debug_dir.getValue();
+    args.MsgDebugTimeLimit = arg_msg_debug_time_limit.getValue();
+    args.MsgDebugByteLimit = arg_msg_debug_byte_limit.getValue();
+    args.SkipCompareMetadataOnRefresh =
         arg_skip_compare_metadata_on_refresh.getValue();
-    config.DiscardLogPath = arg_discard_log_path.getValue();
-    config.DiscardLogMaxFileSize = arg_discard_log_max_file_size.getValue();
-    config.DiscardLogMaxArchiveSize =
+    args.DiscardLogPath = arg_discard_log_path.getValue();
+    args.DiscardLogMaxFileSize = arg_discard_log_max_file_size.getValue();
+    args.DiscardLogMaxArchiveSize =
         arg_discard_log_max_archive_size.getValue();
-    config.DiscardLogBadMsgPrefixSize =
+    args.DiscardLogBadMsgPrefixSize =
         arg_discard_log_bad_msg_prefix_size.getValue();
-    config.DiscardReportBadMsgPrefixSize =
+    args.DiscardReportBadMsgPrefixSize =
         arg_discard_report_bad_msg_prefix_size.getValue();
-    config.TopicAutocreate = arg_topic_autocreate.getValue();
+    args.TopicAutocreate = arg_topic_autocreate.getValue();
 
     if (!arg_receive_socket_name.isSet() &&
         !arg_receive_stream_socket_name.isSet() && !arg_input_port.isSet()) {
@@ -446,7 +446,7 @@ static void ParseArgs(int argc, char *argv[], TCmdLineArgs &config,
     throw TArgParseError(x.error(), x.argId());
   }
 
-  if (config.StatusPort < 1) {
+  if (args.StatusPort < 1) {
     throw TArgParseError("Invalid value specified for option --status_port.");
   }
 }

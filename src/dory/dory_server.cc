@@ -119,33 +119,33 @@ static bool CheckUnixDgSize(const TCmdLineArgs &cfg) {
 TDoryServer::TServerConfig
 TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
     bool allow_input_bind_ephemeral, bool enable_lz4) {
-  std::unique_ptr<TCmdLineArgs> cfg(
+  std::unique_ptr<TCmdLineArgs> args(
       new TCmdLineArgs(argc, argv, allow_input_bind_ephemeral));
-  large_sendbuf_required = CheckUnixDgSize(*cfg);
+  large_sendbuf_required = CheckUnixDgSize(*args);
 
-  if (cfg->DiscardReportInterval < 1) {
+  if (args->DiscardReportInterval < 1) {
     THROW_ERROR(TBadDiscardReportInterval);
   }
 
-  if (cfg->RequiredAcks < -1) {
+  if (args->RequiredAcks < -1) {
     THROW_ERROR(TBadRequiredAcks);
   }
 
-  if (cfg->ReplicationTimeout >
+  if (args->ReplicationTimeout >
       static_cast<size_t>(std::numeric_limits<int32_t>::max())) {
     THROW_ERROR(TBadReplicationTimeout);
   }
 
-  if (cfg->DebugDir.empty() || (cfg->DebugDir[0] != '/')) {
+  if (args->DebugDir.empty() || (args->DebugDir[0] != '/')) {
     THROW_ERROR(TBadDebugDir);
   }
 
-  if (cfg->DiscardLogMaxFileSize == 0) {
+  if (args->DiscardLogMaxFileSize == 0) {
     THROW_ERROR(TBadDiscardLogMaxFileSize);
   }
 
-  if (!cfg->DiscardLogPath.empty() &&
-      ((cfg->DiscardLogMaxFileSize * 1024) < (2 * cfg->MaxInputMsgSize))) {
+  if (!args->DiscardLogPath.empty() &&
+      ((args->DiscardLogMaxFileSize * 1024) < (2 * args->MaxInputMsgSize))) {
     /* We enforce this requirement to ensure that the discard logfile has
        enough capacity for at least one message of the maximum possible size.
        Multiplying by 2 ensures that there is more than enough space for the
@@ -157,18 +157,18 @@ TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
      started, cases where the brokers don't support a requested API version
      will be handled. */
 
-  if (cfg->MetadataApiVersion.IsKnown() &&
-      !IsMetadataApiVersionSupported(*cfg->MetadataApiVersion)) {
+  if (args->MetadataApiVersion.IsKnown() &&
+      !IsMetadataApiVersionSupported(*args->MetadataApiVersion)) {
     THROW_ERROR(TUnsupportedMetadataApiVersion);
   }
 
-  if (cfg->ProduceApiVersion.IsKnown() &&
-      !IsProduceApiVersionSupported(*cfg->ProduceApiVersion)) {
+  if (args->ProduceApiVersion.IsKnown() &&
+      !IsProduceApiVersionSupported(*args->ProduceApiVersion)) {
     THROW_ERROR(TUnsupportedProduceApiVersion);
   }
 
   Conf::TConf conf = Conf::TConf::TBuilder(enable_lz4).Build(
-      ReadFileIntoString(cfg->ConfigPath));
+      ReadFileIntoString(args->ConfigPath));
   TGlobalBatchConfig batch_config =
       TBatchConfigBuilder().BuildFromConf(conf.BatchConf);
 
@@ -183,7 +183,7 @@ TDoryServer::CreateConfig(int argc, char **argv, bool &large_sendbuf_required,
   Wr::clock_gettime(CLOCK_MONOTONIC_RAW, &t);
   std::srand(static_cast<unsigned>(t.tv_sec ^ t.tv_nsec));
 
-  return TServerConfig(std::move(cfg), std::move(conf),
+  return TServerConfig(std::move(args), std::move(conf),
       std::move(batch_config));
 }
 
