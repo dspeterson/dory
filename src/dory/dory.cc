@@ -79,9 +79,9 @@ static int DoryMain(int argc, char *argv[]) {
       return EXIT_FAILURE;
     }
 
-    const TCmdLineArgs &config = dory_config->GetCmdLineConfig();
+    const TCmdLineArgs &args = dory_config->GetCmdLineArgs();
 
-    if (config.Daemon) {
+    if (args.Daemon) {
       pid_t pid = Server::Daemonize();
 
       if (pid) {
@@ -91,8 +91,8 @@ static int DoryMain(int argc, char *argv[]) {
     }
 
     try {
-      InitLogging(argv[0], config.LogLevel,
-          config.LogEcho && !config.Daemon /* enable_stdout_stderr */,
+      InitLogging(argv[0], args.LogLevel,
+          args.LogEcho && !args.Daemon /* enable_stdout_stderr */,
           true /* enable_syslog */, std::string() /* file_path */);
     } catch (const std::exception &x) {
       std::cerr << "Failed to initialize logging: " << x.what()
@@ -134,7 +134,7 @@ static int DoryMain(int argc, char *argv[]) {
   /* Fail early if server is already running. */
   dory->BindStatusSocket(false);
 
-  LogCmdLineArgs(dory->GetConfig());
+  LogCmdLineArgs(dory->GetCmdLineArgs());
 
   if (large_sendbuf_required) {
     LOG(TPri::WARNING)
@@ -142,8 +142,6 @@ static int DoryMain(int argc, char *argv[]) {
         << "SO_SNDBUF above the default value.";
   }
 
-  LOG(TPri::NOTICE) << "Pool block size is " << dory->GetPoolBlockSize()
-      << " bytes";
   return dory->Run();
 }
 

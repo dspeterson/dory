@@ -107,20 +107,20 @@ namespace Dory {
 
       TServerConfig &operator=(TServerConfig &&) = default;
 
-      const TCmdLineArgs &GetCmdLineConfig() const noexcept {
+      const TCmdLineArgs &GetCmdLineArgs() const noexcept {
         assert(this);
-        return *Config;
+        return *CmdLineArgs;
       }
 
       private:
-      TServerConfig(std::unique_ptr<const TCmdLineArgs> &&config,
+      TServerConfig(std::unique_ptr<const TCmdLineArgs> &&args,
           Conf::TConf &&conf, Batch::TGlobalBatchConfig &&batch_config)
-          : Config(std::move(config)),
+          : CmdLineArgs(std::move(args)),
             Conf(std::move(conf)),
             BatchConfig(std::move(batch_config)) {
       }
 
-      std::unique_ptr<const TCmdLineArgs> Config;
+      std::unique_ptr<const TCmdLineArgs> CmdLineArgs;
 
       Conf::TConf Conf;
 
@@ -136,15 +136,9 @@ namespace Dory {
     /* dory monitors shutdown_fd, and shuts down when it becomes readable. */
     TDoryServer(TServerConfig &&config, const Base::TFd &shutdown_fd);
 
-    /* Must not be called until _after_ InitConfig() has been called. */
-    size_t GetPoolBlockSize() const noexcept {
+    const TCmdLineArgs &GetCmdLineArgs() const noexcept {
       assert(this);
-      return PoolBlockSize;
-    }
-
-    const TCmdLineArgs &GetConfig() const noexcept {
-      assert(this);
-      return *Config;
+      return *CmdLineArgs;
     }
 
     /* Used for testing. */
@@ -207,7 +201,7 @@ namespace Dory {
     static const int STREAM_BACKLOG = 16;
 
     /* Configuration obtained from command line arguments. */
-    const std::unique_ptr<const TCmdLineArgs> Config;
+    const std::unique_ptr<const TCmdLineArgs> CmdLineArgs;
 
     /* Configuration obtained from config file. */
     Conf::TConf Conf;

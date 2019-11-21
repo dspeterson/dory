@@ -469,8 +469,8 @@ static std::string BuildModeString(const TOpt<mode_t> &opt_mode) {
   return socket_mode;
 }
 
-void Dory::LogCmdLineArgs(const TCmdLineArgs &config) {
-  if (config.ClientIdWasEmpty) {
+void Dory::LogCmdLineArgs(const TCmdLineArgs &args) {
+  if (args.ClientIdWasEmpty) {
     LOG(TPri::WARNING) << "Using \"dory\" for client ID since none was "
         << "specified with --client_id option.  This is a workaround for a "
         << "bug in Kafka 0.9.0.0 that causes broker to crash on receipt of "
@@ -479,111 +479,111 @@ void Dory::LogCmdLineArgs(const TCmdLineArgs &config) {
   }
 
   LOG(TPri::NOTICE) << "Version: [" << dory_build_id << "]";
-  LOG(TPri::NOTICE) << "Config file: [" << config.ConfigPath << "]";
+  LOG(TPri::NOTICE) << "Config file: [" << args.ConfigPath << "]";
 
-  if (config.ReceiveSocketName.empty()) {
+  if (args.ReceiveSocketName.empty()) {
     LOG(TPri::NOTICE) << "UNIX domain datagram input socket disabled";
   } else {
     LOG(TPri::NOTICE) << "UNIX domain datagram input socket ["
-        << config.ReceiveSocketName << "]";
+                      << args.ReceiveSocketName << "]";
   }
 
-  if (config.ReceiveStreamSocketName.empty()) {
+  if (args.ReceiveStreamSocketName.empty()) {
     LOG(TPri::NOTICE) << "UNIX domain stream input socket disabled";
   } else {
     LOG(TPri::NOTICE) << "UNIX domain stream input socket ["
-        << config.ReceiveStreamSocketName << "]";
+                      << args.ReceiveStreamSocketName << "]";
   }
 
-  if (config.InputPort.IsKnown()) {
-    LOG(TPri::NOTICE) << "Listening on input port " << *config.InputPort;
+  if (args.InputPort.IsKnown()) {
+    LOG(TPri::NOTICE) << "Listening on input port " << *args.InputPort;
   } else {
     LOG(TPri::NOTICE) << "Input port disabled";
   }
 
-  if (!config.ReceiveSocketName.empty()) {
+  if (!args.ReceiveSocketName.empty()) {
     LOG(TPri::NOTICE) << "UNIX domain datagram input socket mode "
-        << BuildModeString(config.ReceiveSocketMode);
+        << BuildModeString(args.ReceiveSocketMode);
   }
 
-  if (!config.ReceiveStreamSocketName.empty()) {
+  if (!args.ReceiveStreamSocketName.empty()) {
     LOG(TPri::NOTICE) << "UNIX domain stream input socket mode "
-        << BuildModeString(config.ReceiveStreamSocketMode);
+        << BuildModeString(args.ReceiveStreamSocketMode);
   }
 
-  if (config.MetadataApiVersion.IsKnown()) {
+  if (args.MetadataApiVersion.IsKnown()) {
     LOG(TPri::NOTICE) << "Metadata API version is specified as "
-        << *config.MetadataApiVersion;
+        << *args.MetadataApiVersion;
   } else {
     LOG(TPri::NOTICE) << "Metadata API version is unspecified";
   }
 
-  if (config.ProduceApiVersion.IsKnown()) {
+  if (args.ProduceApiVersion.IsKnown()) {
     LOG(TPri::NOTICE) << "Produce API version is specified as "
-        << *config.ProduceApiVersion;
+        << *args.ProduceApiVersion;
   } else {
     LOG(TPri::NOTICE) << "Produce API version is unspecified";
   }
 
-  LOG(TPri::NOTICE) << "Listening on status port " << config.StatusPort;
+  LOG(TPri::NOTICE) << "Listening on status port " << args.StatusPort;
   LOG(TPri::NOTICE) << "Web interface loopback only: "
-      << std::boolalpha << config.StatusLoopbackOnly;
-  LOG(TPri::NOTICE) << "Buffered message limit " << config.MsgBufferMax
-      << "kbytes";
+                    << std::boolalpha << args.StatusLoopbackOnly;
+  LOG(TPri::NOTICE) << "Buffered message limit " << args.MsgBufferMax
+                    << "kbytes";
   LOG(TPri::NOTICE) << "Max datagram input message size "
-      << config.MaxInputMsgSize << " bytes";
+                    << args.MaxInputMsgSize << " bytes";
   LOG(TPri::NOTICE) << "Max stream input message size "
-      << config.MaxStreamInputMsgSize << " bytes";
+                    << args.MaxStreamInputMsgSize << " bytes";
 
-  if (!config.ReceiveSocketName.empty()) {
+  if (!args.ReceiveSocketName.empty()) {
     LOG(TPri::NOTICE) << "Allow large UNIX datagrams: "
-        << std::boolalpha << config.AllowLargeUnixDatagrams;
+                      << std::boolalpha << args.AllowLargeUnixDatagrams;
   }
 
   LOG(TPri::NOTICE) << "Max failed delivery attempts "
-      << config.MaxFailedDeliveryAttempts;
+                    << args.MaxFailedDeliveryAttempts;
   LOG(TPri::NOTICE) << "Running as daemon: " << std::boolalpha
-      << config.Daemon;
-  LOG(TPri::NOTICE) << "Client ID [" << config.ClientId << "]";
-  LOG(TPri::NOTICE) << "Required ACKs " << config.RequiredAcks;
-  LOG(TPri::NOTICE) << "Replication timeout " << config.ReplicationTimeout
-      << " ms";
-  LOG(TPri::NOTICE) << "Shutdown send grace period " << config.ShutdownMaxDelay
-      << " ms";
+                    << args.Daemon;
+  LOG(TPri::NOTICE) << "Client ID [" << args.ClientId << "]";
+  LOG(TPri::NOTICE) << "Required ACKs " << args.RequiredAcks;
+  LOG(TPri::NOTICE) << "Replication timeout " << args.ReplicationTimeout
+                    << " ms";
+  LOG(TPri::NOTICE) << "Shutdown send grace period " << args.ShutdownMaxDelay
+                    << " ms";
   LOG(TPri::NOTICE) << "Kafka dispatch restart grace period "
-      << config.DispatcherRestartMaxDelay << " ms";
+                    << args.DispatcherRestartMaxDelay << " ms";
   LOG(TPri::NOTICE) << "Metadata refresh interval "
-      << config.MetadataRefreshInterval << " min";
-  LOG(TPri::NOTICE) << "Kafka socket timeout " << config.KafkaSocketTimeout
-      << " sec";
+                    << args.MetadataRefreshInterval << " min";
+  LOG(TPri::NOTICE) << "Kafka socket timeout " << args.KafkaSocketTimeout
+                    << " sec";
   LOG(TPri::NOTICE) << "Pause rate limit initial "
-      << config.PauseRateLimitInitial << " ms";
+                    << args.PauseRateLimitInitial << " ms";
   LOG(TPri::NOTICE) << "Pause rate limit max double "
-      << config.PauseRateLimitMaxDouble;
-  LOG(TPri::NOTICE) << "Minimum pause delay " << config.MinPauseDelay << " ms";
+                    << args.PauseRateLimitMaxDouble;
+  LOG(TPri::NOTICE) << "Minimum pause delay " << args.MinPauseDelay << " ms";
   LOG(TPri::NOTICE) << "Discard reporting interval "
-      << config.DiscardReportInterval << " sec";
-  LOG(TPri::NOTICE) << "Debug directory [" << config.DebugDir << "]";
-  LOG(TPri::NOTICE) << "Message debug time limit " << config.MsgDebugTimeLimit
-      << " sec";
-  LOG(TPri::NOTICE) << "Message debug byte limit " << config.MsgDebugByteLimit;
+                    << args.DiscardReportInterval << " sec";
+  LOG(TPri::NOTICE) << "Debug directory [" << args.DebugDir << "]";
+  LOG(TPri::NOTICE) << "Message debug time limit " << args.MsgDebugTimeLimit
+                    << " sec";
+  LOG(TPri::NOTICE) << "Message debug byte limit " << args.MsgDebugByteLimit;
   LOG(TPri::NOTICE) << "Skip comparing metadata on refresh: " << std::boolalpha
-      << config.SkipCompareMetadataOnRefresh;
+                    << args.SkipCompareMetadataOnRefresh;
 
-  if (config.DiscardLogPath.empty()) {
+  if (args.DiscardLogPath.empty()) {
     LOG(TPri::NOTICE) << "Discard logfile creation is disabled";
   } else {
-    LOG(TPri::NOTICE) << "Discard logfile: [" << config.DiscardLogPath << "]";
+    LOG(TPri::NOTICE) << "Discard logfile: [" << args.DiscardLogPath << "]";
     LOG(TPri::NOTICE) << "Discard log max file size: "
-        << config.DiscardLogMaxFileSize << " kb";
+                      << args.DiscardLogMaxFileSize << " kb";
     LOG(TPri::NOTICE) << "Discard log max archive size: "
-        << config.DiscardLogMaxArchiveSize << " kb";
+                      << args.DiscardLogMaxArchiveSize << " kb";
     LOG(TPri::NOTICE) << "Discard log bad msg prefix size: "
-        << config.DiscardLogBadMsgPrefixSize << " bytes";
+                      << args.DiscardLogBadMsgPrefixSize << " bytes";
   }
 
   LOG(TPri::NOTICE) << "Discard report bad msg prefix size: "
-      << config.DiscardReportBadMsgPrefixSize << " bytes";
+                    << args.DiscardReportBadMsgPrefixSize << " bytes";
   LOG(TPri::NOTICE) << "Automatic topic creation enabled: " << std::boolalpha
-      << config.TopicAutocreate;
+                    << args.TopicAutocreate;
 }

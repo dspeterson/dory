@@ -123,6 +123,6 @@ namespace Dory {
     bool TopicAutocreate = false;
   };  // TCmdLineArgs
 
-  void LogCmdLineArgs(const TCmdLineArgs &config);
+  void LogCmdLineArgs(const TCmdLineArgs &args);
 
 }  // Dory

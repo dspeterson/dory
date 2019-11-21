@@ -193,48 +193,48 @@ ComputeBlockCount(size_t max_buffer_kb, size_t block_size) {
 }
 
 TDoryServer::TDoryServer(TServerConfig &&config, const TFd &shutdown_fd)
-    : Config(std::move(config.Config)),
+    : CmdLineArgs(std::move(config.CmdLineArgs)),
       Conf(std::move(config.Conf)),
       PoolBlockSize(128),
       ShutdownFd(shutdown_fd),
       Pool(PoolBlockSize,
-           ComputeBlockCount(Config->MsgBufferMax, PoolBlockSize),
+           ComputeBlockCount(CmdLineArgs->MsgBufferMax, PoolBlockSize),
            Capped::TPool::TSync::Mutexed),
-      AnomalyTracker(DiscardFileLogger, Config->DiscardReportInterval,
-                     Config->DiscardReportBadMsgPrefixSize),
+      AnomalyTracker(DiscardFileLogger, CmdLineArgs->DiscardReportInterval,
+                     CmdLineArgs->DiscardReportBadMsgPrefixSize),
       StatusPort(0),
-      DebugSetup(Config->DebugDir.c_str(), Config->MsgDebugTimeLimit,
-                 Config->MsgDebugByteLimit),
-      Dispatcher(*Config, Conf.CompressionConf, MsgStateTracker,
+      DebugSetup(CmdLineArgs->DebugDir.c_str(), CmdLineArgs->MsgDebugTimeLimit,
+                 CmdLineArgs->MsgDebugByteLimit),
+      Dispatcher(*CmdLineArgs, Conf.CompressionConf, MsgStateTracker,
           AnomalyTracker, config.BatchConfig, DebugSetup),
-      RouterThread(*Config, Conf, AnomalyTracker, MsgStateTracker,
+      RouterThread(*CmdLineArgs, Conf, AnomalyTracker, MsgStateTracker,
           config.BatchConfig, DebugSetup, Dispatcher),
       MetadataTimestamp(RouterThread.GetMetadataTimestamp()) {
-  if (!Config->ReceiveStreamSocketName.empty() ||
-      Config->InputPort.IsKnown()) {
+  if (!CmdLineArgs->ReceiveStreamSocketName.empty() ||
+      CmdLineArgs->InputPort.IsKnown()) {
     /* Create thread pool if UNIX stream or TCP input is enabled. */
     StreamClientWorkerPool.MakeKnown();
   }
 
-  if (!Config->ReceiveSocketName.empty()) {
-    UnixDgInputAgent.MakeKnown(*Config, Pool, MsgStateTracker, AnomalyTracker,
-        RouterThread.GetMsgChannel());
+  if (!CmdLineArgs->ReceiveSocketName.empty()) {
+    UnixDgInputAgent.MakeKnown(*CmdLineArgs, Pool, MsgStateTracker,
+        AnomalyTracker, RouterThread.GetMsgChannel());
   }
 
-  if (!Config->ReceiveStreamSocketName.empty()) {
+  if (!CmdLineArgs->ReceiveStreamSocketName.empty()) {
     assert(StreamClientWorkerPool.IsKnown());
     UnixStreamInputAgent.MakeKnown(STREAM_BACKLOG,
-        Config->ReceiveStreamSocketName.c_str(),
+        CmdLineArgs->ReceiveStreamSocketName.c_str(),
         CreateStreamClientHandler(false));
 
-    if (Config->ReceiveStreamSocketMode.IsKnown()) {
-      UnixStreamInputAgent->SetMode(*Config->ReceiveStreamSocketMode);
+    if (CmdLineArgs->ReceiveStreamSocketMode.IsKnown()) {
+      UnixStreamInputAgent->SetMode(*CmdLineArgs->ReceiveStreamSocketMode);
     }
   }
 
-  if (Config->InputPort.IsKnown()) {
+  if (CmdLineArgs->InputPort.IsKnown()) {
     TcpInputAgent.MakeKnown(STREAM_BACKLOG, htonl(INADDR_LOOPBACK),
-        *Config->InputPort, CreateStreamClientHandler(true));
+        *CmdLineArgs->InputPort, CreateStreamClientHandler(true));
   }
 
   config.BatchConfig.Clear();
@@ -243,8 +243,9 @@ TDoryServer::TDoryServer(TServerConfig &&config, const TFd &shutdown_fd)
 void TDoryServer::BindStatusSocket(bool bind_ephemeral) {
   assert(this);
   TAddress status_address(
-      Config->StatusLoopbackOnly ? TAddress::IPv4Loopback : TAddress::IPv4Any,
-      bind_ephemeral ? 0 : Config->StatusPort);
+      CmdLineArgs->StatusLoopbackOnly ?
+          TAddress::IPv4Loopback : TAddress::IPv4Any,
+      bind_ephemeral ? 0 : CmdLineArgs->StatusPort);
   TmpStatusSocket = Wr::socket(Wr::TDisp::Nonfatal, {},
       status_address.GetFamily(), SOCK_STREAM, 0);
   assert(TmpStatusSocket.IsOpen());
@@ -258,7 +259,7 @@ void TDoryServer::BindStatusSocket(bool bind_ephemeral) {
 
   TAddress sock_name = GetSockName(TmpStatusSocket);
   StatusPort = sock_name.GetPort();
-  assert(bind_ephemeral || (StatusPort == Config->StatusPort));
+  assert(bind_ephemeral || (StatusPort == CmdLineArgs->StatusPort));
 }
 
 int TDoryServer::Run() {
@@ -291,7 +292,7 @@ int TDoryServer::Run() {
     /* Initialization of all input agents succeeded.  Start the Mongoose HTTP
        server, which provides Dory's web interface.  It runs in separate
        threads. */
-    web_interface.StartHttpServer(Config->StatusLoopbackOnly);
+    web_interface.StartHttpServer(CmdLineArgs->StatusLoopbackOnly);
 
     /* We can close this now, since Mongoose has the port claimed. */
     TmpStatusSocket.Reset();
@@ -315,7 +316,7 @@ std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>
     TDoryServer::CreateStreamClientHandler(bool is_tcp) {
   assert(this);
   return std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>(
-      new TStreamClientHandler(is_tcp, *Config, Pool, MsgStateTracker,
+      new TStreamClientHandler(is_tcp, *CmdLineArgs, Pool, MsgStateTracker,
           AnomalyTracker, RouterThread.GetMsgChannel(),
           *StreamClientWorkerPool));
 }
@@ -323,14 +324,14 @@ std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>
 bool TDoryServer::StartMsgHandlingThreads() {
   assert(this);
 
-  if (!Config->DiscardLogPath.empty()) {
+  if (!CmdLineArgs->DiscardLogPath.empty()) {
     /* We must do this before starting the input agents so all discards are
        tracked properly when discard file logging is enabled.  This starts a
        thread when discard file logging is enabled. */
-    DiscardFileLogger.Init(Config->DiscardLogPath.c_str(),
-        static_cast<uint64_t>(Config->DiscardLogMaxFileSize) * 1024,
-        static_cast<uint64_t>(Config->DiscardLogMaxArchiveSize) * 1024,
-        Config->DiscardLogBadMsgPrefixSize);
+    DiscardFileLogger.Init(CmdLineArgs->DiscardLogPath.c_str(),
+        static_cast<uint64_t>(CmdLineArgs->DiscardLogMaxFileSize) * 1024,
+        static_cast<uint64_t>(CmdLineArgs->DiscardLogMaxArchiveSize) * 1024,
+        CmdLineArgs->DiscardLogBadMsgPrefixSize);
   }
 
   if (StreamClientWorkerPool.IsKnown()) {
@@ -411,7 +412,7 @@ bool TDoryServer::HandleEvents() {
   /* This is for periodically verifying that we are getting queried for discard
      info. */
   TTimerFd discard_query_check_timer(
-      1000 * (1 + Config->DiscardReportInterval));
+      1000 * (1 + CmdLineArgs->DiscardReportInterval));
 
   std::array<struct pollfd, 8> events;
   struct pollfd &discard_query_check = events[0];
@@ -552,7 +553,7 @@ void TDoryServer::DiscardFinalMsgs(std::list<TMsg::TPtr> &msg_list) {
 
   for (TMsg::TPtr &msg : msg_list) {
     if (msg) {
-      if (!Config->NoLogDiscard) {
+      if (!CmdLineArgs->NoLogDiscard) {
         LOG_R(TPri::ERR, std::chrono::seconds(30))
             << "Main thread discarding queued message on server shutdown: "
             << "topic [" << msg->GetTopic() << "]";
