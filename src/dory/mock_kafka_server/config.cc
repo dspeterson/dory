@@ -23,7 +23,7 @@
 
 #include <base/basename.h>
 #include <dory/build_id.h>
-#include <dory/util/arg_parse_error.h>
+#include <dory/util/invalid_arg_error.h>
 #include <tclap/CmdLine.h>
 
 using namespace Base;
@@ -78,7 +78,7 @@ static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
     config.CmdPort = arg_cmd_port.getValue();
     config.SingleOutputFile = arg_single_output_file.getValue();
   } catch (const ArgException &x) {
-    throw TArgParseError(x.error(), x.argId());
+    throw TInvalidArgError(x.error(), x.argId());
   }
 }
 

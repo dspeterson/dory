@@ -31,13 +31,14 @@
 #include <unistd.h>
 
 #include <base/error_util.h>
+#include <base/file_reader.h>
 #include <base/opt.h>
 #include <dory/cmd_line_args.h>
 #include <dory/conf/conf.h>
 #include <dory/dory_server.h>
-#include <dory/util/arg_parse_error.h>
 #include <dory/util/dory_xml_init.h>
 #include <dory/util/handle_xml_errors.h>
+#include <dory/util/invalid_arg_error.h>
 #include <dory/util/misc_util.h>
 #include <log/log.h>
 #include <log_util/init_logging.h>
@@ -56,8 +57,8 @@ using namespace Xml;
 static int DoryMain(int argc, char *const argv[]) {
   TDoryXmlInit xml_init;
   TCmdLineArgs args;
-  TConf conf;
   bool large_sendbuf_required = false;
+  TConf conf;
 
   try {
     xml_init.Init();
@@ -71,12 +72,14 @@ static int DoryMain(int argc, char *const argv[]) {
              bug in Kafka.  See
              https://cwiki.apache.org/confluence/display/KAFKA/KIP-57+-+Interoperable+LZ4+Framing
              for details. */
-          bool enable_lz4 = false;
+          const bool enable_lz4 = false;
 
-          auto dory_config = TDoryServer::CreateConfig(argc, argv,
-              large_sendbuf_required, false, enable_lz4);
-          args = std::move(dory_config.first);
-          conf = std::move(dory_config.second);
+          args = TCmdLineArgs(argc, argv,
+              false /* allow_input_bind_ephemeral */);
+          large_sendbuf_required = TDoryServer::CheckUnixDgSize(args);
+          conf = Dory::Conf::TConf::TBuilder(enable_lz4).Build(
+              ReadFileIntoString(args.ConfigPath));
+          TDoryServer::PrepareForInit(conf);
         }
     );
 
@@ -102,8 +105,8 @@ static int DoryMain(int argc, char *const argv[]) {
       std::cerr << "Failed to initialize logging: " << x.what()
                 << std::endl;
     }
-  } catch (const TArgParseError &x) {
-    /* Error parsing command line arguments. */
+  } catch (const TInvalidArgError &x) {
+    /* Error processing command line arguments. */
     std::cerr << x.what() << std::endl;
     return EXIT_FAILURE;
   } catch (const std::exception &x) {

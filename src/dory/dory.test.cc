@@ -33,6 +33,7 @@
 #include <netinet/in.h>
 
 #include <base/field_access.h>
+#include <base/file_reader.h>
 #include <base/no_copy_semantics.h>
 #include <base/opt.h>
 #include <base/time_util.h>
@@ -186,39 +187,46 @@ namespace {
     ofs << DoryConf;
     ofs.close();
     std::string msg_buffer_max_str = std::to_string(MsgBufferMaxKb);
-    std::vector<const char *> args;
-    args.push_back("dory");
-    args.push_back("--config_path");
-    args.push_back(tmp_file.GetName().c_str());
-    args.push_back("--msg_buffer_max");
-    args.push_back(msg_buffer_max_str.c_str());
+    std::vector<const char *> arg_vec;
+    arg_vec.push_back("dory");
+    arg_vec.push_back("--config_path");
+    arg_vec.push_back(tmp_file.GetName().c_str());
+    arg_vec.push_back("--msg_buffer_max");
+    arg_vec.push_back(msg_buffer_max_str.c_str());
 
     if (!UnixDgSocketName.empty()) {
-      args.push_back("--receive_socket_name");
-      args.push_back(UnixDgSocketName.c_str());
+      arg_vec.push_back("--receive_socket_name");
+      arg_vec.push_back(UnixDgSocketName.c_str());
     }
 
     if (!UnixStreamSocketName.empty()) {
-      args.push_back("--receive_stream_socket_name");
-      args.push_back(UnixStreamSocketName.c_str());
+      arg_vec.push_back("--receive_stream_socket_name");
+      arg_vec.push_back(UnixStreamSocketName.c_str());
     }
 
     if (TcpInputActive) {
-      args.push_back("--input_port");
-      args.push_back("0");  // 0 means "request ephemeral port"
+      arg_vec.push_back("--input_port");
+      arg_vec.push_back("0");  // 0 means "request ephemeral port"
     }
 
-    args.push_back("--client_id");
-    args.push_back("dory");
-    args.push_back("--status_loopback_only");
-    args.push_back(nullptr);
+    arg_vec.push_back("--client_id");
+    arg_vec.push_back("dory");
+    arg_vec.push_back("--status_loopback_only");
+    arg_vec.push_back(nullptr);
 
     try {
-      bool large_sendbuf_required = false;
-      auto dory_config = TDoryServer::CreateConfig( args.size() - 1, &args[0],
-          large_sendbuf_required, true, true);
-      Dory.reset(new TDoryServer(std::move(dory_config.first),
-          std::move(dory_config.second), GetShutdownRequestedFd()));
+      TCmdLineArgs args(static_cast<int>(arg_vec.size()) - 1, &arg_vec[0],
+          true /* allow_input_bind_ephemeral */);
+
+      if (TDoryServer::CheckUnixDgSize(args)) {
+        std::cout << "Large sendbuf required" << std::endl;
+      }
+
+      TConf conf = Dory::Conf::TConf::TBuilder(true /* enable_lz4 */).Build(
+              ReadFileIntoString(args.ConfigPath));
+      TDoryServer::PrepareForInit(conf);
+      Dory.reset(new TDoryServer(std::move(args), std::move(conf),
+          GetShutdownRequestedFd()));
       Start();
     } catch (const std::exception &x) {
       std::cerr << "Server error: " << x.what() << std::endl;

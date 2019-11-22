@@ -36,7 +36,7 @@ namespace Dory {
   struct TCmdLineArgs {
     TCmdLineArgs() = default;
 
-    /* Throws TArgParseError on error parsing args. */
+    /* Throws TInvalidArgError on error parsing args. */
     TCmdLineArgs(int argc, const char *const argv[], bool allow_input_bind_ephemeral);
 
     std::string ConfigPath;

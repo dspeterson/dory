@@ -52,6 +52,7 @@
 #include <dory/kafka_proto/produce/version_util.h>
 #include <dory/msg.h>
 #include <dory/util/init_notifier.h>
+#include <dory/util/invalid_arg_error.h>
 #include <dory/util/misc_util.h>
 #include <dory/web_interface.h>
 #include <log/log.h>
@@ -75,6 +76,35 @@ using namespace Thread;
 DEFINE_COUNTER(StreamClientWorkerStdException);
 DEFINE_COUNTER(StreamClientWorkerUnknownException);
 
+bool TDoryServer::CheckUnixDgSize(const TCmdLineArgs &args) {
+  bool large_sendbuf_required = false;
+
+  if (!args.ReceiveSocketName.empty()) {
+    switch (TestUnixDgSize(args.MaxInputMsgSize)) {
+      case TUnixDgSizeTestResult::Pass:
+        break;
+      case TUnixDgSizeTestResult::PassWithLargeSendbuf:
+        large_sendbuf_required = true;
+
+        if (!args.AllowLargeUnixDatagrams) {
+          throw TInvalidArgError(
+              "You didn't specify allow_large_unix_datagrams, and "
+              "max_input_msg_size is large enough that clients sending large "
+              "datagrams will need to increase SO_SNDBUF above the default "
+              "value.  Either decrease max_input_msg_size or specify "
+              "allow_large_unix_datagrams.");
+        }
+
+        break;
+      case TUnixDgSizeTestResult::Fail:
+        throw TInvalidArgError("max_input_msg_size is too large");
+      NO_DEFAULT_CASE;
+    }
+  }
+
+  return large_sendbuf_required;
+}
+
 static void LoadCompressionLibraries(const TCompressionConf &conf) {
   std::set<TCompressionType> in_use;
   in_use.insert(conf.DefaultTopicConfig.Type);
@@ -91,85 +121,7 @@ static void LoadCompressionLibraries(const TCompressionConf &conf) {
   }
 }
 
-static bool CheckUnixDgSize(const TCmdLineArgs &args) {
-  bool large_sendbuf_required = false;
-
-  if (!args.ReceiveSocketName.empty()) {
-    switch (TestUnixDgSize(args.MaxInputMsgSize)) {
-      case TUnixDgSizeTestResult::Pass:
-        break;
-      case TUnixDgSizeTestResult::PassWithLargeSendbuf:
-        large_sendbuf_required = true;
-
-        if (!args.AllowLargeUnixDatagrams) {
-          THROW_ERROR(TDoryServer::TMustAllowLargeDatagrams);
-        }
-
-        break;
-      case TUnixDgSizeTestResult::Fail:
-        THROW_ERROR(TDoryServer::TMaxInputMsgSizeTooLarge);
-        break;
-      NO_DEFAULT_CASE;
-    }
-  }
-
-  return large_sendbuf_required;
-}
-
-std::pair<TCmdLineArgs, TConf>
-TDoryServer::CreateConfig(int argc, const char *const *argv,
-    bool &large_sendbuf_required, bool allow_input_bind_ephemeral,
-    bool enable_lz4) {
-  TCmdLineArgs args(argc, argv, allow_input_bind_ephemeral);
-  large_sendbuf_required = CheckUnixDgSize(args);
-
-  if (args.DiscardReportInterval < 1) {
-    THROW_ERROR(TBadDiscardReportInterval);
-  }
-
-  if (args.RequiredAcks < -1) {
-    THROW_ERROR(TBadRequiredAcks);
-  }
-
-  if (args.ReplicationTimeout >
-      static_cast<size_t>(std::numeric_limits<int32_t>::max())) {
-    THROW_ERROR(TBadReplicationTimeout);
-  }
-
-  if (args.DebugDir.empty() || (args.DebugDir[0] != '/')) {
-    THROW_ERROR(TBadDebugDir);
-  }
-
-  if (args.DiscardLogMaxFileSize == 0) {
-    THROW_ERROR(TBadDiscardLogMaxFileSize);
-  }
-
-  if (!args.DiscardLogPath.empty() &&
-      ((args.DiscardLogMaxFileSize * 1024) < (2 * args.MaxInputMsgSize))) {
-    /* We enforce this requirement to ensure that the discard logfile has
-       enough capacity for at least one message of the maximum possible size.
-       Multiplying by 2 ensures that there is more than enough space for the
-       extra information in a log entry beyond just the message content. */
-    THROW_ERROR(TBadDiscardLogMaxFileSize);
-  }
-
-  /* Verify that Dory supports any requested API version(s).  Once Dory has
-     started, cases where the brokers don't support a requested API version
-     will be handled. */
-
-  if (args.MetadataApiVersion.IsKnown() &&
-      !IsMetadataApiVersionSupported(*args.MetadataApiVersion)) {
-    THROW_ERROR(TUnsupportedMetadataApiVersion);
-  }
-
-  if (args.ProduceApiVersion.IsKnown() &&
-      !IsProduceApiVersionSupported(*args.ProduceApiVersion)) {
-    THROW_ERROR(TUnsupportedProduceApiVersion);
-  }
-
-  Conf::TConf conf = Conf::TConf::TBuilder(enable_lz4).Build(
-      ReadFileIntoString(args.ConfigPath));
-
+void TDoryServer::PrepareForInit(const Conf::TConf &conf) {
   /* Load any compression libraries we need, according to the compression info
      from our config file.  This will throw if a library fails to load.  We
      want to fail early if there is a problem loading a library. */
@@ -180,8 +132,6 @@ TDoryServer::CreateConfig(int argc, const char *const *argv,
   struct timespec t;
   Wr::clock_gettime(CLOCK_MONOTONIC_RAW, &t);
   std::srand(static_cast<unsigned>(t.tv_sec ^ t.tv_nsec));
-
-  return std::make_pair(std::move(args), std::move(conf));
 }
 
 static inline size_t

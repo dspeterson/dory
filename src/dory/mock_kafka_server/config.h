@@ -32,7 +32,7 @@ namespace Dory {
   namespace MockKafkaServer {
 
     struct TConfig {
-      /* Throws TArgParseError on error parsing args. */
+      /* Throws TInvalidArgError on error parsing args. */
       TConfig(int argc, const char *const argv[]);
 
       bool LogEcho = false;

@@ -35,13 +35,18 @@
 #include <base/basename.h>
 #include <base/no_default_case.h>
 #include <dory/build_id.h>
-#include <dory/util/arg_parse_error.h>
+#include <dory/kafka_proto/metadata/version_util.h>
+#include <dory/kafka_proto/produce/version_util.h>
+#include <dory/util/invalid_arg_error.h>
 #include <dory/util/misc_util.h>
 #include <log/log.h>
 #include <tclap/CmdLine.h>
 
 using namespace Base;
 using namespace Dory;
+using namespace Dory::KafkaProto;
+using namespace Dory::KafkaProto::Metadata;
+using namespace Dory::KafkaProto::Produce;
 using namespace Dory::Util;
 using namespace Log;
 
@@ -54,7 +59,7 @@ static void ProcessModeArg(const std::string &mode_string,
     if (s.empty()) {
       std::string blurb("Invalid value for --");
       blurb += opt_name;
-      throw TArgParseError(std::move(blurb));
+      throw TInvalidArgError(std::move(blurb));
     }
 
     char *pos = nullptr;
@@ -65,7 +70,7 @@ static void ProcessModeArg(const std::string &mode_string,
         (static_cast<long>(mode) != n)) {
       std::string blurb("Invalid value for --");
       blurb += opt_name;
-      throw TArgParseError(std::move(blurb));
+      throw TInvalidArgError(std::move(blurb));
     }
 
     result.MakeKnown(mode);
@@ -349,7 +354,7 @@ static void ParseArgs(int argc, const char *const argv[], TCmdLineArgs &args,
       if ((port < 1) && !allow_input_bind_ephemeral) {
         /* A value of 0 requests an ephemeral port, which is only allowed for
            test code. */
-        throw TArgParseError("Invalid input port");
+        throw TInvalidArgError("Invalid input port");
       }
 
       args.InputPort.MakeKnown(port);
@@ -416,7 +421,7 @@ static void ParseArgs(int argc, const char *const argv[], TCmdLineArgs &args,
 
     if (!arg_receive_socket_name.isSet() &&
         !arg_receive_stream_socket_name.isSet() && !arg_input_port.isSet()) {
-      throw TArgParseError(
+      throw TInvalidArgError(
           "At least one of (--receive_socket_name, "
           "--receive_stream_socket_name, --input_port) options must be "
           "specified.");
@@ -424,13 +429,13 @@ static void ParseArgs(int argc, const char *const argv[], TCmdLineArgs &args,
 
     if (!arg_receive_socket_name.isSet()) {
       if (arg_receive_socket_mode.isSet()) {
-        throw TArgParseError(
+        throw TInvalidArgError(
             "Option --receive_socket_mode is only allowed when "
             "--receive_socket_name is specified.");
       }
 
       if (arg_allow_large_unix_datagrams.isSet()) {
-        throw TArgParseError(
+        throw TInvalidArgError(
             "Option --allow_large_unix_datagrams is only allowed when "
             "--receive_socket_name is specified.");
       }
@@ -438,16 +443,67 @@ static void ParseArgs(int argc, const char *const argv[], TCmdLineArgs &args,
 
     if (!arg_receive_stream_socket_name.isSet() &&
         arg_receive_stream_socket_mode.isSet()) {
-      throw TArgParseError(
+      throw TInvalidArgError(
           "Option --receive_stream_socket_mode is only allowed when "
           "--receive_stream_socket_name is specified.");
     }
   } catch (const ArgException &x) {
-    throw TArgParseError(x.error(), x.argId());
+    throw TInvalidArgError(x.error(), x.argId());
   }
 
   if (args.StatusPort < 1) {
-    throw TArgParseError("Invalid value specified for option --status_port.");
+    throw TInvalidArgError(
+        "Invalid value specified for option --status_port.");
+  }
+
+  if (args.DiscardReportInterval < 1) {
+    throw TInvalidArgError("discard_report_interval value must be positive");
+  }
+
+  if (args.RequiredAcks < -1) {
+    throw TInvalidArgError("required_acks value must be >= -1");
+  }
+
+  if (args.ReplicationTimeout >
+      static_cast<size_t>(std::numeric_limits<int32_t>::max())) {
+    throw TInvalidArgError("replication_timeout value out of range");
+  }
+
+  if (args.DebugDir.empty() || (args.DebugDir[0] != '/')) {
+    throw TInvalidArgError("debug_dir must be an absolute path");
+  }
+
+  if (args.DiscardLogMaxFileSize == 0) {
+    throw TInvalidArgError(
+        "discard_log_max_file_size must be at least twice the maximum input "
+        "message size.  To disable discard logfile generation, leave "
+        "discard_log_path unspecified.");
+  }
+
+  if (!args.DiscardLogPath.empty() &&
+      ((args.DiscardLogMaxFileSize * 1024) < (2 * args.MaxInputMsgSize))) {
+    /* We enforce this requirement to ensure that the discard logfile has
+       enough capacity for at least one message of the maximum possible size.
+       Multiplying by 2 ensures that there is more than enough space for the
+       extra information in a log entry beyond just the message content. */
+    throw TInvalidArgError(
+        "discard_log_max_file_size must be at least twice the maximum input "
+        "message size.  To disable discard logfile generation, leave "
+        "discard_log_path unspecified.");
+  }
+
+  /* Verify that Dory supports any requested API version(s).  Once Dory has
+     started, cases where the brokers don't support a requested API version
+     will be handled. */
+
+  if (args.MetadataApiVersion.IsKnown() &&
+      !IsMetadataApiVersionSupported(*args.MetadataApiVersion)) {
+    throw TInvalidArgError("Requested metadata API version is not supported");
+  }
+
+  if (args.ProduceApiVersion.IsKnown() &&
+      !IsProduceApiVersionSupported(*args.ProduceApiVersion)) {
+    throw TInvalidArgError("Requested produce API version is not supported");
   }
 }
 

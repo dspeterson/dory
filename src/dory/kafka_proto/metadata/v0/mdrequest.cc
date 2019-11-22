@@ -44,8 +44,8 @@
 #include <base/io_util.h>
 #include <base/no_copy_semantics.h>
 #include <dory/build_id.h>
-#include <dory/util/arg_parse_error.h>
 #include <dory/util/connect_to_host.h>
+#include <dory/util/invalid_arg_error.h>
 #include <rpc/transceiver.h>
 #include <tclap/CmdLine.h>
 
@@ -57,7 +57,7 @@ using namespace Dory::Util;
 using namespace Rpc;
 
 struct TConfig {
-  /* Throws TArgParseError on error parsing args. */
+  /* Throws TInvalidArgError on error parsing args. */
   TConfig(int argc, const char *const argv[]);
 
   std::string BrokerHost;
@@ -77,7 +77,8 @@ static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
 
   try {
     CmdLine cmd(
-        "Utility for sending a metadata request to a Kafka broker and writing the response to standard output",
+        "Utility for sending a metadata request to a Kafka broker and writing "
+        "the response to standard output",
         ' ', dory_build_id);
     ValueArg<decltype(config.BrokerHost)> arg_broker_host("", "broker_host",
         "Kafka broker to connect to.", true, config.BrokerHost, "HOST");
@@ -86,8 +87,8 @@ static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
         "Port to connect to.", false, config.BrokerPort, "PORT");
     cmd.add(arg_broker_port);
     ValueArg<decltype(config.Topic)> arg_topic("", "topic",
-        "Topic to request metadata for.  If omitted, metadata will be requested for all topics.",
-        false, config.Topic, "TOPIC");
+        "Topic to request metadata for.  If omitted, metadata will be "
+        "requested for all topics.", false, config.Topic, "TOPIC");
     cmd.add(arg_topic);
     ValueArg<decltype(config.RequestCount)> arg_request_count("",
         "request_count", "Number of requests to send (for testing).", false,
@@ -99,7 +100,7 @@ static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
     config.Topic = arg_topic.getValue();
     config.RequestCount = arg_request_count.getValue();
   } catch (const ArgException &x) {
-    throw TArgParseError(x.error(), x.argId());
+    throw TInvalidArgError(x.error(), x.argId());
   }
 }
 
@@ -371,7 +372,7 @@ static int mdrequest_main(int argc, const char *const *argv) {
 
   try {
     cfg.reset(new TConfig(argc, argv));
-  } catch (const TArgParseError &x) {
+  } catch (const TInvalidArgError &x) {
     /* Error parsing command line arguments. */
     std::cerr << x.what() << std::endl;
     return EXIT_FAILURE;

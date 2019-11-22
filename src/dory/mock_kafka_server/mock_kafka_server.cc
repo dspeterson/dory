@@ -27,7 +27,7 @@
 #include <dory/compress/compression_init.h>
 #include <dory/mock_kafka_server/config.h>
 #include <dory/mock_kafka_server/server.h>
-#include <dory/util/arg_parse_error.h>
+#include <dory/util/invalid_arg_error.h>
 #include <log/log.h>
 #include <log/pri.h>
 #include <log_util/init_logging.h>
@@ -45,7 +45,7 @@ int mock_kafka_server_main(int argc, const char *const *argv) {
 
   try {
     cfg.reset(new TConfig(argc, argv));
-  } catch (const TArgParseError &x) {
+  } catch (const TInvalidArgError &x) {
     /* Error parsing command line arguments. */
     std::cerr << x.what() << std::endl;
     return EXIT_FAILURE;

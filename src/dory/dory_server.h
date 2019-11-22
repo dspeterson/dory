@@ -44,6 +44,7 @@
 #include <dory/batch/batch_config_builder.h>
 #include <dory/batch/global_batch_config.h>
 #include <dory/cmd_line_args.h>
+#include <dory/conf/compression_conf.h>
 #include <dory/conf/conf.h>
 #include <dory/debug/debug_setup.h>
 #include <dory/discard_file_logger.h>
@@ -65,45 +66,10 @@ namespace Dory {
     NO_COPY_SEMANTICS(TDoryServer);
 
     public:
-    DEFINE_ERROR(TUnsupportedMetadataApiVersion, std::runtime_error,
-        "Requested metadata API version is not supported.");
+    static bool CheckUnixDgSize(const TCmdLineArgs &args);
 
-    DEFINE_ERROR(TUnsupportedProduceApiVersion, std::runtime_error,
-        "Requested produce API version is not supported.");
-
-    DEFINE_ERROR(TBadRequiredAcks, std::runtime_error,
-        "required_acks value must be >= -1");
-
-    DEFINE_ERROR(TBadReplicationTimeout, std::runtime_error,
-        "replication_timeout value out of range");
-
-    DEFINE_ERROR(TBadDiscardReportInterval, std::runtime_error,
-        "discard_report_interval value must be positive");
-
-    DEFINE_ERROR(TMaxInputMsgSizeTooSmall, std::runtime_error,
-        "max_input_msg_size is too small");
-
-    DEFINE_ERROR(TMaxInputMsgSizeTooLarge, std::runtime_error,
-        "max_input_msg_size is too large");
-
-    DEFINE_ERROR(TMustAllowLargeDatagrams, std::runtime_error,
-        "You didn't specify allow_large_unix_datagrams, and "
-        "max_input_msg_size is large enough that clients sending large "
-        "datagrams will need to increase SO_SNDBUF above the default value.  "
-        "Either decrease max_input_msg_size or specify "
-        "allow_large_unix_datagrams.");
-
-    DEFINE_ERROR(TBadDebugDir, std::runtime_error,
-        "debug_dir must be an absolute path");
-
-    DEFINE_ERROR(TBadDiscardLogMaxFileSize, std::runtime_error,
-        "discard_log_max_file_size must be at least twice the maximum input "
-        "message size.  To disable discard logfile generation, leave "
-        "discard_log_path unspecified.");
-
-    static std::pair<TCmdLineArgs, Conf::TConf> CreateConfig(int argc,
-        const char *const *argv, bool &large_sendbuf_required,
-        bool allow_input_bind_ephemeral, bool enable_lz4);
+    /* Must be called before invoking TDoryServer constructor. */
+    static void PrepareForInit(const Conf::TConf &conf);
 
     /* dory monitors shutdown_fd, and shuts down when it becomes readable. */
     TDoryServer(TCmdLineArgs &&args, Conf::TConf &&conf,

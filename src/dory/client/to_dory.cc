@@ -54,7 +54,7 @@
 #include <dory/client/tcp_sender.h>
 #include <dory/client/unix_dg_sender.h>
 #include <dory/client/unix_stream_sender.h>
-#include <dory/util/arg_parse_error.h>
+#include <dory/util/invalid_arg_error.h>
 #include <tclap/CmdLine.h>
 
 using namespace Base;
@@ -63,7 +63,7 @@ using namespace Dory::Client;
 using namespace Dory::Util;
 
 struct TConfig {
-  /* Throws TArgParseError on error parsing args. */
+  /* Throws TInvalidArgError on error parsing args. */
   TConfig(int argc, const char *const argv[]);
 
   /* For UNIX domain datagram socket input to Dory. */
@@ -168,7 +168,7 @@ static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
       in_port_t port = arg_port.getValue();
 
       if (port < 1) {
-        throw TArgParseError("Invalid port");
+        throw TInvalidArgError("Invalid port");
       }
 
       config.Port.MakeKnown(port);
@@ -198,16 +198,16 @@ static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
     }
 
     if (input_type_count != 1) {
-      throw TArgParseError(
+      throw TInvalidArgError(
           "Exactly one of (--socket_path, --stream_socket_path, --port) "
           "options must be specified.");
     }
   } catch (const ArgException &x) {
-    throw TArgParseError(x.error(), x.argId());
+    throw TInvalidArgError(x.error(), x.argId());
   }
 
   if (config.Stdin && config.ValueSpecified) {
-    throw TArgParseError(
+    throw TInvalidArgError(
         "You cannot specify --value <VALUE> and --stdin simultaneously.");
   }
 }
@@ -333,7 +333,7 @@ static int ToDoryMain(int argc, const char *const argv[]) {
 
   try {
     cfg.reset(new TConfig(argc, argv));
-  } catch (const TArgParseError &x) {
+  } catch (const TInvalidArgError &x) {
     /* Error parsing command line arguments. */
     std::cerr << x.what() << std::endl;
     return EXIT_FAILURE;

@@ -30,14 +30,14 @@ namespace Dory {
 
   namespace Util {
 
-    class TArgParseError : public std::runtime_error {
+    class TInvalidArgError : public std::runtime_error {
       public:
-      explicit TArgParseError(std::string &&msg)
+      explicit TInvalidArgError(std::string &&msg)
           : std::runtime_error(MakeWhatArg(msg)),
             Msg(std::move(msg)) {
       }
 
-      TArgParseError(std::string &&msg, std::string &&arg_id)
+      TInvalidArgError(std::string &&msg, std::string &&arg_id)
           : std::runtime_error(MakeWhatArg(msg, arg_id)),
             Msg(std::move(msg)),
             ArgId(std::move(arg_id)) {
@@ -72,7 +72,7 @@ namespace Dory {
       std::string Msg;
 
       std::string ArgId;
-    };  // TArgParseError
+    };  // TInvalidArgError
 
   }  // Util
 

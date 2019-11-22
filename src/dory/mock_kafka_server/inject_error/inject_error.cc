@@ -38,7 +38,7 @@
 #include <dory/build_id.h>
 #include <dory/mock_kafka_server/cmd.h>
 #include <dory/mock_kafka_server/error_injector.h>
-#include <dory/util/arg_parse_error.h>
+#include <dory/util/invalid_arg_error.h>
 #include <tclap/CmdLine.h>
 
 using namespace Base;
@@ -49,7 +49,7 @@ using namespace Dory::Util;
 using TErrorInjectCmd = Dory::MockKafkaServer::TCmd;
 
 struct TConfig {
-  /* Throws TArgParseError on error parsing args. */
+  /* Throws TInvalidArgError on error parsing args. */
   TConfig(int argc, const char *const argv[]);
 
   std::string Host;
@@ -142,7 +142,7 @@ static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
     config.Topic = arg_topic.getValue();
     config.CmdFile = arg_cmd_file.getValue();
   } catch (const ArgException &x) {
-    throw TArgParseError(x.error(), x.argId());
+    throw TInvalidArgError(x.error(), x.argId());
   }
 }
 
@@ -421,7 +421,7 @@ static int inject_error_main(int argc, const char *const *argv) {
 
   try {
     cfg.reset(new TConfig(argc, argv));
-  } catch (const TArgParseError &x) {
+  } catch (const TInvalidArgError &x) {
     /* Error parsing command line arguments. */
     std::cerr << x.what() << std::endl;
     return EXIT_FAILURE;
