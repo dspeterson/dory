@@ -61,9 +61,12 @@ static int DoryMain(int argc, char *const argv[]) {
   TConf conf;
 
   try {
+    args = TCmdLineArgs(argc, argv,
+        false /* allow_input_bind_ephemeral */);
+    large_sendbuf_required = TDoryServer::CheckUnixDgSize(args);
     xml_init.Init();
     TOpt<std::string> opt_err_msg = HandleXmlErrors(
-        [&]() -> void {
+        [&args, &conf]() -> void {
           /* TODO: Enable support for LZ4 compression.  To enable LZ4, dory's
              wire protocol implementation needs to be updated to support asking
              the brokers what version of Kafka they are running.  LZ4 support
@@ -72,14 +75,8 @@ static int DoryMain(int argc, char *const argv[]) {
              bug in Kafka.  See
              https://cwiki.apache.org/confluence/display/KAFKA/KIP-57+-+Interoperable+LZ4+Framing
              for details. */
-          const bool enable_lz4 = false;
-
-          args = TCmdLineArgs(argc, argv,
-              false /* allow_input_bind_ephemeral */);
-          large_sendbuf_required = TDoryServer::CheckUnixDgSize(args);
-          conf = Dory::Conf::TConf::TBuilder(enable_lz4).Build(
+          conf = Dory::Conf::TConf::TBuilder(false /* enable_lz4 */).Build(
               ReadFileIntoString(args.ConfigPath));
-          TDoryServer::PrepareForInit(conf);
         }
     );
 
@@ -87,6 +84,8 @@ static int DoryMain(int argc, char *const argv[]) {
       std::cerr << *opt_err_msg << std::endl;
       return EXIT_FAILURE;
     }
+
+    TDoryServer::PrepareForInit(conf);
 
     if (args.Daemon) {
       pid_t pid = Server::Daemonize();
