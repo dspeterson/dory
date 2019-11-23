@@ -58,7 +58,7 @@ namespace Dory {
       NO_COPY_SEMANTICS(TProduceRequestFactory);
 
       public:
-      TProduceRequestFactory(const TCmdLineArgs &config,
+      TProduceRequestFactory(const TCmdLineArgs &args,
           const Batch::TGlobalBatchConfig &batch_config,
           const Conf::TCompressionConf &compression_conf,
           const std::shared_ptr<KafkaProto::Produce::TProduceProtocol>
@@ -182,7 +182,7 @@ namespace Dory {
       void WriteOneMsgSet(const TMsgSet &msg_set, const TCompressionInfo &info,
           std::vector<uint8_t> &dst);
 
-      const TCmdLineArgs &Config;
+      const TCmdLineArgs &CmdLineArgs;
 
       const size_t BrokerIndex;
 

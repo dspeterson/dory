@@ -50,7 +50,7 @@ namespace Dory {
       NO_COPY_SEMANTICS(TMockKafkaDispatcher);
 
       public:
-      TMockKafkaDispatcher(const TCmdLineArgs &config,
+      TMockKafkaDispatcher(const TCmdLineArgs &args,
           TMsgStateTracker &msg_state_tracker,
           TAnomalyTracker &anomaly_tracker,
           const Batch::TBatchConfig &batch_config,

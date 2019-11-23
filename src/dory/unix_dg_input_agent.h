@@ -71,7 +71,7 @@ namespace Dory {
     NO_COPY_SEMANTICS(TUnixDgInputAgent);
 
     public:
-    TUnixDgInputAgent(const TCmdLineArgs &config, Capped::TPool &pool,
+    TUnixDgInputAgent(const TCmdLineArgs &args, Capped::TPool &pool,
         TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
         Thread::TGatePutApi<TMsg::TPtr> &output_queue);
 
@@ -91,7 +91,7 @@ namespace Dory {
 
     void ForwardMessages();
 
-    const TCmdLineArgs &Config;
+    const TCmdLineArgs &CmdLineArgs;
 
     bool Destroying = false;
 

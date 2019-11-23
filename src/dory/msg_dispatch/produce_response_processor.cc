@@ -125,10 +125,10 @@ void TProduceResponseProcessor::CountFailedDeliveryAttempt(
     assert(msg->GetTopic() == topic);
 
     if (msg->CountFailedDeliveryAttempt() >
-        Ds.Config.MaxFailedDeliveryAttempts) {
+        Ds.CmdLineArgs.MaxFailedDeliveryAttempts) {
       DiscardOnFailedDeliveryAttemptLimit.Increment();
 
-      if (!Ds.Config.NoLogDiscard) {
+      if (!Ds.CmdLineArgs.NoLogDiscard) {
         LOG_R(TPri::ERR, std::chrono::seconds(30))
             << "Discarding message because failed delivery attempt limit "
             << "reached (topic: [" << msg->GetTopic() << "])";

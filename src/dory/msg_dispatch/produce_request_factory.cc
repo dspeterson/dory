@@ -51,12 +51,12 @@ DEFINE_COUNTER(SerializeMsgSet);
 DEFINE_COUNTER(SerializeProduceRequest);
 DEFINE_COUNTER(SerializeTopicGroup);
 
-TProduceRequestFactory::TProduceRequestFactory(const TCmdLineArgs &config,
+TProduceRequestFactory::TProduceRequestFactory(const TCmdLineArgs &args,
     const TGlobalBatchConfig &batch_config,
     const TCompressionConf &compression_conf,
     const std::shared_ptr<TProduceProtocol> &produce_protocol,
     size_t broker_index)
-    : Config(config),
+    : CmdLineArgs(args),
       BrokerIndex(broker_index),
       ProduceProtocol(produce_protocol),
       ProduceRequestDataLimit(batch_config.GetProduceRequestDataLimit()),
@@ -104,10 +104,10 @@ TOpt<TProduceRequest> TProduceRequestFactory::BuildRequest(
     return TOpt<TProduceRequest>();
   }
 
-  const char *client_id_begin = Config.ClientId.data();
+  const char *client_id_begin = CmdLineArgs.ClientId.data();
   RequestWriter->OpenRequest(dst, request.first, client_id_begin,
-      client_id_begin + Config.ClientId.size(), Config.RequiredAcks,
-      static_cast<int32_t>(Config.ReplicationTimeout));
+      client_id_begin + CmdLineArgs.ClientId.size(), CmdLineArgs.RequiredAcks,
+      static_cast<int32_t>(CmdLineArgs.ReplicationTimeout));
   const TAllTopics &all_topics = request.second;
   assert(!all_topics.empty());
 

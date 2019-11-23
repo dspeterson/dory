@@ -43,7 +43,6 @@
 #include <base/wr/net_util.h>
 #include <base/wr/time_util.h>
 #include <capped/pool.h>
-#include <dory/batch/batch_config_builder.h>
 #include <dory/compress/compression_init.h>
 #include <dory/conf/batch_conf.h>
 #include <dory/conf/compression_conf.h>
@@ -139,6 +138,53 @@ ComputeBlockCount(size_t max_buffer_kb, size_t block_size) {
   return std::max<size_t>(1, (1024 * max_buffer_kb) / block_size);
 }
 
+TDoryServer::TDoryServer(TCmdLineArgs &&args, TConf &&conf,
+    const TFd &shutdown_fd)
+    : CmdLineArgs(std::move(args)),
+      Conf(std::move(conf)),
+      PoolBlockSize(128),
+      ShutdownFd(shutdown_fd),
+      Pool(PoolBlockSize,
+           ComputeBlockCount(CmdLineArgs.MsgBufferMax, PoolBlockSize),
+           Capped::TPool::TSync::Mutexed),
+      AnomalyTracker(DiscardFileLogger, CmdLineArgs.DiscardReportInterval,
+                     CmdLineArgs.DiscardReportBadMsgPrefixSize),
+      StatusPort(0),
+      DebugSetup(CmdLineArgs.DebugDir.c_str(), CmdLineArgs.MsgDebugTimeLimit,
+                 CmdLineArgs.MsgDebugByteLimit),
+      Dispatcher(CmdLineArgs, Conf, MsgStateTracker, AnomalyTracker,
+          DebugSetup),
+      RouterThread(CmdLineArgs, Conf, AnomalyTracker, MsgStateTracker,
+          DebugSetup, Dispatcher),
+      MetadataTimestamp(RouterThread.GetMetadataTimestamp()) {
+  if (!CmdLineArgs.ReceiveStreamSocketName.empty() ||
+      CmdLineArgs.InputPort.IsKnown()) {
+    /* Create thread pool if UNIX stream or TCP input is enabled. */
+    StreamClientWorkerPool.MakeKnown();
+  }
+
+  if (!CmdLineArgs.ReceiveSocketName.empty()) {
+    UnixDgInputAgent.MakeKnown(CmdLineArgs, Pool, MsgStateTracker,
+        AnomalyTracker, RouterThread.GetMsgChannel());
+  }
+
+  if (!CmdLineArgs.ReceiveStreamSocketName.empty()) {
+    assert(StreamClientWorkerPool.IsKnown());
+    UnixStreamInputAgent.MakeKnown(STREAM_BACKLOG,
+        CmdLineArgs.ReceiveStreamSocketName.c_str(),
+        CreateStreamClientHandler(false));
+
+    if (CmdLineArgs.ReceiveStreamSocketMode.IsKnown()) {
+      UnixStreamInputAgent->SetMode(*CmdLineArgs.ReceiveStreamSocketMode);
+    }
+  }
+
+  if (CmdLineArgs.InputPort.IsKnown()) {
+    TcpInputAgent.MakeKnown(STREAM_BACKLOG, htonl(INADDR_LOOPBACK),
+        *CmdLineArgs.InputPort, CreateStreamClientHandler(true));
+  }
+}
+
 void TDoryServer::BindStatusSocket(bool bind_ephemeral) {
   assert(this);
   TAddress status_address(
@@ -209,54 +255,6 @@ int TDoryServer::Run() {
   }
 
   return Shutdown() && no_error ? EXIT_SUCCESS : EXIT_FAILURE;
-}
-
-TDoryServer::TDoryServer(TCmdLineArgs &&args, TConf &&conf,
-    const TGlobalBatchConfig &batch_config,
-    const TFd &shutdown_fd)
-    : CmdLineArgs(std::move(args)),
-      Conf(std::move(conf)),
-      PoolBlockSize(128),
-      ShutdownFd(shutdown_fd),
-      Pool(PoolBlockSize,
-           ComputeBlockCount(CmdLineArgs.MsgBufferMax, PoolBlockSize),
-           Capped::TPool::TSync::Mutexed),
-      AnomalyTracker(DiscardFileLogger, CmdLineArgs.DiscardReportInterval,
-                     CmdLineArgs.DiscardReportBadMsgPrefixSize),
-      StatusPort(0),
-      DebugSetup(CmdLineArgs.DebugDir.c_str(), CmdLineArgs.MsgDebugTimeLimit,
-                 CmdLineArgs.MsgDebugByteLimit),
-      Dispatcher(CmdLineArgs, Conf.CompressionConf, MsgStateTracker,
-          AnomalyTracker, batch_config, DebugSetup),
-      RouterThread(CmdLineArgs, Conf, AnomalyTracker, MsgStateTracker,
-          batch_config, DebugSetup, Dispatcher),
-      MetadataTimestamp(RouterThread.GetMetadataTimestamp()) {
-  if (!CmdLineArgs.ReceiveStreamSocketName.empty() ||
-      CmdLineArgs.InputPort.IsKnown()) {
-    /* Create thread pool if UNIX stream or TCP input is enabled. */
-    StreamClientWorkerPool.MakeKnown();
-  }
-
-  if (!CmdLineArgs.ReceiveSocketName.empty()) {
-    UnixDgInputAgent.MakeKnown(CmdLineArgs, Pool, MsgStateTracker,
-        AnomalyTracker, RouterThread.GetMsgChannel());
-  }
-
-  if (!CmdLineArgs.ReceiveStreamSocketName.empty()) {
-    assert(StreamClientWorkerPool.IsKnown());
-    UnixStreamInputAgent.MakeKnown(STREAM_BACKLOG,
-        CmdLineArgs.ReceiveStreamSocketName.c_str(),
-        CreateStreamClientHandler(false));
-
-    if (CmdLineArgs.ReceiveStreamSocketMode.IsKnown()) {
-      UnixStreamInputAgent->SetMode(*CmdLineArgs.ReceiveStreamSocketMode);
-    }
-  }
-
-  if (CmdLineArgs.InputPort.IsKnown()) {
-    TcpInputAgent.MakeKnown(STREAM_BACKLOG, htonl(INADDR_LOOPBACK),
-        *CmdLineArgs.InputPort, CreateStreamClientHandler(true));
-  }
 }
 
 std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>

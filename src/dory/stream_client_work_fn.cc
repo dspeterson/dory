@@ -68,7 +68,7 @@ TStreamClientWorkFn &TStreamClientWorkFn::TStreamClientWorkFn::operator=(
     nullptr_t) noexcept {
   assert(this);
   IsTcp = false;
-  Config = nullptr;
+  CmdLineArgs = nullptr;
   Pool = nullptr;
   MsgStateTracker = nullptr;
   AnomalyTracker = nullptr;
@@ -81,7 +81,7 @@ TStreamClientWorkFn &TStreamClientWorkFn::TStreamClientWorkFn::operator=(
 
 void TStreamClientWorkFn::operator()() {
   assert(this);
-  assert(Config);
+  assert(CmdLineArgs);
   assert(Pool);
   assert(MsgStateTracker);
   assert(AnomalyTracker);
@@ -120,13 +120,13 @@ void TStreamClientWorkFn::operator()() {
   } while (!shutdown_item.revents && HandleSockReadReady());
 }
 
-void TStreamClientWorkFn::SetState(bool is_tcp, const TCmdLineArgs &config,
+void TStreamClientWorkFn::SetState(bool is_tcp, const TCmdLineArgs &args,
     TPool &pool, TMsgStateTracker &msg_state_tracker,
     TAnomalyTracker &anomaly_tracker, TGatePutApi<TMsg::TPtr> &output_queue,
     const TFd &shutdown_request_fd, TFd &&client_socket) noexcept {
   assert(this);
   IsTcp = is_tcp;
-  Config = &config;
+  CmdLineArgs = &args;
   Pool = &pool;
   MsgStateTracker = &msg_state_tracker;
   AnomalyTracker = &anomaly_tracker;
@@ -134,7 +134,7 @@ void TStreamClientWorkFn::SetState(bool is_tcp, const TCmdLineArgs &config,
   ShutdownRequestFd = &shutdown_request_fd;
   ClientSocket = std::move(client_socket);
   StreamReader.Reset(ClientSocket);
-  StreamReader.SetMaxMsgBodySize(config.MaxStreamInputMsgSize);
+  StreamReader.SetMaxMsgBodySize(args.MaxStreamInputMsgSize);
 }
 
 void TStreamClientWorkFn::HandleClientClosed() const {
@@ -242,8 +242,8 @@ bool TStreamClientWorkFn::HandleSockReadReady() {
       }
       case TStreamMsgReader::TState::MsgReady: {
         TMsg::TPtr msg = InputDg::BuildMsgFromDg(StreamReader.GetReadyMsg(),
-            StreamReader.GetReadyMsgSize(), *Config, *Pool, *AnomalyTracker,
-            *MsgStateTracker);
+            StreamReader.GetReadyMsgSize(), *CmdLineArgs, *Pool,
+            *AnomalyTracker, *MsgStateTracker);
 
         if (msg) {
           OutputQueue->Put(std::move(msg));

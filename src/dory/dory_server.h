@@ -73,11 +73,7 @@ namespace Dory {
 
     /* dory monitors shutdown_fd, and shuts down when it becomes readable. */
     TDoryServer(TCmdLineArgs &&args, Conf::TConf &&conf,
-        const Base::TFd &shutdown_fd)
-        : TDoryServer(std::move(args), std::move(conf),
-            Batch::TBatchConfigBuilder().BuildFromConf(conf.BatchConf),
-            shutdown_fd) {
-    }
+        const Base::TFd &shutdown_fd);
 
     const TCmdLineArgs &GetCmdLineArgs() const noexcept {
       assert(this);
@@ -127,11 +123,6 @@ namespace Dory {
     int Run();
 
     private:
-    /* Public constructor delegates to this one. */
-    TDoryServer(TCmdLineArgs &&args, Conf::TConf &&conf,
-        const Batch::TGlobalBatchConfig &batch_config,
-        const Base::TFd &shutdown_fd);
-
     /* Thread pool type for handling local TCP and UNIX domain stream client
        connections. */
     using TWorkerPool = TStreamClientHandler::TWorkerPool;

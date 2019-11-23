@@ -42,6 +42,7 @@
 #include <base/opt.h>
 #include <base/timer_fd.h>
 #include <dory/anomaly_tracker.h>
+#include <dory/batch/batch_config_builder.h>
 #include <dory/batch/global_batch_config.h>
 #include <dory/batch/per_topic_batcher.h>
 #include <dory/cmd_line_args.h>
@@ -68,11 +69,14 @@ namespace Dory {
     NO_COPY_SEMANTICS(TRouterThread);
 
     public:
-    TRouterThread(const TCmdLineArgs &config, const Conf::TConf &conf,
+    TRouterThread(const TCmdLineArgs &args, const Conf::TConf &conf,
         TAnomalyTracker &anomaly_tracker, TMsgStateTracker &msg_state_tracker,
-        const Batch::TGlobalBatchConfig &batch_config,
         const Debug::TDebugSetup &debug_setup,
-        MsgDispatch::TKafkaDispatcherApi &dispatcher);
+        MsgDispatch::TKafkaDispatcherApi &dispatcher)
+        : TRouterThread(args, conf, anomaly_tracker, msg_state_tracker,
+              Batch::TBatchConfigBuilder().BuildFromConf(conf.BatchConf),
+              debug_setup, dispatcher) {
+    }
 
     ~TRouterThread() override;
 
@@ -129,6 +133,13 @@ namespace Dory {
     };  // TShutdownOnDestroy
 
     using TKafkaBroker = Util::THostAndPort;
+
+    /* Public constructor delegates to this one. */
+    TRouterThread(const TCmdLineArgs &args, const Conf::TConf &conf,
+        TAnomalyTracker &anomaly_tracker, TMsgStateTracker &msg_state_tracker,
+        const Batch::TGlobalBatchConfig &batch_config,
+        const Debug::TDebugSetup &debug_setup,
+        MsgDispatch::TKafkaDispatcherApi &dispatcher);
 
     static size_t ComputeRetryDelay(size_t mean_delay, size_t div);
 
@@ -291,7 +302,7 @@ namespace Dory {
     void SetMetadata(std::shared_ptr<TMetadata> &&meta,
         bool record_update = true);
 
-    const TCmdLineArgs &Config;
+    const TCmdLineArgs &CmdLineArgs;
 
     /* Configuration for per-topic message rate limiting. */
     Conf::TTopicRateConf TopicRateConf;

@@ -74,7 +74,7 @@ namespace {
 
     std::vector<const char *> Args;
 
-    std::unique_ptr<TCmdLineArgs> Cfg;
+    std::unique_ptr<TCmdLineArgs> CmdLineArgs;
 
     TPool Pool;
 
@@ -139,11 +139,11 @@ namespace {
     Args.push_back("--receive_socket_name");
     Args.push_back(UnixSocketName.c_str());
     Args.push_back(nullptr);
-    Cfg.reset(
+    CmdLineArgs.reset(
         new TCmdLineArgs(static_cast<int>(Args.size() - 1), &Args[0], true));
     OutputQueue.reset(new TGate<TMsg::TPtr>);
-    UnixDgInputAgent.reset(new TUnixDgInputAgent(*Cfg, Pool, MsgStateTracker,
-        AnomalyTracker, *OutputQueue));
+    UnixDgInputAgent.reset(new TUnixDgInputAgent(*CmdLineArgs, Pool,
+        MsgStateTracker, AnomalyTracker, *OutputQueue));
   }
 
   void MakeDg(std::vector<uint8_t> &dg, const std::string &topic,

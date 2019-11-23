@@ -29,9 +29,9 @@ using namespace Dory::KafkaProto;
 using namespace Dory::MsgDispatch;
 using namespace Dory::TestUtil;
 
-TMockKafkaDispatcher::TMockKafkaDispatcher(const TCmdLineArgs &/*config*/,
+TMockKafkaDispatcher::TMockKafkaDispatcher(const TCmdLineArgs &/*args*/,
     TMsgStateTracker &/*msg_state_tracker*/,
-    TAnomalyTracker &/*anomaly_trackeri*/,
+    TAnomalyTracker &/*anomaly_tracker*/,
     const TBatchConfig &/*batch_config*/,
     std::unordered_set<std::string> &&/*batch_topic_filter*/,
     bool /*batch_topic_filter_exclude*/, size_t /*produce_request_data_limit*/,

@@ -45,7 +45,7 @@ namespace Dory {
 
     void operator()();
 
-    void SetState(bool is_tcp, const TCmdLineArgs &config, Capped::TPool &pool,
+    void SetState(bool is_tcp, const TCmdLineArgs &args, Capped::TPool &pool,
         TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
         Thread::TGatePutApi<TMsg::TPtr> &output_queue,
         const Base::TFd &shutdown_request_fd,
@@ -64,7 +64,7 @@ namespace Dory {
        indicates that we are handling a UNIX domain stream connection. */
     bool IsTcp = false;
 
-    const TCmdLineArgs *Config = nullptr;
+    const TCmdLineArgs *CmdLineArgs = nullptr;
 
     /* Blocks for TBlob objects containing message data get allocated from
        here. */

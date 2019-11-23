@@ -90,7 +90,7 @@ TConnector::TConnector(size_t my_broker_index, TDispatcherSharedState &ds)
       DebugLoggerReceive(ds.DebugSetup, TDebugSetup::TLogId::MSG_GOT_ACK),
       InputQueue(ds.BatchConfig, ds.MsgStateTracker),
       /* TODO: rethink DebugLogger stuff */
-      RequestFactory(ds.Config, ds.BatchConfig, ds.CompressionConf,
+      RequestFactory(ds.CmdLineArgs, ds.BatchConfig, ds.Conf.CompressionConf,
                      ds.ProduceProtocol, my_broker_index),
       ResponseReader(ds.ProduceProtocol->CreateProduceResponseReader()),
       /* Note: The max message body size value is a loose upper bound to guard
@@ -112,7 +112,7 @@ void TConnector::SetMetadata(const std::shared_ptr<TMetadata> &md) {
   assert(this);
   assert(md);
   Metadata = md;
-  RequestFactory.Init(Ds.CompressionConf, md);
+  RequestFactory.Init(Ds.Conf.CompressionConf, md);
 }
 
 void TConnector::StartSlowShutdown(uint64_t start_time) {
@@ -312,7 +312,7 @@ static int AdjustTimeoutByDeadline(int initial_timeout, uint64_t now,
 void TConnector::SetFastShutdownState() {
   assert(this);
   uint64_t deadline = GetEpochMilliseconds() +
-      Ds.Config.DispatcherRestartMaxDelay;
+      Ds.CmdLineArgs.DispatcherRestartMaxDelay;
 
   if (OptInProgressShutdown.IsKnown()) {
     TInProgressShutdown &shutdown_state = *OptInProgressShutdown;
@@ -343,7 +343,7 @@ void TConnector::HandleShutdownRequest() {
     RequestFactory.Put(InputQueue.GetAllOnShutdown());
 
     uint64_t deadline = *cmd.OptSlowShutdownStartTime +
-        Ds.Config.ShutdownMaxDelay;
+        Ds.CmdLineArgs.ShutdownMaxDelay;
 
     if (OptInProgressShutdown.IsKnown()) {
       TInProgressShutdown &shutdown_state = *OptInProgressShutdown;
@@ -455,7 +455,7 @@ bool TConnector::HandleSockWriteReady() {
 
     SendProduceRequestOk.Increment();
     TAllTopics &all_topics = CurrentRequest->second;
-    bool ack_expected = (Ds.Config.RequiredAcks != 0);
+    bool ack_expected = (Ds.CmdLineArgs.RequiredAcks != 0);
 
     for (auto &topic_elem : all_topics) {
       TMultiPartitionGroup &group = topic_elem.second;
@@ -691,7 +691,7 @@ bool TConnector::PrepareForPoll(uint64_t now, int &poll_timeout) {
   }
 
   if (need_sock_write || need_sock_read) {
-    poll_timeout = static_cast<int>(Ds.Config.KafkaSocketTimeout * 1000);
+    poll_timeout = static_cast<int>(Ds.CmdLineArgs.KafkaSocketTimeout * 1000);
   }
 
   if (need_shutdown_timeout) {
@@ -774,7 +774,7 @@ void TConnector::DoRun() {
     if (ret == 0) {  // poll() timed out
       if ((MainLoopPollArray[TMainLoopPollItem::SockIo].fd >= 0) &&
           ((finish_time - start_time) >=
-              (Ds.Config.KafkaSocketTimeout * 1000))) {
+              (Ds.CmdLineArgs.KafkaSocketTimeout * 1000))) {
         LOG(TPri::ERR) << "Connector thread " << Gettid() << " (index "
             << MyBrokerIndex << " broker " << broker_id
             << ") starting pause due to socket timeout in main loop";

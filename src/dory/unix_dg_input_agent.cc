@@ -47,14 +47,14 @@ using namespace Thread;
 
 DEFINE_COUNTER(UnixDgInputAgentForwardMsg);
 
-TUnixDgInputAgent::TUnixDgInputAgent(const TCmdLineArgs &config, TPool &pool,
+TUnixDgInputAgent::TUnixDgInputAgent(const TCmdLineArgs &args, TPool &pool,
     TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
     TGatePutApi<TMsg::TPtr> &output_queue)
-    : Config(config),
+    : CmdLineArgs(args),
       Pool(pool),
       MsgStateTracker(msg_state_tracker),
       AnomalyTracker(anomaly_tracker),
-      InputBuf(config.MaxInputMsgSize),
+      InputBuf(args.MaxInputMsgSize),
       OutputQueue(output_queue) {
 }
 
@@ -120,7 +120,7 @@ void TUnixDgInputAgent::OpenUnixSocket() {
   LOG(TPri::NOTICE) << "UNIX datagram input thread opening socket";
   TAddress input_socket_address;
   input_socket_address.SetFamily(AF_LOCAL);
-  input_socket_address.SetPath(Config.ReceiveSocketName.c_str());
+  input_socket_address.SetPath(CmdLineArgs.ReceiveSocketName.c_str());
 
   try {
     Bind(InputSocket, input_socket_address);
@@ -132,10 +132,10 @@ void TUnixDgInputAgent::OpenUnixSocket() {
   /* Set the permission bits on the socket file if they were specified as a
      command line argument.  If unspecified, the umask determines the
      permission bits. */
-  if (Config.ReceiveSocketMode.IsKnown()) {
+  if (CmdLineArgs.ReceiveSocketMode.IsKnown()) {
     try {
-      IfLt0(Wr::chmod(Config.ReceiveSocketName.c_str(),
-          *Config.ReceiveSocketMode));
+      IfLt0(Wr::chmod(CmdLineArgs.ReceiveSocketName.c_str(),
+          *CmdLineArgs.ReceiveSocketMode));
     } catch (const std::system_error &x) {
       LOG(TPri::ERR) << "Failed to set permissions on datagram socket file: "
           << x.what();
@@ -152,7 +152,7 @@ TMsg::TPtr TUnixDgInputAgent::ReadOneMsg() {
   assert(result >= 0);
 
   return InputDg::BuildMsgFromDg(msg_begin, static_cast<size_t>(result),
-      Config, Pool, AnomalyTracker, MsgStateTracker);
+      CmdLineArgs, Pool, AnomalyTracker, MsgStateTracker);
 }
 
 void TUnixDgInputAgent::ForwardMessages() {

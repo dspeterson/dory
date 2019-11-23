@@ -22,6 +22,7 @@
 #include <dory/msg_dispatch/dispatcher_shared_state.h>
 
 #include <base/counter.h>
+#include <dory/batch/batch_config_builder.h>
 #include <dory/msg_state_tracker.h>
 #include <log/log.h>
 
@@ -36,16 +37,15 @@ using namespace Log;
 
 DEFINE_COUNTER(AllDispatcherThreadsFinished);
 
-TDispatcherSharedState::TDispatcherSharedState(const TCmdLineArgs &config,
-     const TCompressionConf &compression_conf,
-     TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
-     const TDebugSetup &debug_setup, const TGlobalBatchConfig &batch_config)
-    : Config(config),
-      CompressionConf(compression_conf),
+TDispatcherSharedState::TDispatcherSharedState(const TCmdLineArgs &args,
+     const TConf &conf, TMsgStateTracker &msg_state_tracker,
+     TAnomalyTracker &anomaly_tracker, const TDebugSetup &debug_setup)
+    : CmdLineArgs(args),
+      Conf(conf),
       MsgStateTracker(msg_state_tracker),
       AnomalyTracker(anomaly_tracker),
       DebugSetup(debug_setup),
-      BatchConfig(batch_config) {
+      BatchConfig(TBatchConfigBuilder().BuildFromConf(conf.BatchConf)) {
 }
 
 void TDispatcherSharedState::Discard(TMsg::TPtr &&msg,

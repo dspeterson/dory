@@ -33,9 +33,11 @@
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
 #include <dory/anomaly_tracker.h>
+#include <dory/batch/batch_config_builder.h>
 #include <dory/batch/global_batch_config.h>
 #include <dory/cmd_line_args.h>
 #include <dory/conf/compression_conf.h>
+#include <dory/conf/conf.h>
 #include <dory/debug/debug_setup.h>
 #include <dory/kafka_proto/produce/produce_protocol.h>
 #include <dory/metadata.h>
@@ -53,12 +55,12 @@ namespace Dory {
       NO_COPY_SEMANTICS(TKafkaDispatcher);
 
       public:
-      TKafkaDispatcher(const TCmdLineArgs &config,
-          const Conf::TCompressionConf &compression_conf,
+      TKafkaDispatcher(const TCmdLineArgs &args, const Conf::TConf &conf,
           TMsgStateTracker &msg_state_tracker,
           TAnomalyTracker &anomaly_tracker,
-          const Batch::TGlobalBatchConfig &batch_config,
-          const Debug::TDebugSetup &debug_setup);
+          const Debug::TDebugSetup &debug_setup)
+          : Ds(args, conf, msg_state_tracker, anomaly_tracker, debug_setup) {
+      }
 
       ~TKafkaDispatcher() override = default;
 

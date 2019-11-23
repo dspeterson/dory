@@ -80,7 +80,7 @@ namespace {
 
     std::vector<const char *> Args;
 
-    std::unique_ptr<TCmdLineArgs> Cfg;
+    std::unique_ptr<TCmdLineArgs> CmdLineArgs;
 
     TPool Pool;
 
@@ -110,7 +110,7 @@ namespace {
         CreateStreamClientHandler() {
       assert(this);
       return std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>(
-          new TStreamClientHandler(false, *Cfg, Pool, MsgStateTracker,
+          new TStreamClientHandler(false, *CmdLineArgs, Pool, MsgStateTracker,
               AnomalyTracker, *OutputQueue, *StreamClientWorkerPool));
     }
 
@@ -159,12 +159,13 @@ namespace {
     Args.push_back("--receive_stream_socket_name");
     Args.push_back(UnixSocketName.c_str());
     Args.push_back(nullptr);
-    Cfg.reset(new TCmdLineArgs(static_cast<int>(Args.size() - 1), &Args[0],
-        true));
+    CmdLineArgs.reset(new TCmdLineArgs(static_cast<int>(Args.size() - 1),
+        &Args[0], true));
     OutputQueue.reset(new TGate<TMsg::TPtr>);
     StreamClientWorkerPool.reset(new TWorkerPool);
     UnixStreamServer.reset(new TUnixStreamServer(16,
-        Cfg->ReceiveStreamSocketName.c_str(), CreateStreamClientHandler()));
+        CmdLineArgs->ReceiveStreamSocketName.c_str(),
+        CreateStreamClientHandler()));
   }
 
   void MakeDg(std::vector<uint8_t> &dg, const std::string &topic,

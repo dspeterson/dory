@@ -55,7 +55,7 @@ namespace {
   struct TTestConfig {
     std::vector<const char *> Args;
 
-    std::unique_ptr<Dory::TCmdLineArgs> Cfg;
+    std::unique_ptr<Dory::TCmdLineArgs> CmdLineArgs;
 
     std::unique_ptr<TPool> Pool;
 
@@ -80,7 +80,7 @@ namespace {
     Args.push_back("--receive_socket_name");
     Args.push_back("dummy_value");
     Args.push_back(nullptr);
-    Cfg.reset(new Dory::TCmdLineArgs(static_cast<int>(Args.size() - 1),
+    CmdLineArgs.reset(new Dory::TCmdLineArgs(static_cast<int>(Args.size() - 1),
         &Args[0], true));
   }
 
@@ -115,8 +115,8 @@ namespace {
     input_dg_p_key_v0_write_msg(&buf[0], timestamp, partition_key,
         topic.data(), topic.data() + topic.size(), key.data(),
         key.data() + key.size(), value.data(), value.data() + value.size());
-    TMsg::TPtr msg = BuildMsgFromDg(&buf[0], buf.size(), *cfg.Cfg, *cfg.Pool,
-        cfg.AnomalyTracker, cfg.MsgStateTracker);
+    TMsg::TPtr msg = BuildMsgFromDg(&buf[0], buf.size(), *cfg.CmdLineArgs,
+        *cfg.Pool, cfg.AnomalyTracker, cfg.MsgStateTracker);
     ASSERT_TRUE(!!msg);
     SetProcessed(msg);
     ASSERT_EQ(msg->GetTimestamp(), timestamp);

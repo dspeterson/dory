@@ -35,7 +35,7 @@ namespace Dory {
   namespace InputDg {
 
     TMsg::TPtr BuildMsgFromDg(const void *dg, size_t dg_size,
-        const TCmdLineArgs &config, Capped::TPool &pool,
+        const TCmdLineArgs &args, Capped::TPool &pool,
         TAnomalyTracker &anomaly_tracker, TMsgStateTracker &msg_state_tracker);
 
   }  // InputDg

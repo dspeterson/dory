@@ -34,7 +34,7 @@
 #include <dory/anomaly_tracker.h>
 #include <dory/batch/global_batch_config.h>
 #include <dory/cmd_line_args.h>
-#include <dory/conf/compression_conf.h>
+#include <dory/conf/conf.h>
 #include <dory/debug/debug_setup.h>
 #include <dory/kafka_proto/produce/produce_protocol.h>
 #include <dory/msg.h>
@@ -48,9 +48,9 @@ namespace Dory {
     struct TDispatcherSharedState {
       NO_COPY_SEMANTICS(TDispatcherSharedState);
 
-      const TCmdLineArgs &Config;
+      const TCmdLineArgs &CmdLineArgs;
 
-      Conf::TCompressionConf CompressionConf;
+      const Conf::TConf &Conf;
 
       std::shared_ptr<KafkaProto::Produce::TProduceProtocol> ProduceProtocol;
 
@@ -64,12 +64,10 @@ namespace Dory {
 
       const Batch::TGlobalBatchConfig BatchConfig;
 
-      TDispatcherSharedState(const TCmdLineArgs &config,
-          const Conf::TCompressionConf &compression_conf,
-          TMsgStateTracker &msg_state_tracker,
+      TDispatcherSharedState(const TCmdLineArgs &args,
+          const Conf::TConf &conf, TMsgStateTracker &msg_state_tracker,
           TAnomalyTracker &anomaly_tracker,
-          const Debug::TDebugSetup &debug_setup,
-          const Batch::TGlobalBatchConfig &batch_config);
+          const Debug::TDebugSetup &debug_setup);
 
       size_t GetAckCount() const noexcept {
         assert(this);
