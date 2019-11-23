@@ -26,7 +26,7 @@
 
 #include <base/no_copy_semantics.h>
 #include <dory/mock_kafka_server/cmd_bucket.h>
-#include <dory/mock_kafka_server/config.h>
+#include <dory/mock_kafka_server/cmd_line_args.h>
 #include <dory/mock_kafka_server/mock_kafka_worker.h>
 #include <dory/mock_kafka_server/received_request_tracker.h>
 #include <dory/mock_kafka_server/setup.h>
@@ -51,7 +51,7 @@ namespace Dory {
         std::shared_ptr<TThreadTerminateHandler> TerminateHandler;
       };  // TPerConnectionState
 
-      const TConfig &Config;
+      const TCmdLineArgs &CmdLineArgs;
 
       const bool TrackReceivedRequests;
 
@@ -72,8 +72,8 @@ namespace Dory {
          unit test code removes items. */
       TReceivedRequestTracker ReceivedRequests;
 
-      TSharedState(const TConfig &config, bool track_received_requests)
-          : Config(config),
+      TSharedState(const TCmdLineArgs &args, bool track_received_requests)
+          : CmdLineArgs(args),
             TrackReceivedRequests(track_received_requests) {
       }
 

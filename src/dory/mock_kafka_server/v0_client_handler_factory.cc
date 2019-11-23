@@ -35,6 +35,6 @@ TV0ClientHandlerFactory::CreateClientHandler(
     TSharedState &ss, Base::TFd &&client_socket) {
   assert(this);
   return std::unique_ptr<TSingleClientHandlerBase>(
-      new TV0ClientHandler(Config, Setup, port_map, port_offset, ss,
+      new TV0ClientHandler(CmdLineArgs, Setup, port_map, port_offset, ss,
           std::move(client_socket)));
 }

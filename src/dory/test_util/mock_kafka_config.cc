@@ -47,9 +47,9 @@ TMockKafkaConfig::TMockKafkaConfig(
   Args.push_back("--setup_file");
   Args.push_back(SetupFile.GetName().c_str());
   Args.push_back(nullptr);
-  Cfg.reset(new Dory::MockKafkaServer::TConfig(
+  CmdLineArgs.reset(new Dory::MockKafkaServer::TCmdLineArgs(
       static_cast<int>(Args.size() - 1), &Args[0]));
-  MainThread.reset(new Dory::MockKafkaServer::TMainThread(*Cfg,
+  MainThread.reset(new Dory::MockKafkaServer::TMainThread(*CmdLineArgs,
       SIGUSR2 /* shutdown_signum */));
 }
 

@@ -36,7 +36,7 @@
 #include <dory/kafka_proto/produce/msg_set_reader_api.h>
 #include <dory/kafka_proto/produce/produce_request_reader_api.h>
 #include <dory/kafka_proto/produce/produce_response_writer_api.h>
-#include <dory/mock_kafka_server/config.h>
+#include <dory/mock_kafka_server/cmd_line_args.h>
 #include <dory/mock_kafka_server/mock_kafka_worker.h>
 #include <dory/mock_kafka_server/port_map.h>
 #include <dory/mock_kafka_server/prod_req/msg_set.h>
@@ -85,12 +85,12 @@ namespace Dory {
         TMetadataRequest() = default;
       };  // TMetadataRequest
 
-      TSingleClientHandlerBase(const TConfig &config,
+      TSingleClientHandlerBase(const TCmdLineArgs &args,
           const TSetup::TInfo &setup,
           const std::shared_ptr<TPortMap> &port_map, size_t port_offset,
           TSharedState &ss, Base::TFd &&client_socket)
           : TMockKafkaWorker(std::move(client_socket)),
-            Config(config),
+            CmdLineArgs(args),
             Setup(setup),
             Ss(ss),
             PortMap(port_map),
@@ -133,7 +133,7 @@ namespace Dory {
           TAction action, const std::string &error_topic,
           int16_t topic_error_value, size_t wait);
 
-      const TConfig &Config;
+      const TCmdLineArgs &CmdLineArgs;
 
       const TSetup::TInfo &Setup;
 

@@ -35,7 +35,7 @@
 #include <base/thrower.h>
 #include <dory/mock_kafka_server/client_handler_factory_base.h>
 #include <dory/mock_kafka_server/cmd_handler.h>
-#include <dory/mock_kafka_server/config.h>
+#include <dory/mock_kafka_server/cmd_line_args.h>
 #include <dory/mock_kafka_server/connect_handler.h>
 #include <dory/mock_kafka_server/port_map.h>
 #include <dory/mock_kafka_server/received_request_tracker.h>
@@ -57,9 +57,9 @@ namespace Dory {
           "Only protocol version 0 (used by Kafka 0.8) is currently supported."
       );
 
-      const TConfig &GetConfig() const {
+      const TCmdLineArgs &GetCmdLineArgs() const {
         assert(this);
-        return Ss.Config;
+        return Ss.CmdLineArgs;
       }
 
       /* Parameter 'config' provides server configuration.  A true value for
@@ -68,11 +68,11 @@ namespace Dory {
          When running in standalone executable mode, false is passed for
          'use_ephemeral_ports'.  When running as part of a unit test, true is
          passed for 'use_ephemeral_ports'. */
-      TServer(const TConfig &config, bool use_ephemeral_ports,
+      TServer(const TCmdLineArgs &args, bool use_ephemeral_ports,
           bool track_received_requests, int shutdown_signum = SIGINT)
           : UseEphemeralPorts(use_ephemeral_ports),
             ShutdownSignum(shutdown_signum),
-            Ss(config, track_received_requests),
+            Ss(args, track_received_requests),
             PortMap(new TPortMap) {
       }
 

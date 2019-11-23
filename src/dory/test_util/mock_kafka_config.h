@@ -28,7 +28,7 @@
 #include <base/no_copy_semantics.h>
 #include <base/tmp_dir.h>
 #include <base/tmp_file.h>
-#include <dory/mock_kafka_server/config.h>
+#include <dory/mock_kafka_server/cmd_line_args.h>
 #include <dory/mock_kafka_server/error_injector.h>
 #include <dory/mock_kafka_server/main_thread.h>
 
@@ -52,7 +52,7 @@ namespace Dory {
 
       std::vector<const char *> Args;
 
-      std::unique_ptr<Dory::MockKafkaServer::TConfig> Cfg;
+      std::unique_ptr<Dory::MockKafkaServer::TCmdLineArgs> CmdLineArgs;
 
       std::unique_ptr<Dory::MockKafkaServer::TMainThread> MainThread;
 

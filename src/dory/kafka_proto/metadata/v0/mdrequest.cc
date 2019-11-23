@@ -56,9 +56,9 @@ using namespace Dory::KafkaProto::Metadata::V0;
 using namespace Dory::Util;
 using namespace Rpc;
 
-struct TConfig {
+struct TCmdLineArgs {
   /* Throws TInvalidArgError on error parsing args. */
-  TConfig(int argc, const char *const argv[]);
+  TCmdLineArgs(int argc, const char *const argv[]);
 
   std::string BrokerHost;
 
@@ -67,9 +67,9 @@ struct TConfig {
   std::string Topic;
 
   size_t RequestCount = 1;
-};  // TConfig
+};  // TCmdLineArgs
 
-static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
+static void ParseArgs(int argc, const char *const argv[], TCmdLineArgs &args) {
   using namespace TCLAP;
   const std::string prog_name = Basename(argv[0]);
   std::vector<const char *> arg_vec(&argv[0], &argv[0] + argc);
@@ -80,31 +80,31 @@ static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
         "Utility for sending a metadata request to a Kafka broker and writing "
         "the response to standard output",
         ' ', dory_build_id);
-    ValueArg<decltype(config.BrokerHost)> arg_broker_host("", "broker_host",
-        "Kafka broker to connect to.", true, config.BrokerHost, "HOST");
+    ValueArg<decltype(args.BrokerHost)> arg_broker_host("", "broker_host",
+        "Kafka broker to connect to.", true, args.BrokerHost, "HOST");
     cmd.add(arg_broker_host);
-    ValueArg<decltype(config.BrokerPort)> arg_broker_port("", "broker_port",
-        "Port to connect to.", false, config.BrokerPort, "PORT");
+    ValueArg<decltype(args.BrokerPort)> arg_broker_port("", "broker_port",
+        "Port to connect to.", false, args.BrokerPort, "PORT");
     cmd.add(arg_broker_port);
-    ValueArg<decltype(config.Topic)> arg_topic("", "topic",
+    ValueArg<decltype(args.Topic)> arg_topic("", "topic",
         "Topic to request metadata for.  If omitted, metadata will be "
-        "requested for all topics.", false, config.Topic, "TOPIC");
+        "requested for all topics.", false, args.Topic, "TOPIC");
     cmd.add(arg_topic);
-    ValueArg<decltype(config.RequestCount)> arg_request_count("",
+    ValueArg<decltype(args.RequestCount)> arg_request_count("",
         "request_count", "Number of requests to send (for testing).", false,
-        config.RequestCount, "COUNT");
+        args.RequestCount, "COUNT");
     cmd.add(arg_request_count);
     cmd.parse(argc, &arg_vec[0]);
-    config.BrokerHost = arg_broker_host.getValue();
-    config.BrokerPort = arg_broker_port.getValue();
-    config.Topic = arg_topic.getValue();
-    config.RequestCount = arg_request_count.getValue();
+    args.BrokerHost = arg_broker_host.getValue();
+    args.BrokerPort = arg_broker_port.getValue();
+    args.Topic = arg_topic.getValue();
+    args.RequestCount = arg_request_count.getValue();
   } catch (const ArgException &x) {
     throw TInvalidArgError(x.error(), x.argId());
   }
 }
 
-TConfig::TConfig(int argc, const char *const argv[]) {
+TCmdLineArgs::TCmdLineArgs(int argc, const char *const argv[]) {
   ParseArgs(argc, argv, *this);
 }
 
@@ -368,10 +368,10 @@ void TResponsePrinter::WriteTopics(TIndent &ind0) {
 }
 
 static int mdrequest_main(int argc, const char *const *argv) {
-  std::unique_ptr<TConfig> cfg;
+  std::unique_ptr<TCmdLineArgs> args;
 
   try {
-    cfg.reset(new TConfig(argc, argv));
+    args.reset(new TCmdLineArgs(argc, argv));
   } catch (const TInvalidArgError &x) {
     /* Error parsing command line arguments. */
     std::cerr << x.what() << std::endl;
@@ -379,16 +379,16 @@ static int mdrequest_main(int argc, const char *const *argv) {
   }
 
   TFd broker_socket;
-  ConnectToHost(cfg->BrokerHost, cfg->BrokerPort, broker_socket);
+  ConnectToHost(args->BrokerHost, args->BrokerPort, broker_socket);
 
   if (!broker_socket.IsOpen()) {
-    std::cerr << "Failed to connect to host " << cfg->BrokerHost << " port "
-        << cfg->BrokerPort << std::endl;
+    std::cerr << "Failed to connect to host " << args->BrokerHost << " port "
+        << args->BrokerPort << std::endl;
     return EXIT_FAILURE;
   }
 
-  for (size_t i = 0; i < cfg->RequestCount; ++i) {
-    SendRequest(broker_socket, cfg->Topic);
+  for (size_t i = 0; i < args->RequestCount; ++i) {
+    SendRequest(broker_socket, args->Topic);
     std::vector<uint8_t> response_buf;
     ReadResponse(broker_socket, response_buf);
     std::ostringstream out;

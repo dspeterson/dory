@@ -114,10 +114,10 @@ void TSingleClientHandlerBase::GetSocketPeer() {
 
 bool TSingleClientHandlerBase::OpenOutputFile() {
   assert(this);
-  std::string path(Config.OutputDir);
+  std::string path(CmdLineArgs.OutputDir);
   std::ios_base::openmode flags = std::ios_base::out;
 
-  if (Config.SingleOutputFile) {
+  if (CmdLineArgs.SingleOutputFile) {
     flags |= std::ios_base::app;
     path += "/server.out";
   } else {
@@ -156,7 +156,7 @@ TSingleClientHandlerBase::GetRequest() {
     }
     case TIoResult::Disconnected:
     case TIoResult::EmptyReadUnexpectedEnd: {
-      if (Config.QuietLevel <= 2) {
+      if (CmdLineArgs.QuietLevel <= 2) {
         Out << "Info: Client disconnected on request read" << std::endl;
       }
 
@@ -168,7 +168,7 @@ TSingleClientHandlerBase::GetRequest() {
       return TGetRequestResult::ClientDisconnected;
     }
     case TIoResult::GotShutdownRequest: {
-      if (Config.QuietLevel <= 2) {
+      if (CmdLineArgs.QuietLevel <= 2) {
         Out << "Info: Got shutdown request 1 while reading request"
             << std::endl;
       }
@@ -746,7 +746,7 @@ void TSingleClientHandlerBase::DoRun() {
     if (port.ReadDelay &&
         (((ProduceRequestCount + MetadataRequestCount + 1) %
           port.ReadDelayInterval) == 0)) {
-      if (Config.QuietLevel <= 1) {
+      if (CmdLineArgs.QuietLevel <= 1) {
         Out << "Info: Sleeping " << port.ReadDelay
             << " milliseconds before reading next request." << std::endl;
       }
@@ -805,7 +805,7 @@ void TSingleClientHandlerBase::DoRun() {
     }
   }
 
-  if ((Config.QuietLevel <= 2) && (!Config.SingleOutputFile)) {
+  if ((CmdLineArgs.QuietLevel <= 2) && (!CmdLineArgs.SingleOutputFile)) {
     Out << "end: ==============================================" << std::endl
         << std::endl
         << "final counts:" << std::endl

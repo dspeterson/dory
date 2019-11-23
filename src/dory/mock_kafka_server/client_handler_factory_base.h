@@ -27,7 +27,7 @@
 
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
-#include <dory/mock_kafka_server/config.h>
+#include <dory/mock_kafka_server/cmd_line_args.h>
 #include <dory/mock_kafka_server/port_map.h>
 #include <dory/mock_kafka_server/setup.h>
 #include <dory/mock_kafka_server/shared_state.h>
@@ -50,17 +50,17 @@ namespace Dory {
           TSharedState &ss, Base::TFd &&client_socket) = 0;
 
       static std::unique_ptr<TClientHandlerFactoryBase>
-          CreateFactory(const TConfig &config, const TSetup::TInfo &setup);
+      CreateFactory(const TCmdLineArgs &config, const TSetup::TInfo &setup);
 
       protected:
-      const TConfig &Config;
+      const TCmdLineArgs &CmdLineArgs;
 
       const TSetup::TInfo &Setup;
 
       /* Only our static CreateFactory() method creates these. */
-      TClientHandlerFactoryBase(const TConfig &config,
+      TClientHandlerFactoryBase(const TCmdLineArgs &args,
                                 const TSetup::TInfo &setup)
-          : Config(config),
+          : CmdLineArgs(args),
             Setup(setup) {
       }
     };  // TClientHandlerFactoryBase

@@ -1,4 +1,4 @@
-/* <dory/mock_kafka_server/config.h>
+/* <dory/mock_kafka_server/cmd_line_args.h>
 
    ----------------------------------------------------------------------------
    Copyright 2013-2014 if(we)
@@ -16,7 +16,7 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Configuration options for mock Kafka server.
+   Command line arguments for mock Kafka server.
  */
 
 #pragma once
@@ -31,9 +31,9 @@ namespace Dory {
 
   namespace MockKafkaServer {
 
-    struct TConfig {
+    struct TCmdLineArgs {
       /* Throws TInvalidArgError on error parsing args. */
-      TConfig(int argc, const char *const argv[]);
+      TCmdLineArgs(int argc, const char *const argv[]);
 
       bool LogEcho = false;
 

@@ -25,7 +25,7 @@
 #include <memory>
 
 #include <dory/compress/compression_init.h>
-#include <dory/mock_kafka_server/config.h>
+#include <dory/mock_kafka_server/cmd_line_args.h>
 #include <dory/mock_kafka_server/server.h>
 #include <dory/util/invalid_arg_error.h>
 #include <log/log.h>
@@ -41,17 +41,17 @@ using namespace Log;
 using namespace LogUtil;
 
 int mock_kafka_server_main(int argc, const char *const *argv) {
-  std::unique_ptr<TConfig> cfg;
+  std::unique_ptr<TCmdLineArgs> args;
 
   try {
-    cfg.reset(new TConfig(argc, argv));
+    args.reset(new TCmdLineArgs(argc, argv));
   } catch (const TInvalidArgError &x) {
     /* Error parsing command line arguments. */
     std::cerr << x.what() << std::endl;
     return EXIT_FAILURE;
   }
 
-  InitLogging(argv[0], TPri::DEBUG, cfg->LogEcho /* enable_stdout_stderr */,
+  InitLogging(argv[0], TPri::DEBUG, args->LogEcho /* enable_stdout_stderr */,
       true /* enable_syslog */, std::string() /* file_path */);
   LOG(TPri::NOTICE) << "Log started";
 
@@ -59,7 +59,7 @@ int mock_kafka_server_main(int argc, const char *const *argv) {
      if a library fails to load. */
   CompressionInit();
 
-  return TServer(*cfg, false, false).Run();
+  return TServer(*args, false, false).Run();
 }
 
 int main(int argc, const char *const *argv) {

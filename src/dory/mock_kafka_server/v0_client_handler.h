@@ -36,7 +36,7 @@
 #include <dory/kafka_proto/produce/v0/msg_set_reader.h>
 #include <dory/kafka_proto/produce/v0/produce_request_reader.h>
 #include <dory/kafka_proto/produce/v0/produce_response_writer.h>
-#include <dory/mock_kafka_server/config.h>
+#include <dory/mock_kafka_server/cmd_line_args.h>
 #include <dory/mock_kafka_server/port_map.h>
 #include <dory/mock_kafka_server/setup.h>
 #include <dory/mock_kafka_server/shared_state.h>
@@ -50,11 +50,11 @@ namespace Dory {
       NO_COPY_SEMANTICS(TV0ClientHandler);
 
       public:
-      TV0ClientHandler(const TConfig &config, const TSetup::TInfo &setup,
+      TV0ClientHandler(const TCmdLineArgs &args, const TSetup::TInfo &setup,
                        const std::shared_ptr<TPortMap> &port_map,
                        size_t port_offset, TSharedState &ss,
                        Base::TFd &&client_socket)
-          : TSingleClientHandlerBase(config, setup, port_map, port_offset, ss,
+          : TSingleClientHandlerBase(args, setup, port_map, port_offset, ss,
                                      std::move(client_socket)) {
       }
 

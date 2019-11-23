@@ -1,4 +1,4 @@
-/* <dory/mock_kafka_server/config.cc>
+/* <dory/mock_kafka_server/cmd_line_args.cc>
 
    ----------------------------------------------------------------------------
    Copyright 2013-2014 if(we)
@@ -16,10 +16,10 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <dory/mock_kafka_server/config.h>.
+   Implements <dory/mock_kafka_server/cmd_line_args.h>.
  */
 
-#include <dory/mock_kafka_server/config.h>
+#include <dory/mock_kafka_server/cmd_line_args.h>
 
 #include <base/basename.h>
 #include <dory/build_id.h>
@@ -31,7 +31,7 @@ using namespace Dory;
 using namespace Dory::MockKafkaServer;
 using namespace Dory::Util;
 
-static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
+static void ParseArgs(int argc, const char *const argv[], TCmdLineArgs &args) {
   using namespace TCLAP;
   const std::string prog_name = Basename(argv[0]);
   std::vector<const char *> arg_vec(&argv[0], &argv[0] + argc);
@@ -40,48 +40,49 @@ static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
   try {
     CmdLine cmd("Mock Kafka server for testing Dory.", ' ', dory_build_id);
     SwitchArg arg_log_echo("", "log_echo",
-        "Echo syslog messages to standard error.", cmd, config.LogEcho);
-    ValueArg<decltype(config.ProduceApiVersion)> arg_produce_api_version("",
+        "Echo syslog messages to standard error.", cmd, args.LogEcho);
+    ValueArg<decltype(args.ProduceApiVersion)> arg_produce_api_version("",
         "produce_api_version",
         "Version of Kafka produce API to use (currently only 0 is supported).",
-        false, config.ProduceApiVersion, "VERSION");
+        false, args.ProduceApiVersion, "VERSION");
     cmd.add(arg_produce_api_version);
-    ValueArg<decltype(config.MetadataApiVersion)> arg_metadata_api_version("",
+    ValueArg<decltype(args.MetadataApiVersion)> arg_metadata_api_version("",
         "metadata_api_version",
-        "Version of Kafka metadata API to use (currently only 0 is supported).",
-        false, config.MetadataApiVersion, "VERSION");
+        "Version of Kafka metadata API to use (currently only 0 is "
+        "supported).",
+        false, args.MetadataApiVersion, "VERSION");
     cmd.add(arg_metadata_api_version);
-    ValueArg<decltype(config.QuietLevel)> arg_quiet_level("", "quiet_level",
-        "Limit output verbosity.", false, config.QuietLevel, "LEVEL");
+    ValueArg<decltype(args.QuietLevel)> arg_quiet_level("", "quiet_level",
+        "Limit output verbosity.", false, args.QuietLevel, "LEVEL");
     cmd.add(arg_quiet_level);
-    ValueArg<decltype(config.SetupFile)> arg_setup_file("", "setup_file",
-        "Setup file.", true, config.SetupFile, "FILE");
+    ValueArg<decltype(args.SetupFile)> arg_setup_file("", "setup_file",
+        "Setup file.", true, args.SetupFile, "FILE");
     cmd.add(arg_setup_file);
-    ValueArg<decltype(config.OutputDir)> arg_output_dir("", "output_dir",
+    ValueArg<decltype(args.OutputDir)> arg_output_dir("", "output_dir",
         "Directory where server writes its output files.", true,
-        config.OutputDir, "DIR");
+        args.OutputDir, "DIR");
     cmd.add(arg_output_dir);
-    ValueArg<decltype(config.CmdPort)> arg_cmd_port("", "cmd_port",
-        "Command port (for error injection, etc.).", false, config.CmdPort,
+    ValueArg<decltype(args.CmdPort)> arg_cmd_port("", "cmd_port",
+        "Command port (for error injection, etc.).", false, args.CmdPort,
         "PORT");
     cmd.add(arg_cmd_port);
     SwitchArg arg_single_output_file("", "single_output_file",
         "Use single output file for all clients", cmd,
-        config.SingleOutputFile);
+        args.SingleOutputFile);
     cmd.parse(argc, &arg_vec[0]);
-    config.LogEcho = arg_log_echo.getValue();
-    config.ProduceApiVersion = arg_produce_api_version.getValue();
-    config.MetadataApiVersion = arg_metadata_api_version.getValue();
-    config.QuietLevel = arg_quiet_level.getValue();
-    config.SetupFile = arg_setup_file.getValue();
-    config.OutputDir = arg_output_dir.getValue();
-    config.CmdPort = arg_cmd_port.getValue();
-    config.SingleOutputFile = arg_single_output_file.getValue();
+    args.LogEcho = arg_log_echo.getValue();
+    args.ProduceApiVersion = arg_produce_api_version.getValue();
+    args.MetadataApiVersion = arg_metadata_api_version.getValue();
+    args.QuietLevel = arg_quiet_level.getValue();
+    args.SetupFile = arg_setup_file.getValue();
+    args.OutputDir = arg_output_dir.getValue();
+    args.CmdPort = arg_cmd_port.getValue();
+    args.SingleOutputFile = arg_single_output_file.getValue();
   } catch (const ArgException &x) {
     throw TInvalidArgError(x.error(), x.argId());
   }
 }
 
-TConfig::TConfig(int argc, const char *const argv[]) {
+TCmdLineArgs::TCmdLineArgs(int argc, const char *const argv[]) {
   ParseArgs(argc, argv, *this);
 }

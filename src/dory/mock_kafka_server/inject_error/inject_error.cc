@@ -48,9 +48,9 @@ using namespace Dory::Util;
 
 using TErrorInjectCmd = Dory::MockKafkaServer::TCmd;
 
-struct TConfig {
+struct TCmdLineArgs {
   /* Throws TInvalidArgError on error parsing args. */
-  TConfig(int argc, const char *const argv[]);
+  TCmdLineArgs(int argc, const char *const argv[]);
 
   std::string Host;
 
@@ -75,9 +75,9 @@ struct TConfig {
   std::string Topic;
 
   std::string CmdFile;
-};  // TConfig
+};  // TCmdLineArgs
 
-static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
+static void ParseArgs(int argc, const char *const argv[], TCmdLineArgs &args) {
   using namespace TCLAP;
   const std::string prog_name = Basename(argv[0]);
   std::vector<const char *> arg_vec(&argv[0], &argv[0] + argc);
@@ -87,66 +87,66 @@ static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
     CmdLine cmd(
         "Utility for sending error injection command to mock Kafka server.",
         ' ', dory_build_id);
-    ValueArg<decltype(config.Host)> arg_host("", "host", "Host to connect to.",
-        true, config.Host, "HOST");
+    ValueArg<decltype(args.Host)> arg_host("", "host", "Host to connect to.",
+        true, args.Host, "HOST");
     cmd.add(arg_host);
-    ValueArg<decltype(config.Port)> arg_port("", "port", "Port to connect to.",
-        false, config.Port, "PORT");
+    ValueArg<decltype(args.Port)> arg_port("", "port", "Port to connect to.",
+        false, args.Port, "PORT");
     cmd.add(arg_port);
-    ValueArg<decltype(config.AckError)> arg_ack_error("", "ack_error",
-        "Inject ACK error.", false, config.AckError, "ACK_ERROR");
+    ValueArg<decltype(args.AckError)> arg_ack_error("", "ack_error",
+        "Inject ACK error.", false, args.AckError, "ACK_ERROR");
     cmd.add(arg_ack_error);
     SwitchArg arg_ack_disconnect("", "ack_disconnect",
-        "Inject disconnect before sending ACK.", cmd, config.AckDisconnect);
-    ValueArg<decltype(config.SingleTopicMdError)> arg_single_topic_md_error("",
+        "Inject disconnect before sending ACK.", cmd, args.AckDisconnect);
+    ValueArg<decltype(args.SingleTopicMdError)> arg_single_topic_md_error("",
         "single_topic_md_error", "Inject single topic metadata error.", false,
-        config.SingleTopicMdError, "MD_ERROR");
+        args.SingleTopicMdError, "MD_ERROR");
     cmd.add(arg_single_topic_md_error);
-    ValueArg<decltype(config.AllTopicsMdError)> arg_all_topics_md_error("",
+    ValueArg<decltype(args.AllTopicsMdError)> arg_all_topics_md_error("",
         "all_topics_md_error", "Inject all topics metadata error.", false,
-        config.AllTopicsMdError, "MD_ERROR");
+        args.AllTopicsMdError, "MD_ERROR");
     cmd.add(arg_all_topics_md_error);
     SwitchArg arg_single_topic_md_disconnect("", "single_topic_md_disconnect",
         "Inject disconnect before single topic metadata response.", cmd,
-        config.SingleTopicMdDisconnect);
+        args.SingleTopicMdDisconnect);
     SwitchArg arg_all_topics_md_disconnect("", "all_topics_md_disconnect",
         "Inject disconnect before all topics metadata response.", cmd,
-        config.AllTopicsMdDisconnect);
-    ValueArg<decltype(config.ClientAddr)> arg_client_addr("", "client_addr",
+        args.AllTopicsMdDisconnect);
+    ValueArg<decltype(args.ClientAddr)> arg_client_addr("", "client_addr",
         "Client (specified by IP address) to direct injected error at.", false,
-        config.ClientAddr, "ADDR");
+        args.ClientAddr, "ADDR");
     cmd.add(arg_client_addr);
-    ValueArg<decltype(config.MsgBody)> arg_msg_body("", "msg_body",
+    ValueArg<decltype(args.MsgBody)> arg_msg_body("", "msg_body",
         "Message body to match for ACK error injection.", false,
-        config.MsgBody, "MSG");
+        args.MsgBody, "MSG");
     cmd.add(arg_msg_body);
-    ValueArg<decltype(config.Topic)> arg_topic("", "topic",
-        "Topic to match for metadata error injection.", false, config.Topic,
+    ValueArg<decltype(args.Topic)> arg_topic("", "topic",
+        "Topic to match for metadata error injection.", false, args.Topic,
         "TOPIC");
     cmd.add(arg_topic);
-    ValueArg<decltype(config.CmdFile)> arg_cmd_file("", "cmd_file",
-        "File to read error injection commands from.", false, config.CmdFile,
+    ValueArg<decltype(args.CmdFile)> arg_cmd_file("", "cmd_file",
+        "File to read error injection commands from.", false, args.CmdFile,
         "FILE");
     cmd.add(arg_cmd_file);
     cmd.parse(argc, &arg_vec[0]);
-    config.Host = arg_host.getValue();
-    config.Port = arg_port.getValue();
-    config.AckError = arg_ack_error.getValue();
-    config.AckDisconnect = arg_ack_disconnect.getValue();
-    config.SingleTopicMdError = arg_single_topic_md_error.getValue();
-    config.AllTopicsMdError = arg_all_topics_md_error.getValue();
-    config.SingleTopicMdDisconnect = arg_single_topic_md_disconnect.getValue();
-    config.AllTopicsMdDisconnect = arg_all_topics_md_disconnect.getValue();
-    config.ClientAddr = arg_client_addr.getValue();
-    config.MsgBody = arg_msg_body.getValue();
-    config.Topic = arg_topic.getValue();
-    config.CmdFile = arg_cmd_file.getValue();
+    args.Host = arg_host.getValue();
+    args.Port = arg_port.getValue();
+    args.AckError = arg_ack_error.getValue();
+    args.AckDisconnect = arg_ack_disconnect.getValue();
+    args.SingleTopicMdError = arg_single_topic_md_error.getValue();
+    args.AllTopicsMdError = arg_all_topics_md_error.getValue();
+    args.SingleTopicMdDisconnect = arg_single_topic_md_disconnect.getValue();
+    args.AllTopicsMdDisconnect = arg_all_topics_md_disconnect.getValue();
+    args.ClientAddr = arg_client_addr.getValue();
+    args.MsgBody = arg_msg_body.getValue();
+    args.Topic = arg_topic.getValue();
+    args.CmdFile = arg_cmd_file.getValue();
   } catch (const ArgException &x) {
     throw TInvalidArgError(x.error(), x.argId());
   }
 }
 
-TConfig::TConfig(int argc, const char *const argv[]) {
+TCmdLineArgs::TCmdLineArgs(int argc, const char *const argv[]) {
   ParseArgs(argc, argv, *this);
 }
 
@@ -312,7 +312,8 @@ static bool ReadCmdFile(std::istream &in,
     } else if (cmd == "InjectDisconnectBeforeAllTopicsMetadataResponse") {
       if (line != cmd) {
         CmdFileErr(line_num,
-            "extra junk after InjectDisconnectBeforeAllTopicsMetadataResponse cmd");
+            "extra junk after InjectDisconnectBeforeAllTopicsMetadataResponse "
+            "cmd");
         return false;
       }
 
@@ -328,7 +329,7 @@ static bool ReadCmdFile(std::istream &in,
   return true;
 }
 
-static bool FillCmdVec(const TConfig &cfg,
+static bool FillCmdVec(const TCmdLineArgs &cfg,
     std::vector<TErrorInjectCmd> &cmd_vec) {
   std::vector<TErrorInjectCmd> result;
   const char *msg_body_str = cfg.MsgBody.empty() ?
@@ -417,10 +418,10 @@ static bool FillCmdVec(const TConfig &cfg,
 }
 
 static int inject_error_main(int argc, const char *const *argv) {
-  std::unique_ptr<TConfig> cfg;
+  std::unique_ptr<TCmdLineArgs> args;
 
   try {
-    cfg.reset(new TConfig(argc, argv));
+    args.reset(new TCmdLineArgs(argc, argv));
   } catch (const TInvalidArgError &x) {
     /* Error parsing command line arguments. */
     std::cerr << x.what() << std::endl;
@@ -429,13 +430,13 @@ static int inject_error_main(int argc, const char *const *argv) {
 
   std::vector<TErrorInjectCmd> cmd_vec;
 
-  if (!FillCmdVec(*cfg, cmd_vec)) {
+  if (!FillCmdVec(*args, cmd_vec)) {
     return EXIT_FAILURE;
   }
 
   TErrorInjector inj;
 
-  if (!inj.Connect(cfg->Host.c_str(), cfg->Port)) {
+  if (!inj.Connect(args->Host.c_str(), args->Port)) {
     std::cerr << "Failed to connect" << std::endl;
     return EXIT_FAILURE;
   }

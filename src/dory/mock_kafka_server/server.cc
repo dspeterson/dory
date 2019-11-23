@@ -54,7 +54,7 @@ int TServer::Init() {
   }
 
   try {
-    TSetup().Get(Ss.Config.SetupFile, Ss.Setup);
+    TSetup().Get(Ss.CmdLineArgs.SetupFile, Ss.Setup);
   } catch (const TFileOpenError &x) {
     std::cerr << x.what() << std::endl;
     return EXIT_FAILURE;
@@ -105,29 +105,29 @@ int TServer::Run() {
 }
 
 bool TServer::InitOutputDir() {
-  if (Ss.Config.OutputDir.empty() || Ss.Config.OutputDir[0] != '/') {
+  if (Ss.CmdLineArgs.OutputDir.empty() || Ss.CmdLineArgs.OutputDir[0] != '/') {
     std::cerr << "Output directory must be an absolute pathname" << std::endl;
     return false;
   }
 
   std::string cmd("/bin/mkdir -p ");
-  cmd += Ss.Config.OutputDir;
+  cmd += Ss.CmdLineArgs.OutputDir;
   int ret = std::system(cmd.c_str());
 
   if (ret) {
-    std::cerr << "Failed to create output directory " << Ss.Config.OutputDir
-        << std::endl;
+    std::cerr << "Failed to create output directory "
+        << Ss.CmdLineArgs.OutputDir << std::endl;
     return false;
   }
 
   cmd = "/bin/rm -fr ";
-  cmd += Ss.Config.OutputDir;
+  cmd += Ss.CmdLineArgs.OutputDir;
   cmd += "/server.out.*";
   ret = std::system(cmd.c_str());
 
   if (ret) {
     std::cerr << "Failed to remove old files from output directory "
-        << Ss.Config.OutputDir << std::endl;
+        << Ss.CmdLineArgs.OutputDir << std::endl;
     return false;
   }
 
@@ -166,22 +166,22 @@ bool TServer::InitCmdPort() {
   auto kafka_port_end =
       static_cast<in_port_t>(kafka_port_begin + Ss.Setup.Ports.size());
 
-  if ((Ss.Config.CmdPort >= kafka_port_begin) &&
-      (Ss.Config.CmdPort < kafka_port_end)) {
+  if ((Ss.CmdLineArgs.CmdPort >= kafka_port_begin) &&
+      (Ss.CmdLineArgs.CmdPort < kafka_port_end)) {
     std::cerr << "Command port is in Kafka port range" << std::endl;
     return false;
   }
 
   CmdHandler.reset(new TCmdHandler(Ss));
   TAddress server_address(TAddress::IPv4Any,
-                          UseEphemeralPorts ? 0 : Ss.Config.CmdPort);
+                          UseEphemeralPorts ? 0 : Ss.CmdLineArgs.CmdPort);
   CmdListenFd = IfLt0(Wr::socket(server_address.GetFamily(), SOCK_STREAM, 0));
   int flag = true;
   Wr::setsockopt(CmdListenFd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
   Bind(CmdListenFd, server_address);
   TAddress sock_name = GetSockName(CmdListenFd);
   CmdPort = sock_name.GetPort();
-  assert(UseEphemeralPorts || (CmdPort == Ss.Config.CmdPort));
+  assert(UseEphemeralPorts || (CmdPort == Ss.CmdLineArgs.CmdPort));
   CmdHandler->RegisterWithDispatcher(*Ss.Dispatcher, CmdListenFd,
                                      POLLIN | POLLERR);
   IfLt0(Wr::listen(CmdListenFd, 1024));
@@ -192,8 +192,8 @@ void TServer::InitKafkaPorts() {
   assert(this);
 
   if (!ClientHandlerFactory) {
-    ClientHandlerFactory = TClientHandlerFactoryBase::CreateFactory(Ss.Config,
-        Ss.Setup);
+    ClientHandlerFactory = TClientHandlerFactoryBase::CreateFactory(
+        Ss.CmdLineArgs, Ss.Setup);
 
     if (!ClientHandlerFactory) {
       /* FIXME: clean up protocol version logic */

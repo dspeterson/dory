@@ -141,7 +141,7 @@ namespace Dory {
     bool Shutdown();
 
     /* For listen() system call for UNIX domain stream and local TCP sockets.
-       TODO: consider providing command line option(s) for setting backlog. */
+       TODO: consider providing config file option(s) for setting backlog. */
     static const int STREAM_BACKLOG = 16;
 
     /* Configuration obtained from command line arguments. */

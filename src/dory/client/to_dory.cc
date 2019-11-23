@@ -62,9 +62,9 @@ using namespace Dory;
 using namespace Dory::Client;
 using namespace Dory::Util;
 
-struct TConfig {
+struct TCmdLineArgs {
   /* Throws TInvalidArgError on error parsing args. */
-  TConfig(int argc, const char *const argv[]);
+  TCmdLineArgs(int argc, const char *const argv[]);
 
   /* For UNIX domain datagram socket input to Dory. */
   std::string SocketPath;
@@ -102,7 +102,8 @@ struct TConfig {
   size_t Print = 0;
 };  // TCmdLineArgs
 
-static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
+static void ParseArgs(int argc, const char *const argv[],
+    TCmdLineArgs &args) {
   using namespace TCLAP;
   const std::string prog_name = Basename(argv[0]);
   std::vector<const char *> arg_vec(&argv[0], &argv[0] + argc);
@@ -110,58 +111,58 @@ static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
 
   try {
     CmdLine cmd("Utility for sending messages to Dory.", ' ', dory_build_id);
-    ValueArg<decltype(config.SocketPath)> arg_socket_path("", "socket_path",
+    ValueArg<decltype(args.SocketPath)> arg_socket_path("", "socket_path",
         "Pathname of UNIX domain datagram socket for sending messages to "
         "Dory.",
-        false, config.SocketPath, "PATH");
+        false, args.SocketPath, "PATH");
     cmd.add(arg_socket_path);
-    ValueArg<decltype(config.StreamSocketPath)> arg_stream_socket_path("",
+    ValueArg<decltype(args.StreamSocketPath)> arg_stream_socket_path("",
         "stream_socket_path",
         "Pathname of UNIX domain stream socket for sending messages to Dory.",
-        false, config.StreamSocketPath, "PATH");
+        false, args.StreamSocketPath, "PATH");
     cmd.add(arg_stream_socket_path);
-    ValueArg<std::remove_reference<decltype(*config.Port)>::type>
+    ValueArg<std::remove_reference<decltype(*args.Port)>::type>
         arg_port("", "port", "Local TCP port for sending messages to Dory.",
         false, 0, "PORT");
     cmd.add(arg_port);
-    ValueArg<decltype(config.Topic)> arg_topic("", "topic", "Kafka topic.",
-        true, config.Topic, "TOPIC");
+    ValueArg<decltype(args.Topic)> arg_topic("", "topic", "Kafka topic.",
+        true, args.Topic, "TOPIC");
     cmd.add(arg_topic);
-    ValueArg<decltype(config.PartitionKey)> arg_partition_key("",
-        "partition_key", "Partition key.", false, config.PartitionKey,
+    ValueArg<decltype(args.PartitionKey)> arg_partition_key("",
+        "partition_key", "Partition key.", false, args.PartitionKey,
         "PARTITION_KEY");
     cmd.add(arg_partition_key);
-    ValueArg<decltype(config.Key)> arg_key("", "key", "Message key.", false,
-        config.Key, "KEY");
+    ValueArg<decltype(args.Key)> arg_key("", "key", "Message key.", false,
+        args.Key, "KEY");
     cmd.add(arg_key);
-    ValueArg<decltype(config.Value)> arg_value("", "value",
+    ValueArg<decltype(args.Value)> arg_value("", "value",
         "Message value (option is invalid if --stdin is specified).", false,
-        config.Value, "VALUE");
+        args.Value, "VALUE");
     cmd.add(arg_value);
     SwitchArg arg_stdin("", "stdin", "Read message value from standard input.",
-        cmd, config.Stdin);
-    ValueArg<decltype(config.Count)> arg_count("", "count",
-        "Number of messages to send.", false, config.Count, "COUNT");
+        cmd, args.Stdin);
+    ValueArg<decltype(args.Count)> arg_count("", "count",
+        "Number of messages to send.", false, args.Count, "COUNT");
     cmd.add(arg_count);
-    ValueArg<decltype(config.Interval)> arg_interval("", "interval",
+    ValueArg<decltype(args.Interval)> arg_interval("", "interval",
         "Message interval in microseconds.  A value of 0 means \"send "
         "messages as fast as possible\".",
-        false, config.Interval, "INTERVAL");
+        false, args.Interval, "INTERVAL");
     cmd.add(arg_interval);
     SwitchArg arg_seq("", "seq",
-        "Prepend incrementing count to message value.", cmd, config.Seq);
-    ValueArg<decltype(config.Pad)> arg_pad("", "pad",
+        "Prepend incrementing count to message value.", cmd, args.Seq);
+    ValueArg<decltype(args.Pad)> arg_pad("", "pad",
         "Pad incrementing count with leading 0s to fill this many spaces.",
-        false, config.Pad, "PAD");
+        false, args.Pad, "PAD");
     cmd.add(arg_pad);
-    SwitchArg arg_bad("", "bad", "Send a malformed message.", cmd, config.Bad);
-    ValueArg<decltype(config.Print)> arg_print("", "print",
+    SwitchArg arg_bad("", "bad", "Send a malformed message.", cmd, args.Bad);
+    ValueArg<decltype(args.Print)> arg_print("", "print",
         "If nonzero, print message number every nth message.", false,
-        config.Print, "PRINT");
+        args.Print, "PRINT");
     cmd.add(arg_print);
     cmd.parse(argc, &arg_vec[0]);
-    config.SocketPath = arg_socket_path.getValue();
-    config.StreamSocketPath = arg_stream_socket_path.getValue();
+    args.SocketPath = arg_socket_path.getValue();
+    args.StreamSocketPath = arg_stream_socket_path.getValue();
     size_t input_type_count = 0;
 
     if (arg_port.isSet()) {
@@ -171,23 +172,23 @@ static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
         throw TInvalidArgError("Invalid port");
       }
 
-      config.Port.MakeKnown(port);
+      args.Port.MakeKnown(port);
       ++input_type_count;
     }
 
-    config.Topic = arg_topic.getValue();
-    config.PartitionKey = arg_partition_key.getValue();
-    config.UsePartitionKey = arg_partition_key.isSet();
-    config.Key = arg_key.getValue();
-    config.Value = arg_value.getValue();
-    config.ValueSpecified = arg_value.isSet();
-    config.Stdin = arg_stdin.getValue();
-    config.Count = arg_count.getValue();
-    config.Interval = arg_interval.getValue();
-    config.Seq = arg_seq.getValue();
-    config.Pad = arg_pad.getValue();
-    config.Bad = arg_bad.getValue();
-    config.Print = arg_print.getValue();
+    args.Topic = arg_topic.getValue();
+    args.PartitionKey = arg_partition_key.getValue();
+    args.UsePartitionKey = arg_partition_key.isSet();
+    args.Key = arg_key.getValue();
+    args.Value = arg_value.getValue();
+    args.ValueSpecified = arg_value.isSet();
+    args.Stdin = arg_stdin.getValue();
+    args.Count = arg_count.getValue();
+    args.Interval = arg_interval.getValue();
+    args.Seq = arg_seq.getValue();
+    args.Pad = arg_pad.getValue();
+    args.Bad = arg_bad.getValue();
+    args.Print = arg_print.getValue();
 
     if (arg_socket_path.isSet()) {
       ++input_type_count;
@@ -206,13 +207,13 @@ static void ParseArgs(int argc, const char *const argv[], TConfig &config) {
     throw TInvalidArgError(x.error(), x.argId());
   }
 
-  if (config.Stdin && config.ValueSpecified) {
+  if (args.Stdin && args.ValueSpecified) {
     throw TInvalidArgError(
         "You cannot specify --value <VALUE> and --stdin simultaneously.");
   }
 }
 
-TConfig::TConfig(int argc, const char *const argv[]) {
+TCmdLineArgs::TCmdLineArgs(int argc, const char *const argv[]) {
   ParseArgs(argc, argv, *this);
 }
 
@@ -241,7 +242,7 @@ std::string GetValueFromStdin() {
   return result;
 }
 
-bool CreateDg(std::vector<uint8_t> &buf, const TConfig &cfg,
+bool CreateDg(std::vector<uint8_t> &buf, const TCmdLineArgs &cfg,
     size_t msg_count) {
   std::string value;
 
@@ -313,7 +314,8 @@ bool CreateDg(std::vector<uint8_t> &buf, const TConfig &cfg,
   return true;
 }
 
-static std::unique_ptr<TClientSenderBase> CreateSender(const TConfig &cfg) {
+static std::unique_ptr<TClientSenderBase> CreateSender(
+    const TCmdLineArgs &cfg) {
   if (!cfg.SocketPath.empty()) {
     return std::unique_ptr<TClientSenderBase>(
         new TUnixDgSender(cfg.SocketPath.c_str()));
@@ -329,17 +331,17 @@ static std::unique_ptr<TClientSenderBase> CreateSender(const TConfig &cfg) {
 }
 
 static int ToDoryMain(int argc, const char *const argv[]) {
-  std::unique_ptr<TConfig> cfg;
+  std::unique_ptr<TCmdLineArgs> args;
 
   try {
-    cfg.reset(new TConfig(argc, argv));
+    args.reset(new TCmdLineArgs(argc, argv));
   } catch (const TInvalidArgError &x) {
     /* Error parsing command line arguments. */
     std::cerr << x.what() << std::endl;
     return EXIT_FAILURE;
   }
 
-  std::unique_ptr<TClientSenderBase> sender(CreateSender(*cfg));
+  std::unique_ptr<TClientSenderBase> sender(CreateSender(*args));
   sender->PrepareToSend();
   std::vector<uint8_t> dg_buf;
   const clockid_t CLOCK_TYPE = CLOCK_MONOTONIC_RAW;
@@ -348,17 +350,17 @@ static int ToDoryMain(int argc, const char *const argv[]) {
      deadline will be in the past, so the sleep time will be 0. */
   TTime deadline;
 
-  for (size_t i = 1; i <= cfg->Count; ++i) {
-    if (!CreateDg(dg_buf, *cfg, i)) {
+  for (size_t i = 1; i <= args->Count; ++i) {
+    if (!CreateDg(dg_buf, *args, i)) {
       return EXIT_FAILURE;
     }
 
     SleepMicroseconds(deadline.RemainingMicroseconds(CLOCK_TYPE));
     deadline.Now(CLOCK_TYPE);
     sender->Send(&dg_buf[0], dg_buf.size());
-    deadline.AddMicroseconds(cfg->Interval);
+    deadline.AddMicroseconds(args->Interval);
 
-    if (cfg->Print && ((i % cfg->Print) == 0)) {
+    if (args->Print && ((i % args->Print) == 0)) {
         std::cout << i << " messages written" << std::endl;
     }
   }

@@ -36,9 +36,9 @@ namespace Dory {
       NO_COPY_SEMANTICS(TV0ClientHandlerFactory);
 
       public:
-      TV0ClientHandlerFactory(const TConfig &config,
-                              const TSetup::TInfo &setup)
-          : TClientHandlerFactoryBase(config, setup) {
+      TV0ClientHandlerFactory(const TCmdLineArgs &args,
+          const TSetup::TInfo &setup)
+          : TClientHandlerFactoryBase(args, setup) {
       }
 
       ~TV0ClientHandlerFactory() override = default;

@@ -215,8 +215,8 @@ namespace {
     arg_vec.push_back(nullptr);
 
     try {
-      TCmdLineArgs args(static_cast<int>(arg_vec.size()) - 1, &arg_vec[0],
-          true /* allow_input_bind_ephemeral */);
+      Dory::TCmdLineArgs args(static_cast<int>(arg_vec.size()) - 1,
+          &arg_vec[0], true /* allow_input_bind_ephemeral */);
 
       if (TDoryServer::CheckUnixDgSize(args)) {
         std::cout << "Large sendbuf required" << std::endl;

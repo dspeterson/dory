@@ -30,7 +30,7 @@
 #include <base/event_semaphore.h>
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
-#include <dory/mock_kafka_server/config.h>
+#include <dory/mock_kafka_server/cmd_line_args.h>
 #include <dory/mock_kafka_server/received_request_tracker.h>
 #include <dory/mock_kafka_server/server.h>
 #include <thread/fd_managed_thread.h>
@@ -46,9 +46,10 @@ namespace Dory {
       NO_COPY_SEMANTICS(TMainThread);
 
       public:
-      explicit TMainThread(const TConfig &config, int shutdown_signum = SIGINT)
+      explicit TMainThread(const TCmdLineArgs &args,
+          int shutdown_signum = SIGINT)
           : ShutdownSignum(shutdown_signum),
-            Server(config, true, true, shutdown_signum) {
+            Server(args, true, true, shutdown_signum) {
        }
 
       ~TMainThread() override;
