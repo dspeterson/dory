@@ -152,6 +152,76 @@ namespace {
         << "        </topicConfigs>" << std::endl
         << "    </topicRateLimiting>" << std::endl
         << std::endl
+        << "    <inputSources>" << std::endl
+        << "        <unixDatagram enable=\"true\">" << std::endl
+        << "            <path value=\"/var/run/dory/input_d\" />" << std::endl
+        << "            <mode value=\"0200\" />" << std::endl
+        << "        </unixDatagram>" << std::endl
+        << "        <unixStream enable=\"true\">" << std::endl
+        << "            <path value=\"/var/run/dory/input_s\" />" << std::endl
+        << "            <mode value=\"0020\" />" << std::endl
+        << "        </unixStream>" << std::endl
+        << "        <tcp enable=\"true\">" << std::endl
+        << "            <port value=\"54321\" />" << std::endl
+        << "        </tcp>" << std::endl
+        << "    </inputSources>" << std::endl
+        << std::endl
+        << "<inputConfig>" << std::endl
+        << "    <maxBuffer value=\"16k\" />" << std::endl
+        << "    <maxDatagramMsgSize value=\"32k\" />" << std::endl
+        << "    <allowLargeUnixDatagrams value=\"true\" />" << std::endl
+        << "    <maxStreamMsgSize value=\"3m\" />" << std::endl
+        << "</inputConfig>" << std::endl
+        << std::endl
+        << "<msgDelivery>" << std::endl
+        << "    <topicAutocreate enable=\"true\" />" << std::endl
+        << "    <maxFailedDeliveryAttempts value=\"7\" />" << std::endl
+        << "    <shutdownMaxDelay value=\"15\" />" << std::endl
+        << "    <dispatcherRestartMaxDelay value=\"8000\" />" << std::endl
+        << "    <metadataRefreshInterval value=\"25\" />" << std::endl
+        << "    <compareMetadataOnRefresh value=\"false\" />" << std::endl
+        << "    <kafkaSocketTimeout value=\"75\" />" << std::endl
+        << "    <pauseRateLimitInitial value=\"6500\" />" << std::endl
+        << "    <pauseRateLimitMaxDouble value=\"3\" />" << std::endl
+        << "    <minPauseDelay value=\"4500\" />" << std::endl
+        << "</msgDelivery>" << std::endl
+        << std::endl
+        << "<httpInterface>" << std::endl
+        << "    <port value=\"3456\" />" << std::endl
+        << "    <loopbackOnly value=\"true\" />" << std::endl
+        << "    <discardReportInterval value=\"750\" />" << std::endl
+        << "    <badMsgPrefixSize value=\"512\" />" << std::endl
+        << "</httpInterface>" << std::endl
+        << std::endl
+        << "<discardLogging enable=\"true\">" << std::endl
+        << "    <path value=\"/discard/logging/path\" />" << std::endl
+        << "    <maxFileSize value=\"2m\" />" << std::endl
+        << "    <maxArchiveSize value=\"64m\" />" << std::endl
+        << "    <badMsgPrefixSize value=\"384\" />" << std::endl
+        << "</discardLogging>" << std::endl
+        << std::endl
+        << "<kafkaConfig>" << std::endl
+        << "    <clientId value=\"test client\" />" << std::endl
+        << "    <replicationTimeout value=\"9000\" />" << std::endl
+        << "</kafkaConfig>" << std::endl
+        << std::endl
+        << "<msgDebug enable=\"true\">" << std::endl
+        << "    <path value=\"/msg/debug/path\" />" << std::endl
+        << "    <timeLimit value=\"45\" />" << std::endl
+        << "    <byteLimit value=\"512m\" />" << std::endl
+        << "</msgDebug>" << std::endl
+        << std::endl
+        << "<logging>" << std::endl
+        << "    <level value=\"INFO\" />" << std::endl
+        << "    <stdoutStderr enable=\"true\" />" << std::endl
+        << "    <syslog enable=\"false\" />" << std::endl
+        << "    <file enable=\"true\">" << std::endl
+        << "        <path value=\"/log/file/path\" />" << std::endl
+        << "        <mode value=\"0664\" />" << std::endl
+        << "    </file>" << std::endl
+        << "    <logDiscards enable=\"false\" />" << std::endl
+        << "</logging>" << std::endl
+        << std::endl
         << "    <initialBrokers>" << std::endl
         << "        <broker host=\"host1\" port=\"9092\" />" << std::endl
         << "        <broker host=\"host2\" port=\"9093\" />" << std::endl
@@ -270,11 +340,51 @@ namespace {
     ASSERT_TRUE(rate_topic_iter->second.MaxCount.IsKnown());
     ASSERT_EQ(*rate_topic_iter->second.MaxCount, 4096U);
 
-    ASSERT_EQ(conf.LoggingConf.Pri, TPri::NOTICE);
-    ASSERT_FALSE(conf.LoggingConf.EnableStdoutStderr);
-    ASSERT_TRUE(conf.LoggingConf.EnableSyslog);
-    ASSERT_TRUE(conf.LoggingConf.FilePath.empty());
-    ASSERT_EQ(conf.LoggingConf.FileMode, TFileLogWriter::DEFAULT_FILE_MODE);
+    ASSERT_EQ(conf.InputSourcesConf.UnixDgPath, "/var/run/dory/input_d");
+    ASSERT_EQ(conf.InputSourcesConf.UnixDgMode, 0200);
+    ASSERT_EQ(conf.InputSourcesConf.UnixStreamPath, "/var/run/dory/input_s");
+    ASSERT_EQ(conf.InputSourcesConf.UnixStreamMode, 0020);
+    ASSERT_TRUE(conf.InputSourcesConf.LocalTcpPort.IsKnown());
+    ASSERT_EQ(*conf.InputSourcesConf.LocalTcpPort, 54321U);
+
+    ASSERT_EQ(conf.InputConfigConf.MaxBuffer, 16U * 1024U);
+    ASSERT_EQ(conf.InputConfigConf.MaxDatagramMsgSize, 32U * 1024U);
+    ASSERT_TRUE(conf.InputConfigConf.AllowLargeUnixDatagrams);
+    ASSERT_EQ(conf.InputConfigConf.MaxStreamMsgSize, 3U * 1024U * 1024U);
+
+    ASSERT_TRUE(conf.MsgDeliveryConf.TopicAutocreate);
+    ASSERT_EQ(conf.MsgDeliveryConf.MaxFailedDeliveryAttempts, 7U);
+    ASSERT_EQ(conf.MsgDeliveryConf.ShutdownMaxDelay, 15U);
+    ASSERT_EQ(conf.MsgDeliveryConf.DispatcherRestartMaxDelay, 8000U);
+    ASSERT_EQ(conf.MsgDeliveryConf.MetadataRefreshInterval, 25U);
+    ASSERT_FALSE(conf.MsgDeliveryConf.CompareMetadataOnRefresh);
+    ASSERT_EQ(conf.MsgDeliveryConf.KafkaSocketTimeout, 75U);
+    ASSERT_EQ(conf.MsgDeliveryConf.PauseRateLimitInitial, 6500U);
+    ASSERT_EQ(conf.MsgDeliveryConf.PauseRateLimitMaxDouble, 3U);
+    ASSERT_EQ(conf.MsgDeliveryConf.MinPauseDelay, 4500U);
+
+    ASSERT_EQ(conf.HttpInterfaceConf.Port, 3456U);
+    ASSERT_TRUE(conf.HttpInterfaceConf.LoopbackOnly);
+    ASSERT_EQ(conf.HttpInterfaceConf.DiscardReportInterval, 750U);
+    ASSERT_EQ(conf.HttpInterfaceConf.BadMsgPrefixSize, 512U);
+
+    ASSERT_EQ(conf.DiscardLoggingConf.Path, "/discard/logging/path");
+    ASSERT_EQ(conf.DiscardLoggingConf.MaxFileSize, 2U * 1024U * 1024U);
+    ASSERT_EQ(conf.DiscardLoggingConf.MaxArchiveSize, 64U * 1024U * 1024U);
+    ASSERT_EQ(conf.DiscardLoggingConf.BadMsgPrefixSize, 384U);
+
+    ASSERT_EQ(conf.KafkaConfigConf.ClientId, "test client");
+    ASSERT_EQ(conf.KafkaConfigConf.ReplicationTimeout, 9000U);
+
+    ASSERT_EQ(conf.MsgDebugConf.Path, "/msg/debug/path");
+    ASSERT_EQ(conf.MsgDebugConf.TimeLimit, 45U);
+    ASSERT_EQ(conf.MsgDebugConf.ByteLimit, 512U * 1024U * 1024U);
+
+    ASSERT_EQ(conf.LoggingConf.Pri, TPri::INFO);
+    ASSERT_TRUE(conf.LoggingConf.EnableStdoutStderr);
+    ASSERT_FALSE(conf.LoggingConf.EnableSyslog);
+    ASSERT_EQ(conf.LoggingConf.FilePath, "/log/file/path");
+    ASSERT_EQ(conf.LoggingConf.FileMode, 0664);
 
     ASSERT_EQ(conf.InitialBrokers.size(), 2U);
     ASSERT_EQ(conf.InitialBrokers[0].Host, "host1");
