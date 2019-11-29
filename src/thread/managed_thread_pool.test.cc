@@ -821,8 +821,7 @@ namespace {
 
   TEST_F(TManagedThreadPoolTest, StressTest2) {
     std::cout
-        << "Running stress test 2 part 1.  This should take about 30-60 "
-        << "seconds." << std::endl;
+        << "Running stress test 2 part 1." << std::endl;
     const size_t initial_thread_count = 50;
     std::atomic<size_t> counter(0);
     std::atomic<size_t> working_count(initial_thread_count);
@@ -897,7 +896,7 @@ namespace {
        restarted. */
 
     std::cout
-        << "Running stress test 2 part 2.  This should take about 30-60 "
+        << "Running stress test 2 part 2.  This should take about 5-10 "
         << "seconds."
         << std::endl;
     counter = 0;
