@@ -25,14 +25,15 @@ using namespace Base;
 using namespace Dory;
 using namespace Dory::Conf;
 
-void TInputSourcesConf::SetUnixDgConf(const std::string &path, mode_t mode) {
+void TInputSourcesConf::SetUnixDgConf(const std::string &path,
+    const TOpt<mode_t> &mode) {
   assert(this);
 
   if (!path.empty() && (path[0] != '/')) {
     throw TInputSourcesRelativeUnixDgPath();
   }
 
-  if (mode > 0777) {
+  if (mode.IsKnown() && (*mode > 0777)) {
     throw TInputSourcesInvalidUnixDgFileMode();
   }
 
@@ -41,14 +42,14 @@ void TInputSourcesConf::SetUnixDgConf(const std::string &path, mode_t mode) {
 }
 
 void TInputSourcesConf::SetUnixStreamConf(const std::string &path,
-    mode_t mode) {
+    const TOpt<mode_t> &mode) {
   assert(this);
 
   if (!path.empty() && (path[0] != '/')) {
     throw TInputSourcesRelativeUnixStreamPath();
   }
 
-  if (mode > 0777) {
+  if (mode.IsKnown() && (*mode > 0777)) {
     throw TInputSourcesInvalidUnixStreamFileMode();
   }
 
@@ -56,7 +57,13 @@ void TInputSourcesConf::SetUnixStreamConf(const std::string &path,
   UnixStreamMode = mode;
 }
 
-void TInputSourcesConf::SetTcpConf(const TOpt<in_port_t> &port) {
+void TInputSourcesConf::SetTcpConf(const TOpt<in_port_t> &port,
+    bool allow_input_bind_ephemeral) {
   assert(this);
+
+  if (!allow_input_bind_ephemeral && port.IsKnown() && (*port == 0)) {
+    throw TInvalidTcpInputPort();
+  }
+
   LocalTcpPort = port;
 }

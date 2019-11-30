@@ -22,10 +22,12 @@
 #include <dory/conf/conf.h>
 
 #include <sstream>
+#include <stdexcept>
 
 #include <base/tmp_file.h>
 #include <dory/compress/compression_type.h>
-#include <log/file_log_writer.h>
+#include <dory/test_util/xml_util.h>
+#include <dory/util/dory_xml_init.h>
 #include <log/pri.h>
 #include <test_util/test_logging.h>
 #include <xml/test/xml_test_initializer.h>
@@ -36,6 +38,8 @@ using namespace Base;
 using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::Conf;
+using namespace Dory::TestUtil;
+using namespace Dory::Util;
 using namespace Log;
 using namespace ::TestUtil;
 using namespace Xml;
@@ -61,7 +65,7 @@ namespace {
 
   TEST_F(TConfTest, BasicTest) {
     std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<doryConfig>" << std::endl
         << "<!-- this is a comment -->" << std::endl
         << "    <batching>" << std::endl
@@ -170,7 +174,7 @@ namespace {
         << "    <maxBuffer value=\"16k\" />" << std::endl
         << "    <maxDatagramMsgSize value=\"32k\" />" << std::endl
         << "    <allowLargeUnixDatagrams value=\"true\" />" << std::endl
-        << "    <maxStreamMsgSize value=\"3m\" />" << std::endl
+        << "    <maxStreamMsgSize value=\"384k\" />" << std::endl
         << "</inputConfig>" << std::endl
         << std::endl
         << "<msgDelivery>" << std::endl
@@ -197,7 +201,7 @@ namespace {
         << "    <path value=\"/discard/logging/path\" />" << std::endl
         << "    <maxFileSize value=\"2m\" />" << std::endl
         << "    <maxArchiveSize value=\"64m\" />" << std::endl
-        << "    <badMsgPrefixSize value=\"384\" />" << std::endl
+        << "    <maxMsgPrefixSize value=\"384\" />" << std::endl
         << "</discardLogging>" << std::endl
         << std::endl
         << "<kafkaConfig>" << std::endl
@@ -227,8 +231,7 @@ namespace {
         << "        <broker host=\"host2\" port=\"9093\" />" << std::endl
         << "    </initialBrokers>" << std::endl
         << "</doryConfig>" << std::endl;
-    TConf::TBuilder builder(true);
-    TConf conf = builder.Build(os.str());
+    TConf conf = XmlToConf(os.str());
 
     ASSERT_EQ(conf.BatchConf.ProduceRequestDataLimit, 100U);
     ASSERT_EQ(conf.BatchConf.MessageMaxBytes, 200U);
@@ -341,16 +344,18 @@ namespace {
     ASSERT_EQ(*rate_topic_iter->second.MaxCount, 4096U);
 
     ASSERT_EQ(conf.InputSourcesConf.UnixDgPath, "/var/run/dory/input_d");
-    ASSERT_EQ(conf.InputSourcesConf.UnixDgMode, 0200);
+    ASSERT_TRUE(conf.InputSourcesConf.UnixDgMode.IsKnown());
+    ASSERT_EQ(*conf.InputSourcesConf.UnixDgMode, 0200);
     ASSERT_EQ(conf.InputSourcesConf.UnixStreamPath, "/var/run/dory/input_s");
-    ASSERT_EQ(conf.InputSourcesConf.UnixStreamMode, 0020);
+    ASSERT_TRUE(conf.InputSourcesConf.UnixStreamMode.IsKnown());
+    ASSERT_EQ(*conf.InputSourcesConf.UnixStreamMode, 0020);
     ASSERT_TRUE(conf.InputSourcesConf.LocalTcpPort.IsKnown());
     ASSERT_EQ(*conf.InputSourcesConf.LocalTcpPort, 54321U);
 
     ASSERT_EQ(conf.InputConfigConf.MaxBuffer, 16U * 1024U);
     ASSERT_EQ(conf.InputConfigConf.MaxDatagramMsgSize, 32U * 1024U);
     ASSERT_TRUE(conf.InputConfigConf.AllowLargeUnixDatagrams);
-    ASSERT_EQ(conf.InputConfigConf.MaxStreamMsgSize, 3U * 1024U * 1024U);
+    ASSERT_EQ(conf.InputConfigConf.MaxStreamMsgSize, 384U * 1024U);
 
     ASSERT_TRUE(conf.MsgDeliveryConf.TopicAutocreate);
     ASSERT_EQ(conf.MsgDeliveryConf.MaxFailedDeliveryAttempts, 7U);
@@ -371,7 +376,7 @@ namespace {
     ASSERT_EQ(conf.DiscardLoggingConf.Path, "/discard/logging/path");
     ASSERT_EQ(conf.DiscardLoggingConf.MaxFileSize, 2U * 1024U * 1024U);
     ASSERT_EQ(conf.DiscardLoggingConf.MaxArchiveSize, 64U * 1024U * 1024U);
-    ASSERT_EQ(conf.DiscardLoggingConf.BadMsgPrefixSize, 384U);
+    ASSERT_EQ(conf.DiscardLoggingConf.MaxMsgPrefixSize, 384U);
 
     ASSERT_EQ(conf.KafkaConfigConf.ClientId, "test client");
     ASSERT_EQ(conf.KafkaConfigConf.ReplicationTimeout, 9000U);
@@ -384,7 +389,8 @@ namespace {
     ASSERT_TRUE(conf.LoggingConf.EnableStdoutStderr);
     ASSERT_FALSE(conf.LoggingConf.EnableSyslog);
     ASSERT_EQ(conf.LoggingConf.FilePath, "/log/file/path");
-    ASSERT_EQ(conf.LoggingConf.FileMode, 0664);
+    ASSERT_TRUE(conf.LoggingConf.FileMode.IsKnown());
+    ASSERT_EQ(*conf.LoggingConf.FileMode, 0664);
 
     ASSERT_EQ(conf.InitialBrokers.size(), 2U);
     ASSERT_EQ(conf.InitialBrokers[0].Host, "host1");
@@ -393,9 +399,9 @@ namespace {
     ASSERT_EQ(conf.InitialBrokers[1].Port, 9093U);
   }
 
-  TEST_F(TConfTest, BasicLoggingTest) {
+  TEST_F(TConfTest, ModeUnspecifiedTest) {
     std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<doryConfig>" << std::endl
         << "<!-- this is a comment -->" << std::endl
         << "    <batching>" << std::endl
@@ -486,6 +492,20 @@ namespace {
         << "        </topicConfigs>" << std::endl
         << "    </topicRateLimiting>" << std::endl
         << std::endl
+        << "    <inputSources>" << std::endl
+        << "        <unixDatagram enable=\"true\">" << std::endl
+        << "            <path value=\"/var/run/dory/input_d\" />" << std::endl
+        << "            <mode value=\"unspecified\" />" << std::endl
+        << "        </unixDatagram>" << std::endl
+        << "        <unixStream enable=\"true\">" << std::endl
+        << "            <path value=\"/var/run/dory/input_s\" />" << std::endl
+        << "            <mode value=\"unspecified\" />" << std::endl
+        << "        </unixStream>" << std::endl
+        << "        <tcp enable=\"true\">" << std::endl
+        << "            <port value=\"54321\" />" << std::endl
+        << "        </tcp>" << std::endl
+        << "    </inputSources>" << std::endl
+        << std::endl
         << "    <logging>" << std::endl
         << "        <level value=\"INFO\" />" << std::endl
         << "        <stdoutStderr enable=\"true\" />" << std::endl
@@ -493,7 +513,7 @@ namespace {
         << std::endl
         << "        <file enable=\"true\">" << std::endl
         << "            <path value=\"/var/log/dory/dory.log\" />" << std::endl
-        << "            <mode value=\"0666\" />" << std::endl
+        << "            <mode value=\"unspecified\" />" << std::endl
         << "" << std::endl
         << "        </file>" << std::endl
         << "    </logging>" << std::endl
@@ -503,19 +523,24 @@ namespace {
         << "        <broker host=\"host2\" port=\"9093\" />" << std::endl
         << "    </initialBrokers>" << std::endl
         << "</doryConfig>" << std::endl;
-    TConf::TBuilder builder(true);
-    TConf conf = builder.Build(os.str());
+    TConf conf = XmlToConf(os.str());
 
+    ASSERT_EQ(conf.InputSourcesConf.UnixDgPath, "/var/run/dory/input_d");
+    ASSERT_FALSE(conf.InputSourcesConf.UnixDgMode.IsKnown());
+    ASSERT_EQ(conf.InputSourcesConf.UnixStreamPath, "/var/run/dory/input_s");
+    ASSERT_FALSE(conf.InputSourcesConf.UnixStreamMode.IsKnown());
+    ASSERT_TRUE(conf.InputSourcesConf.LocalTcpPort.IsKnown());
+    ASSERT_EQ(*conf.InputSourcesConf.LocalTcpPort, 54321U);
     ASSERT_EQ(conf.LoggingConf.Pri, TPri::INFO);
     ASSERT_TRUE(conf.LoggingConf.EnableStdoutStderr);
     ASSERT_FALSE(conf.LoggingConf.EnableSyslog);
     ASSERT_EQ(conf.LoggingConf.FilePath, "/var/log/dory/dory.log");
-    ASSERT_EQ(conf.LoggingConf.FileMode, 0666);
+    ASSERT_FALSE(conf.LoggingConf.FileMode.IsKnown());
   }
 
-  TEST_F(TConfTest, LoggingTestInvalidLevel) {
+  TEST_F(TConfTest, NoTcpTest) {
     std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<doryConfig>" << std::endl
         << "<!-- this is a comment -->" << std::endl
         << "    <batching>" << std::endl
@@ -605,6 +630,159 @@ namespace {
         << std::endl
         << "        </topicConfigs>" << std::endl
         << "    </topicRateLimiting>" << std::endl
+        << std::endl
+        << "    <inputSources>" << std::endl
+        << "        <unixDatagram enable=\"true\">" << std::endl
+        << "            <path value=\"/var/run/dory/input_d\" />" << std::endl
+        << "            <mode value=\"0222\" />" << std::endl
+        << "        </unixDatagram>" << std::endl
+        << "        <unixStream enable=\"true\">" << std::endl
+        << "            <path value=\"/var/run/dory/input_s\" />" << std::endl
+        << "            <mode value=\"unspecified\" />" << std::endl
+        << "        </unixStream>" << std::endl
+        << "        <tcp enable=\"false\">" << std::endl
+        << "            <port value=\"54321\" />" << std::endl
+        << "        </tcp>" << std::endl
+        << "    </inputSources>" << std::endl
+        << std::endl
+        << "    <logging>" << std::endl
+        << "        <level value=\"INFO\" />" << std::endl
+        << "        <stdoutStderr enable=\"true\" />" << std::endl
+        << "        <syslog enable=\"false\" />" << std::endl
+        << std::endl
+        << "        <file enable=\"true\">" << std::endl
+        << "            <path value=\"/var/log/dory/dory.log\" />" << std::endl
+        << "            <mode value=\"unspecified\" />" << std::endl
+        << "" << std::endl
+        << "        </file>" << std::endl
+        << "    </logging>" << std::endl
+        << std::endl
+        << "    <initialBrokers>" << std::endl
+        << "        <broker host=\"host1\" port=\"9092\" />" << std::endl
+        << "        <broker host=\"host2\" port=\"9093\" />" << std::endl
+        << "    </initialBrokers>" << std::endl
+        << "</doryConfig>" << std::endl;
+    TConf conf = XmlToConf(os.str());
+
+    ASSERT_EQ(conf.InputSourcesConf.UnixDgPath, "/var/run/dory/input_d");
+    ASSERT_TRUE(conf.InputSourcesConf.UnixDgMode.IsKnown());
+    ASSERT_EQ(*conf.InputSourcesConf.UnixDgMode, 0222);
+    ASSERT_EQ(conf.InputSourcesConf.UnixStreamPath, "/var/run/dory/input_s");
+    ASSERT_FALSE(conf.InputSourcesConf.UnixStreamMode.IsKnown());
+    ASSERT_FALSE(conf.InputSourcesConf.LocalTcpPort.IsKnown());
+    ASSERT_EQ(conf.LoggingConf.Pri, TPri::INFO);
+    ASSERT_TRUE(conf.LoggingConf.EnableStdoutStderr);
+    ASSERT_FALSE(conf.LoggingConf.EnableSyslog);
+    ASSERT_EQ(conf.LoggingConf.FilePath, "/var/log/dory/dory.log");
+    ASSERT_FALSE(conf.LoggingConf.FileMode.IsKnown());
+  }
+
+  TEST_F(TConfTest, LoggingTestInvalidLevel) {
+    std::ostringstream os;
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+        << "<doryConfig>" << std::endl
+        << "<!-- this is a comment -->" << std::endl
+        << "    <batching>" << std::endl
+        << "        <namedConfigs>" << std::endl
+        << "            <config name=\"config1\">" << std::endl
+        << "                <time value=\"50\" />" << std::endl
+        << "                <messages value=\"100\" />" << std::endl
+        << "                <bytes value=\"200\" />" << std::endl
+        << "            </config>" << std::endl
+        << "            <config name=\"config2\">" << std::endl
+        << "                <time value=\"5\" />" << std::endl
+        << "                <messages value=\"disable\" />" << std::endl
+        << "                <bytes value=\"20k\" />" << std::endl
+        << "            </config>" << std::endl
+        << "        </namedConfigs>" << std::endl
+        << std::endl
+        << "        <produceRequestDataLimit value=\"100\" />" << std::endl
+        << std::endl
+        << "        <messageMaxBytes value=\"200\" />" << std::endl
+        << std::endl
+        << "        <combinedTopics enable=\"true\" config=\"config1\" />"
+        << std::endl
+        << std::endl
+        << "        <defaultTopic action=\"perTopic\" config=\"config2\" />"
+        << std::endl
+        << std::endl
+        << "        <topicConfigs>" << std::endl
+        << "            <topic name=\"topic1\" action=\"perTopic\" "
+        << "config=\"config1\" />" << std::endl
+        << "            <topic name=\"topic2\" action=\"perTopic\" "
+        << "config=\"config2\" />" << std::endl
+        << "        </topicConfigs>" << std::endl
+        << "    </batching>" << std::endl
+        << std::endl
+        << "    <compression>" << std::endl
+        << "        <namedConfigs>" << std::endl
+        << "            <config name=\"noComp\" type=\"none\" />" << std::endl
+        << "            <config name=\"snappy1\" type=\"snappy\" "
+        << "minSize=\"1024\" />" << std::endl
+        << "            <config name=\"snappy2\" type=\"snappy\" "
+        << "minSize=\"2k\" />" << std::endl
+        << "            <config name=\"gzip1\" type=\"gzip\" "
+        << "minSize=\"4096\" />" << std::endl
+        << "            <config name=\"gzip2\" type=\"gzip\" level=\"3\" "
+        << "minSize=\"8192\" />" << std::endl
+        << "            <config name=\"lz4_1\" type=\"lz4\" "
+        << "minSize=\"16384\" />" << std::endl
+        << "            <config name=\"lz4_2\" type=\"lz4\" level=\"5\" "
+        << "minSize=\"32768\" />" << std::endl
+        << "        </namedConfigs>" << std::endl
+        << std::endl
+        << "        <sizeThresholdPercent value=\"75\" />" << std::endl
+        << std::endl
+        << "        <defaultTopic config=\"snappy1\" />" << std::endl
+        << std::endl
+        << "        <topicConfigs>" << std::endl
+        << "            <topic name=\"topic1\" config=\"noComp\" />"
+        << std::endl
+        << "            <topic name=\"topic2\" config=\"snappy2\" />"
+        << "            <topic name=\"topic3\" config=\"gzip1\" />"
+        << "            <topic name=\"topic4\" config=\"gzip2\" />"
+        << "            <topic name=\"topic5\" config=\"lz4_1\" />"
+        << "            <topic name=\"topic6\" config=\"lz4_2\" />"
+        << std::endl
+        << "        </topicConfigs>" << std::endl
+        << "    </compression>" << std::endl
+        << std::endl
+        << "    <topicRateLimiting>" << std::endl
+        << "        <namedConfigs>" << std::endl
+        << "            <config name=\"zero\" interval=\"1\" maxCount=\"0\" />"
+        << std::endl
+        << "            <config name=\"infinity\" interval=\"1\" "
+        << "maxCount=\"unlimited\" />" << std::endl
+        << "            <config name=\"config1\" interval=\"10000\" "
+        << "maxCount=\"500\" />" << std::endl
+        << "            <config name=\"config2\" interval=\"20000\" "
+        << "maxCount=\"4k\" />" << std::endl
+        << "        </namedConfigs>" << std::endl
+        << "" << std::endl
+        << "        <defaultTopic config=\"config1\" />" << std::endl
+        << "" << std::endl
+        << "        <topicConfigs>" << std::endl
+        << "            <topic name=\"topic1\" config=\"zero\" />" << std::endl
+        << "            <topic name=\"topic2\" config=\"infinity\" />"
+        << std::endl
+        << "            <topic name=\"topic3\" config=\"config2\" />"
+        << std::endl
+        << "        </topicConfigs>" << std::endl
+        << "    </topicRateLimiting>" << std::endl
+        << std::endl
+        << "    <inputSources>" << std::endl
+        << "        <unixDatagram enable=\"true\">" << std::endl
+        << "            <path value=\"/var/run/dory/input_d\" />" << std::endl
+        << "            <mode value=\"0200\" />" << std::endl
+        << "        </unixDatagram>" << std::endl
+        << "        <unixStream enable=\"true\">" << std::endl
+        << "            <path value=\"/var/run/dory/input_s\" />" << std::endl
+        << "            <mode value=\"0020\" />" << std::endl
+        << "        </unixStream>" << std::endl
+        << "        <tcp enable=\"true\">" << std::endl
+        << "            <port value=\"54321\" />" << std::endl
+        << "        </tcp>" << std::endl
+        << "    </inputSources>" << std::endl
         << std::endl
         << "    <logging>" << std::endl
         << "        <level value=\"BLAH\" />" << std::endl
@@ -623,11 +801,10 @@ namespace {
         << "        <broker host=\"host2\" port=\"9093\" />" << std::endl
         << "    </initialBrokers>" << std::endl
         << "</doryConfig>" << std::endl;
-    TConf::TBuilder builder(true);
     bool caught = false;
 
     try {
-      TConf conf = builder.Build(os.str());
+      TConf conf = XmlToConf(os.str());
     } catch (const TLoggingInvalidLevel &) {
       caught = true;
     }
@@ -635,9 +812,9 @@ namespace {
     ASSERT_TRUE(caught);
   }
 
-  TEST_F(TConfTest, LoggingTestRelativePath) {
+  TEST_F(TConfTest, InputSourcesEmpty) {
     std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<doryConfig>" << std::endl
         << "<!-- this is a comment -->" << std::endl
         << "    <batching>" << std::endl
@@ -727,6 +904,155 @@ namespace {
         << std::endl
         << "        </topicConfigs>" << std::endl
         << "    </topicRateLimiting>" << std::endl
+        << std::endl
+        << "    <inputSources>" << std::endl
+        << "        <unixDatagram enable=\"false\">" << std::endl
+        << "            <path value=\"/var/run/dory/input_d\" />" << std::endl
+        << "            <mode value=\"0200\" />" << std::endl
+        << "        </unixDatagram>" << std::endl
+        << "        <unixStream enable=\"false\">" << std::endl
+        << "            <path value=\"/var/run/dory/input_s\" />" << std::endl
+        << "            <mode value=\"0020\" />" << std::endl
+        << "        </unixStream>" << std::endl
+        << "        <tcp enable=\"false\">" << std::endl
+        << "            <port value=\"54321\" />" << std::endl
+        << "        </tcp>" << std::endl
+        << "    </inputSources>" << std::endl
+        << std::endl
+        << "    <logging>" << std::endl
+        << "        <level value=\"BLAH\" />" << std::endl
+        << "        <stdoutStderr enable=\"true\" />" << std::endl
+        << "        <syslog enable=\"false\" />" << std::endl
+        << std::endl
+        << "        <file enable=\"true\">" << std::endl
+        << "            <path value=\"/var/log/dory/dory.log\" />" << std::endl
+        << "            <mode value=\"0666\" />" << std::endl
+        << "" << std::endl
+        << "        </file>" << std::endl
+        << "    </logging>" << std::endl
+        << std::endl
+        << "    <initialBrokers>" << std::endl
+        << "        <broker host=\"host1\" port=\"9092\" />" << std::endl
+        << "        <broker host=\"host2\" port=\"9093\" />" << std::endl
+        << "    </initialBrokers>" << std::endl
+        << "</doryConfig>" << std::endl;
+    bool caught = false;
+
+    try {
+      TConf conf = XmlToConf(os.str());
+    } catch (const std::runtime_error &) {
+      caught = true;
+    }
+
+    ASSERT_TRUE(caught);
+  }
+
+  TEST_F(TConfTest, LoggingTestRelativePath) {
+    std::ostringstream os;
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+        << "<doryConfig>" << std::endl
+        << "<!-- this is a comment -->" << std::endl
+        << "    <batching>" << std::endl
+        << "        <namedConfigs>" << std::endl
+        << "            <config name=\"config1\">" << std::endl
+        << "                <time value=\"50\" />" << std::endl
+        << "                <messages value=\"100\" />" << std::endl
+        << "                <bytes value=\"200\" />" << std::endl
+        << "            </config>" << std::endl
+        << "            <config name=\"config2\">" << std::endl
+        << "                <time value=\"5\" />" << std::endl
+        << "                <messages value=\"disable\" />" << std::endl
+        << "                <bytes value=\"20k\" />" << std::endl
+        << "            </config>" << std::endl
+        << "        </namedConfigs>" << std::endl
+        << std::endl
+        << "        <produceRequestDataLimit value=\"100\" />" << std::endl
+        << std::endl
+        << "        <messageMaxBytes value=\"200\" />" << std::endl
+        << std::endl
+        << "        <combinedTopics enable=\"true\" config=\"config1\" />"
+        << std::endl
+        << std::endl
+        << "        <defaultTopic action=\"perTopic\" config=\"config2\" />"
+        << std::endl
+        << std::endl
+        << "        <topicConfigs>" << std::endl
+        << "            <topic name=\"topic1\" action=\"perTopic\" "
+        << "config=\"config1\" />" << std::endl
+        << "            <topic name=\"topic2\" action=\"perTopic\" "
+        << "config=\"config2\" />" << std::endl
+        << "        </topicConfigs>" << std::endl
+        << "    </batching>" << std::endl
+        << std::endl
+        << "    <compression>" << std::endl
+        << "        <namedConfigs>" << std::endl
+        << "            <config name=\"noComp\" type=\"none\" />" << std::endl
+        << "            <config name=\"snappy1\" type=\"snappy\" "
+        << "minSize=\"1024\" />" << std::endl
+        << "            <config name=\"snappy2\" type=\"snappy\" "
+        << "minSize=\"2k\" />" << std::endl
+        << "            <config name=\"gzip1\" type=\"gzip\" "
+        << "minSize=\"4096\" />" << std::endl
+        << "            <config name=\"gzip2\" type=\"gzip\" level=\"3\" "
+        << "minSize=\"8192\" />" << std::endl
+        << "            <config name=\"lz4_1\" type=\"lz4\" "
+        << "minSize=\"16384\" />" << std::endl
+        << "            <config name=\"lz4_2\" type=\"lz4\" level=\"5\" "
+        << "minSize=\"32768\" />" << std::endl
+        << "        </namedConfigs>" << std::endl
+        << std::endl
+        << "        <sizeThresholdPercent value=\"75\" />" << std::endl
+        << std::endl
+        << "        <defaultTopic config=\"snappy1\" />" << std::endl
+        << std::endl
+        << "        <topicConfigs>" << std::endl
+        << "            <topic name=\"topic1\" config=\"noComp\" />"
+        << std::endl
+        << "            <topic name=\"topic2\" config=\"snappy2\" />"
+        << "            <topic name=\"topic3\" config=\"gzip1\" />"
+        << "            <topic name=\"topic4\" config=\"gzip2\" />"
+        << "            <topic name=\"topic5\" config=\"lz4_1\" />"
+        << "            <topic name=\"topic6\" config=\"lz4_2\" />"
+        << std::endl
+        << "        </topicConfigs>" << std::endl
+        << "    </compression>" << std::endl
+        << std::endl
+        << "    <topicRateLimiting>" << std::endl
+        << "        <namedConfigs>" << std::endl
+        << "            <config name=\"zero\" interval=\"1\" maxCount=\"0\" />"
+        << std::endl
+        << "            <config name=\"infinity\" interval=\"1\" "
+        << "maxCount=\"unlimited\" />" << std::endl
+        << "            <config name=\"config1\" interval=\"10000\" "
+        << "maxCount=\"500\" />" << std::endl
+        << "            <config name=\"config2\" interval=\"20000\" "
+        << "maxCount=\"4k\" />" << std::endl
+        << "        </namedConfigs>" << std::endl
+        << "" << std::endl
+        << "        <defaultTopic config=\"config1\" />" << std::endl
+        << "" << std::endl
+        << "        <topicConfigs>" << std::endl
+        << "            <topic name=\"topic1\" config=\"zero\" />" << std::endl
+        << "            <topic name=\"topic2\" config=\"infinity\" />"
+        << std::endl
+        << "            <topic name=\"topic3\" config=\"config2\" />"
+        << std::endl
+        << "        </topicConfigs>" << std::endl
+        << "    </topicRateLimiting>" << std::endl
+        << std::endl
+        << "    <inputSources>" << std::endl
+        << "        <unixDatagram enable=\"true\">" << std::endl
+        << "            <path value=\"/var/run/dory/input_d\" />" << std::endl
+        << "            <mode value=\"0200\" />" << std::endl
+        << "        </unixDatagram>" << std::endl
+        << "        <unixStream enable=\"true\">" << std::endl
+        << "            <path value=\"/var/run/dory/input_s\" />" << std::endl
+        << "            <mode value=\"0020\" />" << std::endl
+        << "        </unixStream>" << std::endl
+        << "        <tcp enable=\"true\">" << std::endl
+        << "            <port value=\"54321\" />" << std::endl
+        << "        </tcp>" << std::endl
+        << "    </inputSources>" << std::endl
         << std::endl
         << "    <logging>" << std::endl
         << "        <stdoutStderr enable=\"true\" />" << std::endl
@@ -744,11 +1070,10 @@ namespace {
         << "        <broker host=\"host2\" port=\"9093\" />" << std::endl
         << "    </initialBrokers>" << std::endl
         << "</doryConfig>" << std::endl;
-    TConf::TBuilder builder(true);
     bool caught = false;
 
     try {
-      TConf conf = builder.Build(os.str());
+      TConf conf = XmlToConf(os.str());
     } catch (const TLoggingRelativePath &) {
       caught = true;
     }
@@ -758,7 +1083,7 @@ namespace {
 
   TEST_F(TConfTest, LoggingTestInvalidMode) {
     std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<doryConfig>" << std::endl
         << "<!-- this is a comment -->" << std::endl
         << "    <batching>" << std::endl
@@ -849,6 +1174,20 @@ namespace {
         << "        </topicConfigs>" << std::endl
         << "    </topicRateLimiting>" << std::endl
         << std::endl
+        << "    <inputSources>" << std::endl
+        << "        <unixDatagram enable=\"true\">" << std::endl
+        << "            <path value=\"/var/run/dory/input_d\" />" << std::endl
+        << "            <mode value=\"0200\" />" << std::endl
+        << "        </unixDatagram>" << std::endl
+        << "        <unixStream enable=\"true\">" << std::endl
+        << "            <path value=\"/var/run/dory/input_s\" />" << std::endl
+        << "            <mode value=\"0020\" />" << std::endl
+        << "        </unixStream>" << std::endl
+        << "        <tcp enable=\"true\">" << std::endl
+        << "            <port value=\"54321\" />" << std::endl
+        << "        </tcp>" << std::endl
+        << "    </inputSources>" << std::endl
+        << std::endl
         << "    <logging>" << std::endl
         << "        <stdoutStderr enable=\"true\" />" << std::endl
         << "        <syslog enable=\"false\" />" << std::endl
@@ -865,11 +1204,10 @@ namespace {
         << "        <broker host=\"host2\" port=\"9093\" />" << std::endl
         << "    </initialBrokers>" << std::endl
         << "</doryConfig>" << std::endl;
-    TConf::TBuilder builder(true);
     bool caught = false;
 
     try {
-      TConf conf = builder.Build(os.str());
+      TConf conf = XmlToConf(os.str());
     } catch (const TLoggingInvalidFileMode &) {
       caught = true;
     }
@@ -881,6 +1219,7 @@ namespace {
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
+  TDoryXmlInit xml_init;
   TTmpFile test_logfile = InitTestLogging(argv[0]);
   return RUN_ALL_TESTS();
 }

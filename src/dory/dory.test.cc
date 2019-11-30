@@ -52,7 +52,10 @@
 #include <dory/kafka_proto/produce/version_util.h>
 #include <dory/msg_state_tracker.h>
 #include <dory/test_util/mock_kafka_config.h>
+#include <dory/test_util/xml_util.h>
 #include <dory/util/misc_util.h>
+#include <dory/util/dory_xml_init.h>
+#include <log/log.h>
 #include <log/pri.h>
 #include <test_util/test_logging.h>
 #include <thread/fd_managed_thread.h>
@@ -84,18 +87,21 @@ namespace {
     NO_COPY_SEMANTICS(TDoryTestServer);
 
     public:
-    TDoryTestServer(in_port_t broker_port, size_t msg_buffer_max_kb,
-        const std::string &dory_conf)
+    TDoryTestServer(in_port_t broker_port, size_t msg_buffer_max)
         : BrokerPort(broker_port),
-          MsgBufferMaxKb(msg_buffer_max_kb),
-          DoryConf(dory_conf) {
+          MsgBufferMax(msg_buffer_max) {
     }
 
-    TDoryTestServer(in_port_t broker_port, size_t msg_buffer_max_kb,
-        std::string &&dory_conf)
+    TDoryTestServer(in_port_t broker_port, size_t msg_buffer_max,
+        size_t compression_min_size, const char *compression_type,
+        TOpt<int> compression_level)
         : BrokerPort(broker_port),
-          MsgBufferMaxKb(msg_buffer_max_kb),
-          DoryConf(std::move(dory_conf)) {
+          MsgBufferMax(msg_buffer_max),
+          EnableBatching(true),
+          EnableCompression(true),
+          CompressionMinSize(compression_min_size),
+          CompressionType(compression_type),
+          CompressionLevel(compression_level) {
     }
 
     virtual ~TDoryTestServer();
@@ -163,11 +169,19 @@ namespace {
 
     bool TcpInputActive = false;
 
-    in_port_t BrokerPort;
+    in_port_t BrokerPort = 0;
 
-    size_t MsgBufferMaxKb;
+    size_t MsgBufferMax = 0;
 
-    std::string DoryConf;
+    bool EnableBatching = false;
+
+    bool EnableCompression = false;
+
+    size_t CompressionMinSize = 0;
+
+    std::string CompressionType;
+
+    TOpt<int> CompressionLevel;
 
     int DoryReturnValue = EXIT_FAILURE;
 
@@ -181,58 +195,140 @@ namespace {
 
   bool TDoryTestServer::SyncStart() {
     assert(this);
-    TTmpFile tmp_file("/tmp/dory_test_server.XXXXXX",
-        true /* delete_on_destroy */);
-    std::ofstream ofs(tmp_file.GetName());
-    ofs << DoryConf;
-    ofs.close();
-    std::string msg_buffer_max_str = std::to_string(MsgBufferMaxKb);
-    std::vector<const char *> arg_vec;
-    arg_vec.push_back("dory");
-    arg_vec.push_back("--config_path");
-    arg_vec.push_back(tmp_file.GetName().c_str());
-    arg_vec.push_back("--msg_buffer_max");
-    arg_vec.push_back(msg_buffer_max_str.c_str());
+    std::ostringstream os;
+    const std::string produce_request_data_limit(
+        EnableBatching ? "1024k" : "0");
+    const std::string compression_config(
+        EnableCompression ? "config1" : "noComp");
+    std::string level_blurb;
+
+    if (CompressionLevel.IsKnown()) {
+      level_blurb = " level=\"";
+      level_blurb += std::to_string(*CompressionLevel);
+      level_blurb += "\"";
+    }
+
+    const std::string batching_default_topic(EnableBatching ?
+        "        <defaultTopic action=\"perTopic\" config=\"config1\" />" :
+        "        <defaultTopic action=\"disable\" />");
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+        << "<doryConfig>" << std::endl
+        << "    <batching>" << std::endl
+        << "        <namedConfigs>" << std::endl
+        << "            <config name=\"config1\">" << std::endl
+        << "                <time value=\"disable\" />" << std::endl
+        << "                <messages value=\"10\" />" << std::endl
+        << "                <bytes value=\"disable\" />" << std::endl
+        << "            </config>" << std::endl
+        << "        </namedConfigs>" << std::endl
+        << "        <produceRequestDataLimit value=\""
+        << produce_request_data_limit << "\" />" << std::endl
+        << "        <messageMaxBytes value=\"1024k\" />" << std::endl
+        << "        <combinedTopics enable=\"false\" />" << std::endl
+        << batching_default_topic << std::endl
+        << "    </batching>" << std::endl
+        << std::endl
+        << "    <compression>" << std::endl
+        << "        <namedConfigs>" << std::endl
+        << "            <config name=\"noComp\" type=\"none\" />" << std::endl;
+
+    if (EnableCompression) {
+      os  << "            <config name=\"config1\" type=\"" << CompressionType
+          << "\"" << level_blurb << " minSize=\""
+          << std::to_string(CompressionMinSize) << "\" />" << std::endl;
+    }
+
+    os  << "        </namedConfigs>" << std::endl
+        << std::endl
+        << "        <defaultTopic config=\"" << compression_config << "\" />"
+        << std::endl
+        << "    </compression>" << std::endl
+        << std::endl
+        << "    <inputSources>" << std::endl;
 
     if (!UnixDgSocketName.empty()) {
-      arg_vec.push_back("--receive_socket_name");
-      arg_vec.push_back(UnixDgSocketName.c_str());
+      os  << "        <unixDatagram enable=\"true\">" << std::endl
+          << "            <path value=\"" << UnixDgSocketName << "\" />"
+          << std::endl
+          << "            <mode value=\"0222\" />" << std::endl
+          << "        </unixDatagram>" << std::endl;
     }
 
     if (!UnixStreamSocketName.empty()) {
-      arg_vec.push_back("--receive_stream_socket_name");
-      arg_vec.push_back(UnixStreamSocketName.c_str());
+      os  << "        <unixStream enable=\"true\">" << std::endl
+          << "            <path value=\"" << UnixStreamSocketName << "\" />"
+          << std::endl
+          << "            <mode value=\"0222\" />" << std::endl
+          << "        </unixStream>" << std::endl;
     }
 
     if (TcpInputActive) {
-      arg_vec.push_back("--input_port");
-      arg_vec.push_back("0");  // 0 means "request ephemeral port"
+      os  << "        <tcp enable=\"true\">" << std::endl
+          // 0 means "request ephemeral port"
+          << "            <port value=\"0\" />" << std::endl
+          << "        </tcp>" << std::endl;
     }
 
-    arg_vec.push_back("--client_id");
+    os  << "    </inputSources>" << std::endl
+        << std::endl
+        << "    <inputConfig>" << std::endl
+        << "        <maxBuffer value=\"" << MsgBufferMax << "\" />"
+        << std::endl
+        << "        <maxDatagramMsgSize value=\"64k\" />" << std::endl
+        << "        <allowLargeUnixDatagrams value=\"false\" />" << std::endl
+        << "        <maxStreamMsgSize value = \"512k\" />" << std::endl
+        << "    </inputConfig>" << std::endl
+        << std::endl
+        << "    <httpInterface>" << std::endl
+        << "        <port value=\"9090\" />" << std::endl
+        << "        <loopbackOnly value=\"true\" />" << std::endl
+        << "        <discardReportInterval value=\"600\" />" << std::endl
+        << "        <badMsgPrefixSize value=\"256\" />" << std::endl
+        << "    </httpInterface>" << std::endl
+        << std::endl
+        << "    <kafkaConfig>" << std::endl
+        << "        <clientId value=\"dory\" />" << std::endl
+        << "        <replicationTimeout value=\"10000\" />" << std::endl
+        << "    </kafkaConfig>" << std::endl
+        << std::endl
+        << "    <initialBrokers>" << std::endl
+        << "        <broker host=\"localhost\" port=\"" << BrokerPort <<"\" />"
+        << std::endl
+        << "    </initialBrokers>" << std::endl
+        << "</doryConfig>" << std::endl;
+
+    TTmpFile tmp_file("/tmp/dory_test_server.XXXXXX",
+        true /* delete_on_destroy */);
+    std::ofstream ofs(tmp_file.GetName());
+    ofs << os.str();
+    ofs.close();
+    std::string msg_buffer_max_str = std::to_string(MsgBufferMax);
+    std::vector<const char *> arg_vec;
     arg_vec.push_back("dory");
-    arg_vec.push_back("--status_loopback_only");
+    arg_vec.push_back("--config-path");
+    arg_vec.push_back(tmp_file.GetName().c_str());
     arg_vec.push_back(nullptr);
 
     try {
       Dory::TCmdLineArgs args(static_cast<int>(arg_vec.size()) - 1,
-          &arg_vec[0], true /* allow_input_bind_ephemeral */);
+          &arg_vec[0]);
+      TConf conf = XmlToConf(ReadFileIntoString(args.ConfigPath));
 
-      if (TDoryServer::CheckUnixDgSize(args)) {
+      if (TDoryServer::CheckUnixDgSize(conf)) {
         std::cout << "Large sendbuf required" << std::endl;
       }
 
-      TConf conf = Dory::Conf::TConf::TBuilder(true /* enable_lz4 */).Build(
-              ReadFileIntoString(args.ConfigPath));
       TDoryServer::PrepareForInit(conf);
       Dory.reset(new TDoryServer(std::move(args), std::move(conf),
           GetShutdownRequestedFd()));
       Start();
     } catch (const std::exception &x) {
       std::cerr << "Server error: " << x.what() << std::endl;
+      tmp_file.SetDeleteOnDestroy(false);  // leave file behind for debugging
       return false;
     } catch (...) {
       std::cerr << "Unknown server error" << std::endl;
+      tmp_file.SetDeleteOnDestroy(false);  // leave file behind for debugging
       return false;
     }
 
@@ -256,38 +352,13 @@ namespace {
 
     try {
       Dory->BindStatusSocket(true);
+      LOG(TPri::NOTICE) << "Web interface port " << Dory->GetStatusPort();
       DoryReturnValue = Dory->Run();
     } catch (const std::exception &x) {
       std::cerr << "Server error: " << x.what() << std::endl;
     } catch (...) {
       std::cerr << "Unknown server error" << std::endl;
     }
-  }
-
-   /* Create simple configuration with batching and compression disabled. */
-  std::string CreateSimpleDoryConf(in_port_t broker_port) {
-    std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
-       << "<doryConfig>" << std::endl
-       << "    <batching>" << std::endl
-       << "        <produceRequestDataLimit value=\"0\" />" << std::endl
-       << "        <messageMaxBytes value=\"1024k\" />" << std::endl
-       << "        <combinedTopics enable=\"false\" />" << std::endl
-       << "        <defaultTopic action=\"disable\" />" << std::endl
-       << "    </batching>" << std::endl
-       << "    <compression>" << std::endl
-       << "        <namedConfigs>" << std::endl
-       << "            <config name=\"noComp\" type=\"none\" />" << std::endl
-       << "        </namedConfigs>" << std::endl
-       << std::endl
-       << "        <defaultTopic config=\"noComp\" />" << std::endl
-       << "    </compression>" << std::endl
-       << "    <initialBrokers>" << std::endl
-       << "        <broker host=\"localhost\" port=\"" << broker_port <<"\" />"
-       << std::endl
-       << "    </initialBrokers>" << std::endl
-       << "</doryConfig>" << std::endl;
-    return os.str();
   }
 
   void CreateKafkaConfig(size_t num_brokers,
@@ -436,7 +507,7 @@ namespace {
     in_port_t port = mock_kafka.VirtualPortToPhys(10000);
 
     assert(port);
-    TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
+    TDoryTestServer server(port, 1024 * 1024);
     server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
@@ -537,7 +608,7 @@ namespace {
     in_port_t port = mock_kafka.VirtualPortToPhys(10000);
 
     assert(port);
-    TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
+    TDoryTestServer server(port, 1024 * 1024);
     server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
@@ -626,7 +697,7 @@ namespace {
     in_port_t port = mock_kafka.VirtualPortToPhys(10000);
 
     assert(port);
-    TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
+    TDoryTestServer server(port, 1024 * 1024);
     server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
@@ -653,9 +724,6 @@ namespace {
     MakeDg(dg_buf, topic, msg_body);
     ret = sock.Send(&dg_buf[0], dg_buf.size());
     ASSERT_EQ(ret, DORY_OK);
-
-    std::cout << "This part of the test is expected to take a while ..."
-        << std::endl;
 
     /* We should get 2 ACKs: the first will be the injected error and the
        second will indicate successful redelivery. */
@@ -779,7 +847,7 @@ namespace {
     in_port_t port = mock_kafka.VirtualPortToPhys(10000);
 
     assert(port);
-    TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
+    TDoryTestServer server(port, 1024 * 1024);
     server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
@@ -906,7 +974,7 @@ namespace {
     in_port_t port = mock_kafka.VirtualPortToPhys(10000);
 
     assert(port);
-    TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
+    TDoryTestServer server(port, 1024 * 1024);
     server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
@@ -970,7 +1038,7 @@ namespace {
     in_port_t port = mock_kafka.VirtualPortToPhys(10000);
 
     assert(port);
-    TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
+    TDoryTestServer server(port, 1024 * 1024);
     server.UseUnixDgSocket();
     server.UseUnixStreamSocket();
     server.UseTcpInputSocket();
@@ -1109,7 +1177,7 @@ namespace {
     in_port_t port = mock_kafka.VirtualPortToPhys(10000);
 
     assert(port);
-    TDoryTestServer server(port, 1024, CreateSimpleDoryConf(port));
+    TDoryTestServer server(port, 1024 * 1024);
     server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
@@ -1158,52 +1226,6 @@ namespace {
     ASSERT_EQ(server.GetDoryReturnValue(), EXIT_SUCCESS);
   }
 
-  std::string CreateCompressionTestConf(in_port_t broker_port,
-      size_t compression_min_size, const char *compression_type,
-      TOpt<int> compression_level) {
-    std::string level_blurb;
-
-    if (compression_level.IsKnown()) {
-      level_blurb = " level=\"";
-      level_blurb += std::to_string(*compression_level);
-      level_blurb += "\"";
-    }
-
-    std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
-       << "<doryConfig>" << std::endl
-       << "    <batching>" << std::endl
-       << "        <namedConfigs>" << std::endl
-       << "            <config name=\"config1\">" << std::endl
-       << "                <time value=\"disable\" />" << std::endl
-       << "                <messages value=\"10\" />" << std::endl
-       << "                <bytes value=\"disable\" />" << std::endl
-       << "            </config>" << std::endl
-       << "        </namedConfigs>" << std::endl
-       << "        <produceRequestDataLimit value=\"1024k\" />" << std::endl
-       << "        <messageMaxBytes value=\"1024k\" />" << std::endl
-       << "        <combinedTopics enable=\"false\" />" << std::endl
-       << "        <defaultTopic action=\"perTopic\" config=\"config1\" />"
-       << std::endl
-       << "    </batching>" << std::endl
-       << "    <compression>" << std::endl
-       << "        <namedConfigs>" << std::endl
-       << "            <config name=\"config1\" type=\"" << compression_type
-       << "\"" << level_blurb << " minSize=\""
-       << std::to_string(compression_min_size) << "\" />"
-       << std::endl
-       << "        </namedConfigs>" << std::endl
-       << std::endl
-       << "        <defaultTopic config=\"config1\" />" << std::endl
-       << "    </compression>" << std::endl
-       << "    <initialBrokers>" << std::endl
-       << "        <broker host=\"localhost\" port=\"" << broker_port <<"\" />"
-       << std::endl
-       << "    </initialBrokers>" << std::endl
-       << "</doryConfig>" << std::endl;
-    return os.str();
-  }
-
   TEST_F(TDoryTest, GzipCompressionTest1) {
     std::unique_ptr<TProduceProtocol>
         produce_protocol(ChooseProduceProto(0));
@@ -1223,9 +1245,8 @@ namespace {
     std::string msg_body_1("123456789");
     size_t data_size = msg_body_1.size() +
         produce_protocol->GetSingleMsgOverhead();
-    TDoryTestServer server(port, 1024,
-        CreateCompressionTestConf(port, 1 + (10 * data_size), "gzip",
-            TOpt<int>()));
+    TDoryTestServer server(port, 1024 * 1024, 1 + (10 * data_size), "gzip",
+        TOpt<int>());
     server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
@@ -1298,9 +1319,8 @@ namespace {
     std::string msg_body_1("123456789");
     size_t data_size = msg_body_1.size() +
         produce_protocol->GetSingleMsgOverhead();
-    TDoryTestServer server(port, 1024,
-        CreateCompressionTestConf(port, 1 + (10 * data_size), "gzip",
-            TOpt<int>(4)));
+    TDoryTestServer server(port, 1024 * 1024, 1 + (10 * data_size), "gzip",
+        TOpt<int>(4));
     server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
@@ -1373,9 +1393,8 @@ namespace {
     std::string msg_body_1("123456789");
     size_t data_size = msg_body_1.size() +
         produce_protocol->GetSingleMsgOverhead();
-    TDoryTestServer server(port, 1024,
-        CreateCompressionTestConf(port, 1 + (10 * data_size), "lz4",
-            TOpt<int>()));
+    TDoryTestServer server(port, 1024 * 1024, 1 + (10 * data_size), "lz4",
+        TOpt<int>());
     server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
@@ -1448,9 +1467,8 @@ namespace {
     std::string msg_body_1("123456789");
     size_t data_size = msg_body_1.size() +
         produce_protocol->GetSingleMsgOverhead();
-    TDoryTestServer server(port, 1024,
-        CreateCompressionTestConf(port, 1 + (10 * data_size), "lz4",
-            TOpt<int>(3)));
+    TDoryTestServer server(port, 1024 * 1024, 1 + (10 * data_size), "lz4",
+        TOpt<int>(3));
     server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
@@ -1523,9 +1541,8 @@ namespace {
     std::string msg_body_1("123456789");
     size_t data_size = msg_body_1.size() +
         produce_protocol->GetSingleMsgOverhead();
-    TDoryTestServer server(port, 1024,
-        CreateCompressionTestConf(port, 1 + (10 * data_size), "snappy",
-            TOpt<int>()));
+    TDoryTestServer server(port, 1024 * 1024, 1 + (10 * data_size), "snappy",
+        TOpt<int>());
     server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
@@ -1640,7 +1657,7 @@ namespace {
   }
 
   TEST_F(TDoryTest, SimpleStressTest) {
-    std::cout << "This test is expected to take a while ..." << std::endl;
+    std::cout << "This test should take about 15-30 seconds." << std::endl;
     std::vector<std::string> topic_vec;
     topic_vec.push_back("scooby_doo");
     topic_vec.push_back("shaggy");
@@ -1656,7 +1673,7 @@ namespace {
     in_port_t port = mock_kafka.VirtualPortToPhys(10000);
 
     assert(port);
-    TDoryTestServer server(port, 100 * 1024, CreateSimpleDoryConf(port));
+    TDoryTestServer server(port, 100 * 1024 * 1024);
     server.UseUnixDgSocket();
     server.UseUnixStreamSocket();
     server.UseTcpInputSocket();
@@ -1808,6 +1825,7 @@ int main(int argc, char **argv) {
 
   /* Initialize logging and start signal handler thread only once, before any
      tests run.  Then stop thread after all tests have finished. */
+  TDoryXmlInit xml_init;
   TTmpFile test_logfile = InitTestLogging(argv[0]);
   TSignalHandlerThreadStarter signal_handler_starter;
 

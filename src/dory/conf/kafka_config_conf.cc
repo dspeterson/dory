@@ -1,4 +1,4 @@
-/* <dory/conf/kafka_config_conf.h>
+/* <dory/conf/kafka_config_conf.cc>
 
    ----------------------------------------------------------------------------
    Copyright 2019 Dave Peterson <dave@dspeterson.com>
@@ -16,35 +16,23 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Class representing Kafka config section from Dory's config file.
+   Implements <dory/conf/kafka_config_conf.h>.
  */
 
-#pragma once
+#include <dory/conf/kafka_config_conf.h>
 
-#include <cstddef>
-#include <string>
+#include <cassert>
+#include <limits>
 
-#include <dory/conf/conf_error.h>
+using namespace Dory;
+using namespace Dory::Conf;
 
-namespace Dory {
+void TKafkaConfigConf::SetReplicationTimeout(size_t value) {
+  assert(this);
 
-  namespace Conf {
+  if (value > static_cast<size_t>(std::numeric_limits<int32_t>::max())) {
+    throw TKafkaConfigInvalidReplicationTimeout();
+  }
 
-    class TKafkaConfigInvalidReplicationTimeout final : public TConfError {
-      public:
-      TKafkaConfigInvalidReplicationTimeout()
-          : TConfError("Invalid replication timeout") {
-      }
-    };  // TKafkaConfigInvalidReplicationTimeout
-
-    struct TKafkaConfigConf final {
-      std::string ClientId = "dory";
-
-      size_t ReplicationTimeout = 10000;
-
-      void SetReplicationTimeout(size_t value);
-    };  // TKafkaConfigConf
-
-  };  // Conf
-
-}  // Dory
+  ReplicationTimeout = value;
+}

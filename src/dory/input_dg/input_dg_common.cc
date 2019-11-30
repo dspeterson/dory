@@ -39,8 +39,8 @@ DEFINE_COUNTER(InputAgentDiscardMsgMalformed);
 DEFINE_COUNTER(InputAgentDiscardMsgNoMem);
 
 void Dory::InputDg::DiscardMalformedMsg(const uint8_t *msg_begin,
-    size_t msg_size, TAnomalyTracker &anomaly_tracker, bool no_log_discard) {
-  if (!no_log_discard) {
+    size_t msg_size, TAnomalyTracker &anomaly_tracker, bool log_discard) {
+  if (log_discard) {
     LOG_R(TPri::ERR, std::chrono::seconds(30))
         << "Discarding malformed message";
   }
@@ -52,7 +52,7 @@ void Dory::InputDg::DiscardMalformedMsg(const uint8_t *msg_begin,
 void Dory::InputDg::DiscardMsgNoMem(TMsg::TTimestamp timestamp,
     const char *topic_begin, const char *topic_end, const void *key_begin,
     const void *key_end, const void *value_begin, const void *value_end,
-    TAnomalyTracker &anomaly_tracker, bool no_log_discard) {
+    TAnomalyTracker &anomaly_tracker, bool log_discard) {
   assert(topic_begin);
   assert(topic_end >= topic_begin);
   assert(key_begin || (key_end == key_begin));
@@ -63,7 +63,7 @@ void Dory::InputDg::DiscardMsgNoMem(TMsg::TTimestamp timestamp,
       key_begin, key_end, value_begin, value_end);
   InputAgentDiscardMsgNoMem.Increment();
 
-  if (!no_log_discard) {
+  if (log_discard) {
     LOG_R(TPri::ERR, std::chrono::seconds(30))
         << "Discarding message due to buffer space cap (topic: ["
         << std::string(topic_begin, topic_end) << "])";
@@ -74,7 +74,7 @@ TMsg::TPtr Dory::InputDg::TryCreateAnyPartitionMsg(int64_t timestamp,
     const char *topic_begin, const char *topic_end, const void *key_begin,
     size_t key_size, const void *value_begin, size_t value_size,
     Capped::TPool &pool, TAnomalyTracker &anomaly_tracker,
-    TMsgStateTracker &msg_state_tracker, bool no_log_discard) {
+    TMsgStateTracker &msg_state_tracker, bool log_discard) {
   assert(topic_begin);
   assert(topic_end > topic_begin);
   assert(key_begin);
@@ -93,7 +93,7 @@ TMsg::TPtr Dory::InputDg::TryCreateAnyPartitionMsg(int64_t timestamp,
     DiscardMsgNoMem(timestamp, topic_begin, topic_end, key_begin,
         reinterpret_cast<const uint8_t *>(key_begin) + key_size, value_begin,
         reinterpret_cast<const uint8_t *>(value_begin) + value_size,
-        anomaly_tracker, no_log_discard);
+        anomaly_tracker, log_discard);
   }
 
   return msg;
@@ -103,7 +103,7 @@ TMsg::TPtr Dory::InputDg::TryCreatePartitionKeyMsg(int32_t partition_key,
     int64_t timestamp, const char *topic_begin, const char *topic_end,
     const void *key_begin, size_t key_size, const void *value_begin,
     size_t value_size, Capped::TPool &pool, TAnomalyTracker &anomaly_tracker,
-    TMsgStateTracker &msg_state_tracker, bool no_log_discard) {
+    TMsgStateTracker &msg_state_tracker, bool log_discard) {
   assert(topic_begin);
   assert(topic_end > topic_begin);
   assert(key_begin);
@@ -122,7 +122,7 @@ TMsg::TPtr Dory::InputDg::TryCreatePartitionKeyMsg(int32_t partition_key,
     DiscardMsgNoMem(timestamp, topic_begin, topic_end, key_begin,
         reinterpret_cast<const uint8_t *>(key_begin) + key_size, value_begin,
         reinterpret_cast<const uint8_t *>(value_begin) + value_size,
-        anomaly_tracker, no_log_discard);
+        anomaly_tracker, log_discard);
   }
 
   return msg;

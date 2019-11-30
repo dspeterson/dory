@@ -66,7 +66,7 @@ namespace Dory {
     NO_COPY_SEMANTICS(TDoryServer);
 
     public:
-    static bool CheckUnixDgSize(const TCmdLineArgs &args);
+    static bool CheckUnixDgSize(const Conf::TConf &conf);
 
     /* Must be called before invoking TDoryServer constructor. */
     static void PrepareForInit(const Conf::TConf &conf);

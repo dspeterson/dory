@@ -111,13 +111,13 @@ static void ParseArgs(int argc, const char *const argv[],
 
   try {
     CmdLine cmd("Utility for sending messages to Dory.", ' ', dory_build_id);
-    ValueArg<decltype(args.SocketPath)> arg_socket_path("", "socket_path",
+    ValueArg<decltype(args.SocketPath)> arg_socket_path("", "socket-path",
         "Pathname of UNIX domain datagram socket for sending messages to "
         "Dory.",
         false, args.SocketPath, "PATH");
     cmd.add(arg_socket_path);
     ValueArg<decltype(args.StreamSocketPath)> arg_stream_socket_path("",
-        "stream_socket_path",
+        "stream-socket-path",
         "Pathname of UNIX domain stream socket for sending messages to Dory.",
         false, args.StreamSocketPath, "PATH");
     cmd.add(arg_stream_socket_path);
@@ -129,7 +129,7 @@ static void ParseArgs(int argc, const char *const argv[],
         true, args.Topic, "TOPIC");
     cmd.add(arg_topic);
     ValueArg<decltype(args.PartitionKey)> arg_partition_key("",
-        "partition_key", "Partition key.", false, args.PartitionKey,
+        "partition-key", "Partition key.", false, args.PartitionKey,
         "PARTITION_KEY");
     cmd.add(arg_partition_key);
     ValueArg<decltype(args.Key)> arg_key("", "key", "Message key.", false,
@@ -200,7 +200,7 @@ static void ParseArgs(int argc, const char *const argv[],
 
     if (input_type_count != 1) {
       throw TInvalidArgError(
-          "Exactly one of (--socket_path, --stream_socket_path, --port) "
+          "Exactly one of (--socket-path, --stream-socket-path, --port) "
           "options must be specified.");
     }
   } catch (const ArgException &x) {

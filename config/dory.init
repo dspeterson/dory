@@ -18,7 +18,7 @@
 PATH=/usr/bin:/bin
 DORY=/usr/bin/dory
 LOCKFILE=/var/lock/subsys/dory
-STATUSPORT=9090
+CONFIG_PATH=/etc/dory/dory_conf.xml
 
 . /etc/rc.d/init.d/functions
 . /etc/sysconfig/dory
@@ -26,7 +26,7 @@ STATUSPORT=9090
 RETVAL=0
 
 get_dory_pid () {
-    pgrep -u nobody -f "dory.*--status_port ${STATUSPORT}( |$)"
+    pgrep -u nobody -f "dory.*--config-path ${CONFIG_PATH}( |$)"
 }
 
 case "$1" in
@@ -37,11 +37,7 @@ case "$1" in
       chown nobody /var/run/dory
       chgrp nobody /var/run/dory
 
-      daemon --user=nobody "$DORY" --daemon \
-            --msg_buffer_max "$MSG_BUFFER_MAX" \
-            --status_port "$STATUSPORT" \
-            --receive_socket_name "$INPUT_SOCKET_NAME" \
-            --config_path $CONFIG_FILE
+      daemon --user=nobody "$DORY" --daemon --config-path $CONFIG_PATH
 
       RETVAL=$?
       echo
@@ -53,7 +49,7 @@ case "$1" in
       PID=$(get_dory_pid)
 
       if [ -z "PID" ]; then
-          echo dory on port $STATUSPORT is not running 1>&2
+          echo dory is not running 1>&2
           RETVAL=1
       else
           kill -TERM "$PID"

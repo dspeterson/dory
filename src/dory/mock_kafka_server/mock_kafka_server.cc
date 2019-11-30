@@ -24,6 +24,9 @@
 #include <iostream>
 #include <memory>
 
+#include <sys/types.h>
+
+#include <base/opt.h>
 #include <dory/compress/compression_init.h>
 #include <dory/mock_kafka_server/cmd_line_args.h>
 #include <dory/mock_kafka_server/server.h>
@@ -52,7 +55,7 @@ int mock_kafka_server_main(int argc, const char *const *argv) {
   }
 
   InitLogging(argv[0], TPri::DEBUG, args->LogEcho /* enable_stdout_stderr */,
-      true /* enable_syslog */, std::string() /* file_path */);
+      true /* enable_syslog */, std::string() /* file_path */, TOpt<mode_t>());
   LOG(TPri::NOTICE) << "Log started";
 
   /* Force all supported compression libraries to load.  We want to fail early

@@ -31,6 +31,7 @@
 
 #include <base/error_util.h>
 #include <base/file_reader.h>
+#include <base/opt.h>
 #include <base/tmp_file.h>
 #include <base/wr/fd_util.h>
 #include <log/log_writer.h>
@@ -75,7 +76,8 @@ namespace {
     SetLogMask(UpTo(TPri::NOTICE));
 
     SetLogWriter(false /* enable_stdout_stderr */, false /* enable_syslog */,
-        tmp_file.GetName());
+        tmp_file.GetName() /* file_path */,
+        TOpt<mode_t>(0644) /* file_mode */);
     std::string msg1("first message ");
     std::string msg2("second message ");
     std::string msg3("third message ");
@@ -114,14 +116,15 @@ namespace {
     Wr::dup2(stderr_file.GetFd(), 2);
     SetLogMask(UpTo(TPri::NOTICE));
     SetLogWriter(true /* enable_stdout_stderr */, false /* enable_syslog */,
-        std::string());
+        std::string() /* file_path */, TOpt<mode_t>() /* file_mode */);
     std::string msg1("should go to stdout");
     std::string msg2("should go to stderr");
     LOG(TPri::NOTICE) << msg1;
     LOG(TPri::WARNING) << msg2;
     TTmpFile tmp_file(name_template, true /* delete_on_destroy */);
     SetLogWriter(true /* enable_stdout_stderr */, false /* enable_syslog */,
-        tmp_file.GetName());
+        tmp_file.GetName() /* file_path */,
+        TOpt<mode_t>(0644) /* file_mode */);
     std::string msg3("should go to stdout and file");
     std::string msg4("should go to stderr and file");
     LOG(TPri::NOTICE) << msg3;
@@ -149,7 +152,7 @@ namespace {
     Wr::dup2(stderr_file.GetFd(), 2);
     SetLogMask(UpTo(TPri::NOTICE));
     SetLogWriter(false /* enable_stdout_stderr */, false /* enable_syslog */,
-        std::string());
+        std::string() /* file_path */, TOpt<mode_t>() /* file_mode */);
     std::string msg1("first message to ignore");
     std::string msg2("second message to ignore");
     LOG(TPri::NOTICE) << msg1;
@@ -168,8 +171,9 @@ namespace {
     TTmpFile tmp_file(name_template, true /* delete_on_destroy */);
     SetLogMask(UpTo(TPri::INFO));
     SetLogWriter(false /* enable_stdout_stderr */, false /* enable_syslog */,
-        tmp_file.GetName());
-    std::cout << "This test should take about 10 seconds" << std::endl;
+        tmp_file.GetName() /* file_path */,
+        TOpt<mode_t>(0644) /* file_mode */);
+    std::cout << "This test should take about 10 seconds." << std::endl;
     auto start = std::chrono::steady_clock::now();
     decltype(start - start) limit(std::chrono::seconds(10));
 

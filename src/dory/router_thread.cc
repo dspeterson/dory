@@ -126,8 +126,8 @@ TRouterThread::TRouterThread(const TCmdLineArgs &args, const TConf &conf,
     const Debug::TDebugSetup &debug_setup,
     MsgDispatch::TKafkaDispatcherApi &dispatcher)
     : CmdLineArgs(args),
-      TopicRateConf(conf.TopicRateConf),
-      MsgRateLimiter(TopicRateConf),
+      Conf(conf),
+      MsgRateLimiter(conf.TopicRateConf),
       MessageMaxBytes(batch_config.GetMessageMaxBytes()),
       AnomalyTracker(anomaly_tracker),
       MsgStateTracker(msg_state_tracker),
@@ -264,7 +264,7 @@ bool TRouterThread::AutocreateTopic(TMsg::TPtr &msg) {
     ConnectSuccessOnTopicAutocreate.Increment();
 
     switch (MetadataFetcher->TopicAutocreate(topic.c_str(),
-        static_cast<int>(CmdLineArgs.KafkaSocketTimeout * 1000))) {
+        static_cast<int>(Conf.MsgDeliveryConf.KafkaSocketTimeout * 1000))) {
       case TMetadataFetcher::TTopicAutocreateResult::Success: {
         LOG(TPri::NOTICE) << "Automatic creation of topic [" << topic
             << "] was successful: updating metadata";
@@ -299,7 +299,7 @@ bool TRouterThread::AutocreateTopic(TMsg::TPtr &msg) {
         << "broker";
   }
 
-  if (!CmdLineArgs.NoLogDiscard) {
+  if (Conf.LoggingConf.LogDiscards) {
     LOG_R(TPri::ERR, std::chrono::seconds(30))
         << "Discarding message because topic autocreate failed: [" << topic
         << "]";
@@ -318,7 +318,7 @@ bool TRouterThread::ValidateNewMsg(TMsg::TPtr &msg) {
   int topic_index = Metadata->FindTopicIndex(topic);
 
   if (topic_index < 0) {
-    if (CmdLineArgs.TopicAutocreate) {
+    if (Conf.MsgDeliveryConf.TopicAutocreate) {
       if (!AutocreateTopic(msg)) {
         /* Shutdown delay expired during metadata update. */
         assert(!msg);
@@ -335,7 +335,7 @@ bool TRouterThread::ValidateNewMsg(TMsg::TPtr &msg) {
     }
 
     if (topic_index < 0) {
-      if (!CmdLineArgs.NoLogDiscard) {
+      if (Conf.LoggingConf.LogDiscards) {
         LOG_R(TPri::ERR, std::chrono::seconds(30))
             << "Discarding message due to unknown topic: [" << topic << "]";
       }
@@ -356,7 +356,7 @@ bool TRouterThread::ValidateNewMsg(TMsg::TPtr &msg) {
        still log the fact that we got a too long message even when Kafka
        problems would prevent assigning a partition. */
 
-    if (!CmdLineArgs.NoLogDiscard) {
+    if (Conf.LoggingConf.LogDiscards) {
       LOG_R(TPri::ERR, std::chrono::seconds(30))
           << "Discarding message that exceeds max allowed size: topic ["
           << topic << "]";
@@ -373,7 +373,7 @@ bool TRouterThread::ValidateNewMsg(TMsg::TPtr &msg) {
     const TMetadata::TTopic &topic_meta = topic_vec[topic_index];
 
     if (topic_meta.GetOkPartitions().empty()) {
-      if (!CmdLineArgs.NoLogDiscard) {
+      if (Conf.LoggingConf.LogDiscards) {
         LOG_R(TPri::ERR, std::chrono::seconds(30))
             << "Discarding message because topic has no available partitions: "
             << "[" << topic << "]";
@@ -384,7 +384,7 @@ bool TRouterThread::ValidateNewMsg(TMsg::TPtr &msg) {
       DiscardNoAvailablePartition.Increment();
     } else if (MsgRateLimiter.WouldExceedLimit(topic,
         msg->GetCreationTimestamp())) {
-      if (!CmdLineArgs.NoLogDiscard) {
+      if (Conf.LoggingConf.LogDiscards) {
         LOG_R(TPri::ERR, std::chrono::seconds(30))
             << "Discarding message due to rate limit: [" << topic << "]";
       }
@@ -404,7 +404,7 @@ void TRouterThread::ValidateBeforeReroute(std::list<TMsg::TPtr> &msg_list) {
   int topic_index = Metadata->FindTopicIndex(topic);
 
   if (topic_index < 0) {
-    if (!CmdLineArgs.NoLogDiscard) {
+    if (Conf.LoggingConf.LogDiscards) {
       LOG_R(TPri::ERR, std::chrono::seconds(30))
           << "Discarding message due to unknown topic on reroute: ["
           << topic << "]";
@@ -426,7 +426,7 @@ void TRouterThread::ValidateBeforeReroute(std::list<TMsg::TPtr> &msg_list) {
         topic_meta.GetOkPartitions();
 
     if (partition_vec.empty()) {
-      if (!CmdLineArgs.NoLogDiscard) {
+      if (Conf.LoggingConf.LogDiscards) {
         LOG_R(TPri::ERR, std::chrono::seconds(30))
             << "Discarding message because topic has no available partitions "
             << "on reroute: [" << topic << "]";
@@ -732,7 +732,7 @@ void TRouterThread::DiscardFinalMsgs() {
 
   for (TMsg::TPtr &msg : msg_list) {
     if (msg) {
-      if (!CmdLineArgs.NoLogDiscard) {
+      if (Conf.LoggingConf.LogDiscards) {
         LOG_R(TPri::ERR, std::chrono::seconds(30))
             << "Discarding message queued for router thread on server "
             << "shutdown: topic [" << msg->GetTopic() << "]";
@@ -757,13 +757,11 @@ void TRouterThread::InitWireProtocol() {
      protocol version was not specified as a command line arg.  In this case,
      we will probe the Kafka cluster and choose the highest version supported
      by both Dory and the Kafka brokers. */
-  size_t metadata_api_version = CmdLineArgs.MetadataApiVersion.IsKnown() ?
-      *CmdLineArgs.MetadataApiVersion : 0;
+  const size_t metadata_api_version = 0;
   std::unique_ptr<TMetadataProtocol> metadata_protocol(
       ChooseMetadataProto(metadata_api_version));
   assert(metadata_protocol);
-  size_t produce_api_version = CmdLineArgs.ProduceApiVersion.IsKnown() ?
-      *CmdLineArgs.ProduceApiVersion : 0;
+  const size_t produce_api_version = 0;
   std::unique_ptr<TProduceProtocol> produce_protocol(
       ChooseProduceProto(produce_api_version));
   assert(produce_protocol);
@@ -801,8 +799,9 @@ bool TRouterThread::Init() {
   Dispatcher.Start(Metadata);
 
   PauseRateLimiter.reset(new TDoryRateLimiter(
-      CmdLineArgs.PauseRateLimitInitial, CmdLineArgs.PauseRateLimitMaxDouble,
-      CmdLineArgs.MinPauseDelay, GetRandomNumber));
+      Conf.MsgDeliveryConf.PauseRateLimitInitial,
+      Conf.MsgDeliveryConf.PauseRateLimitMaxDouble,
+      Conf.MsgDeliveryConf.MinPauseDelay, GetRandomNumber));
   InitMetadataRefreshTimer();
   LOG(TPri::NOTICE) << "Router thread finished initialization";
   InitFinishedSem.Push();
@@ -873,7 +872,7 @@ bool TRouterThread::RefreshMetadata() {
   assert(ShutdownStartTime.IsUnknown());
   std::shared_ptr<TMetadata> meta;
 
-  if (!CmdLineArgs.SkipCompareMetadataOnRefresh) {
+  if (Conf.MsgDeliveryConf.CompareMetadataOnRefresh) {
     LOG(TPri::INFO) << "Starting metadata fetch 1";
     meta = GetMetadata();
     LOG(TPri::INFO) << "Finished metadata fetch 1";
@@ -916,7 +915,7 @@ std::list<std::list<TMsg::TPtr>> TRouterThread::EmptyDispatcher() {
            ACK for.  Track this event, since it may cause a duplicate message.
          */
 
-        if (!CmdLineArgs.NoLogDiscard) {
+        if (Conf.LoggingConf.LogDiscards) {
           LOG_R(TPri::WARNING, std::chrono::seconds(30))
               << "Possible duplicate message (topic: [" << msg->GetTopic()
               << "])";
@@ -976,7 +975,7 @@ bool TRouterThread::RespondToPause() {
     for (const std::list<TMsg::TPtr> &msg_list : to_discard) {
       assert(!msg_list.empty());
 
-      if (!CmdLineArgs.NoLogDiscard) {
+      if (Conf.LoggingConf.LogDiscards) {
         LOG_R(TPri::ERR, std::chrono::seconds(30))
             << "Router thread discarding message with topic ["
             << msg_list.front()->GetTopic()
@@ -1000,7 +999,7 @@ bool TRouterThread::RespondToPause() {
 void TRouterThread::DiscardOnShutdownDuringMetadataUpdate(TMsg::TPtr &&msg) {
   assert(this);
 
-  if (!CmdLineArgs.NoLogDiscard) {
+  if (Conf.LoggingConf.LogDiscards) {
     LOG_R(TPri::ERR, std::chrono::seconds(30))
         << "Router thread discarding message with topic [" << msg->GetTopic()
         << "] on shutdown delay expiration during metadata update";
@@ -1222,7 +1221,7 @@ void TRouterThread::HandleShutdownFinished() {
   for (const std::list<TMsg::TPtr> &msg_list : to_discard) {
     assert(!msg_list.empty());
 
-    if (!CmdLineArgs.NoLogDiscard) {
+    if (Conf.LoggingConf.LogDiscards) {
       LOG_R(TPri::ERR, std::chrono::seconds(30))
           << "Router thread discarding message with topic ["
           << msg_list.front()->GetTopic() << " on shutdown";
@@ -1409,14 +1408,15 @@ std::shared_ptr<TMetadata> TRouterThread::TryGetMetadata() {
     if (!MetadataFetcher->Connect(broker.Host, broker.Port)) {
       ConnectFailOnTryGetMetadata.Increment();
       LOG(TPri::ERR)
-          << "Router thread failed to connect to broker for metadata";
+          << "Router thread failed to connect to broker " << broker.Host
+          << " port " << broker.Port << " for metadata";
       continue;
     }
 
     ConnectSuccessOnTryGetMetadata.Increment();
     result = std::move(
         MetadataFetcher->Fetch(
-            static_cast<int>(CmdLineArgs.KafkaSocketTimeout) * 1000));
+            static_cast<int>(Conf.MsgDeliveryConf.KafkaSocketTimeout) * 1000));
 
     if (result) {
       break;  // success
@@ -1424,7 +1424,8 @@ std::shared_ptr<TMetadata> TRouterThread::TryGetMetadata() {
 
     /* Failed to get metadata: try next broker. */
     LOG(TPri::ERR)
-        << "Router thread did not get valid metadata response from broker";
+        << "Router thread did not get valid metadata response from broker "
+        << broker.Host << " port " << broker.Port;
   }
 
   bool success = false;
@@ -1453,15 +1454,16 @@ std::shared_ptr<TMetadata> TRouterThread::TryGetMetadata() {
 void TRouterThread::InitMetadataRefreshTimer() {
   assert(this);
   MetadataRefreshTimer.reset(new TTimerFd(ComputeRetryDelay(
-      CmdLineArgs.MetadataRefreshInterval * 60 * 1000, 5)));
+      Conf.MsgDeliveryConf.MetadataRefreshInterval * 60 * 1000, 5)));
 }
 
 std::shared_ptr<TMetadata> TRouterThread::GetInitialMetadata() {
   assert(this);
   std::shared_ptr<TMetadata> result;
-  TDoryRateLimiter retry_rate_limiter(CmdLineArgs.PauseRateLimitInitial,
-      CmdLineArgs.PauseRateLimitMaxDouble, CmdLineArgs.MinPauseDelay,
-      GetRandomNumber);
+  TDoryRateLimiter retry_rate_limiter(
+      Conf.MsgDeliveryConf.PauseRateLimitInitial,
+      Conf.MsgDeliveryConf.PauseRateLimitMaxDouble,
+      Conf.MsgDeliveryConf.MinPauseDelay, GetRandomNumber);
   const TFd &shutdown_request_fd = GetShutdownRequestFd();
 
   for (; ; ) {
@@ -1490,9 +1492,10 @@ std::shared_ptr<TMetadata> TRouterThread::GetInitialMetadata() {
 std::shared_ptr<TMetadata> TRouterThread::GetMetadataBeforeSlowShutdown() {
   assert(this);
   std::shared_ptr<TMetadata> result;
-  TDoryRateLimiter retry_rate_limiter(CmdLineArgs.PauseRateLimitInitial,
-      CmdLineArgs.PauseRateLimitMaxDouble, CmdLineArgs.MinPauseDelay,
-      GetRandomNumber);
+  TDoryRateLimiter retry_rate_limiter(
+      Conf.MsgDeliveryConf.PauseRateLimitInitial,
+      Conf.MsgDeliveryConf.PauseRateLimitMaxDouble,
+      Conf.MsgDeliveryConf.MinPauseDelay, GetRandomNumber);
 
   /* A slow shutdown is not currently in progress, so we will watch for a
      shutdown notification while attempting to get metadata. */
@@ -1526,17 +1529,18 @@ std::shared_ptr<TMetadata> TRouterThread::GetMetadataBeforeSlowShutdown() {
 std::shared_ptr<TMetadata> TRouterThread::GetMetadataDuringSlowShutdown() {
   assert(this);
   std::shared_ptr<TMetadata> result;
-  size_t shutdown_delay = CmdLineArgs.ShutdownMaxDelay;
-  uint64_t finish_time = *ShutdownStartTime + shutdown_delay;
+  const size_t shutdown_delay = Conf.MsgDeliveryConf.ShutdownMaxDelay;
+  const uint64_t finish_time = *ShutdownStartTime + shutdown_delay;
   uint64_t now = GetEpochMilliseconds();
 
   if (now >= finish_time) {
     return result;  // deadline expired
   }
 
-  TDoryRateLimiter retry_rate_limiter(CmdLineArgs.PauseRateLimitInitial,
-      CmdLineArgs.PauseRateLimitMaxDouble, CmdLineArgs.MinPauseDelay,
-      GetRandomNumber);
+  TDoryRateLimiter retry_rate_limiter(
+      Conf.MsgDeliveryConf.PauseRateLimitInitial,
+      Conf.MsgDeliveryConf.PauseRateLimitMaxDouble,
+      Conf.MsgDeliveryConf.MinPauseDelay, GetRandomNumber);
 
   for (; ; ) {
     result = TryGetMetadata();
@@ -1623,7 +1627,7 @@ void TRouterThread::UpdateBatchStateForNewMetadata(const TMetadata &old_md,
     assert(msg);
     DiscardDeletedTopicMsg.Increment();
 
-    if (!CmdLineArgs.NoLogDiscard) {
+    if (Conf.LoggingConf.LogDiscards) {
       LOG_R(TPri::ERR, std::chrono::seconds(30))
           << "Router thread discarding message with topic [" << msg->GetTopic()
           << "] that is not present in new metadata";
@@ -1634,7 +1638,7 @@ void TRouterThread::UpdateBatchStateForNewMetadata(const TMetadata &old_md,
     assert(msg);
     DiscardNoLongerAvailableTopicMsg.Increment();
 
-    if (!CmdLineArgs.NoLogDiscard) {
+    if (Conf.LoggingConf.LogDiscards) {
       LOG_R(TPri::ERR, std::chrono::seconds(30))
           << "Router thread discarding message with topic [" << msg->GetTopic()
           << "] that has no available partitions in new metadata";

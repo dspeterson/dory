@@ -25,6 +25,7 @@
 
 #include <sys/types.h>
 
+#include <base/opt.h>
 #include <dory/conf/conf_error.h>
 #include <log/file_log_writer.h>
 #include <log/pri.h>
@@ -58,11 +59,12 @@ namespace Dory {
          that file logging is disabled. */
       std::string FilePath;
 
-      mode_t FileMode = Log::TFileLogWriter::DEFAULT_FILE_MODE;
+      Base::TOpt<mode_t> FileMode;
 
       bool LogDiscards = true;
 
-      void SetFileConf(const std::string &path, mode_t mode);
+      void SetFileConf(const std::string &path,
+          const Base::TOpt<mode_t> &mode);
     };  // TLoggingConf
 
   }  // Conf

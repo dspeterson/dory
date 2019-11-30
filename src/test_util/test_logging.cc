@@ -26,11 +26,13 @@
 #include <string>
 
 #include <base/basename.h>
+#include <base/opt.h>
 #include <log/log.h>
 #include <log_util/init_logging.h>
 
 #include <gtest/gtest.h>
 
+using namespace Base;
 using namespace Log;
 using namespace LogUtil;
 using namespace TestUtil;
@@ -74,8 +76,7 @@ Base::TTmpFile TestUtil::InitTestLogging(const char *prog_name) {
      logfile, which will be a temporary file.  Fatal error output goes to both
      stderr and the logfile. */
   InitLogging(prog_name, TPri::DEBUG, false /* enable_stdout_stderr */,
-      false /* enable_syslog */, tmp_logfile.GetName(),
-      TFileLogWriter::DEFAULT_FILE_MODE);
+      false /* enable_syslog */, tmp_logfile.GetName(), TOpt<mode_t>());
 
   testing::UnitTest::GetInstance()->listeners().Append(
       new TestFailureEventListener);

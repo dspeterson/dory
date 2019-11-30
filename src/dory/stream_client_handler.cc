@@ -29,15 +29,16 @@
 using namespace Base;
 using namespace Capped;
 using namespace Dory;
+using namespace Dory::Conf;
 using namespace Log;
 using namespace Thread;
 
 TStreamClientHandler::TStreamClientHandler(bool is_tcp,
-    const TCmdLineArgs &args, TPool &pool, TMsgStateTracker &msg_state_tracker,
+    const TConf &conf, TPool &pool, TMsgStateTracker &msg_state_tracker,
     TAnomalyTracker &anomaly_tracker, TGatePutApi<TMsg::TPtr> &output_queue,
     TWorkerPool &worker_pool) noexcept
     : IsTcp(is_tcp),
-      CmdLineArgs(args),
+      Conf(conf),
       Pool(pool),
       MsgStateTracker(msg_state_tracker),
       AnomalyTracker(anomaly_tracker),
@@ -49,7 +50,7 @@ void TStreamClientHandler::HandleConnection(Base::TFd &&sock,
     const struct sockaddr *, socklen_t) {
   assert(this);
   TWorkerPool::TReadyWorker worker = WorkerPool.GetReadyWorker();
-  worker.GetWorkFn().SetState(IsTcp, CmdLineArgs, Pool, MsgStateTracker,
+  worker.GetWorkFn().SetState(IsTcp, Conf, Pool, MsgStateTracker,
       AnomalyTracker, OutputQueue, WorkerPool.GetShutdownRequestFd(),
       std::move(sock));
   worker.Launch();

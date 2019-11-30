@@ -55,15 +55,13 @@ using namespace LogUtil;
 using namespace Xml;
 
 static int DoryMain(int argc, char *const argv[]) {
-  TDoryXmlInit xml_init;
+  TDoryXmlInit xml_init(false /* init_on_construction */);
   TCmdLineArgs args;
   bool large_sendbuf_required = false;
   TConf conf;
 
   try {
-    args = TCmdLineArgs(argc, argv,
-        false /* allow_input_bind_ephemeral */);
-    large_sendbuf_required = TDoryServer::CheckUnixDgSize(args);
+    args = TCmdLineArgs(argc, argv);
     xml_init.Init();
     TOpt<std::string> opt_err_msg = HandleXmlErrors(
         [&args, &conf]() -> void {
@@ -75,8 +73,10 @@ static int DoryMain(int argc, char *const argv[]) {
              bug in Kafka.  See
              https://cwiki.apache.org/confluence/display/KAFKA/KIP-57+-+Interoperable+LZ4+Framing
              for details. */
-          conf = Dory::Conf::TConf::TBuilder(false /* enable_lz4 */).Build(
-              ReadFileIntoString(args.ConfigPath));
+          conf = Dory::Conf::TConf::TBuilder(
+              false /* allow_input_bind_ephemeral */,
+              false /* enable_lz4 */).Build(
+                  ReadFileIntoString(args.ConfigPath));
         }
     );
 
@@ -85,6 +85,7 @@ static int DoryMain(int argc, char *const argv[]) {
       return EXIT_FAILURE;
     }
 
+    large_sendbuf_required = TDoryServer::CheckUnixDgSize(conf);
     TDoryServer::PrepareForInit(conf);
 
     if (args.Daemon) {
@@ -97,12 +98,14 @@ static int DoryMain(int argc, char *const argv[]) {
     }
 
     try {
-      InitLogging(argv[0], args.LogLevel,
-          args.LogEcho && !args.Daemon /* enable_stdout_stderr */,
-          true /* enable_syslog */, std::string() /* file_path */);
+      InitLogging(argv[0], conf.LoggingConf.Pri,
+          conf.LoggingConf.EnableStdoutStderr && !args.Daemon,
+          conf.LoggingConf.EnableSyslog, conf.LoggingConf.FilePath,
+          conf.LoggingConf.FileMode);
     } catch (const std::exception &x) {
       std::cerr << "Failed to initialize logging: " << x.what()
                 << std::endl;
+      return EXIT_FAILURE;
     }
   } catch (const TInvalidArgError &x) {
     /* Error processing command line arguments. */
@@ -137,8 +140,6 @@ static int DoryMain(int argc, char *const argv[]) {
 
   /* Fail early if server is already running. */
   dory->BindStatusSocket(false);
-
-  LogCmdLineArgs(dory->GetCmdLineArgs());
 
   if (large_sendbuf_required) {
     LOG(TPri::WARNING)

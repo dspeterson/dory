@@ -1,4 +1,4 @@
-/* <dory/conf/kafka_config_conf.h>
+/* <dory/test_util/xml_util.cc>
 
    ----------------------------------------------------------------------------
    Copyright 2019 Dave Peterson <dave@dspeterson.com>
@@ -16,35 +16,35 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Class representing Kafka config section from Dory's config file.
+   Implements <dory/test_util/xml_util.h>.
  */
 
-#pragma once
+#include <dory/test_util/xml_util.h>
 
-#include <cstddef>
-#include <string>
+#include <stdexcept>
 
-#include <dory/conf/conf_error.h>
+#include <base/opt.h>
+#include <dory/util/handle_xml_errors.h>
 
-namespace Dory {
+using namespace Base;
+using namespace Dory;
+using namespace Dory::Conf;
+using namespace Dory::TestUtil;
+using namespace Dory::Util;
 
-  namespace Conf {
-
-    class TKafkaConfigInvalidReplicationTimeout final : public TConfError {
-      public:
-      TKafkaConfigInvalidReplicationTimeout()
-          : TConfError("Invalid replication timeout") {
+TConf Dory::TestUtil::XmlToConf(const std::string &xml) {
+  TConf conf;
+  TOpt<std::string> opt_err_msg = HandleXmlErrors(
+      [&xml, &conf]() -> void {
+        conf = Dory::Conf::TConf::TBuilder(
+            true /* allow_input_bind_ephemeral */,
+            true /* enable_lz4 */).Build(xml);
       }
-    };  // TKafkaConfigInvalidReplicationTimeout
+  );
 
-    struct TKafkaConfigConf final {
-      std::string ClientId = "dory";
+  if (opt_err_msg.IsKnown()) {
+    throw std::runtime_error(*opt_err_msg);
+  }
 
-      size_t ReplicationTimeout = 10000;
-
-      void SetReplicationTimeout(size_t value);
-    };  // TKafkaConfigConf
-
-  };  // Conf
-
-}  // Dory
+  return conf;
+}

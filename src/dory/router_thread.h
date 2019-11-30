@@ -304,10 +304,9 @@ namespace Dory {
 
     const TCmdLineArgs &CmdLineArgs;
 
-    /* Configuration for per-topic message rate limiting. */
-    Conf::TTopicRateConf TopicRateConf;
+    const Conf::TConf &Conf;
 
-    /* Limits message rates according to 'TopicRateConf'. */
+    /* Limits message rates according to 'Conf.TopicRateConf'. */
     TMsgRateLimiter MsgRateLimiter;
 
     /* Header overhead for a single message.  For checking message size. */

@@ -247,6 +247,8 @@ namespace Dory {
 
     void WriteToLog(const std::string &log_entry);
 
+    /* Upper bound in bytes on the key or value size of a discarded message to
+       log.  Keys or values longer than this length will be truncated. */
     size_t MaxMsgPrefixLen = std::numeric_limits<size_t>::max();
 
     /* Protects everything below.  However, reads of boolean 'Enabled' value

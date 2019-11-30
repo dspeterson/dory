@@ -80,10 +80,10 @@ static void ParseArgs(int argc, const char *const argv[], TCmdLineArgs &args) {
         "Utility for sending a metadata request to a Kafka broker and writing "
         "the response to standard output",
         ' ', dory_build_id);
-    ValueArg<decltype(args.BrokerHost)> arg_broker_host("", "broker_host",
+    ValueArg<decltype(args.BrokerHost)> arg_broker_host("", "broker-host",
         "Kafka broker to connect to.", true, args.BrokerHost, "HOST");
     cmd.add(arg_broker_host);
-    ValueArg<decltype(args.BrokerPort)> arg_broker_port("", "broker_port",
+    ValueArg<decltype(args.BrokerPort)> arg_broker_port("", "broker-port",
         "Port to connect to.", false, args.BrokerPort, "PORT");
     cmd.add(arg_broker_port);
     ValueArg<decltype(args.Topic)> arg_topic("", "topic",
@@ -91,7 +91,7 @@ static void ParseArgs(int argc, const char *const argv[], TCmdLineArgs &args) {
         "requested for all topics.", false, args.Topic, "TOPIC");
     cmd.add(arg_topic);
     ValueArg<decltype(args.RequestCount)> arg_request_count("",
-        "request_count", "Number of requests to send (for testing).", false,
+        "request-count", "Number of requests to send (for testing).", false,
         args.RequestCount, "COUNT");
     cmd.add(arg_request_count);
     cmd.parse(argc, &arg_vec[0]);

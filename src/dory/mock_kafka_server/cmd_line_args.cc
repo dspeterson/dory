@@ -39,34 +39,34 @@ static void ParseArgs(int argc, const char *const argv[], TCmdLineArgs &args) {
 
   try {
     CmdLine cmd("Mock Kafka server for testing Dory.", ' ', dory_build_id);
-    SwitchArg arg_log_echo("", "log_echo",
+    SwitchArg arg_log_echo("", "log-echo",
         "Echo syslog messages to standard error.", cmd, args.LogEcho);
     ValueArg<decltype(args.ProduceApiVersion)> arg_produce_api_version("",
-        "produce_api_version",
+        "produce-api-version",
         "Version of Kafka produce API to use (currently only 0 is supported).",
         false, args.ProduceApiVersion, "VERSION");
     cmd.add(arg_produce_api_version);
     ValueArg<decltype(args.MetadataApiVersion)> arg_metadata_api_version("",
-        "metadata_api_version",
+        "metadata-api-version",
         "Version of Kafka metadata API to use (currently only 0 is "
         "supported).",
         false, args.MetadataApiVersion, "VERSION");
     cmd.add(arg_metadata_api_version);
-    ValueArg<decltype(args.QuietLevel)> arg_quiet_level("", "quiet_level",
+    ValueArg<decltype(args.QuietLevel)> arg_quiet_level("", "quiet-level",
         "Limit output verbosity.", false, args.QuietLevel, "LEVEL");
     cmd.add(arg_quiet_level);
-    ValueArg<decltype(args.SetupFile)> arg_setup_file("", "setup_file",
+    ValueArg<decltype(args.SetupFile)> arg_setup_file("", "setup-file",
         "Setup file.", true, args.SetupFile, "FILE");
     cmd.add(arg_setup_file);
-    ValueArg<decltype(args.OutputDir)> arg_output_dir("", "output_dir",
+    ValueArg<decltype(args.OutputDir)> arg_output_dir("", "output-dir",
         "Directory where server writes its output files.", true,
         args.OutputDir, "DIR");
     cmd.add(arg_output_dir);
-    ValueArg<decltype(args.CmdPort)> arg_cmd_port("", "cmd_port",
+    ValueArg<decltype(args.CmdPort)> arg_cmd_port("", "cmd-port",
         "Command port (for error injection, etc.).", false, args.CmdPort,
         "PORT");
     cmd.add(arg_cmd_port);
-    SwitchArg arg_single_output_file("", "single_output_file",
+    SwitchArg arg_single_output_file("", "single-output-file",
         "Use single output file for all clients", cmd,
         args.SingleOutputFile);
     cmd.parse(argc, &arg_vec[0]);

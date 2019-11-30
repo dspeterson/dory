@@ -125,10 +125,10 @@ void TProduceResponseProcessor::CountFailedDeliveryAttempt(
     assert(msg->GetTopic() == topic);
 
     if (msg->CountFailedDeliveryAttempt() >
-        Ds.CmdLineArgs.MaxFailedDeliveryAttempts) {
+        Ds.Conf.MsgDeliveryConf.MaxFailedDeliveryAttempts) {
       DiscardOnFailedDeliveryAttemptLimit.Increment();
 
-      if (!Ds.CmdLineArgs.NoLogDiscard) {
+      if (Ds.Conf.LoggingConf.LogDiscards) {
         LOG_R(TPri::ERR, std::chrono::seconds(30))
             << "Discarding message because failed delivery attempt limit "
             << "reached (topic: [" << msg->GetTopic() << "])";
@@ -220,7 +220,7 @@ bool TProduceResponseProcessor::ProcessOneAck(std::list<TMsg::TPtr> &&msg_set,
     case TAckResultAction::Discard: {
       ConnectorGotDiscardAck.Increment();
 
-      /* Write a log message even if Ds.Config.NoLogDiscard is true because
+      /* Write a log message even if Ds.Config.LogDiscard is false because
          these events are always interesting enough to be worth logging. */
       LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Connector thread "
           << Gettid() << " (index " << MyBrokerIndex << " broker "

@@ -42,22 +42,22 @@ using namespace Log;
 DEFINE_COUNTER(InputAgentDiscardMsgUnsupportedApiKey);
 
 TMsg::TPtr Dory::InputDg::BuildMsgFromDg(const void *dg, size_t dg_size,
-    const TCmdLineArgs &args, Capped::TPool &pool,
-    TAnomalyTracker &anomaly_tracker, TMsgStateTracker &msg_state_tracker) {
+    bool log_discard, Capped::TPool &pool, TAnomalyTracker &anomaly_tracker,
+    TMsgStateTracker &msg_state_tracker) {
   assert(dg);
   const auto *dg_bytes = reinterpret_cast<const uint8_t *>(dg);
   size_t fixed_part_size = INPUT_DG_SZ_FIELD_SIZE +
       INPUT_DG_API_KEY_FIELD_SIZE + INPUT_DG_API_VERSION_FIELD_SIZE;
 
   if (dg_size < fixed_part_size) {
-    DiscardMalformedMsg(dg_bytes, dg_size, anomaly_tracker, args.NoLogDiscard);
+    DiscardMalformedMsg(dg_bytes, dg_size, anomaly_tracker, log_discard);
     return TMsg::TPtr();
   }
 
   int32_t sz = ReadInt32FromHeader(dg_bytes);
 
   if ((sz < 0) || (static_cast<size_t>(sz) != dg_size)) {
-    DiscardMalformedMsg(dg_bytes, dg_size, anomaly_tracker, args.NoLogDiscard);
+    DiscardMalformedMsg(dg_bytes, dg_size, anomaly_tracker, log_discard);
     return TMsg::TPtr();
   }
 
@@ -72,19 +72,19 @@ TMsg::TPtr Dory::InputDg::BuildMsgFromDg(const void *dg, size_t dg_size,
     case 256: {
       return BuildAnyPartitionMsgFromDg(dg_bytes, dg_size, api_version,
           versioned_part_begin, versioned_part_end, pool, anomaly_tracker,
-          msg_state_tracker, args.NoLogDiscard);
+          msg_state_tracker, log_discard);
     }
     case 257: {
       return BuildPartitionKeyMsgFromDg(dg_bytes, dg_size, api_version,
           versioned_part_begin, versioned_part_end, pool, anomaly_tracker,
-          msg_state_tracker, args.NoLogDiscard);
+          msg_state_tracker, log_discard);
     }
     default: {
       break;
     }
   }
 
-  if (!args.NoLogDiscard) {
+  if (log_discard) {
     LOG_R(TPri::ERR, std::chrono::seconds(30)) <<
         "Discarding message with unsupported API key: " << api_key;
   }

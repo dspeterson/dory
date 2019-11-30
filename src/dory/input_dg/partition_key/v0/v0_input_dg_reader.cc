@@ -35,21 +35,21 @@ TMsg::TPtr TV0InputDgReader::BuildMsg() {
   const uint8_t *pos = DataBegin;
 
   if ((DataEnd - pos) < INPUT_DG_P_KEY_V0_FLAGS_FIELD_SIZE) {
-    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, NoLogDiscard);
+    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, LogDiscard);
     return TMsg::TPtr();
   }
 
   int16_t flags = ReadInt16FromHeader(pos);
 
   if (flags) {
-    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, NoLogDiscard);
+    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, LogDiscard);
     return TMsg::TPtr();
   }
 
   pos += INPUT_DG_P_KEY_V0_FLAGS_FIELD_SIZE;
 
   if ((DataEnd - pos) < INPUT_DG_P_KEY_V0_PARTITION_KEY_FIELD_SIZE) {
-    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, NoLogDiscard);
+    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, LogDiscard);
     return TMsg::TPtr();
   }
 
@@ -58,21 +58,21 @@ TMsg::TPtr TV0InputDgReader::BuildMsg() {
   pos += INPUT_DG_P_KEY_V0_PARTITION_KEY_FIELD_SIZE;
 
   if ((DataEnd - pos) < INPUT_DG_P_KEY_V0_TOPIC_SZ_FIELD_SIZE) {
-    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, NoLogDiscard);
+    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, LogDiscard);
     return TMsg::TPtr();
   }
 
   int16_t topic_sz = ReadInt16FromHeader(pos);
 
   if (topic_sz <= 0) {
-    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, NoLogDiscard);
+    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, LogDiscard);
     return TMsg::TPtr();
   }
 
   pos += INPUT_DG_P_KEY_V0_TOPIC_SZ_FIELD_SIZE;
 
   if ((DataEnd - pos) < topic_sz) {
-    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, NoLogDiscard);
+    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, LogDiscard);
     return TMsg::TPtr();
   }
 
@@ -81,7 +81,7 @@ TMsg::TPtr TV0InputDgReader::BuildMsg() {
   pos = reinterpret_cast<const uint8_t *>(topic_end);
 
   if ((DataEnd - pos) < INPUT_DG_P_KEY_V0_TS_FIELD_SIZE) {
-    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, NoLogDiscard);
+    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, LogDiscard);
     return TMsg::TPtr();
   }
 
@@ -89,21 +89,21 @@ TMsg::TPtr TV0InputDgReader::BuildMsg() {
   pos += INPUT_DG_P_KEY_V0_TS_FIELD_SIZE;
 
   if ((DataEnd - pos) < INPUT_DG_P_KEY_V0_KEY_SZ_FIELD_SIZE) {
-    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, NoLogDiscard);
+    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, LogDiscard);
     return TMsg::TPtr();
   }
 
   int32_t key_sz = ReadInt32FromHeader(pos);
 
   if (key_sz < 0) {
-    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, NoLogDiscard);
+    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, LogDiscard);
     return TMsg::TPtr();
   }
 
   pos += INPUT_DG_P_KEY_V0_KEY_SZ_FIELD_SIZE;
 
   if ((DataEnd - pos) < key_sz) {
-    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, NoLogDiscard);
+    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, LogDiscard);
     return TMsg::TPtr();
   }
 
@@ -112,21 +112,21 @@ TMsg::TPtr TV0InputDgReader::BuildMsg() {
   pos += key_sz;
 
   if ((DataEnd - pos) < INPUT_DG_P_KEY_V0_VALUE_SZ_FIELD_SIZE) {
-    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, NoLogDiscard);
+    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, LogDiscard);
     return TMsg::TPtr();
   }
 
   int32_t value_sz = ReadInt32FromHeader(pos);
 
   if (value_sz < 0) {
-    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, NoLogDiscard);
+    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, LogDiscard);
     return TMsg::TPtr();
   }
 
   pos += INPUT_DG_P_KEY_V0_VALUE_SZ_FIELD_SIZE;
 
   if ((DataEnd - pos) != value_sz) {
-    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, NoLogDiscard);
+    DiscardMalformedMsg(DgBegin, DgSize, AnomalyTracker, LogDiscard);
     return TMsg::TPtr();
   }
 
@@ -134,5 +134,5 @@ TMsg::TPtr TV0InputDgReader::BuildMsg() {
   return TryCreatePartitionKeyMsg(partition_key, ts, topic_begin, topic_end,
       key_begin, static_cast<size_t>(key_sz), value_begin,
       static_cast<size_t>(value_sz), Pool, AnomalyTracker, MsgStateTracker,
-      NoLogDiscard);
+      LogDiscard);
 }

@@ -41,7 +41,7 @@ namespace Dory {
           const uint8_t *versioned_part_begin,
           const uint8_t *versioned_part_end, Capped::TPool &pool,
           TAnomalyTracker &anomaly_tracker,
-          TMsgStateTracker &msg_state_tracker, bool no_log_discard);
+          TMsgStateTracker &msg_state_tracker, bool log_discard);
 
     }  // AnyPartition
 

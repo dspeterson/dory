@@ -69,7 +69,7 @@ namespace {
 
     /* Tell logging subsystem to open logfile tmp_filename_1. */
     SetLogWriter(false /* enable_stdout_stderr */, false /* enable_syslog */,
-        tmp_filename_1 /* file_path */);
+        tmp_filename_1 /* file_path */, TOpt<mode_t>(0644) /* file_mode */);
 
     const std::string tmp_filename_2 = MakeTmpFilename(
         "/tmp/log_writer_test.XXXXXX");
@@ -124,7 +124,7 @@ namespace {
 
     /* Create log writer with file logging disabled. */
     SetLogWriter(false /* enable_stdout_stderr */, false /* enable_syslog */,
-        std::string() /* file_path */);
+        std::string() /* file_path */, TOpt<mode_t>() /* file_mode */);
 
     /* This should be a no-op and return false, since log writer has been
        created but file logging is disabled. */

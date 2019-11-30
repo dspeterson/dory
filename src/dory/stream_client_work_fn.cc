@@ -41,6 +41,7 @@
 using namespace Base;
 using namespace Capped;
 using namespace Dory;
+using namespace Dory::Conf;
 using namespace Dory::Util;
 using namespace Log;
 using namespace Thread;
@@ -68,7 +69,7 @@ TStreamClientWorkFn &TStreamClientWorkFn::TStreamClientWorkFn::operator=(
     nullptr_t) noexcept {
   assert(this);
   IsTcp = false;
-  CmdLineArgs = nullptr;
+  Conf = nullptr;
   Pool = nullptr;
   MsgStateTracker = nullptr;
   AnomalyTracker = nullptr;
@@ -81,7 +82,7 @@ TStreamClientWorkFn &TStreamClientWorkFn::TStreamClientWorkFn::operator=(
 
 void TStreamClientWorkFn::operator()() {
   assert(this);
-  assert(CmdLineArgs);
+  assert(Conf);
   assert(Pool);
   assert(MsgStateTracker);
   assert(AnomalyTracker);
@@ -120,13 +121,13 @@ void TStreamClientWorkFn::operator()() {
   } while (!shutdown_item.revents && HandleSockReadReady());
 }
 
-void TStreamClientWorkFn::SetState(bool is_tcp, const TCmdLineArgs &args,
-    TPool &pool, TMsgStateTracker &msg_state_tracker,
-    TAnomalyTracker &anomaly_tracker, TGatePutApi<TMsg::TPtr> &output_queue,
-    const TFd &shutdown_request_fd, TFd &&client_socket) noexcept {
+void TStreamClientWorkFn::SetState(bool is_tcp, const TConf &conf, TPool &pool,
+    TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
+    TGatePutApi<TMsg::TPtr> &output_queue, const TFd &shutdown_request_fd,
+    TFd &&client_socket) noexcept {
   assert(this);
   IsTcp = is_tcp;
-  CmdLineArgs = &args;
+  Conf = &conf;
   Pool = &pool;
   MsgStateTracker = &msg_state_tracker;
   AnomalyTracker = &anomaly_tracker;
@@ -134,7 +135,7 @@ void TStreamClientWorkFn::SetState(bool is_tcp, const TCmdLineArgs &args,
   ShutdownRequestFd = &shutdown_request_fd;
   ClientSocket = std::move(client_socket);
   StreamReader.Reset(ClientSocket);
-  StreamReader.SetMaxMsgBodySize(args.MaxStreamInputMsgSize);
+  StreamReader.SetMaxMsgBodySize(conf.InputConfigConf.MaxStreamMsgSize);
 }
 
 void TStreamClientWorkFn::HandleClientClosed() const {
@@ -242,8 +243,8 @@ bool TStreamClientWorkFn::HandleSockReadReady() {
       }
       case TStreamMsgReader::TState::MsgReady: {
         TMsg::TPtr msg = InputDg::BuildMsgFromDg(StreamReader.GetReadyMsg(),
-            StreamReader.GetReadyMsgSize(), *CmdLineArgs, *Pool,
-            *AnomalyTracker, *MsgStateTracker);
+            StreamReader.GetReadyMsgSize(), Conf->LoggingConf.LogDiscards,
+            *Pool, *AnomalyTracker, *MsgStateTracker);
 
         if (msg) {
           OutputQueue->Put(std::move(msg));

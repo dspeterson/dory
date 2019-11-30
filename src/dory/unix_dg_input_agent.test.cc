@@ -26,6 +26,7 @@
 #include <cstdint>
 #include <limits>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -40,12 +41,13 @@
 #include <dory/client/dory_client.h>
 #include <dory/client/dory_client_socket.h>
 #include <dory/client/status_codes.h>
-#include <dory/cmd_line_args.h>
+#include <dory/conf/conf.h>
 #include <dory/debug/debug_setup.h>
 #include <dory/discard_file_logger.h>
-#include <dory/metadata_timestamp.h>
 #include <dory/msg_state_tracker.h>
 #include <dory/test_util/misc_util.h>
+#include <dory/test_util/xml_util.h>
+#include <dory/util/dory_xml_init.h>
 #include <test_util/test_logging.h>
 #include <thread/gate.h>
 
@@ -55,8 +57,10 @@ using namespace Base;
 using namespace Capped;
 using namespace Dory;
 using namespace Dory::Client;
+using namespace Dory::Conf;
 using namespace Dory::Debug;
 using namespace Dory::TestUtil;
+using namespace Dory::Util;
 using namespace ::TestUtil;
 using namespace Thread;
 
@@ -72,9 +76,7 @@ namespace {
 
     std::string UnixSocketName;
 
-    std::vector<const char *> Args;
-
-    std::unique_ptr<TCmdLineArgs> CmdLineArgs;
+    TConf Conf;
 
     TPool Pool;
 
@@ -83,8 +85,6 @@ namespace {
     TAnomalyTracker AnomalyTracker;
 
     TMsgStateTracker MsgStateTracker;
-
-    TMetadataTimestamp MetadataTimestamp;
 
     TDebugSetup DebugSetup;
 
@@ -131,19 +131,53 @@ namespace {
             std::numeric_limits<size_t>::max()),
         DebugSetup("/unused/path", TDebugSetup::MAX_LIMIT,
                    TDebugSetup::MAX_LIMIT) {
-    Args.push_back("dory");
-    Args.push_back("--config_path");
-    Args.push_back("/nonexistent/path");
-    Args.push_back("--msg_buffer_max");
-    Args.push_back("1");  /* this is 1 * 1024 bytes, not 1 byte */
-    Args.push_back("--receive_socket_name");
-    Args.push_back(UnixSocketName.c_str());
-    Args.push_back(nullptr);
-    CmdLineArgs.reset(
-        new TCmdLineArgs(static_cast<int>(Args.size() - 1), &Args[0], true));
+    std::ostringstream os;
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+        << "<doryConfig>" << std::endl
+        << "    <batching>" << std::endl
+        << "        <produceRequestDataLimit value=\"0\" />" << std::endl
+        << "        <messageMaxBytes value=\"1024k\" />" << std::endl
+        << "        <combinedTopics enable=\"false\" />" << std::endl
+        << "        <defaultTopic action=\"disable\" />" << std::endl
+        << "    </batching>" << std::endl
+        << "    <compression>" << std::endl
+        << "        <namedConfigs>" << std::endl
+        << "            <config name=\"noComp\" type=\"none\" />" << std::endl
+        << "        </namedConfigs>" << std::endl
+        << std::endl
+        << "        <defaultTopic config=\"noComp\" />" << std::endl
+        << "    </compression>" << std::endl
+        << std::endl
+        << "    <inputSources>" << std::endl
+        << "        <unixDatagram enable=\"true\">" << std::endl
+        << "            <path value=\"" << UnixSocketName << "\" />"
+        << std::endl
+        << "            <mode value=\"0222\" />" << std::endl
+        << "        </unixDatagram>" << std::endl
+        << "    </inputSources>" << std::endl
+        << std::endl
+        << "    <inputConfig>" << std::endl
+        << "        <maxBuffer value=\"1024\" />" << std::endl
+        << "        <maxDatagramMsgSize value=\"64k\" />" << std::endl
+        << "        <allowLargeUnixDatagrams value=\"false\" />" << std::endl
+        << "        <maxStreamMsgSize value = \"512k\" />" << std::endl
+        << "    </inputConfig>" << std::endl
+        << std::endl
+        << "    <kafkaConfig>" << std::endl
+        << "        <clientId value=\"dory\" />" << std::endl
+        << "        <replicationTimeout value=\"10000\" />" << std::endl
+        << "    </kafkaConfig>" << std::endl
+        << std::endl
+        << "    <initialBrokers>" << std::endl
+        << "        <broker host=\"localhost\" port=\"" << 9092 <<"\" />"
+        << std::endl
+        << "    </initialBrokers>" << std::endl
+        << std::endl
+        << "</doryConfig>" << std::endl;
+    Conf = XmlToConf(os.str());
     OutputQueue.reset(new TGate<TMsg::TPtr>);
-    UnixDgInputAgent.reset(new TUnixDgInputAgent(*CmdLineArgs, Pool,
-        MsgStateTracker, AnomalyTracker, *OutputQueue));
+    UnixDgInputAgent.reset(new TUnixDgInputAgent(Conf, Pool, MsgStateTracker,
+        AnomalyTracker, *OutputQueue));
   }
 
   void MakeDg(std::vector<uint8_t> &dg, const std::string &topic,
@@ -390,6 +424,7 @@ namespace {
 
 int main(int argc, char **argv) {
   ::testing::InitGoogleTest(&argc, argv);
+  TDoryXmlInit xml_init;
   TTmpFile test_logfile = InitTestLogging(argv[0]);
   return RUN_ALL_TESTS();
 }

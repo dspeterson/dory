@@ -51,13 +51,13 @@ static std::string MakeInvalidFileModeMsg(const std::string &path) {
 }
 
 static std::string ValidateFilePathAndMode(const std::string &path,
-    mode_t mode) {
+    const TOpt<mode_t> &mode) {
   if (!path.empty() && (path[0] != '/')) {
     throw TFileLogWriter::TInvalidPath(path);
   }
 
-  if (mode & ~(S_IRWXU | S_IRWXG | S_IRWXO)) {
-    throw TFileLogWriter::TInvalidMode(path, mode);
+  if (mode.IsKnown() && (*mode & ~(S_IRWXU | S_IRWXG | S_IRWXO))) {
+    throw TFileLogWriter::TInvalidMode(path, *mode);
   }
 
   return path;
@@ -77,17 +77,25 @@ void TFileLogWriter::SetErrorHandler(TWriteErrorHandler handler) noexcept {
   ErrorHandler = handler;
 }
 
-const mode_t TFileLogWriter::DEFAULT_FILE_MODE =
-    S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+static TFd OpenLogfile(const std::string &path, const TOpt<mode_t> &mode) {
+  TFd log_fd;
 
-TFileLogWriter::TFileLogWriter(const std::string &path, mode_t open_mode)
+  if (!path.empty()) {
+    const int open_flags = O_CREAT | O_APPEND | O_WRONLY;
+    log_fd = mode.IsKnown() ?
+        Wr::open(path.c_str(), open_flags, *mode) :
+        Wr::open(path.c_str(), open_flags);
+  }
+
+  return log_fd;
+}
+
+TFileLogWriter::TFileLogWriter(const std::string &path,
+    const TOpt<mode_t> &open_mode)
     : TLogWriterBase(),
       Path(ValidateFilePathAndMode(path, open_mode)),
       OpenMode(open_mode),
-      FdRef(path.empty() ?
-          new TFd() :
-          new TFd(IfLt0(Wr::open(path.c_str(), O_CREAT | O_APPEND | O_WRONLY,
-              open_mode)))) {
+      FdRef(std::make_shared<TFd>(OpenLogfile(path, open_mode))) {
 }
 
 void TFileLogWriter::WriteEntry(TLogEntryAccessApi &entry,

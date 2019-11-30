@@ -26,7 +26,7 @@
 #include <sys/types.h>
 
 #include <base/error_util.h>
-#include <log/file_log_writer.h>
+#include <base/opt.h>
 #include <log/pri.h>
 
 namespace LogUtil {
@@ -38,7 +38,6 @@ namespace LogUtil {
    */
   void InitLogging(const char *prog_name, Log::TPri max_level,
       bool enable_stdout_stderr, bool enable_syslog,
-      const std::string &file_path,
-      mode_t file_mode = Log::TFileLogWriter::DEFAULT_FILE_MODE);
+      const std::string &file_path, const Base::TOpt<mode_t> &file_mode);
 
 }  // LogUtil

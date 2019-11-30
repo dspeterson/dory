@@ -75,17 +75,17 @@ using namespace Thread;
 DEFINE_COUNTER(StreamClientWorkerStdException);
 DEFINE_COUNTER(StreamClientWorkerUnknownException);
 
-bool TDoryServer::CheckUnixDgSize(const TCmdLineArgs &args) {
+bool TDoryServer::CheckUnixDgSize(const TConf &conf) {
   bool large_sendbuf_required = false;
 
-  if (!args.ReceiveSocketName.empty()) {
-    switch (TestUnixDgSize(args.MaxInputMsgSize)) {
+  if (!conf.InputSourcesConf.UnixDgPath.empty()) {
+    switch (TestUnixDgSize(conf.InputConfigConf.MaxDatagramMsgSize)) {
       case TUnixDgSizeTestResult::Pass:
         break;
       case TUnixDgSizeTestResult::PassWithLargeSendbuf:
         large_sendbuf_required = true;
 
-        if (!args.AllowLargeUnixDatagrams) {
+        if (!conf.InputConfigConf.AllowLargeUnixDatagrams) {
           throw TInvalidArgError(
               "You didn't specify allow_large_unix_datagrams, and "
               "max_input_msg_size is large enough that clients sending large "
@@ -134,8 +134,8 @@ void TDoryServer::PrepareForInit(const Conf::TConf &conf) {
 }
 
 static inline size_t
-ComputeBlockCount(size_t max_buffer_kb, size_t block_size) {
-  return std::max<size_t>(1, (1024 * max_buffer_kb) / block_size);
+ComputeBlockCount(size_t max_buffer, size_t block_size) {
+  return std::max<size_t>(1, max_buffer / block_size);
 }
 
 TDoryServer::TDoryServer(TCmdLineArgs &&args, TConf &&conf,
@@ -145,52 +145,53 @@ TDoryServer::TDoryServer(TCmdLineArgs &&args, TConf &&conf,
       PoolBlockSize(128),
       ShutdownFd(shutdown_fd),
       Pool(PoolBlockSize,
-           ComputeBlockCount(CmdLineArgs.MsgBufferMax, PoolBlockSize),
+           ComputeBlockCount(Conf.InputConfigConf.MaxBuffer, PoolBlockSize),
            Capped::TPool::TSync::Mutexed),
-      AnomalyTracker(DiscardFileLogger, CmdLineArgs.DiscardReportInterval,
-                     CmdLineArgs.DiscardReportBadMsgPrefixSize),
+      AnomalyTracker(DiscardFileLogger,
+          Conf.HttpInterfaceConf.DiscardReportInterval,
+          Conf.HttpInterfaceConf.BadMsgPrefixSize),
       StatusPort(0),
-      DebugSetup(CmdLineArgs.DebugDir.c_str(), CmdLineArgs.MsgDebugTimeLimit,
-                 CmdLineArgs.MsgDebugByteLimit),
+      DebugSetup(Conf.MsgDebugConf.Path.c_str(), Conf.MsgDebugConf.TimeLimit,
+                 Conf.MsgDebugConf.ByteLimit),
       Dispatcher(CmdLineArgs, Conf, MsgStateTracker, AnomalyTracker,
           DebugSetup),
       RouterThread(CmdLineArgs, Conf, AnomalyTracker, MsgStateTracker,
           DebugSetup, Dispatcher),
       MetadataTimestamp(RouterThread.GetMetadataTimestamp()) {
-  if (!CmdLineArgs.ReceiveStreamSocketName.empty() ||
-      CmdLineArgs.InputPort.IsKnown()) {
+  if (!Conf.InputSourcesConf.UnixStreamPath.empty() ||
+      Conf.InputSourcesConf.LocalTcpPort.IsKnown()) {
     /* Create thread pool if UNIX stream or TCP input is enabled. */
     StreamClientWorkerPool.MakeKnown();
   }
 
-  if (!CmdLineArgs.ReceiveSocketName.empty()) {
-    UnixDgInputAgent.MakeKnown(CmdLineArgs, Pool, MsgStateTracker,
-        AnomalyTracker, RouterThread.GetMsgChannel());
+  if (!Conf.InputSourcesConf.UnixDgPath.empty()) {
+    UnixDgInputAgent.MakeKnown(Conf, Pool, MsgStateTracker, AnomalyTracker,
+        RouterThread.GetMsgChannel());
   }
 
-  if (!CmdLineArgs.ReceiveStreamSocketName.empty()) {
+  if (!Conf.InputSourcesConf.UnixStreamPath.empty()) {
     assert(StreamClientWorkerPool.IsKnown());
     UnixStreamInputAgent.MakeKnown(STREAM_BACKLOG,
-        CmdLineArgs.ReceiveStreamSocketName.c_str(),
+        Conf.InputSourcesConf.UnixStreamPath.c_str(),
         CreateStreamClientHandler(false));
 
-    if (CmdLineArgs.ReceiveStreamSocketMode.IsKnown()) {
-      UnixStreamInputAgent->SetMode(*CmdLineArgs.ReceiveStreamSocketMode);
+    if (Conf.InputSourcesConf.UnixStreamMode.IsKnown()) {
+      UnixStreamInputAgent->SetMode(*Conf.InputSourcesConf.UnixStreamMode);
     }
   }
 
-  if (CmdLineArgs.InputPort.IsKnown()) {
+  if (Conf.InputSourcesConf.LocalTcpPort.IsKnown()) {
     TcpInputAgent.MakeKnown(STREAM_BACKLOG, htonl(INADDR_LOOPBACK),
-        *CmdLineArgs.InputPort, CreateStreamClientHandler(true));
+        *Conf.InputSourcesConf.LocalTcpPort, CreateStreamClientHandler(true));
   }
 }
 
 void TDoryServer::BindStatusSocket(bool bind_ephemeral) {
   assert(this);
   TAddress status_address(
-      CmdLineArgs.StatusLoopbackOnly ?
+      Conf.HttpInterfaceConf.LoopbackOnly ?
           TAddress::IPv4Loopback : TAddress::IPv4Any,
-      bind_ephemeral ? 0 : CmdLineArgs.StatusPort);
+      bind_ephemeral ? 0 : Conf.HttpInterfaceConf.Port);
   TmpStatusSocket = Wr::socket(Wr::TDisp::Nonfatal, {},
       status_address.GetFamily(), SOCK_STREAM, 0);
   assert(TmpStatusSocket.IsOpen());
@@ -204,7 +205,7 @@ void TDoryServer::BindStatusSocket(bool bind_ephemeral) {
 
   TAddress sock_name = GetSockName(TmpStatusSocket);
   StatusPort = sock_name.GetPort();
-  assert(bind_ephemeral || (StatusPort == CmdLineArgs.StatusPort));
+  assert(bind_ephemeral || (StatusPort == Conf.HttpInterfaceConf.Port));
 }
 
 int TDoryServer::Run() {
@@ -237,7 +238,7 @@ int TDoryServer::Run() {
     /* Initialization of all input agents succeeded.  Start the Mongoose HTTP
        server, which provides Dory's web interface.  It runs in separate
        threads. */
-    web_interface.StartHttpServer(CmdLineArgs.StatusLoopbackOnly);
+    web_interface.StartHttpServer(Conf.HttpInterfaceConf.LoopbackOnly);
 
     /* We can close this now, since Mongoose has the port claimed. */
     TmpStatusSocket.Reset();
@@ -261,7 +262,7 @@ std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>
     TDoryServer::CreateStreamClientHandler(bool is_tcp) {
   assert(this);
   return std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>(
-      new TStreamClientHandler(is_tcp, CmdLineArgs, Pool, MsgStateTracker,
+      new TStreamClientHandler(is_tcp, Conf, Pool, MsgStateTracker,
           AnomalyTracker, RouterThread.GetMsgChannel(),
           *StreamClientWorkerPool));
 }
@@ -269,14 +270,14 @@ std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>
 bool TDoryServer::StartMsgHandlingThreads() {
   assert(this);
 
-  if (!CmdLineArgs.DiscardLogPath.empty()) {
+  if (!Conf.DiscardLoggingConf.Path.empty()) {
     /* We must do this before starting the input agents so all discards are
        tracked properly when discard file logging is enabled.  This starts a
        thread when discard file logging is enabled. */
-    DiscardFileLogger.Init(CmdLineArgs.DiscardLogPath.c_str(),
-        static_cast<uint64_t>(CmdLineArgs.DiscardLogMaxFileSize) * 1024,
-        static_cast<uint64_t>(CmdLineArgs.DiscardLogMaxArchiveSize) * 1024,
-        CmdLineArgs.DiscardLogBadMsgPrefixSize);
+    DiscardFileLogger.Init(Conf.DiscardLoggingConf.Path.c_str(),
+        static_cast<uint64_t>(Conf.DiscardLoggingConf.MaxFileSize),
+        static_cast<uint64_t>(Conf.DiscardLoggingConf.MaxArchiveSize),
+        Conf.DiscardLoggingConf.MaxMsgPrefixSize);
   }
 
   if (StreamClientWorkerPool.IsKnown()) {
@@ -357,7 +358,7 @@ bool TDoryServer::HandleEvents() {
   /* This is for periodically verifying that we are getting queried for discard
      info. */
   TTimerFd discard_query_check_timer(
-      1000 * (1 + CmdLineArgs.DiscardReportInterval));
+      1000 * (1 + Conf.HttpInterfaceConf.DiscardReportInterval));
 
   std::array<struct pollfd, 8> events;
   struct pollfd &discard_query_check = events[0];
@@ -498,7 +499,7 @@ void TDoryServer::DiscardFinalMsgs(std::list<TMsg::TPtr> &msg_list) {
 
   for (TMsg::TPtr &msg : msg_list) {
     if (msg) {
-      if (!CmdLineArgs.NoLogDiscard) {
+      if (Conf.LoggingConf.LogDiscards) {
         LOG_R(TPri::ERR, std::chrono::seconds(30))
             << "Main thread discarding queued message on server shutdown: "
             << "topic [" << msg->GetTopic() << "]";

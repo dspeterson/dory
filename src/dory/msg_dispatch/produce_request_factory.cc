@@ -51,12 +51,12 @@ DEFINE_COUNTER(SerializeMsgSet);
 DEFINE_COUNTER(SerializeProduceRequest);
 DEFINE_COUNTER(SerializeTopicGroup);
 
-TProduceRequestFactory::TProduceRequestFactory(const TCmdLineArgs &args,
+TProduceRequestFactory::TProduceRequestFactory(const TConf &conf,
     const TGlobalBatchConfig &batch_config,
     const TCompressionConf &compression_conf,
     const std::shared_ptr<TProduceProtocol> &produce_protocol,
     size_t broker_index)
-    : CmdLineArgs(args),
+    : Conf(conf),
       BrokerIndex(broker_index),
       ProduceProtocol(produce_protocol),
       ProduceRequestDataLimit(batch_config.GetProduceRequestDataLimit()),
@@ -104,10 +104,11 @@ TOpt<TProduceRequest> TProduceRequestFactory::BuildRequest(
     return TOpt<TProduceRequest>();
   }
 
-  const char *client_id_begin = CmdLineArgs.ClientId.data();
+  const char *client_id_begin = Conf.KafkaConfigConf.ClientId.data();
   RequestWriter->OpenRequest(dst, request.first, client_id_begin,
-      client_id_begin + CmdLineArgs.ClientId.size(), CmdLineArgs.RequiredAcks,
-      static_cast<int32_t>(CmdLineArgs.ReplicationTimeout));
+      client_id_begin + Conf.KafkaConfigConf.ClientId.size(),
+      -1 /* required ACKs */,
+      static_cast<int32_t>(Conf.KafkaConfigConf.ReplicationTimeout));
   const TAllTopics &all_topics = request.second;
   assert(!all_topics.empty());
 

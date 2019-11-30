@@ -39,7 +39,7 @@ TMsg::TPtr Dory::InputDg::PartitionKey::BuildPartitionKeyMsgFromDg(
     const uint8_t *dg_bytes, size_t dg_size, int16_t api_version,
     const uint8_t *versioned_part_begin, const uint8_t *versioned_part_end,
     TPool &pool, TAnomalyTracker &anomaly_tracker,
-    TMsgStateTracker &msg_state_tracker, bool no_log_discard) {
+    TMsgStateTracker &msg_state_tracker, bool log_discard) {
   assert(dg_bytes);
   assert(versioned_part_begin > dg_bytes);
   assert(versioned_part_end > versioned_part_begin);
@@ -49,7 +49,7 @@ TMsg::TPtr Dory::InputDg::PartitionKey::BuildPartitionKeyMsgFromDg(
     case 0: {
       return V0::TV0InputDgReader(dg_bytes, versioned_part_begin,
           versioned_part_end, pool, anomaly_tracker,
-          msg_state_tracker, no_log_discard).BuildMsg();
+          msg_state_tracker, log_discard).BuildMsg();
     }
     default: {
       break;
@@ -60,7 +60,7 @@ TMsg::TPtr Dory::InputDg::PartitionKey::BuildPartitionKeyMsgFromDg(
       dg_bytes + dg_size, api_version);
   InputAgentDiscardPartitionKeyMsgUnsupportedApiVersion.Increment();
 
-  if (!no_log_discard) {
+  if (log_discard) {
     LOG_R(TPri::ERR, std::chrono::seconds(30))
         << "Discarding PartitionKey message with unsupported API version: "
         << api_version;

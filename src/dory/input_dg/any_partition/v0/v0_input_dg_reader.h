@@ -49,13 +49,13 @@ namespace Dory {
           TV0InputDgReader(const uint8_t *dg_begin,
               const uint8_t *data_begin, const uint8_t *data_end,
               Capped::TPool &pool, TAnomalyTracker &anomaly_tracker,
-              TMsgStateTracker &msg_state_tracker, bool no_log_discard)
+              TMsgStateTracker &msg_state_tracker, bool log_discard)
               : DgBegin(dg_begin),
                 DataBegin(data_begin),
                 DataEnd(data_end),
                 DgSize(data_end - dg_begin),
                 DataSize(data_end - data_begin),
-                NoLogDiscard(no_log_discard),
+               LogDiscard(log_discard),
                 Pool(pool),
                 AnomalyTracker(anomaly_tracker),
                 MsgStateTracker(msg_state_tracker) {
@@ -83,7 +83,7 @@ namespace Dory {
           /* Size in bytes of version-specific part of input datagram. */
           const size_t DataSize;
 
-          bool NoLogDiscard;
+          bool LogDiscard;
 
           /* Pool to allocate space for TMsg we are building from input
              datagram. */

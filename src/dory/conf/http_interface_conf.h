@@ -25,9 +25,26 @@
 
 #include <netinet/in.h>
 
+#include <dory/conf/conf_error.h>
+
 namespace Dory {
 
   namespace Conf {
+
+    class THttpInterfaceInvalidPort final : public TConfError {
+      public:
+      THttpInterfaceInvalidPort()
+          : TConfError("Invalid HTTP interface port") {
+      }
+    };  // THttpInterfaceInvalidPort
+
+    class THttpInterfaceInvalidDiscardReportInterval final
+        : public TConfError {
+      public:
+      THttpInterfaceInvalidDiscardReportInterval()
+          : TConfError("Invalid HTTP interface discard report interval") {
+      }
+    };  // THttpInterfaceInvalidDiscardReportInterval
 
     struct THttpInterfaceConf final {
       in_port_t Port = 9090;
@@ -37,6 +54,10 @@ namespace Dory {
       size_t DiscardReportInterval = 600;
 
       size_t BadMsgPrefixSize = 256;
+
+      void SetPort(in_port_t port);
+
+      void SetDiscardReportInterval(size_t value);
     };  // THttpInterfaceConf
 
   };  // Conf

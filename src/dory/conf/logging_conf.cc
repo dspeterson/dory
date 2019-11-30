@@ -23,18 +23,19 @@
 
 #include <cassert>
 
+using namespace Base;
 using namespace Dory;
 using namespace Dory::Conf;
 
 void TLoggingConf::SetFileConf(const std::string &path,
-    mode_t mode) {
+    const TOpt<mode_t> &mode) {
   assert(this);
 
   if (!path.empty() && (path[0] != '/')) {
     throw TLoggingRelativePath();
   }
 
-  if (mode > 0777) {
+  if (mode.IsKnown() && (*mode > 0777)) {
     throw TLoggingInvalidFileMode();
   }
 

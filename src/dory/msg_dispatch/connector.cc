@@ -90,7 +90,7 @@ TConnector::TConnector(size_t my_broker_index, TDispatcherSharedState &ds)
       DebugLoggerReceive(ds.DebugSetup, TDebugSetup::TLogId::MSG_GOT_ACK),
       InputQueue(ds.BatchConfig, ds.MsgStateTracker),
       /* TODO: rethink DebugLogger stuff */
-      RequestFactory(ds.CmdLineArgs, ds.BatchConfig, ds.Conf.CompressionConf,
+      RequestFactory(ds.Conf, ds.BatchConfig, ds.Conf.CompressionConf,
                      ds.ProduceProtocol, my_broker_index),
       ResponseReader(ds.ProduceProtocol->CreateProduceResponseReader()),
       /* Note: The max message body size value is a loose upper bound to guard
@@ -166,7 +166,7 @@ void TConnector::WaitForShutdownAck() {
 
   const char *blurb = poll_array[0].revents ?
       "shutdown ACK" : "shutdown finished notification";
-  LOG(TPri::NOTICE) << "Got " << blurb << "from connector thread (index "
+  LOG(TPri::NOTICE) << "Got " << blurb << " from connector thread (index "
       << MyBrokerIndex << " broker " << broker_id << ")";
   ConnectorFinishWaitShutdownAck.Increment();
   OptShutdownCmd.Reset();
@@ -218,7 +218,7 @@ void TConnector::Run() {
         });
     assert(MyBrokerIndex < Metadata->GetBrokers().size());
     broker_id = MyBrokerId();
-    LOG(TPri::NOTICE) << "Coonnector thread " << Gettid() << " (index "
+    LOG(TPri::NOTICE) << "Connector thread " << Gettid() << " (index "
         << MyBrokerIndex << " broker " << broker_id << ") started";
     DoRun();
   } catch (const TShutdownOnDestroy &) {
@@ -234,7 +234,7 @@ void TConnector::Run() {
     Die("Terminating on fatal error");
   }
 
-  LOG(TPri::NOTICE) << "Coonnector thread " << Gettid() << " (index "
+  LOG(TPri::NOTICE) << "Connector thread " << Gettid() << " (index "
       << MyBrokerIndex << " broker " << broker_id << ") finished "
       << (OkShutdown ? "normally" : "on error");
   Ds.MarkThreadFinished();
@@ -312,7 +312,7 @@ static int AdjustTimeoutByDeadline(int initial_timeout, uint64_t now,
 void TConnector::SetFastShutdownState() {
   assert(this);
   uint64_t deadline = GetEpochMilliseconds() +
-      Ds.CmdLineArgs.DispatcherRestartMaxDelay;
+      Ds.Conf.MsgDeliveryConf.DispatcherRestartMaxDelay;
 
   if (OptInProgressShutdown.IsKnown()) {
     TInProgressShutdown &shutdown_state = *OptInProgressShutdown;
@@ -343,7 +343,7 @@ void TConnector::HandleShutdownRequest() {
     RequestFactory.Put(InputQueue.GetAllOnShutdown());
 
     uint64_t deadline = *cmd.OptSlowShutdownStartTime +
-        Ds.CmdLineArgs.ShutdownMaxDelay;
+        Ds.Conf.MsgDeliveryConf.ShutdownMaxDelay;
 
     if (OptInProgressShutdown.IsKnown()) {
       TInProgressShutdown &shutdown_state = *OptInProgressShutdown;
@@ -450,12 +450,10 @@ bool TConnector::HandleSockWriteReady() {
   }
 
   if (!SendInProgress()) {
-    /* We finished sending the request.  Now expect a response from Kafka,
-       unless RequiredAcks is 0. */
-
+    /* We finished sending the request.  Now expect a response from Kafka. */
     SendProduceRequestOk.Increment();
     TAllTopics &all_topics = CurrentRequest->second;
-    bool ack_expected = (Ds.CmdLineArgs.RequiredAcks != 0);
+    const bool ack_expected = true;
 
     for (auto &topic_elem : all_topics) {
       TMultiPartitionGroup &group = topic_elem.second;
@@ -691,7 +689,8 @@ bool TConnector::PrepareForPoll(uint64_t now, int &poll_timeout) {
   }
 
   if (need_sock_write || need_sock_read) {
-    poll_timeout = static_cast<int>(Ds.CmdLineArgs.KafkaSocketTimeout * 1000);
+    poll_timeout =
+        static_cast<int>(Ds.Conf.MsgDeliveryConf.KafkaSocketTimeout * 1000);
   }
 
   if (need_shutdown_timeout) {
@@ -774,7 +773,7 @@ void TConnector::DoRun() {
     if (ret == 0) {  // poll() timed out
       if ((MainLoopPollArray[TMainLoopPollItem::SockIo].fd >= 0) &&
           ((finish_time - start_time) >=
-              (Ds.CmdLineArgs.KafkaSocketTimeout * 1000))) {
+              (Ds.Conf.MsgDeliveryConf.KafkaSocketTimeout * 1000))) {
         LOG(TPri::ERR) << "Connector thread " << Gettid() << " (index "
             << MyBrokerIndex << " broker " << broker_id
             << ") starting pause due to socket timeout in main loop";

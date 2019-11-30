@@ -33,7 +33,8 @@
                      empty message is counted as 1 byte.  This prevents
                      batching an unbounded number of empty messages in the case
                      where no limit is placed on batching delay or message
-                     count. -->
+                     count.
+                  -->
                 <bytes value="256k" />
             </config>
 
@@ -50,7 +51,8 @@
              Here, you can not specify "disable".  A nonnegative integer value
              must be specified.  This value applies to the actual message
              content (keys and values).  The total size of a produce request
-             will be a bit larger due to header overhead. -->
+             will be a bit larger due to header overhead.
+          -->
         <produceRequestDataLimit value="1024k" />
 
         <!-- This value should be exactly the same as the message.max.bytes
@@ -60,7 +62,8 @@
              them.  A smaller value will not cause data loss, but will
              unnecessarily restrict the size of a compressed message set.  As
              above, you can supply a value such as "1024k".  Specifying
-             "disable" here is not permitted. -->
+             "disable" here is not permitted.
+          -->
         <messageMaxBytes value="1000000" />
 
         <!-- This specifies the configuration for combined topics batching
@@ -151,7 +154,8 @@
              of the uncompressed size, then Dory sends the data uncompressed,
              so the Kafka brokers don't waste CPU cycles dealing with the
              compression.  The value below is somewhat arbitrary, and not based
-             on experimental data. -->
+             on experimental data.
+          -->
         <sizeThresholdPercent value="75" />
 
         <!-- This specifies the compression configuration for all topics not
@@ -173,21 +177,25 @@
     <topicRateLimiting>
         <namedConfigs>
             <!-- This configuration specifies that all messages should be
-                 discarded. -->
+                 discarded.
+              -->
             <config name="zero" interval="1" maxCount="0" />
 
             <!-- This configuration specifies no rate limit (i.e. don't discard
-                 any messages regardless of their arrival rate). -->
+                 any messages regardless of their arrival rate).
+              -->
             <config name="infinity" interval="1" maxCount="unlimited" />
 
             <!-- This configuration specifies a limit of at most 1000 messages
                  every 10000 milliseconds.  Messages that would exceed this
-                 limit are discarded. -->
+                 limit are discarded.
+              -->
             <config name="config1" interval="10000" maxCount="1000" />
 
             <!-- This configuration specifies a limit of at most (4 * 1024)
                  messages every 15000 milliseconds.  Messages that would exceed
-                 this limit are discarded. -->
+                 this limit are discarded.
+              -->
             <config name="config2" interval="15000" maxCount="4k" />
         </namedConfigs>
 
@@ -196,17 +204,285 @@
              individually.  In other words, with this configuration, topic
              "topic_a" would be allowed 1000 messages every 10000 milliseconds,
              and "topic_b" would also be allowed 1000 messages every 10000
-             milliseconds. -->
-        <defaultTopic config="config1" />
+             milliseconds.
+          -->
+        <defaultTopic config="infinity" />
 
         <topicConfigs>
             <!-- Rate limit configurations for individual topics go here. -->
+            <!--
             <topic name="topic1" config="zero" />
             <topic name="topic2" config="infinity" />
             <topic name="topic3" config="config1" />
             <topic name="topic4" config="config2" />
+              -->
         </topicConfigs>
     </topicRateLimiting>
+
+    <inputSources>
+        <!-- Config for UNIX domain datagram input. -->
+        <unixDatagram enable="true">
+            <!-- Socket file path must be absolute (i.e. it must start with
+                 '/') or empty.  An empty path will disable UNIX datagram input
+                 regardless of "enable" setting above.
+              -->
+            <path value="/var/run/dory/input_datagram_sock" />
+
+            <!-- Mode bits for opening socket file.  Must be specified in octal
+                 or binary.  For instance, value 0644 is octal as indicated by
+                 the leading 0, and represents user read/write, group read, and
+                 other read.  A binary value is prefixed by "0b" or "0B".  For
+                 instance, the same permissions represented in binary are
+                 0b110010010.  A value of "unspecified" lets the process umask
+                 determine the mode bits.
+              -->
+            <mode value="0222" />
+        </unixDatagram>
+
+        <!-- Config for UNIX domain stream input. -->
+        <unixStream enable="false">
+            <!-- Socket file path must be absolute (i.e. it must start with
+                 '/') or empty.  An empty path will disable UNIX stream input
+                 regardless of "enable" setting above.
+              -->
+            <path value="/var/run/dory/input_stream_sock" />
+
+            <!-- Mode bits for opening socket file.  Must be specified in octal
+                 or binary.  For instance, value 0644 is octal as indicated by
+                 the leading 0, and represents user read/write, group read, and
+                 other read.  A binary value is prefixed by "0b" or "0B".  For
+                 instance, the same permissions represented in binary are
+                 0b110010010.  A value of "unspecified" lets the process umask
+                 determine the mode bits.
+              -->
+            <mode value="0222" />
+        </unixStream>
+
+        <!-- Config for TCP input (loopback interface only). -->
+        <tcp enable="false">
+            <!-- Port to listen on.  An empty value will disable TCP input,
+                 regardless of "enable" setting above.
+              -->
+            <port value="9000" />
+        </tcp>
+    </inputSources>
+
+    <inputConfig>
+        <!-- Maximum amount of memory in bytes to use for buffering messages.
+             If this memory is exhausted, Dory starts discarding messages.
+             Suffixes k or m may be used to specify a value, where k means
+             "multiply by 1024" and m means "multiply by (1024 * 1024)".
+          -->
+        <maxBuffer value="128m" />
+
+        <!-- Maximum input message size in bytes expected from clients sending
+             UNIX domain datagrams.  This limit does NOT apply to messages sent
+             by UNIX domain stream socket or local TCP (see maxStreamMsgSize).
+             Input datagrams larger than this value will be discarded.
+             Suffix k may be used to specify a value, where k means "multiply
+             by 1024".
+          -->
+        <maxDatagramMsgSize value="64k" />
+
+        <!-- Allow large enough values for max_input_msg_size that a client
+             sending a UNIX domain datagram of the maximum allowed size will
+             need to increase its SO_SNDBUF socket option above the default
+             value.
+          -->
+        <allowLargeUnixDatagrams value="false" />
+
+        <!-- Maximum input message size in bytes expected from clients using
+             UNIX domain stream sockets or local TCP.  Input messages larger
+             than this value will cause Dory to immediately log an error and
+             disconnect, forcing the client to reconnect if it wishes to
+             continue sending messages.  This guards against ridiculously large
+             messages.  Even if a message doesn't exceed this limit, it may
+             still be discarded if it is too large to send in a single produce
+             request.  However, in this case Dory will still leave the
+             connection open and continue reading messages.  Suffix k may be
+             used to specify a value, where k means "multiply by 1024".
+          -->
+        <maxStreamMsgSize value="512k" />
+    </inputConfig>
+
+    <msgDelivery>
+        <!-- Enable support for automatic topic creation.  The Kafka brokers
+             must also be configured to support this.
+          -->
+        <topicAutocreate enable="false" />
+
+        <!-- Maximum number of failed delivery attempts allowed before a
+             message is discarded.
+          -->
+        <maxFailedDeliveryAttempts value="5" />
+
+        <!-- Maximum delay in milliseconds to allow delivery of buffered
+             messages once shutdown signal is received.
+          -->
+        <shutdownMaxDelay value="30000" />
+
+        <!-- Max dispatcher shutdown delay in milliseconds when restarting
+             dispatcher for metadata update.
+          -->
+        <dispatcherRestartMaxDelay value="5000" />
+
+        <!-- Interval in minutes (plus or minus a bit of randomness) between
+             periodic metadata updates
+          -->
+        <metadataRefreshInterval value="15" />
+
+        <!-- On metadata refresh, compare new metadata to old metadata, and
+             replace it only if it differs.  This should be enabled for normal
+             operation, but disabling it may be useful for testing.
+          -->
+        <compareMetadataOnRefresh value="true" />
+
+        <!-- Socket timeout in seconds to use when communicating with Kafka
+             brokers.
+          -->
+        <kafkaSocketTimeout value="60" />
+
+        <!-- Initial delay value in milliseconds between consecutive metadata
+             fetches due to Kafka-related errors.  The actual value has some
+             randomness added.
+          -->
+        <pauseRateLimitInitial value="5000" />
+
+        <!-- Maximum number of times to double pauseRateLimitInitial on
+             consecutive errors.
+          -->
+        <pauseRateLimitMaxDouble value="4" />
+
+        <!-- Minimum delay in milliseconds before fetching new metadata from
+             Kafka in response to an error.
+          -->
+        <minPauseDelay value="5000" />
+    </msgDelivery>
+
+    <httpInterface>
+        <!-- Port that dory listens on for its HTTP interface. -->
+        <port value="9090" />
+
+        <!-- Make HTTP interface available only on loopback interface. -->
+        <loopbackOnly value="false" />
+
+        <!-- Discard reporting interval in seconds. -->
+        <discardReportInterval value="600" />
+
+        <!-- Maximum bad message prefix size in bytes to write to discard
+             report.
+          -->
+        <badMsgPrefixSize value="256" />
+    </httpInterface>
+
+    <discardLogging enable="false">
+        <!-- Absolute pathname of local file where discards will be logged.
+             This is intended for debugging.  If unspecified, logging of
+             discards to a file will be disabled.
+          -->
+        <path value="/var/log/dory/discard.log" />
+
+        <!-- Maximum size in bytes of discard logfile.  When the next log entry
+             e would exceed the maximum, logfile f is renamed to f.N wnere N is
+             the current time in milliseconds since the epoch.  Then a new file
+             f is opened, and e is written to f.  See also maxArchiveSize.
+             Suffixes k or m may be used to specify a value, where k means
+             "multiply by 1024" and m means "multiply by (1024 * 1024)".
+          -->
+        <maxFileSize value="1m" />
+
+        <!-- See description of maxFileSize.  Once a discard logfile is renamed
+             from f to f.N due to the size restriction imposed by maxFileSize,
+             the directory containing f.N is scanned for all old discard
+             logfiles.  If their combined size exceeds maxArchiveSize in bytes,
+             then old logfiles are deleted, starting with the oldest, until
+             their combined size no longer exceeds the maximum.  Suffixes k or
+             m may be used to specify a value, where k means "multiply by 1024"
+             and m means "multiply by (1024 * 1024)".
+          -->
+        <maxArchiveSize value="32m" />
+
+        <!-- Maximum message prefix size in bytes to write to discard logfile
+             when discarding.  Messages larger than this limit will be
+             truncated  Suffix k may be used to specify a value, where k means
+             "multiply by 1024".  A value of "unlimited" may be specified here.
+          -->
+        <maxMsgPrefixSize value="2k" />
+    </discardLogging>
+
+    <kafkaConfig>
+        <!-- Client ID to send in produce requests. -->
+        <clientId value="dory" />
+
+        <!-- Replication timeout in milliseconds to send in produce requests.
+          -->
+        <replicationTimeout value="10000" />
+    </kafkaConfig>
+
+    <msgDebug enable="false">
+        <!-- Absolute path to directory for debug instrumentation files. -->
+        <path value="/var/log/dory/msg-debug" />
+
+        <!-- Message debugging time limit in seconds. -->
+        <timeLimit value="3600" />
+
+        <!-- Message debugging byte limit.  Suffixes k or m may be used to
+             specify a value, where k means "multiply by 1024" and m means
+             "multiply by (1024 * 1024)".
+          -->
+        <byteLimit value="2048m" />
+    </msgDebug>
+
+    <!-- Logging congifuration.  If omitted, the default behavior is to enable
+         only syslog output and set the level to NOTICE.
+      -->
+    <logging>
+        <!-- Determines logging verbosity.  Valid values are "ERR", "WARNING",
+             "NOTICE", "INFO", "DEBUG".  For instance, a value of "NOTICE"
+             enables log messages of levels "ERR", "WARNING", and "NOTICE", and
+             disables log messages of levels "INFO" and "DEBUG".
+          -->
+        <level value="NOTICE" />
+
+        <!-- A true value for 'enable' enables logging to stdout/stderr.
+             If enabled, warnings and errors go to stderr, and other messages
+             go to stdout.  If stdoutStderr element is omitted, then logging to
+             stdout/stderr is disabled.
+          -->
+        <stdoutStderr enable="false" />
+
+        <!-- A true value for 'enable' enables syslog logging.  If syslog
+             element is omitted, then syslog logging is enabled.
+          -->
+        <syslog enable="false" />
+
+        <!-- A true value for 'enable' enables logging to a file.  If file
+             element is omitted, then file logging is enabled.
+          -->
+        <file enable="true">
+            <!-- Logfile path must be absolute (i.e. it must start with '/') or
+                 empty.  An empty path will disable file logging regardless of
+                 "enable" setting above.
+              -->
+            <path value="/var/log/dory/dory.log" />
+
+            <!-- Mode bits for opening logfile.  Must be specified in octal or
+                 binary.  For instance, value 0644 is octal as indicated by the
+                 leading 0, and represents user read/write, group read, and
+                 other read.  A binary value is prefixed by "0b" or "0B".  For
+                 instance, the same permissions represented in binary are
+                 0b110010010.  A value of "unspecified" lets the process umask
+                 determine the mode bits.
+              -->
+            <mode value="0644" />
+        </file>
+
+        <!-- If true, log messages will be emitted when messages are discarded.
+             These messages are rate limited to avoid writing too much output
+             if a large number of discards occur.
+          -->
+        <logDiscards enable="true" />
+    </logging>
 
     <initialBrokers>
         <!-- When Dory starts, it chooses a broker in this list to contact for

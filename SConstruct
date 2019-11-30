@@ -135,6 +135,8 @@ xerces_lib_deps = ['xerces-c']
 
 ext_lib_deps = [
     [r'^dory/dory\.test$', xerces_lib_deps],
+    [r'^dory/unix_dg_input_agent\.test$', xerces_lib_deps],
+    [r'^dory/stream_client_handler\.test$', xerces_lib_deps],
     [r'^dory/conf/conf\.test$', xerces_lib_deps],
     [r'^xml/.*', xerces_lib_deps],
     [r'^dory/dory$', xerces_lib_deps]

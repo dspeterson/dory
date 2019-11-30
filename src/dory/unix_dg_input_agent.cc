@@ -41,20 +41,21 @@
 using namespace Base;
 using namespace Capped;
 using namespace Dory;
+using namespace Dory::Conf;
 using namespace Log;
 using namespace Socket;
 using namespace Thread;
 
 DEFINE_COUNTER(UnixDgInputAgentForwardMsg);
 
-TUnixDgInputAgent::TUnixDgInputAgent(const TCmdLineArgs &args, TPool &pool,
+TUnixDgInputAgent::TUnixDgInputAgent(const TConf &conf, TPool &pool,
     TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
     TGatePutApi<TMsg::TPtr> &output_queue)
-    : CmdLineArgs(args),
+    : Conf(conf),
       Pool(pool),
       MsgStateTracker(msg_state_tracker),
       AnomalyTracker(anomaly_tracker),
-      InputBuf(args.MaxInputMsgSize),
+      InputBuf(conf.InputConfigConf.MaxDatagramMsgSize),
       OutputQueue(output_queue) {
 }
 
@@ -120,7 +121,7 @@ void TUnixDgInputAgent::OpenUnixSocket() {
   LOG(TPri::NOTICE) << "UNIX datagram input thread opening socket";
   TAddress input_socket_address;
   input_socket_address.SetFamily(AF_LOCAL);
-  input_socket_address.SetPath(CmdLineArgs.ReceiveSocketName.c_str());
+  input_socket_address.SetPath(Conf.InputSourcesConf.UnixDgPath.c_str());
 
   try {
     Bind(InputSocket, input_socket_address);
@@ -129,13 +130,12 @@ void TUnixDgInputAgent::OpenUnixSocket() {
     Die("Terminating on fatal error");
   }
 
-  /* Set the permission bits on the socket file if they were specified as a
-     command line argument.  If unspecified, the umask determines the
-     permission bits. */
-  if (CmdLineArgs.ReceiveSocketMode.IsKnown()) {
+  /* Set the permission bits on the socket file if they were specified.  If
+     unspecified, the umask determines the permission bits. */
+  if (Conf.InputSourcesConf.UnixDgMode.IsKnown()) {
     try {
-      IfLt0(Wr::chmod(CmdLineArgs.ReceiveSocketName.c_str(),
-          *CmdLineArgs.ReceiveSocketMode));
+      IfLt0(Wr::chmod(Conf.InputSourcesConf.UnixDgPath.c_str(),
+          *Conf.InputSourcesConf.UnixDgMode));
     } catch (const std::system_error &x) {
       LOG(TPri::ERR) << "Failed to set permissions on datagram socket file: "
           << x.what();
@@ -152,7 +152,7 @@ TMsg::TPtr TUnixDgInputAgent::ReadOneMsg() {
   assert(result >= 0);
 
   return InputDg::BuildMsgFromDg(msg_begin, static_cast<size_t>(result),
-      CmdLineArgs, Pool, AnomalyTracker, MsgStateTracker);
+      Conf.LoggingConf.LogDiscards, Pool, AnomalyTracker, MsgStateTracker);
 }
 
 void TUnixDgInputAgent::ForwardMessages() {

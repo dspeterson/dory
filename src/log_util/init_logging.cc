@@ -170,7 +170,7 @@ static void LogFatalStackTrace(void *const *stack_trace_buffer,
 
 void LogUtil::InitLogging(const char *prog_name, Log::TPri max_level,
     bool enable_stdout_stderr, bool enable_syslog,
-    const std::string &file_path, mode_t file_mode) {
+    const std::string &file_path, const TOpt<mode_t> &file_mode) {
   /* Initialize syslog() logging even if enable_syslog is false.  syslog()
      logging can be enabled at any time, and it requires that initialization
      has been completed, so do the initialization now.

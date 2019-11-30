@@ -35,11 +35,11 @@
 #include <base/no_copy_semantics.h>
 #include <base/opt.h>
 #include <dory/batch/global_batch_config.h>
-#include <dory/cmd_line_args.h>
 #include <dory/compress/compression_codec_api.h>
 #include <dory/compress/compression_type.h>
 #include <dory/compress/get_compression_codec.h>
 #include <dory/conf/compression_conf.h>
+#include <dory/conf/conf.h>
 #include <dory/debug/debug_logger.h>
 #include <dory/kafka_proto/produce/msg_set_writer_api.h>
 #include <dory/kafka_proto/produce/produce_protocol.h>
@@ -58,7 +58,7 @@ namespace Dory {
       NO_COPY_SEMANTICS(TProduceRequestFactory);
 
       public:
-      TProduceRequestFactory(const TCmdLineArgs &args,
+      TProduceRequestFactory(const Conf::TConf &conf,
           const Batch::TGlobalBatchConfig &batch_config,
           const Conf::TCompressionConf &compression_conf,
           const std::shared_ptr<KafkaProto::Produce::TProduceProtocol>
@@ -182,7 +182,7 @@ namespace Dory {
       void WriteOneMsgSet(const TMsgSet &msg_set, const TCompressionInfo &info,
           std::vector<uint8_t> &dst);
 
-      const TCmdLineArgs &CmdLineArgs;
+      const Conf::TConf &Conf;
 
       const size_t BrokerIndex;
 

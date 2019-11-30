@@ -35,7 +35,6 @@
 #include <capped/reader.h>
 #include <dory/anomaly_tracker.h>
 #include <dory/client/status_codes.h>
-#include <dory/cmd_line_args.h>
 #include <dory/msg.h>
 #include <dory/msg_state_tracker.h>
 #include <dory/test_util/misc_util.h>
@@ -53,10 +52,6 @@ using namespace ::TestUtil;
 namespace {
 
   struct TTestConfig {
-    std::vector<const char *> Args;
-
-    std::unique_ptr<Dory::TCmdLineArgs> CmdLineArgs;
-
     std::unique_ptr<TPool> Pool;
 
     TDiscardFileLogger DiscardFileLogger;
@@ -72,16 +67,6 @@ namespace {
       : Pool(new TPool(128, 16384, TPool::TSync::Mutexed)),
         AnomalyTracker(DiscardFileLogger, 0,
                        std::numeric_limits<size_t>::max()) {
-    Args.push_back("dory");
-    Args.push_back("--config_path");
-    Args.push_back("/nonexistent/path");
-    Args.push_back("--msg_buffer_max");
-    Args.push_back("1");  // dummy value
-    Args.push_back("--receive_socket_name");
-    Args.push_back("dummy_value");
-    Args.push_back(nullptr);
-    CmdLineArgs.reset(new Dory::TCmdLineArgs(static_cast<int>(Args.size() - 1),
-        &Args[0], true));
   }
 
   /* The fixture for testing reading/writing of v0 PartitionKey input
@@ -115,8 +100,9 @@ namespace {
     input_dg_p_key_v0_write_msg(&buf[0], timestamp, partition_key,
         topic.data(), topic.data() + topic.size(), key.data(),
         key.data() + key.size(), value.data(), value.data() + value.size());
-    TMsg::TPtr msg = BuildMsgFromDg(&buf[0], buf.size(), *cfg.CmdLineArgs,
-        *cfg.Pool, cfg.AnomalyTracker, cfg.MsgStateTracker);
+    TMsg::TPtr msg = BuildMsgFromDg(&buf[0], buf.size(),
+        false /* log_discard */, *cfg.Pool, cfg.AnomalyTracker,
+        cfg.MsgStateTracker);
     ASSERT_TRUE(!!msg);
     SetProcessed(msg);
     ASSERT_EQ(msg->GetTimestamp(), timestamp);

@@ -26,6 +26,7 @@
 
 #include <log/combined_log_writer.h>
 
+using namespace Base;
 using namespace Log;
 
 static std::shared_ptr<TCombinedLogWriter> LogWriter;
@@ -33,7 +34,7 @@ static std::shared_ptr<TCombinedLogWriter> LogWriter;
 static std::mutex LogWriterMutex;
 
 void Log::SetLogWriter(bool enable_stdout_stderr, bool enable_syslog,
-    const std::string &file_path, mode_t file_mode) {
+    const std::string &file_path, const TOpt<mode_t> &file_mode) {
   std::lock_guard<std::mutex> lock(LogWriterMutex);
   LogWriter = !LogWriter ?
       std::make_shared<TCombinedLogWriter>(enable_stdout_stderr, enable_syslog,
@@ -69,7 +70,7 @@ std::shared_ptr<TLogWriterBase> Log::GetLogWriter() noexcept {
        to stdout/stderr. */
     LogWriter = std::make_shared<TCombinedLogWriter>(
         true /* enable_stdout_stderr */, false /* enable_syslog */,
-        std::string() /* file_path */);
+        std::string() /* file_path */, TOpt<mode_t>() /* file_mode */);
   }
 
   return LogWriter;

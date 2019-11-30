@@ -23,6 +23,7 @@
 #pragma once
 
 #include <base/no_copy_semantics.h>
+#include <dory/conf/conf.h>
 #include <dory/stream_client_work_fn.h>
 #include <server/stream_server_base.h>
 #include <thread/managed_thread_pool.h>
@@ -36,7 +37,7 @@ namespace Dory {
     public:
     using TWorkerPool = Thread::TManagedThreadPool<TStreamClientWorkFn>;
 
-    TStreamClientHandler(bool is_tcp, const TCmdLineArgs &args,
+    TStreamClientHandler(bool is_tcp, const Conf::TConf &conf,
         Capped::TPool &pool, TMsgStateTracker &msg_state_tracker,
         TAnomalyTracker &anomaly_tracker,
         Thread::TGatePutApi<TMsg::TPtr> &output_queue,
@@ -52,7 +53,7 @@ namespace Dory {
        indicates that we are handling a UNIX domain stream connection. */
     const bool IsTcp;
 
-    const TCmdLineArgs &CmdLineArgs;
+    const Conf::TConf &Conf;
 
     /* Blocks for TBlob objects containing message data get allocated from
        here. */

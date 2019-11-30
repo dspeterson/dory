@@ -31,6 +31,7 @@
 #include <sys/types.h>
 
 #include <base/fd.h>
+#include <base/opt.h>
 #include <log/error_handler.h>
 #include <log/log_entry_access_api.h>
 #include <log/log_writer_base.h>
@@ -79,13 +80,11 @@ namespace Log {
        so it should be set before concurrent access is possible. */
     static void SetErrorHandler(TWriteErrorHandler handler) noexcept;
 
-    static const mode_t DEFAULT_FILE_MODE;
-
     /* Throws std::system_error on error opening file.  An empty path disables
        the writer.  If nonempty, the path must be absolute (i.e. it must start
        with '/'). */
     TFileLogWriter(const std::string &path,
-        mode_t open_mode = DEFAULT_FILE_MODE);
+        const Base::TOpt<mode_t> &open_mode);
 
     TFileLogWriter(const TFileLogWriter &) = default;
 
@@ -103,7 +102,7 @@ namespace Log {
       return Path;
     }
 
-    mode_t GetOpenMode() const noexcept {
+    Base::TOpt<mode_t> GetOpenMode() const noexcept {
       assert(this);
       return OpenMode;
     }
@@ -124,7 +123,7 @@ namespace Log {
 
     const std::string Path;
 
-    const mode_t OpenMode;
+    const Base::TOpt<mode_t> OpenMode;
 
     /* Holding the file descriptor by shared_ptr facilitates copy construction.
      */

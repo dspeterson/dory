@@ -1,7 +1,7 @@
-/* <dory/util/dory_xml_init.h>
+/* <dory/test_util/xml_util.h>
 
    ----------------------------------------------------------------------------
-   Copyright 2017 Dave Peterson <dave@dspeterson.com>
+   Copyright 2019 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,34 +16,23 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Utility class for initializing XML processing library.
+   XML-related utility functions for testing.
  */
 
 #pragma once
 
-#include <xercesc/util/XMLException.hpp>
+#include <string>
 
-#include <xml/xml_initializer.h>
+#include <dory/conf/conf.h>
 
 namespace Dory {
 
-  namespace Util {
+  namespace TestUtil {
 
-    class TDoryXmlInit final : public Xml::TXmlInitializer {
-      public:
-      explicit TDoryXmlInit(bool init_on_construction = true)
-          : TXmlInitializer(init_on_construction) {
-      }
+    /* Be sure to initialize Xerces XML processing library before calling this.
+       See <dory/util/dory_xml_init.h>. */
+    Conf::TConf XmlToConf(const std::string &xml);
 
-      protected:
-      bool HandleInitError(const xercesc::XMLException &x) override;
-
-      void HandleCleanupError(
-          const xercesc::XMLException &x) noexcept override;
-
-      void HandleUnknownErrorOnCleanup() noexcept override;
-    };  // TDoryXmlInit
-
-  }  // Util
+  }  // TestUtil
 
 }  // Dory

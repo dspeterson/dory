@@ -63,27 +63,37 @@ namespace Dory {
       }
     };  // TInputSourcesInvalidUnixStreamFileMode
 
+    class TInvalidTcpInputPort final : public TConfError {
+      public:
+      TInvalidTcpInputPort()
+          : TConfError("Invalid TCP input port") {
+      }
+    };  // TInvalidTcpInputPort
+
     struct TInputSourcesConf final {
       /* Absolute path for UNIX datagram socket.  Empty means disable. */
       std::string UnixDgPath;
 
       /* File creation mode for UNIX datagram socket. */
-      mode_t UnixDgMode = 0222;
+      Base::TOpt<mode_t> UnixDgMode;
 
       /* Absolute path for UNIX stream socket.  Empty means disable. */
       std::string UnixStreamPath;
 
       /* File creation mode for UNIX stream socket. */
-      mode_t UnixStreamMode = 0222;
+      Base::TOpt<mode_t> UnixStreamMode;
 
       /* Optional port for local TCP input. */
       Base::TOpt<in_port_t> LocalTcpPort;
 
-      void SetUnixDgConf(const std::string &path, mode_t mode);
+      void SetUnixDgConf(const std::string &path,
+          const Base::TOpt<mode_t> &mode);
 
-      void SetUnixStreamConf(const std::string &path, mode_t mode);
+      void SetUnixStreamConf(const std::string &path,
+          const Base::TOpt<mode_t> &mode);
 
-      void SetTcpConf(const Base::TOpt<in_port_t> &port);
+      void SetTcpConf(const Base::TOpt<in_port_t> &port,
+          bool allow_input_bind_ephemeral);
     };  // TInputSourcesConf
 
   }  // Conf

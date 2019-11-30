@@ -1,4 +1,4 @@
-/* <dory/conf/kafka_config_conf.h>
+/* <dory/conf/http_interface_conf.cc>
 
    ----------------------------------------------------------------------------
    Copyright 2019 Dave Peterson <dave@dspeterson.com>
@@ -16,35 +16,32 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Class representing Kafka config section from Dory's config file.
+   Implements <dory/conf/http_interface_conf.h>.
  */
 
-#pragma once
+#include <dory/conf/http_interface_conf.h>
 
-#include <cstddef>
-#include <string>
+#include <cassert>
 
-#include <dory/conf/conf_error.h>
+using namespace Dory;
+using namespace Dory::Conf;
 
-namespace Dory {
+void THttpInterfaceConf::SetPort(in_port_t port) {
+  assert(this);
 
-  namespace Conf {
+  if (port < 1) {
+    throw THttpInterfaceInvalidPort();
+  }
 
-    class TKafkaConfigInvalidReplicationTimeout final : public TConfError {
-      public:
-      TKafkaConfigInvalidReplicationTimeout()
-          : TConfError("Invalid replication timeout") {
-      }
-    };  // TKafkaConfigInvalidReplicationTimeout
+  Port = port;
+}
 
-    struct TKafkaConfigConf final {
-      std::string ClientId = "dory";
+void THttpInterfaceConf::SetDiscardReportInterval(size_t value) {
+  assert(this);
 
-      size_t ReplicationTimeout = 10000;
+  if (value < 1) {
+    throw THttpInterfaceInvalidDiscardReportInterval();
+  }
 
-      void SetReplicationTimeout(size_t value);
-    };  // TKafkaConfigConf
-
-  };  // Conf
-
-}  // Dory
+  DiscardReportInterval = value;
+}

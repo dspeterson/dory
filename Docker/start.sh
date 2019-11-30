@@ -1,1 +1,1 @@
-/opt/dory/bin/dory --daemon --log_echo --log_level LOG_DEBUG --msg_buffer_max 65536 --discard_log_path /root/discard_msgs.txt --receive_socket_name /root/dory.socket --config_path /etc/dory/dory_conf.xml
+/opt/dory/bin/dory --daemon --config-path /etc/dory/dory_conf.xml

@@ -25,7 +25,6 @@
 #include <array>
 #include <cctype>
 #include <cerrno>
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <sstream>
@@ -35,7 +34,6 @@
 #include <poll.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
 
 #include <base/dir_iter.h>
 #include <base/error_util.h>
@@ -757,7 +755,7 @@ bool TDiscardFileLogger::CheckMaxFileSize(uint64_t next_entry_size) {
   assert(ArchiveCleaner);
   assert(LogFd.IsOpen());
   struct stat stat_buf;
-  int ret = fstat(Wr::TDisp::Nonfatal, {}, LogFd, &stat_buf);
+  int ret = Wr::fstat(Wr::TDisp::Nonfatal, {}, LogFd, &stat_buf);
   assert(ret == 0);
 
   if (!S_ISREG(stat_buf.st_mode)) {

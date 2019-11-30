@@ -32,6 +32,7 @@
 #include <xercesc/dom/DOMDocument.hpp>
 #include <xercesc/dom/DOMElement.hpp>
 
+#include <base/opt.h>
 #include <dory/conf/batch_conf.h>
 #include <dory/conf/compression_conf.h>
 #include <dory/conf/conf_error.h>
@@ -57,6 +58,16 @@ namespace Dory {
                 "\"NOTICE\", \"INFO\", \"DEBUG\"}") {
       }
     };  // TLoggingInvalidLevel
+
+    class TDiscardLoggingInvalidMaxFileSize final : public TConfError {
+      public:
+      TDiscardLoggingInvalidMaxFileSize()
+          : TConfError(
+                "If discard logging is enabled, discard_log_max_file_size "
+                "must be at least twice the maximum input datagram or stream "
+                "message size.") {
+      }
+    };  // TDiscardLoggingInvalidMaxFileSize
 
     struct TConf final {
       class TBuilder;
@@ -90,7 +101,7 @@ namespace Dory {
 
     class TConf::TBuilder final {
       public:
-      explicit TBuilder(bool enable_lz4 = false);
+      explicit TBuilder(bool allow_input_bind_ephemeral, bool enable_lz4);
 
       TConf Build(const void *buf, size_t buf_size);
 
@@ -104,7 +115,7 @@ namespace Dory {
 
       void Reset() {
         assert(this);
-        *this = TBuilder(EnableLz4);
+        *this = TBuilder(AllowInputBindEphemeral, EnableLz4);
       }
 
       private:
@@ -127,8 +138,8 @@ namespace Dory {
 
       void ProcessTopicRateElem(const xercesc::DOMElement &topic_rate_elem);
 
-      std::pair<std::string, mode_t> ProcessFileSectionElem(
-          const xercesc::DOMElement &elem);
+      std::pair<std::string, Base::TOpt<mode_t>>
+      ProcessFileSectionElem(const xercesc::DOMElement &elem);
 
       void ProcessInputSourcesElem(
           const xercesc::DOMElement &input_sources_elem);
@@ -156,6 +167,8 @@ namespace Dory {
           const xercesc::DOMElement &initial_brokers_elem);
 
       void ProcessRootElem(const xercesc::DOMElement &root_elem);
+
+      bool AllowInputBindEphemeral;
 
       bool EnableLz4;
 

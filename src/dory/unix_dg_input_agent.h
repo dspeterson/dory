@@ -58,7 +58,7 @@
 #include <base/no_copy_semantics.h>
 #include <capped/pool.h>
 #include <dory/anomaly_tracker.h>
-#include <dory/cmd_line_args.h>
+#include <dory/conf/conf.h>
 #include <dory/msg.h>
 #include <dory/msg_state_tracker.h>
 #include <socket/named_unix_socket.h>
@@ -71,7 +71,7 @@ namespace Dory {
     NO_COPY_SEMANTICS(TUnixDgInputAgent);
 
     public:
-    TUnixDgInputAgent(const TCmdLineArgs &args, Capped::TPool &pool,
+    TUnixDgInputAgent(const Conf::TConf &conf, Capped::TPool &pool,
         TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
         Thread::TGatePutApi<TMsg::TPtr> &output_queue);
 
@@ -91,7 +91,7 @@ namespace Dory {
 
     void ForwardMessages();
 
-    const TCmdLineArgs &CmdLineArgs;
+    const Conf::TConf &Conf;
 
     bool Destroying = false;
 

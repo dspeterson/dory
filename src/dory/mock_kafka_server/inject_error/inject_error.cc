@@ -93,30 +93,30 @@ static void ParseArgs(int argc, const char *const argv[], TCmdLineArgs &args) {
     ValueArg<decltype(args.Port)> arg_port("", "port", "Port to connect to.",
         false, args.Port, "PORT");
     cmd.add(arg_port);
-    ValueArg<decltype(args.AckError)> arg_ack_error("", "ack_error",
+    ValueArg<decltype(args.AckError)> arg_ack_error("", "ack-error",
         "Inject ACK error.", false, args.AckError, "ACK_ERROR");
     cmd.add(arg_ack_error);
-    SwitchArg arg_ack_disconnect("", "ack_disconnect",
+    SwitchArg arg_ack_disconnect("", "ack-disconnect",
         "Inject disconnect before sending ACK.", cmd, args.AckDisconnect);
     ValueArg<decltype(args.SingleTopicMdError)> arg_single_topic_md_error("",
-        "single_topic_md_error", "Inject single topic metadata error.", false,
+        "single-topic-md-error", "Inject single topic metadata error.", false,
         args.SingleTopicMdError, "MD_ERROR");
     cmd.add(arg_single_topic_md_error);
     ValueArg<decltype(args.AllTopicsMdError)> arg_all_topics_md_error("",
-        "all_topics_md_error", "Inject all topics metadata error.", false,
+        "all-topics-md-error", "Inject all topics metadata error.", false,
         args.AllTopicsMdError, "MD_ERROR");
     cmd.add(arg_all_topics_md_error);
-    SwitchArg arg_single_topic_md_disconnect("", "single_topic_md_disconnect",
+    SwitchArg arg_single_topic_md_disconnect("", "single-topic-md-disconnect",
         "Inject disconnect before single topic metadata response.", cmd,
         args.SingleTopicMdDisconnect);
-    SwitchArg arg_all_topics_md_disconnect("", "all_topics_md_disconnect",
+    SwitchArg arg_all_topics_md_disconnect("", "all-topics-md-disconnect",
         "Inject disconnect before all topics metadata response.", cmd,
         args.AllTopicsMdDisconnect);
-    ValueArg<decltype(args.ClientAddr)> arg_client_addr("", "client_addr",
+    ValueArg<decltype(args.ClientAddr)> arg_client_addr("", "client-addr",
         "Client (specified by IP address) to direct injected error at.", false,
         args.ClientAddr, "ADDR");
     cmd.add(arg_client_addr);
-    ValueArg<decltype(args.MsgBody)> arg_msg_body("", "msg_body",
+    ValueArg<decltype(args.MsgBody)> arg_msg_body("", "msg-body",
         "Message body to match for ACK error injection.", false,
         args.MsgBody, "MSG");
     cmd.add(arg_msg_body);
@@ -124,7 +124,7 @@ static void ParseArgs(int argc, const char *const argv[], TCmdLineArgs &args) {
         "Topic to match for metadata error injection.", false, args.Topic,
         "TOPIC");
     cmd.add(arg_topic);
-    ValueArg<decltype(args.CmdFile)> arg_cmd_file("", "cmd_file",
+    ValueArg<decltype(args.CmdFile)> arg_cmd_file("", "cmd-file",
         "File to read error injection commands from.", false, args.CmdFile,
         "FILE");
     cmd.add(arg_cmd_file);

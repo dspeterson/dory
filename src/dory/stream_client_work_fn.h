@@ -28,7 +28,7 @@
 #include <base/stream_msg_with_size_reader.h>
 #include <capped/pool.h>
 #include <dory/anomaly_tracker.h>
-#include <dory/cmd_line_args.h>
+#include <dory/conf/conf.h>
 #include <dory/msg_state_tracker.h>
 #include <thread/gate_put_api.h>
 
@@ -45,7 +45,7 @@ namespace Dory {
 
     void operator()();
 
-    void SetState(bool is_tcp, const TCmdLineArgs &args, Capped::TPool &pool,
+    void SetState(bool is_tcp, const Conf::TConf &conf, Capped::TPool &pool,
         TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
         Thread::TGatePutApi<TMsg::TPtr> &output_queue,
         const Base::TFd &shutdown_request_fd,
@@ -64,7 +64,7 @@ namespace Dory {
        indicates that we are handling a UNIX domain stream connection. */
     bool IsTcp = false;
 
-    const TCmdLineArgs *CmdLineArgs = nullptr;
+    const Conf::TConf *Conf = nullptr;
 
     /* Blocks for TBlob objects containing message data get allocated from
        here. */

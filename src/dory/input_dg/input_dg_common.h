@@ -35,25 +35,25 @@ namespace Dory {
   namespace InputDg {
 
     void DiscardMalformedMsg(const uint8_t *msg_begin, size_t msg_size,
-        TAnomalyTracker &anomaly_tracker, bool no_log_discard);
+        TAnomalyTracker &anomaly_tracker, bool log_discard);
 
     void DiscardMsgNoMem(TMsg::TTimestamp timestamp, const char *topic_begin,
         const char *topic_end, const void *key_begin, const void *key_end,
         const void *value_begin, const void *value_end,
-        TAnomalyTracker &anomaly_tracker, bool no_log_discard);
+        TAnomalyTracker &anomaly_tracker, bool log_discard);
 
     TMsg::TPtr TryCreateAnyPartitionMsg(int64_t timestamp,
         const char *topic_begin, const char *topic_end, const void *key_begin,
         size_t key_size, const void *value_begin, size_t value_size,
         Capped::TPool &pool, TAnomalyTracker &anomaly_tracker,
-        TMsgStateTracker &msg_state_tracker, bool no_log_discard);
+        TMsgStateTracker &msg_state_tracker, bool log_discard);
 
     TMsg::TPtr TryCreatePartitionKeyMsg(int32_t partition_key,
         int64_t timestamp, const char *topic_begin, const char *topic_end,
         const void *key_begin, size_t key_size, const void *value_begin,
         size_t value_size, Capped::TPool &pool,
         TAnomalyTracker &anomaly_tracker, TMsgStateTracker &msg_state_tracker,
-        bool no_log_discard);
+        bool log_discard);
 
   }  // InputDg
 

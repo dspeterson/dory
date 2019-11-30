@@ -21,13 +21,14 @@
 
 #include <dory/conf/conf.h>
 
+#include <algorithm>
+#include <limits>
 #include <stdexcept>
 
 #include <netinet/in.h>
 
 #include <base/file_reader.h>
 #include <base/no_default_case.h>
-#include <base/opt.h>
 #include <base/to_integer.h>
 #include <dory/compress/compression_type.h>
 #include <log/pri.h>
@@ -49,8 +50,9 @@ using namespace Xml::Config;
 
 using TOpts = TAttrReader::TOpts;
 
-TConf::TBuilder::TBuilder(bool enable_lz4)
-    : EnableLz4(enable_lz4),
+TConf::TBuilder::TBuilder(bool allow_input_bind_ephemeral, bool enable_lz4)
+    : AllowInputBindEphemeral(allow_input_bind_ephemeral),
+      EnableLz4(enable_lz4),
       XmlDoc(MakeEmptyDomDocumentUniquePtr()) {
 }
 
@@ -63,9 +65,7 @@ TConf TConf::TBuilder::Build(const void *buf, size_t buf_size) {
   assert(root);
   const std::string name = TranscodeToString(root->getNodeName());
 
-  /* For backward compatibility with Bruce, allow root node to be named either
-     "doryConfig" or "bruceConfig". */
-  if ((name != "doryConfig") && (name != "bruceConfig")) {
+  if (name != "doryConfig") {
     throw TUnexpectedElementName(*root, "doryConfig");
   }
 
@@ -82,26 +82,35 @@ void TConf::TBuilder::ProcessSingleBatchingNamedConfig(
       TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
   RequireAllChildElementLeaves(config_elem);
   const auto subsection_map = GetSubsectionElements(config_elem,
-      {{"time", true}, {"messages", true}, {"bytes", true}}, false);
+      {{"time", false}, {"messages", false}, {"bytes", false}}, false);
   TBatchConf::TBatchValues values;
-  values.OptTimeLimit = TAttrReader::GetOptUnsigned<decltype(
-      values.OptTimeLimit)::TValueType>(
-      *subsection_map.at("time"), "value", "disable", 0 | TBase::DEC,
-      TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE);
-  values.OptMsgCount = TAttrReader::GetOptUnsigned<decltype(
-      values.OptMsgCount)::TValueType>(
-      *subsection_map.at("messages"), "value", "disable", 0 | TBase::DEC,
-      TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE | TOpts::ALLOW_K);
-  values.OptByteCount = TAttrReader::GetOptUnsigned<decltype(
-      values.OptByteCount)::TValueType>(
-      *subsection_map.at("bytes"), "value", "disable", 0 | TBase::DEC,
-      TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE | TOpts::ALLOW_K);
+
+  if (subsection_map.count("time")) {
+    values.OptTimeLimit = TAttrReader::GetOptUnsigned<decltype(
+    values.OptTimeLimit)::TValueType>(
+        *subsection_map.at("time"), "value", "disable", 0 | TBase::DEC,
+        TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE);
+  }
+
+  if (subsection_map.count("messages")) {
+    values.OptMsgCount = TAttrReader::GetOptUnsigned<decltype(
+    values.OptMsgCount)::TValueType>(
+        *subsection_map.at("messages"), "value", "disable", 0 | TBase::DEC,
+        TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE | TOpts::ALLOW_K);
+  }
+
+  if (subsection_map.count("bytes")) {
+    values.OptByteCount = TAttrReader::GetOptUnsigned<decltype(
+    values.OptByteCount)::TValueType>(
+        *subsection_map.at("bytes"), "value", "disable", 0 | TBase::DEC,
+        TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE | TOpts::ALLOW_K);
+  }
 
   if (values.OptTimeLimit.IsUnknown() && values.OptMsgCount.IsUnknown() &&
       values.OptByteCount.IsUnknown()) {
     std::string msg("Named batching config [");
     msg += name;
-    msg += "] must not have a setting of [disable] for all values";
+    msg += "] must specify at least one of {time, messages, bytes}";
     throw TElementError(msg.c_str(), config_elem);
   }
 
@@ -316,27 +325,31 @@ void TConf::TBuilder::ProcessTopicRateElem(const DOMElement &topic_rate_elem) {
   assert(this);
   const auto subsection_map = GetSubsectionElements(topic_rate_elem,
       {
-        {"namedConfigs", true}, {"defaultTopic", false},
+        {"namedConfigs", false}, {"defaultTopic", false},
         {"topicConfigs", false}
       }, false);
-  const DOMElement &named_configs_elem = *subsection_map.at("namedConfigs");
-  RequireAllChildElementLeaves(named_configs_elem);
-  const auto item_vec = GetItemListElements(named_configs_elem, "config");
 
-  for (const auto &item : item_vec) {
-    const DOMElement &elem = *item;
-    const std::string name = TAttrReader::GetString(elem, "name",
-        TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
-    const TOpt<size_t> opt_max_count = TAttrReader::GetOptUnsigned<size_t>(
-        elem, "maxCount", "unlimited", 0 | TBase::DEC,
-        TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE | TOpts::ALLOW_K);
+  if (subsection_map.count("namedConfigs")) {
+    const DOMElement &named_configs_elem = *subsection_map.at("namedConfigs");
+    RequireAllChildElementLeaves(named_configs_elem);
+    const auto item_vec = GetItemListElements(named_configs_elem, "config");
 
-    if (opt_max_count.IsKnown()) {
-      TopicRateConfBuilder.AddBoundedNamedConfig(name,
-          TAttrReader::GetUnsigned<size_t>(elem, "interval",
-              0 | TBase::DEC), *opt_max_count);
-    } else {
-      TopicRateConfBuilder.AddUnlimitedNamedConfig(name);
+    for (const auto &item : item_vec) {
+      const DOMElement &elem = *item;
+      const std::string name = TAttrReader::GetString(elem, "name",
+          TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
+      const TOpt<size_t> opt_max_count = TAttrReader::GetOptUnsigned<size_t>(
+          elem, "maxCount", "unlimited", 0 | TBase::DEC,
+          TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE |
+              TOpts::ALLOW_K);
+
+      if (opt_max_count.IsKnown()) {
+        TopicRateConfBuilder.AddBoundedNamedConfig(name,
+            TAttrReader::GetUnsigned<size_t>(elem, "interval",
+                0 | TBase::DEC), *opt_max_count);
+      } else {
+        TopicRateConfBuilder.AddUnlimitedNamedConfig(name);
+      }
     }
   }
 
@@ -365,13 +378,13 @@ void TConf::TBuilder::ProcessTopicRateElem(const DOMElement &topic_rate_elem) {
   BuildResult.TopicRateConf = TopicRateConfBuilder.Build();
 }
 
-std::pair<std::string, mode_t> TConf::TBuilder::ProcessFileSectionElem(
-  const DOMElement &elem) {
+std::pair<std::string, TOpt<mode_t>>
+TConf::TBuilder::ProcessFileSectionElem(const DOMElement &elem) {
   assert(this);
   const bool enable = TAttrReader::GetBool(elem, "enable");
   RequireAllChildElementLeaves(elem);
   const auto subsection_map = GetSubsectionElements(elem,
-      {{"path", true}, {"mode", true}}, false);
+      {{"path", true}, {"mode", false}}, false);
   const DOMElement &path_elem = *subsection_map.at("path");
 
   /* Make sure path element has a value attribute, even if enable is false. */
@@ -381,9 +394,15 @@ std::pair<std::string, mode_t> TConf::TBuilder::ProcessFileSectionElem(
     path.clear();
   }
 
-  const DOMElement &mode_elem = *subsection_map.at("mode");
-  const auto mode = TAttrReader::GetUnsigned<mode_t>(mode_elem, "value",
-      0 | TBase::BIN | TBase::OCT);
+  TOpt<mode_t> mode;
+
+  if (subsection_map.count("mode")) {
+    const DOMElement &mode_elem = *subsection_map.at("mode");
+    mode = TAttrReader::GetOptUnsigned<mode_t>(mode_elem, "value",
+        "unspecified", 0 | TBase::BIN | TBase::OCT,
+        TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE);
+  }
+
   return std::make_pair(std::move(path), mode);
 }
 
@@ -392,30 +411,61 @@ void TConf::TBuilder::ProcessInputSourcesElem(
   assert(this);
   const auto subsection_map = GetSubsectionElements(input_sources_elem,
       {
-          {"unixDatagram", true}, {"unixStream", true}, {"tcp", true}
+          {"unixDatagram", false}, {"unixStream", false}, {"tcp", false}
       }, false);
-  const auto unix_dg_conf = ProcessFileSectionElem(
-      *subsection_map.at("unixDatagram"));
-  BuildResult.InputSourcesConf.SetUnixDgConf(unix_dg_conf.first,
-      unix_dg_conf.second);
-  const auto unix_stream_conf = ProcessFileSectionElem(
-      *subsection_map.at("unixStream"));
-  BuildResult.InputSourcesConf.SetUnixStreamConf(unix_stream_conf.first,
-      unix_stream_conf.second);
-  const DOMElement &tcp_elem = *subsection_map.at("tcp");
-  const bool enable = TAttrReader::GetBool(tcp_elem, "enable");
-  RequireAllChildElementLeaves(tcp_elem);
-  const auto tcp_subsection_map = GetSubsectionElements(tcp_elem,
-      {{"port", true}}, false);
-  const DOMElement &port_elem = *tcp_subsection_map.at("port");
-  TOpt<in_port_t> port = TAttrReader::GetOptUnsigned<in_port_t>(port_elem,
-      "value", nullptr, 0 | TBase::DEC);
 
-  if (!enable) {
-    port.Reset();
+  bool source_specified = false;
+
+  if (subsection_map.count("unixDatagram")) {
+    const auto unix_dg_conf = ProcessFileSectionElem(
+        *subsection_map.at("unixDatagram"));
+
+    if (!unix_dg_conf.first.empty()) {
+      source_specified = true;
+    }
+
+    BuildResult.InputSourcesConf.SetUnixDgConf(unix_dg_conf.first,
+        unix_dg_conf.second);
   }
 
-  BuildResult.InputSourcesConf.SetTcpConf(port);
+  if (subsection_map.count("unixStream")) {
+    const auto unix_stream_conf = ProcessFileSectionElem(
+        *subsection_map.at("unixStream"));
+
+    if (!unix_stream_conf.first.empty()) {
+      source_specified = true;
+    }
+
+    BuildResult.InputSourcesConf.SetUnixStreamConf(unix_stream_conf.first,
+        unix_stream_conf.second);
+  }
+
+  if (subsection_map.count("tcp")) {
+    const DOMElement &tcp_elem = *subsection_map.at("tcp");
+    const bool enable = TAttrReader::GetBool(tcp_elem, "enable");
+    RequireAllChildElementLeaves(tcp_elem);
+    const auto tcp_subsection_map = GetSubsectionElements(tcp_elem,
+        {{"port", true}}, false);
+    const DOMElement &port_elem = *tcp_subsection_map.at("port");
+    TOpt<in_port_t> port = TAttrReader::GetOptUnsigned<in_port_t>(port_elem,
+        "value", nullptr, 0 | TBase::DEC);
+
+    if (!enable) {
+      port.Reset();
+    }
+
+    if (port.IsKnown()) {
+      source_specified = true;
+    }
+
+    BuildResult.InputSourcesConf.SetTcpConf(port, AllowInputBindEphemeral);
+  }
+
+  if (!source_specified) {
+    throw TElementError(
+        "Input sources config must enable at least one of {unixDatagram, "
+        "unixStream, tcp}", input_sources_elem);
+  }
 }
 
 void TConf::TBuilder::ProcessInputConfigElem(
@@ -440,7 +490,7 @@ void TConf::TBuilder::ProcessInputConfigElem(
         TAttrReader::GetUnsigned<decltype(
                 BuildResult.InputConfigConf.MaxDatagramMsgSize)>(
             *subsection_map.at("maxDatagramMsgSize"), "value", 0 | TBase::DEC,
-            TOpts::ALLOW_K | TOpts::ALLOW_M);
+            0 | TOpts::ALLOW_K);
   }
 
   if (subsection_map.count("allowLargeUnixDatagrams")) {
@@ -453,7 +503,7 @@ void TConf::TBuilder::ProcessInputConfigElem(
         TAttrReader::GetUnsigned<decltype(
                 BuildResult.InputConfigConf.MaxStreamMsgSize)>(
             *subsection_map.at("maxStreamMsgSize"), "value", 0 | TBase::DEC,
-            TOpts::ALLOW_K | TOpts::ALLOW_M);
+            0 | TOpts::ALLOW_K);
   }
 }
 
@@ -555,9 +605,9 @@ void TConf::TBuilder::ProcessHttpInterfaceElem(
   RequireAllChildElementLeaves(http_interface_elem);
 
   if (subsection_map.count("port")) {
-    BuildResult.HttpInterfaceConf.Port = TAttrReader::GetUnsigned<decltype(
+    BuildResult.HttpInterfaceConf.SetPort(TAttrReader::GetUnsigned<decltype(
         BuildResult.HttpInterfaceConf.Port)>(
-        *subsection_map.at("port"), "value", 0 | TBase::DEC);
+        *subsection_map.at("port"), "value", 0 | TBase::DEC));
   }
 
   if (subsection_map.count("loopbackOnly")) {
@@ -566,11 +616,11 @@ void TConf::TBuilder::ProcessHttpInterfaceElem(
   }
 
   if (subsection_map.count("discardReportInterval")) {
-    BuildResult.HttpInterfaceConf.DiscardReportInterval =
+    BuildResult.HttpInterfaceConf.SetDiscardReportInterval(
         TAttrReader::GetUnsigned<decltype(
             BuildResult.HttpInterfaceConf.DiscardReportInterval)>(
             *subsection_map.at("discardReportInterval"), "value",
-            0 | TBase::DEC);
+            0 | TBase::DEC));
   }
 
   if (subsection_map.count("badMsgPrefixSize")) {
@@ -587,7 +637,7 @@ void TConf::TBuilder::ProcessDiscardLoggingElem(
   const auto subsection_map = GetSubsectionElements(discard_logging_elem,
       {
           {"path", true}, {"maxFileSize", false},
-          {"maxArchiveSize", false}, {"badMsgPrefixSize", false}
+          {"maxArchiveSize", false}, {"maxMsgPrefixSize", false}
       }, false);
   const bool enable = TAttrReader::GetBool(discard_logging_elem, "enable");
   RequireAllChildElementLeaves(discard_logging_elem);
@@ -610,16 +660,24 @@ void TConf::TBuilder::ProcessDiscardLoggingElem(
             TOpts::ALLOW_K | TOpts::ALLOW_M);
   }
 
-  if (subsection_map.count("badMsgPrefixSize")) {
-    BuildResult.DiscardLoggingConf.BadMsgPrefixSize =
-        TAttrReader::GetUnsigned<decltype(
-            BuildResult.DiscardLoggingConf.BadMsgPrefixSize)>(
-            *subsection_map.at("badMsgPrefixSize"), "value", 0 | TBase::DEC);
+  if (subsection_map.count("maxMsgPrefixSize")) {
+    using t_max_prefix_type =
+        decltype(BuildResult.DiscardLoggingConf.MaxMsgPrefixSize);
+    const TOpt<size_t> opt_max_size =
+        TAttrReader::GetOptUnsigned<t_max_prefix_type>(
+            *subsection_map.at("maxMsgPrefixSize"), "value", "unlimited",
+            0 | TBase::DEC, TOpts::REQUIRE_PRESENCE |
+                TOpts::STRICT_EMPTY_VALUE | TOpts::ALLOW_K);
+    BuildResult.DiscardLoggingConf.MaxMsgPrefixSize =
+        opt_max_size.IsKnown() ?
+            *opt_max_size : std::numeric_limits<t_max_prefix_type>::max();
   }
 
-  if (enable) {
-    BuildResult.DiscardLoggingConf.SetPath(path);
+  if (!enable) {
+    path.clear();
   }
+
+  BuildResult.DiscardLoggingConf.SetPath(path);
 }
 
 void TConf::TBuilder::ProcessKafkaConfigElem(
@@ -637,10 +695,11 @@ void TConf::TBuilder::ProcessKafkaConfigElem(
   }
 
   if (subsection_map.count("replicationTimeout")) {
-    BuildResult.KafkaConfigConf.ReplicationTimeout =
+    BuildResult.KafkaConfigConf.SetReplicationTimeout(
         TAttrReader::GetUnsigned<decltype(
             BuildResult.KafkaConfigConf.ReplicationTimeout)>(
-            *subsection_map.at("replicationTimeout"), "value", 0 | TBase::DEC);
+            *subsection_map.at("replicationTimeout"), "value",
+            0 | TBase::DEC));
   }
 }
 
@@ -653,7 +712,7 @@ void TConf::TBuilder::ProcessMsgDebugElem(const DOMElement &msg_debug_elem) {
       }, false);
   const bool enable = TAttrReader::GetBool(msg_debug_elem, "enable");
   RequireAllChildElementLeaves(msg_debug_elem);
-  const std::string path = TAttrReader::GetString(*subsection_map.at("path"),
+  std::string path = TAttrReader::GetString(*subsection_map.at("path"),
       "value");
 
   if (subsection_map.count("timeLimit")) {
@@ -670,9 +729,11 @@ void TConf::TBuilder::ProcessMsgDebugElem(const DOMElement &msg_debug_elem) {
             TOpts::ALLOW_K | TOpts::ALLOW_M);
   }
 
-  if (enable) {
-    BuildResult.MsgDebugConf.SetPath(path);
+  if (!enable) {
+    path.clear();
   }
+
+  BuildResult.MsgDebugConf.SetPath(path);
 }
 
 void TConf::TBuilder::ProcessLoggingElem(const DOMElement &logging_elem) {
@@ -750,8 +811,8 @@ void TConf::TBuilder::ProcessRootElem(const DOMElement &root_elem) {
   assert(this);
   const auto subsection_map = GetSubsectionElements(root_elem,
       {
-        {"batching", true}, {"compression", true},
-        {"topicRateLimiting", false}, {"inputSources", false},
+        {"batching", false}, {"compression", false},
+        {"topicRateLimiting", false}, {"inputSources", true},
         {"inputConfig", false}, {"msgDelivery", false},
         {"httpInterface", false}, {"discardLogging", false},
         {"kafkaConfig", false}, {"msgDebug", false}, {"logging", false},
@@ -759,8 +820,13 @@ void TConf::TBuilder::ProcessRootElem(const DOMElement &root_elem) {
       },
       false);
 
-  ProcessBatchingElem(*subsection_map.at("batching"));
-  ProcessCompressionElem(*subsection_map.at("compression"));
+  if (subsection_map.count("batching")) {
+    ProcessBatchingElem(*subsection_map.at("batching"));
+  }
+
+  if (subsection_map.count("compression")) {
+    ProcessCompressionElem(*subsection_map.at("compression"));
+  }
 
   if (subsection_map.count("topicRateLimiting")) {
     ProcessTopicRateElem(*subsection_map.at("topicRateLimiting"));
@@ -772,9 +838,7 @@ void TConf::TBuilder::ProcessRootElem(const DOMElement &root_elem) {
     BuildResult.TopicRateConf = TopicRateConfBuilder.Build();
   }
 
-  if (subsection_map.count("inputSources")) {
-    ProcessInputSourcesElem(*subsection_map.at("inputSources"));
-  }
+  ProcessInputSourcesElem(*subsection_map.at("inputSources"));
 
   if (subsection_map.count("inputConfig")) {
     ProcessInputConfigElem(*subsection_map.at("inputConfig"));
@@ -805,4 +869,13 @@ void TConf::TBuilder::ProcessRootElem(const DOMElement &root_elem) {
   }
 
   ProcessInitialBrokersElem(*subsection_map.at("initialBrokers"));
+  const size_t max_input_msg_size = std::max(
+      BuildResult.InputConfigConf.MaxDatagramMsgSize,
+      BuildResult.InputConfigConf.MaxStreamMsgSize);
+
+  if (!BuildResult.DiscardLoggingConf.Path.empty() &&
+      ((BuildResult.DiscardLoggingConf.MaxFileSize * 1024) <
+          (2 * max_input_msg_size))) {
+    throw TDiscardLoggingInvalidMaxFileSize();
+  }
 }
