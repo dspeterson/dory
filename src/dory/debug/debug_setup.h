@@ -221,13 +221,18 @@ namespace Dory {
       }
 
       std::shared_ptr<TSettings> CreateInitialSettings() {
-        DeleteOldDebugFiles();
         std::unordered_set<std::string> no_topics;
-        return TSettings::Create(0, &no_topics,
+        std::shared_ptr<TSettings> settings = TSettings::Create(0, &no_topics,
             GetLogPath(TLogId::MSG_RECEIVE).c_str(),
             GetLogPath(TLogId::MSG_SEND).c_str(),
             GetLogPath(TLogId::MSG_GOT_ACK).c_str(),
             KillSwitchLimitBytes, true);
+
+        if (settings->LoggingIsEnabled()) {
+          DeleteOldDebugFiles();
+        }
+
+        return settings;
       }
 
       /* If 'debug_topics' is null, the created TSettings object will specify
