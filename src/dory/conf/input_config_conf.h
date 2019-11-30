@@ -28,7 +28,7 @@ namespace Dory {
   namespace Conf {
 
     struct TInputConfigConf final {
-      size_t MaxBuffer = 16 * 1024 * 1024;
+      size_t MaxBuffer = 128 * 1024 * 1024;
 
       size_t MaxDatagramMsgSize = 64 * 1024;
 
