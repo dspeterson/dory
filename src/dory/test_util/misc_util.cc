@@ -21,8 +21,8 @@
 
 #include <dory/test_util/misc_util.h>
 
-#include <cassert>
 #include <algorithm>
+#include <cassert>
 
 #include <capped/reader.h>
 #include <dory/msg_creator.h>
