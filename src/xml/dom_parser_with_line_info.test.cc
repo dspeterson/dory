@@ -76,7 +76,7 @@ namespace {
 
   TEST_F(TXmlParserTest, ParseErrorTest) {
     std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<testDocument>" << std::endl
         << "  <noClosingTag>" << std::endl  // bad XML: no closing tag
         << "</testDocument>" << std::endl;
@@ -99,7 +99,7 @@ namespace {
 
   TEST_F(TXmlParserTest, SuccessfulParseTest) {
     std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<testDocument>" << std::endl
         << "  <testElement value=\"blah\" />" << std::endl
         << "</testDocument>" << std::endl;
