@@ -22,6 +22,7 @@
 #pragma once
 
 #include <cstddef>
+#include <limits>
 #include <string>
 
 #include <dory/conf/conf_error.h>
@@ -42,9 +43,9 @@ namespace Dory {
 
       size_t MaxFileSize = 1024 * 1024;
 
-      size_t MaxArchiveSize = 8 * 1024 * 1024;
+      size_t MaxArchiveSize = 32 * 1024 * 1024;
 
-      size_t BadMsgPrefixSize = 256;
+      size_t MaxMsgPrefixSize = std::numeric_limits<size_t>::max();
 
       void SetPath(const std::string &path);
     };  // TDiscardLoggingConf
