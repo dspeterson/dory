@@ -43,8 +43,9 @@ config file.
 Dory's config file (`/etc/dory/dory_conf.xml` in the above example) is an
 XML document that specifies various settings including batching, compression,
 and message rate limiting options, as well as the above-described list of
-initial brokers.  The settings related to batching and compression are somewhat 
-arbitrary, and may require tuning.
+initial brokers.  The settings in the
+[example config file](../config/dory_conf.xml) related to batching and
+compression are somewhat arbitrary, and may require tuning.
 
 Full details of Dory's configuration options are provided
 [here](detailed_config.md).
