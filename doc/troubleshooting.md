@@ -79,7 +79,7 @@ The keys and values of the messages are written in base64 encoded form.
 ### Debug Logfiles
 
 The `<msgDebug>` section of the config file configures Dory's debug logfile
-mechanism, which maintains 3 separate logfiles: One for messages received from
+mechanism, which maintains 3 separate logfiles: one for messages received from
 clients, one for messages sent to Kafka, and one for messages that Dory
 received a successful ACK for.  The `<path>` option specifies the directory in
 which these files are placed.  To start and stop the logging mechanism, you
