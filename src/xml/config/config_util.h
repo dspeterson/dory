@@ -110,9 +110,10 @@ namespace Xml {
            present. */
         REQUIRE_PRESENCE = 1U << 0,
 
-        /* For GetOptInt2() method, require that either a valid integer or
-           'empty_value_name' is provided.  Throw TMissingAttrValue if
-           attribute value is the empty string or all whitespace. */
+        /* For GetOptSigned() or GetOptUnsigned() methods, require that either
+           a valid integer or 'empty_value_name' is provided.  Throw
+           TMissingAttrValue if attribute value is the empty string or all
+           whitespace. */
         STRICT_EMPTY_VALUE = 1U << 1,
 
         /* Trim leading and trailing whitespace from string values.  This is
