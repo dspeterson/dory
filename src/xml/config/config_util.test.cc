@@ -68,7 +68,7 @@ namespace {
 
   TEST_F(TXmlConfigUtilTest, EncodingTest) {
     std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<testDocument>" << std::endl
         << "  <testElement1>   </testElement1>" << std::endl
         << "  <testElement2>   blah    </testElement2>" << std::endl
@@ -87,7 +87,7 @@ namespace {
     ASSERT_TRUE(caught);
 
     os.str("");
-    os << "<testDocument>" << std::endl
+    os  << "<testDocument>" << std::endl
         << "  <testElement1>   </testElement1>" << std::endl
         << "  <testElement2>   blah    </testElement2>" << std::endl
         << "</testDocument>" << std::endl;
@@ -106,7 +106,7 @@ namespace {
 
   TEST_F(TXmlConfigUtilTest, ParseErrorTest) {
     std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<testDocument>" << std::endl
         << "  <noClosingTag>" << std::endl  // bad XML: no closing tag
         << "</testDocument>" << std::endl;
@@ -127,13 +127,13 @@ namespace {
 
   TEST_F(TXmlConfigUtilTest, SuccessfulParseTest) {
     std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<testDocument>" << std::endl
         << "  <testElement1>   </testElement1>" << std::endl
         << "  <testElement2>   blah    </testElement2>" << std::endl
         << "  <testElement3><testElement3a /></testElement3>" << std::endl
         << "  <testElement4><testElement4a><testElement4aa />"
-            "</testElement4a></testElement4>"
+        << "</testElement4a></testElement4>"
         << "</testDocument>" << std::endl;
     std::string xml(os.str());
     auto doc = MakeDomDocumentUniquePtr(ParseXmlConfig(xml.data(), xml.size(),
@@ -281,7 +281,7 @@ namespace {
 
   TEST_F(TXmlConfigUtilTest, RequireAllChildElementLeavesTest) {
     std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<testDocument>" << std::endl
         << "  <elem1><elem1a /><elem1b /></elem1>" << std::endl
         << "  <elem2><elem2a /><elem2b>blah</elem2b></elem2>" << std::endl
@@ -352,7 +352,7 @@ namespace {
 
   TEST_F(TXmlConfigUtilTest, SubsectionTest) {
     std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<testDocument>" << std::endl
         << "  <section1>" << std::endl
         << "    <sub1 />" << std::endl
@@ -502,7 +502,7 @@ namespace {
 
   TEST_F(TXmlConfigUtilTest, ItemListTest) {
     std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<testDocument>" << std::endl
         << "  <section1>" << std::endl
         << "  </section1>" << std::endl
@@ -632,7 +632,7 @@ namespace {
   TEST_F(TXmlConfigUtilTest, StringAttrTest) {
     using TOpts = TAttrReader::TOpts;
     std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<testDocument>" << std::endl
         << "  <elem attr1=\"\"" << std::endl
         << "      attr2=\"   \"" << std::endl
@@ -739,7 +739,7 @@ namespace {
   TEST_F(TXmlConfigUtilTest, BoolAttrTest) {
     using TOpts = TAttrReader::TOpts;
     std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<testDocument>" << std::endl
         << "  <elem attr1=\"    \"" << std::endl
         << "      attr2=\"  true   \"" << std::endl
@@ -898,7 +898,7 @@ namespace {
   TEST_F(TXmlConfigUtilTest, OptIntAttrTest) {
     using TOpts = TAttrReader::TOpts;
     std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<testDocument>" << std::endl
         << "  <elem attr1=\"    \"" << std::endl
         << "      attr2=\"  5    \"" << std::endl
@@ -1070,7 +1070,7 @@ namespace {
   TEST_F(TXmlConfigUtilTest, IntAttrTest) {
     using TOpts = TAttrReader::TOpts;
     std::ostringstream os;
-    os << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
+    os  << "<?xml version=\"1.0\" encoding=\"US-ASCII\"?>" << std::endl
         << "<testDocument>" << std::endl
         << "  <elem attr1=\"    \"" << std::endl
         << "      attr2=\"  5    \"" << std::endl
