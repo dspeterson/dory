@@ -15,26 +15,26 @@ handles the details of:
 * Waiting for acknowledgements, and resending messages as necessary due to
   communication failures or Kafka-reported errors
 * Buffering messages to handle transient load spikes and Kafka-related problems
-* Tracking message discards when serious problems occur; Providing web-based
-  discard reporting and status monitoring interfaces
+* Tracking message discards when serious problems occur.  Dory provides
+  web-based discard reporting and status monitoring interfaces.
 * Batching and compressing messages in a configurable manner for improved
   performance.  Snappy and gzip compression are currently supported.
 * Optional rate limiting of messages on a per-topic basis.  This guards against
-  buggy client code overwhelming the Kafka cluster with too many messages.
+  buggy clients overwhelming the Kafka cluster with too many messages.
 
 Dory runs on each individual host that sends messages to Kafka, receiving
 messages from clients through local interprocess communication and forwarding
 them to the Kafka cluster.  Once a client has written a message, no further
 interaction with Dory is required.  From that point onward, Dory takes full
 responsibility for reliable message delivery.  The preferred method for sending
-messages to Dory is by UNIX domain datagram socket.  However, Dory can also
-receive messages by UNIX domain stream socket or local TCP.  The option of
-using stream sockets allows sending messages too large to fit in a single
-datagram.  Local TCP facilitates sending messages from clients written in
-programming languages that do not provide easy access to UNIX domain sockets.
-Dory serves as a single intake point, receiving messages from diverse clients
-written in a variety of programming languages.  Here are some reasons to
-consider using Dory:
+messages to Dory is by UNIX domain datagram socket.  Dory can also receive
+messages by UNIX domain stream socket or local TCP.  The option of using stream
+sockets allows sending messages too large to fit in a single datagram.  Local
+TCP facilitates sending messages from clients written in programming languages
+that do not provide easy access to UNIX domain sockets.  Dory serves as a
+single intake point, receiving messages from diverse clients written in a
+variety of programming languages.  Here are some reasons to consider using
+Dory:
 
 * Dory decouples message sources from the Kafka cluster.  A client is not
   forced to wait for an ACK after sending a message, since Dory handles the
@@ -64,14 +64,13 @@ consider using Dory:
   awareness of messages from other clients.  If Dory assumes responsibility for
   all message transmission from a client host to a Kafka cluster with N
   brokers, only a single TCP connection to each broker is required, rather than
-  having each client program maintain its own set of N connections.  Scenarios
-  are avoided in which short-lived clients frequently open and close
-  connections to the brokers.
+  having each client program maintain its own set of N connections.  The
+  inefficiency of short-lived clients frequently opening and closing
+  connections to the brokers is avoided.
 
 * Dory simplifies adding producer support for new programming languages and
-  runtime environments.  Sending a message to Kafka becomes as simple as
-  writing a message in a simple binary format to a UNIX domain or local TCP
-  socket.
+  runtime environments.  Sending a message to Kafka requires only writing a
+  message in a simple binary format to a UNIX domain or local TCP socket.
 
 The following client support for sending messages to Dory is currently
 available:
