@@ -27,12 +27,12 @@ datagram.  TCP makes Dory available to clients written in programming languages
 that do not provide easy access to UNIX domain sockets.  To send messages to
 Dory's UNIX domain stream socket, you would change the
 `--socket-path /var/run/dory/dory.socket` in the above examples to something
-like `--stream_socket-path /var/run/dory/dory.stream_socket`.  To send messages
+like `--stream-socket-path /var/run/dory/dory.stream_socket`.  To send messages
 to Dory over a local TCP connection, you would replace
 `--socket-path /var/run/dory/dory.socket` with `--port N` where `N` is the port
 Dory listens on, as specified in Dory's [config file](../config/dory_conf.xml).
 A full listing of the client's command line options may be obtained by typing
-to_dory --help`.
+`to_dory --help`.
 
 To send messages to Dory using a given communication mechanism (UNIX domain
 datagram sockets, UNIX domain stream sockets, or local TCP), Dory must be
