@@ -3,12 +3,12 @@
 Dory's core implementation consists of three input agents for receiving
 messages from clients by different interprocess communication mechanisms, a
 router thread, and a message dispatcher that assigns a thread to each Kafka
-broker.  There is also a main thread that starts the input agents and router
-thread, and then waits for a shutdown signal.  The router thread starts and
-manages the dispatcher, receives messages from the input agents, and routes
-them to dispatcher threads for delivery to the Kafka brokers.  A third party
-HTTP server library used for Dory's status monitoring interface creates
-additional threads.
+broker.  There is also a main thread that handles starting and stopping the
+input agents and router thread, and thread dedicated to handling signals.  The
+router thread starts and manages the dispatcher, receives messages from the
+input agents, and routes them to dispatcher threads for delivery to the Kafka
+brokers.  A third party HTTP server library used for Dory's status monitoring
+interface creates additional threads.
 
 ### Input Agents
 
@@ -18,11 +18,9 @@ UNIX domain datagram socket, UNIX domain stream socket, and local TCP socket,
 respectively.  For each option, the operating system provides the same reliable
 delivery guarantee as for other local interprocess communication mechanisms
 such as traditional UNIX pipes.  In particular, UNIX domain datagrams differ
-from UDP datagrams, which do not guarantee reliable delivery.  Command line
-options documented [here](detailed_config.md#command-line-arguments) determine
-which of the above-mentioned communication mechanisms are available to clients.
-If a given input option is not specified on the command line, the corresponding
-input agent is not started.
+from UDP datagrams, which do not guarantee reliable delivery.  Config file
+options documented [here](detailed_config.md) determine which of the
+above-mentioned communication mechanisms are available to clients.
 
 #### Overview of Input Agent Behavior
 
@@ -41,7 +39,7 @@ overhead associated with creating and destroying threads.  Its size adjusts
 dynamically based on demand, and decays gradually over time when a period of
 high demand for workers is followed by reduced demand.  The pool has a manager
 thread, which wakes up periodically to prune workers that have been idle for a
-long time.  If Dory's command line options activate neither of the stream-based
+long time.  If Dory's config file options activate neither of the stream-based
 input agents, the thread pool is not activated.
 
 The input agents are designed to respond immediately to messages from clients,
@@ -50,11 +48,11 @@ delay.  This is important to prevent clients from blocking when attempting to
 write a message or open a connection to Dory.  Message handling behavior is
 kept as simple as possible, with more complex and possibly time-consuming
 behaviors delegated to the router thread and dispatcher threads.  When Dory
-starts up, it preallocates a fixed but configurable amount of memory for
-storing message content.  On receipt of a message, Dory allocates memory from
-this pool to store the message contents.  If the pool does not contain enough
-free memory, Dory will discard the message.  All messages discarded for any
-reason are tracked and reported through Dory's web interface, as described
+starts, it preallocates a fixed but configurable amount of memory for storing
+message content.  On receipt of a message, Dory allocates memory from this pool
+to store the message contents.  If the pool does not contain enough free
+memory, Dory will discard the message.  All messages discarded for any reason
+are tracked and reported through Dory's web interface, as described
 [here](status_monitoring.md#discard-reporting).  On successful message
 creation, the receiving input agent queues the message for processing by the
 router thread.  Once it has queued or discarded a message, the input agent
@@ -91,13 +89,13 @@ one after another, and close the connection when finished.  As with UNIX domain
 datagrams, communication is purely one-way.  There is no need for Dory to send
 an ACK to the client since the operating system guarantees reliable message
 transmission.  Clients should never attempt to read from the socket, since Dory
-will never write anything.  Dory's `--max_stream_input_msg_size MAX_BYTES`
-option is intended to guard against a buggy client sending a ridiculously large
-message over a stream socket.  It should be set to a value substantially larger
-than the `message.max.bytes` setting in the Kafka broker configuration, and
-large enough that a nonbuggy client is unlikely to attempt to send a message
-that large.  If a client attempts to send a message that exceeds this limit (as
-indicated by the `Size` field documented
+will never write anything.  Dory's `<maxStreamMsgSize>` option in the
+`<inputConfig>` section of the config file is intended to guard against a buggy
+client sending a ridiculously large message over a stream socket.  It should be
+set to a value substantially larger than the `message.max.bytes` setting in the
+Kafka broker configuration, and large enough that a nonbuggy client is unlikely
+to attempt to send a message that large.  If a client attempts to send a
+message that exceeds this limit (as indicated by the `Size` field documented
 [here](sending_messages.md#generic-message-format), Dory will immediately close
 the connection and log an error.  Messages that do not exceed the limit, but
 are still too large for Kafka to accept due to the `message.max.bytes` broker

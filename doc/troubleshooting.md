@@ -14,17 +14,12 @@ that Kafka isn't keeping up with the volume of messages directed at it.
 * `MsgUnprocessedDestroy`: This indicates destruction of a message before Dory
 has marked it as processed.  If this occurs for any reason other than Dory
 exiting on a fatal error, then there is a bug in Dory.  On occurrence of this
-type of event, Dory will write a syslog message containing a stack trace,
-which will help track down problems.
+type of event, Dory will log a stack trace, which will help track down
+problems.
 * `AckOk`: This is incremented each time Dory receives a successful ACK from
 Kafka.
 * `AckErrorXxx`: These counters indicate various types of error ACKs received
 from Kafka, as documented
-* `AckNotRequired`: When Dory finishes sending a produce request with a
-`RequiredAcks` value of 0 (see `--required_acks`
-[command line option](detailed_config.md#command-line-arguments)), this is
-incremented once for each message set in the produce request, indicating that
-no ACK is expected from Kafka for the given message set.
 [here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-ErrorCodes).
 * `XxxInputAgentDiscardXxx` and `DiscardXxx`: These counters are incremented
 when Dory discards messages for various reasons.
@@ -73,11 +68,8 @@ values.
 ### Discard File Logging
 
 For debugging and troubleshooting purposes, it may be helpful to configure
-Dory to log discards to local files.  To do this, see the
-`--discard_log_path PATH`, `--discard_log_bad_msg_prefix_size N`,
-`--discard_log_max_file_size N`, and `--discard_log_max_archive_size N` command
-line options, which are documented
-[here](detailed_config.md#command-line-arguments).
+Dory to log discards to local files.  To do this, see the `<discardLogging>`
+section of the config file.
 As documented
 [here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-Messagesets),
 a Kafka message consists of a key and a value, either of which may be empty.
@@ -86,12 +78,10 @@ The keys and values of the messages are written in base64 encoded form.
 
 ### Debug Logfiles
 
-As documented [here](detailed_config.md#command-line-arguments), the
-`--debug_dir DIR`, `--msg_debug_time_limit N` and `--msg_debug_byte_limit N`
-command line options configure Dory's debug logfile mechanism, which causes
-Dory to maintain 3 separate logfiles: One for messages received from its input
-socket, one for messages sent to Kafka, and one for messages that Dory
-received a successful ACK for.  The `--debug_dir DIR` option specifies the
+The `<msgDebug>` section of the config file configures Dory's debug logfile
+mechanism, which causes Dory to maintain 3 separate logfiles: One for messages
+received from clients, one for messages sent to Kafka, and one for messages
+that Dory received a successful ACK for.  The `<path>` option specifies the
 directory in which these files are placed.  To start and stop the logging
 mechanism, you must send HTTP requests to Dory's web interface as follows:
 
@@ -109,9 +99,9 @@ mechanism, you must send HTTP requests to Dory's web interface as follows:
 `http://dory_host:9090/msg_debug/truncate_files`.
 
 Once debug logging is started, it will automatically stop when either the
-time limit specified by `--msg_debug_time_limit N` expires or the debug logfile
-size limit specified by `--msg_debug_byte_limit N` is reached.  As with discard
-logfiles, keys and values are written in base64 encoded form.
+time limit specified by `<timeLimit>` expires or the debug logfile size limit
+specified by `<byteLimit>` is reached.  As with discard logfiles, keys and
+values are written in base64 encoded form.
 
 ### Other Tools
 
@@ -120,9 +110,9 @@ Dory's queue status interface described
 provides per-topic information on messages being processed by Dory.  In cases
 where Kafka isn't keeping up with the message volume, this may be helpful in
 identifying specific topics that are placing heavy load on the system.  Useful
-information can also be obtained from Dory's syslog messages.  As documented
-[here](detailed_config.md#command-line-arguments), the `--log_level LEVEL`
-command line option configures Dory's logging verbosity.
+information can also be obtained from Dory's log messages.  As documented
+[here](detailed_config.md), the `<level>` option in the `<logging>` section of
+the config file specifies Dory's logging verbosity.
 
 If you are interested in making custom modifications or contributing to Dory,
 information is provided [here](dev_info.md).

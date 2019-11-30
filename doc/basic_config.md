@@ -1,18 +1,28 @@
 ## Basic Configuration
 
-A simple Dory configuration can be found in the [config](../config) directory
+An example Dory configuration can be found in the [config](../config) directory
 of Dory's Git repository, and instructions for deploying it can be found
 [here](build_install.md#installing-dory).  Before using it, you need to edit
 Dory's config file (`/etc/dory/dory_conf.xml` in the example configuration) as
-follows.  Look for the `<initialBrokers>` XML element near the bottom of the
-file.  You will find a list of Kafka brokers to try contacting for Dory's
-initial metadata request.  This list needs to be edited to specify the brokers
-in your Kafka cluster.  Specifying a single broker is ok, since Dory will learn
-about other brokers from the metadata response it receives.  However,
-specifying multiple brokers is preferable to guard against a situation where
-the specified broker is down.  If you wish to start Dory using its init script
-after following the steps given [here](build_install.md#installing-dory), that
-can be done as follows:
+follows.
+
+* Look for the `<inputSources>` XML element.  Decide which input mechanisms you
+want to configure (UNIX domain datagram sockets, UNIX domain stream sockets,
+and/or local TCP).
+* Look for the `<logging>` XML element.  Decide how you want to configure
+Dory's logging.  You can choose any combination of (stdout/stderr, syslog,
+logfile).  If you enable logging to a file, `SIGUSR1` will cause Dory to close
+and reopen its logfile, which is useful for logfile rotation.
+* Look for the `<initialBrokers>` XML element near the bottom of the file.  You
+will find a list of Kafka brokers to try contacting for Dory's initial metadata
+request.  This list needs to be edited to specify the brokers in your Kafka
+cluster.  Specifying a single broker is ok, since Dory will learn about other
+brokers from the metadata response it receives.  However, specifying multiple
+brokers is preferable to guard against a situation where the specified broker
+is down.
+
+If you wish to start Dory using its init script after following the
+steps given [here](build_install.md#installing-dory), that can be done as follows:
 
 ```
 chkconfig dory on
@@ -22,68 +32,19 @@ Otherwise, Dory can be started manually using the example configuration as
 follows:
 
 ```
-dory --daemon --msg_buffer_max 65536 \
-        --receive_socket_name /var/run/dory/dory.socket \
-        --config_path /etc/dory/dory_conf.xml
+dory --daemon --config-path /etc/dory/dory_conf.xml
 ```
 
 The above command line arguments have the following effects:
 * `--daemon` tells Dory to run as a daemon.
-* `--msg_buffer_max 65536` tells Dory to reserve 65536 kbytes (or 64 * 1024 *
-1024 bytes) of memory for buffering message data to be sent to Kafka.
-* `--receive_socket_name /var/run/dory/dory.socket` specifies the location of
-a UNIX domain datagram socket to create for receiving messages from clients.
-at least one of (`--receive_socket_name PATH`,
-`--receive_stream_socket_name PATH`, `--input_port PORT`) must be specified
-(see below).  UNIX domain datagrams are the preferred method of sending
-messages to Dory.  However, stream sockets allow sending messages too large to
-fit in a single datagram, and local TCP makes Dory available to clients written
-in programming languages that do not provide easy access to UNIX domain
-sockets.
-* `--config_path /etc/dory/dory_conf.xml` specifies the location of Dory's
+* `--config-path /etc/dory/dory_conf.xml` specifies the location of Dory's
 config file.
 
-A few additional options that you may find useful are the following:
-* `--status_port N` specifies the port to use for Dory's status monitoring web
-interface.  The default value is 9090.
-* `--client_id CLIENT_ID_STRING` allows a Client ID string to be specified when
-sending produce requests to Kafka.  If unspecified, the client ID will be
-empty.
-* `--required_acks N` specifies the *required ACKs* value to be sent in produce
-requests, as described
-[here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-ProduceRequest).
-If unspecified, a default value of -1 is used.
-* `--replication_timeout N` specifies the time in milliseconds the broker will
-wait for successful replication to occur, as described
-[here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-ProduceRequest),
-before returning an error.  If unspecified, a default value of 10000 is used.
-* `--receive_stream_socket_name PATH` specifies the pathname of a UNIX domain
-stream socket to create for receiving messages from clients.  This allows
-clients to send messages that are too large to fit in a single datagram.
-* `--input_port PORT` specifies a TCP port to monitor for connections from
-clients that wish to send messages over a TCP connection.  This makes Dory
-available to clients written in programming languages that do not provide easy
-access to UNIX domain sockets.  It also allows clients to send messages that
-are too large to fit in a single datagram.  Dory binds to the loopback
-interface, so only local clients may connect.
-* `--receive_socket_mode MODE` Specifies the file permissions for Dory's UNIX
-domain datagram socket.  Octal values are prefixed with 0.  For instance,
-`--receive_socket_mode 0777` specifies unrestricted access.
-* `--receive_stream_socket_mode MODE` Specifies the file permissions for Dory's
-UNIX domain stream socket.  Octal values are prefixed with 0.  For instance,
-`--receive_stream_socket_mode 0777` specifies unrestricted access.
-* `--log_level LOG_ERR|LOG_WARNING|LOG_NOTICE|LOG_INFO|LOG_DEBUG` Specifies log
-level for syslog messages.
-* `--log_echo` Causes syslog messages to be echoed to standard error.
-
 Dory's config file (`/etc/dory/dory_conf.xml` in the above example) is an
-XML document that specifies batching, compression, and message rate limiting
-options, as well as the above-described list of initial brokers.  The example
-configuration specifies a uniform batching latency of 1000 ms, with a 256 kbyte
-upper bound on the total message data size in a single batch.  The maximum
-message data size for a single produce request is limited to 1024 kbytes.
-These values are somewhat arbitrary, and may require tuning.  Snappy message
-compression is also configured for all topics.
+XML document that specifies various settings including batching, compression,
+and message rate limiting options, as well as the above-described list of
+initial brokers.  The settings related to batching and compression are somewhat 
+arbitrary, and may require tuning.
 
 Full details of Dory's configuration options are provided
 [here](detailed_config.md).

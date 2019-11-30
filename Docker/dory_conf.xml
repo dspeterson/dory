@@ -302,7 +302,7 @@
              connection open and continue reading messages.  Suffix k may be
              used to specify a value, where k means "multiply by 1024".
           -->
-        <maxStreamMsgSize value="512k" />
+        <maxStreamMsgSize value="16384k" />
     </inputConfig>
 
     <msgDelivery>
@@ -462,7 +462,9 @@
         <file enable="true">
             <!-- Logfile path must be absolute (i.e. it must start with '/') or
                  empty.  An empty path will disable file logging regardless of
-                 "enable" setting above.
+                 "enable" setting above.  If logging to a file is enabled,
+                 SIGUSR1 causes dory to close and reopen its logfile.  This
+                 facilitates logfile rotation.
               -->
             <path value="/var/log/dory/dory.log" />
 

@@ -115,8 +115,8 @@ C++ code, see [dory/client/to_dory.cc](../src/dory/client/to_dory.cc).
 ### More Details on Dory's Build System (including debug builds)
 
 Full details on Dory's build system are provided [here](dev_info.md),
-including information on [building a debug version of Dory]
-(dev_info.md#debug-builds).
+including information on
+[building a debug version of Dory](dev_info.md#debug-builds).
 
 ### Installing Dory
 
@@ -134,9 +134,8 @@ must be installed, and `LD_LIBRARY_PATH` must contain `/opt/gcc/lib64` in the
 shell that you execute Dory from.  If you built your RPM package using the
 `rpm_noconfig` option described above, or you built Dory directly using SCons,
 you will need to install Dory's init script, sysconfig file, and configuration
-file (which mostly contains settings related to batching and compression)
-separately.  Assuming you are in the root of the Git repository (where Dory's
-[SConstruct](../SConstruct) file is found), you can do this as follows:
+file separately.  Assuming you are in the root of the Git repository (where
+Dory's [SConstruct](../SConstruct) file is found), you can do this as follows:
 
 ```
 cp config/dory.init /etc/init.d/dory

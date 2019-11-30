@@ -117,20 +117,21 @@ script, debug versions of binaries will be built by default.  As documented
 for building an RPM package.  By default, `pkg` builds a release version of
 Dory.  To build a debug version, specify `--debug`.
 
-In GCC 4.8, support was added for [AddressSanitizer]
-(http://code.google.com/p/address-sanitizer/), a useful debugging tool.  This
-is enabled by default in debug builds.  When running Dory with the address
-sanitizer, you may notice that it uses a large amount of virtual memory (often
-multiple terabytes).  This is expected behavior.  After running Dory for a
-while with the address sanitizer, it may exit with the following error message:
+In GCC 4.8, support was added for
+[AddressSanitizer](http://code.google.com/p/address-sanitizer/), a useful
+debugging tool.  This is enabled by default in debug builds.  When running Dory
+with the address sanitizer, you may notice that it uses a large amount of
+virtual memory (often multiple terabytes).  This is expected behavior.  After
+running Dory for a while with the address sanitizer, it may exit with the
+following error message:
 
 ```
 ERROR: Failed to mmap
 ```
 
 If this causes problems, you can build Dory with the address sanitizer
-disabled.  When building Dory directly, as described [here]
-(build_install.md#building-dory-directly), you can disable the address
+disabled.  When building Dory directly, as described
+[here](build_install.md#building-dory-directly), you can disable the address
 sanitizer as follows:
 
 ```
@@ -143,9 +144,9 @@ Likewise, you can invoke `build_all` as follows:
 ./build_all --asan=no
 ```
 
-When building an RPM package (as described [here]
-(build_install.md#building-an-rpm-package)), a debug version with the address
-sanitizer disabled may be created as follows:
+When building an RPM package (as described
+[here](build_install.md#building-an-rpm-package)), a debug version with the
+address sanitizer disabled may be created as follows:
 
 ```
 ./pkg --debug --asan no rpm
@@ -161,19 +162,19 @@ Another thing to keep in mind about the address sanitizer's behavior is that it
 causes `operator new` to return `nullptr` on allocation failure in cases where
 the C++ standard dictates that `std::bad_alloc` should be thrown.  This can
 cause out of memory conditions to result in segmentation faults due to null
-pointer dereferences.  See [this issue]
-(https://github.com/google/sanitizers/issues/295) for details.
+pointer dereferences.  See
+[this issue](https://github.com/google/sanitizers/issues/295) for details.
 
 Regardless of how you build dory (via the `build` command, the `build_all`
 script, or the `pkg` script), the address sanitizer is *always* disabled in
 release builds, regardless of any command line options that disable or enable
 the address sanitizer.
 
-The GNU C++ library provides a [debug mode]
-(https://gcc.gnu.org/onlinedocs/libstdc++/manual/debug_mode.html) which
-implements various assertion checks for STL containers.  Dory makes use of
-this in its debug build. A word of caution is therefore necessary. Suppose you
-have the following piece of code:
+The GNU C++ library provides a
+[debug mode](https://gcc.gnu.org/onlinedocs/libstdc++/manual/debug_mode.html)
+which implements various assertion checks for STL containers.  Dory makes use
+of this in its debug build. A word of caution is therefore necessary. Suppose
+you have the following piece of code:
 
 ```C++
 /* Do something interesting to an array of int values.  'begin' points to the

@@ -6,12 +6,12 @@ probably want an overview of Dory's design, which is avaliable
 
 ### Config File
 
-Dory's config file is an XML document that specifies settings for batching,
-compression, and per-topic message rate limiting.  It also specifies a list of
-initial brokers to try contacting for metadata when Dory is starting.  Below
-is an example config file.  It is well commented, and should be self-
-explanatory once the reader is familiar with the information provided in the
-above-mentioned design section.
+Dory's config file is an XML document that specifies settings for various
+features such as batching, compression, and per-topic message rate limiting, as
+well as a list of initial brokers to try contacting for metadata when Dory is
+starting.  Below is an example config file.  It is well commented, and should
+be self-explanatory once the reader is familiar with the information provided
+in the above-mentioned design section.
 
 ```XML
 <?xml version="1.0" encoding="US-ASCII"?>
@@ -49,7 +49,8 @@ above-mentioned design section.
                      empty message is counted as 1 byte.  This prevents
                      batching an unbounded number of empty messages in the case
                      where no limit is placed on batching delay or message
-                     count. -->
+                     count.
+                  -->
                 <bytes value="256k" />
             </config>
 
@@ -66,7 +67,8 @@ above-mentioned design section.
              Here, you can not specify "disable".  A nonnegative integer value
              must be specified.  This value applies to the actual message
              content (keys and values).  The total size of a produce request
-             will be a bit larger due to header overhead. -->
+             will be a bit larger due to header overhead.
+          -->
         <produceRequestDataLimit value="1024k" />
 
         <!-- This value should be exactly the same as the message.max.bytes
@@ -76,7 +78,8 @@ above-mentioned design section.
              them.  A smaller value will not cause data loss, but will
              unnecessarily restrict the size of a compressed message set.  As
              above, you can supply a value such as "1024k".  Specifying
-             "disable" here is not permitted. -->
+             "disable" here is not permitted.
+          -->
         <messageMaxBytes value="1000000" />
 
         <!-- This specifies the configuration for combined topics batching
@@ -167,7 +170,8 @@ above-mentioned design section.
              of the uncompressed size, then Dory sends the data uncompressed,
              so the Kafka brokers don't waste CPU cycles dealing with the
              compression.  The value below is somewhat arbitrary, and not based
-             on experimental data. -->
+             on experimental data.
+          -->
         <sizeThresholdPercent value="75" />
 
         <!-- This specifies the compression configuration for all topics not
@@ -189,21 +193,25 @@ above-mentioned design section.
     <topicRateLimiting>
         <namedConfigs>
             <!-- This configuration specifies that all messages should be
-                 discarded. -->
+                 discarded.
+              -->
             <config name="zero" interval="1" maxCount="0" />
 
             <!-- This configuration specifies no rate limit (i.e. don't discard
-                 any messages regardless of their arrival rate). -->
+                 any messages regardless of their arrival rate).
+              -->
             <config name="infinity" interval="1" maxCount="unlimited" />
 
             <!-- This configuration specifies a limit of at most 1000 messages
                  every 10000 milliseconds.  Messages that would exceed this
-                 limit are discarded. -->
+                 limit are discarded.
+              -->
             <config name="config1" interval="10000" maxCount="1000" />
 
             <!-- This configuration specifies a limit of at most (4 * 1024)
                  messages every 15000 milliseconds.  Messages that would exceed
-                 this limit are discarded. -->
+                 this limit are discarded.
+              -->
             <config name="config2" interval="15000" maxCount="4k" />
         </namedConfigs>
 
@@ -212,17 +220,287 @@ above-mentioned design section.
              individually.  In other words, with this configuration, topic
              "topic_a" would be allowed 1000 messages every 10000 milliseconds,
              and "topic_b" would also be allowed 1000 messages every 10000
-             milliseconds. -->
-        <defaultTopic config="config1" />
+             milliseconds.
+          -->
+        <defaultTopic config="infinity" />
 
         <topicConfigs>
             <!-- Rate limit configurations for individual topics go here. -->
+            <!--
             <topic name="topic1" config="zero" />
             <topic name="topic2" config="infinity" />
             <topic name="topic3" config="config1" />
             <topic name="topic4" config="config2" />
+              -->
         </topicConfigs>
     </topicRateLimiting>
+
+    <inputSources>
+        <!-- Config for UNIX domain datagram input. -->
+        <unixDatagram enable="true">
+            <!-- Socket file path must be absolute (i.e. it must start with
+                 '/') or empty.  An empty path will disable UNIX datagram input
+                 regardless of "enable" setting above.
+              -->
+            <path value="/var/run/dory/input_datagram_sock" />
+
+            <!-- Mode bits for opening socket file.  Must be specified in octal
+                 or binary.  For instance, value 0644 is octal as indicated by
+                 the leading 0, and represents user read/write, group read, and
+                 other read.  A binary value is prefixed by "0b" or "0B".  For
+                 instance, the same permissions represented in binary are
+                 0b110010010.  A value of "unspecified" lets the process umask
+                 determine the mode bits.
+              -->
+            <mode value="0222" />
+        </unixDatagram>
+
+        <!-- Config for UNIX domain stream input. -->
+        <unixStream enable="false">
+            <!-- Socket file path must be absolute (i.e. it must start with
+                 '/') or empty.  An empty path will disable UNIX stream input
+                 regardless of "enable" setting above.
+              -->
+            <path value="/var/run/dory/input_stream_sock" />
+
+            <!-- Mode bits for opening socket file.  Must be specified in octal
+                 or binary.  For instance, value 0644 is octal as indicated by
+                 the leading 0, and represents user read/write, group read, and
+                 other read.  A binary value is prefixed by "0b" or "0B".  For
+                 instance, the same permissions represented in binary are
+                 0b110010010.  A value of "unspecified" lets the process umask
+                 determine the mode bits.
+              -->
+            <mode value="0222" />
+        </unixStream>
+
+        <!-- Config for TCP input (loopback interface only). -->
+        <tcp enable="false">
+            <!-- Port to listen on.  An empty value will disable TCP input,
+                 regardless of "enable" setting above.
+              -->
+            <port value="9000" />
+        </tcp>
+    </inputSources>
+
+    <inputConfig>
+        <!-- Maximum amount of memory in bytes to use for buffering messages.
+             If this memory is exhausted, Dory starts discarding messages.
+             Suffixes k or m may be used to specify a value, where k means
+             "multiply by 1024" and m means "multiply by (1024 * 1024)".
+          -->
+        <maxBuffer value="128m" />
+
+        <!-- Maximum input message size in bytes expected from clients sending
+             UNIX domain datagrams.  This limit does NOT apply to messages sent
+             by UNIX domain stream socket or local TCP (see maxStreamMsgSize).
+             Input datagrams larger than this value will be discarded.
+             Suffix k may be used to specify a value, where k means "multiply
+             by 1024".
+          -->
+        <maxDatagramMsgSize value="64k" />
+
+        <!-- Allow large enough values for max_input_msg_size that a client
+             sending a UNIX domain datagram of the maximum allowed size will
+             need to increase its SO_SNDBUF socket option above the default
+             value.
+          -->
+        <allowLargeUnixDatagrams value="false" />
+
+        <!-- Maximum input message size in bytes expected from clients using
+             UNIX domain stream sockets or local TCP.  Input messages larger
+             than this value will cause Dory to immediately log an error and
+             disconnect, forcing the client to reconnect if it wishes to
+             continue sending messages.  This guards against ridiculously large
+             messages.  Even if a message doesn't exceed this limit, it may
+             still be discarded if it is too large to send in a single produce
+             request.  However, in this case Dory will still leave the
+             connection open and continue reading messages.  Suffix k may be
+             used to specify a value, where k means "multiply by 1024".
+          -->
+        <maxStreamMsgSize value="16384k" />
+    </inputConfig>
+
+    <msgDelivery>
+        <!-- Enable support for automatic topic creation.  The Kafka brokers
+             must also be configured to support this.
+          -->
+        <topicAutocreate enable="false" />
+
+        <!-- Maximum number of failed delivery attempts allowed before a
+             message is discarded.
+          -->
+        <maxFailedDeliveryAttempts value="5" />
+
+        <!-- Maximum delay in milliseconds to allow delivery of buffered
+             messages once shutdown signal is received.
+          -->
+        <shutdownMaxDelay value="30000" />
+
+        <!-- Max dispatcher shutdown delay in milliseconds when restarting
+             dispatcher for metadata update.
+          -->
+        <dispatcherRestartMaxDelay value="5000" />
+
+        <!-- Interval in minutes (plus or minus a bit of randomness) between
+             periodic metadata updates
+          -->
+        <metadataRefreshInterval value="15" />
+
+        <!-- On metadata refresh, compare new metadata to old metadata, and
+             replace it only if it differs.  This should be enabled for normal
+             operation, but disabling it may be useful for testing.
+          -->
+        <compareMetadataOnRefresh value="true" />
+
+        <!-- Socket timeout in seconds to use when communicating with Kafka
+             brokers.
+          -->
+        <kafkaSocketTimeout value="60" />
+
+        <!-- Initial delay value in milliseconds between consecutive metadata
+             fetches due to Kafka-related errors.  The actual value has some
+             randomness added.
+          -->
+        <pauseRateLimitInitial value="5000" />
+
+        <!-- Maximum number of times to double pauseRateLimitInitial on
+             consecutive errors.
+          -->
+        <pauseRateLimitMaxDouble value="4" />
+
+        <!-- Minimum delay in milliseconds before fetching new metadata from
+             Kafka in response to an error.
+          -->
+        <minPauseDelay value="5000" />
+    </msgDelivery>
+
+    <httpInterface>
+        <!-- Port that dory listens on for its HTTP interface. -->
+        <port value="9090" />
+
+        <!-- Make HTTP interface available only on loopback interface. -->
+        <loopbackOnly value="false" />
+
+        <!-- Discard reporting interval in seconds. -->
+        <discardReportInterval value="600" />
+
+        <!-- Maximum bad message prefix size in bytes to write to discard
+             report.
+          -->
+        <badMsgPrefixSize value="256" />
+    </httpInterface>
+
+    <discardLogging enable="false">
+        <!-- Absolute pathname of local file where discards will be logged.
+             This is intended for debugging.  If unspecified, logging of
+             discards to a file will be disabled.
+          -->
+        <path value="/var/log/dory/discard.log" />
+
+        <!-- Maximum size in bytes of discard logfile.  When the next log entry
+             e would exceed the maximum, logfile f is renamed to f.N wnere N is
+             the current time in milliseconds since the epoch.  Then a new file
+             f is opened, and e is written to f.  See also maxArchiveSize.
+             Suffixes k or m may be used to specify a value, where k means
+             "multiply by 1024" and m means "multiply by (1024 * 1024)".
+          -->
+        <maxFileSize value="1m" />
+
+        <!-- See description of maxFileSize.  Once a discard logfile is renamed
+             from f to f.N due to the size restriction imposed by maxFileSize,
+             the directory containing f.N is scanned for all old discard
+             logfiles.  If their combined size exceeds maxArchiveSize in bytes,
+             then old logfiles are deleted, starting with the oldest, until
+             their combined size no longer exceeds the maximum.  Suffixes k or
+             m may be used to specify a value, where k means "multiply by 1024"
+             and m means "multiply by (1024 * 1024)".
+          -->
+        <maxArchiveSize value="32m" />
+
+        <!-- Maximum message prefix size in bytes to write to discard logfile
+             when discarding.  Messages larger than this limit will be
+             truncated  Suffix k may be used to specify a value, where k means
+             "multiply by 1024".  A value of "unlimited" may be specified here.
+          -->
+        <maxMsgPrefixSize value="2k" />
+    </discardLogging>
+
+    <kafkaConfig>
+        <!-- Client ID to send in produce requests. -->
+        <clientId value="dory" />
+
+        <!-- Replication timeout in milliseconds to send in produce requests.
+          -->
+        <replicationTimeout value="10000" />
+    </kafkaConfig>
+
+    <msgDebug enable="false">
+        <!-- Absolute path to directory for debug instrumentation files. -->
+        <path value="/var/log/dory/msg-debug" />
+
+        <!-- Message debugging time limit in seconds. -->
+        <timeLimit value="3600" />
+
+        <!-- Message debugging byte limit.  Suffixes k or m may be used to
+             specify a value, where k means "multiply by 1024" and m means
+             "multiply by (1024 * 1024)".
+          -->
+        <byteLimit value="2048m" />
+    </msgDebug>
+
+    <!-- Logging congifuration.  If omitted, the default behavior is to enable
+         only syslog output and set the level to NOTICE.
+      -->
+    <logging>
+        <!-- Determines logging verbosity.  Valid values are "ERR", "WARNING",
+             "NOTICE", "INFO", "DEBUG".  For instance, a value of "NOTICE"
+             enables log messages of levels "ERR", "WARNING", and "NOTICE", and
+             disables log messages of levels "INFO" and "DEBUG".
+          -->
+        <level value="NOTICE" />
+
+        <!-- A true value for 'enable' enables logging to stdout/stderr.
+             If enabled, warnings and errors go to stderr, and other messages
+             go to stdout.  If stdoutStderr element is omitted, then logging to
+             stdout/stderr is disabled.
+          -->
+        <stdoutStderr enable="false" />
+
+        <!-- A true value for 'enable' enables syslog logging.  If syslog
+             element is omitted, then syslog logging is enabled.
+          -->
+        <syslog enable="false" />
+
+        <!-- A true value for 'enable' enables logging to a file.  If file
+             element is omitted, then file logging is enabled.
+          -->
+        <file enable="true">
+            <!-- Logfile path must be absolute (i.e. it must start with '/') or
+                 empty.  An empty path will disable file logging regardless of
+                 "enable" setting above.  If logging to a file is enabled,
+                 SIGUSR1 causes dory to close and reopen its logfile.  This
+                 facilitates logfile rotation.
+              -->
+            <path value="/var/log/dory/dory.log" />
+
+            <!-- Mode bits for opening logfile.  Must be specified in octal or
+                 binary.  For instance, value 0644 is octal as indicated by the
+                 leading 0, and represents user read/write, group read, and
+                 other read.  A binary value is prefixed by "0b" or "0B".  For
+                 instance, the same permissions represented in binary are
+                 0b110010010.  A value of "unspecified" lets the process umask
+                 determine the mode bits.
+              -->
+            <mode value="0644" />
+        </file>
+
+        <!-- If true, log messages will be emitted when messages are discarded.
+             These messages are rate limited to avoid writing too much output
+             if a large number of discards occur.
+          -->
+        <logDiscards enable="true" />
+    </logging>
 
     <initialBrokers>
         <!-- When Dory starts, it chooses a broker in this list to contact for
@@ -244,165 +522,13 @@ above-mentioned design section.
 
 Dory's required command line arguments are summarized below:
 
-* `--config_path PATH`: This specifies the location of the config file.
-* `--msg_buffer_max MAX_KB`: This specifies the amount of memory in kbytes
-Dory reserves for message data.  If this buffer space is exhausted, Dory
-starts discarding messages.
-
-Additionally, Dory requires at least one of the following:
-
-* `--receive_socket_name PATH`: This specifies the pathname of Dory's UNIX
-domain datagram socket that clients write messages to.
-* `--receive_stream_socket_name PATH`: This specifies the pathname of Dory's
-UNIX domain stream socket that clients write messages to.
-* `--input_port PORT`: This specifies the port that local clients should
-connect to when sending messages to Dory over a TCP connection.
+* `--config-path PATH`: This specifies the location of the config file.
 
 Dory's optional command line arguments are summarized below:
 
 * `-h --help`: Display help message.
 * `--version`: Display version information and exit.
-* `--receive_socket_mode MODE`: This specifies the file permissions for Dory's
-UNIX domain datagram socket.  Octal values are prefixed with 0.  For instance,
-`--receive_socket_mode 0777` specifies unrestricted access.
-* `--receive_stream_socket_mode MODE`: This specifies the file permissions for
-Dory's UNIX domain stream socket.  Octal values are prefixed with 0.  For
-instance, `--receive_stream_socket_mode 0777` specifies unrestricted access.
-* `--log_level LEVEL`: This specifies the maximum enabled log level for syslog
-messages.  Allowed values are { LOG_ERR, LOG_WARNING, LOG_NOTICE, LOG_INFO,
-LOG_DEBUG }.  The default value is LOG_NOTICE.
-* `--log_echo`: Echo syslog messages to standard error.
-* `--metadata_api_version`: This specified the metadata protocol API version to
-use when communicating with Kafka, as specified
-[here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol).
-Currently 0 is the only allowed value.  If unspecified, Dory will choose the
-highest API version supported by both Dory and the Kafka cluster.
-* `--produce_api_version`: This specified the produce protocol API version to
-use when communicating with Kafka, as specified
-[here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol).
-Currently 0 is the only allowed value.  If unspecified, Dory will choose the
-highest API version supported by both Dory and the Kafka cluster.
-* `--status_loopback_only`: This specifies that Dory's web interface should
-only be available on the loopback interface.
-* `--status_port PORT`: This specifies the port Dory uses for its web
-interface.  The default value is 9090.
-* `--max_input_msg_size N`: This specifies the maximum input message size in
-bytes expected from clients sending UNIX domain datagrams.  This limit does NOT
-apply to messages sent by UNIX domain stream socket or local TCP (see
-max_stream_input_msg_size).  Input datagrams larger than this value will be
-discarded.  The default value is 65536.
-* `--max_stream_input_msg_size N`: This specifies the maximum input message
-size in bytes expected from clients using UNIX domain stream sockets or local
-TCP.  Input messages larger than this value will cause Dory to immediately log
-an error and disconnect, forcing the client to reconnect if it wishes to
-continue sending messages.  The purpose of this is to guard against
-ridiculously large messages.  Even if a message doesn't exceed this limit, it
-may still be discarded if it is too large to send in a single produce request.
-However, in this case Dory will still leave the connection open and continue
-reading messages.  The default value is (2 * 1024 * 1024).
-* `--allow_large_unix_datagrams`: Allow large enough values for
-max_input_msg_size that a client sending a UNIX domain datagram of the maximum
-allowed size will need to increase its SO_SNDBUF socket option above the
-default value.
-* `--max_failed_delivery_attempts N`: Each time Dory receives an error ACK
-causing it to initiate a "pause without discard" or "resend" action as
-documented [here](design.md#dispatcher), Dory increments the failed delivery
-attempt account for each message in the message set that the ACK applies to.
-Once a message's failed delivery attempt count exceeds this value, the message
-is discarded.  The default vaule is 5.
 * `--daemon`: Causes Dory to run as a daemon.
-* `--client_id ID`: This specifies the client ID string to send in produce
-requests, as documented
-[here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol).
-If unspecified, the client ID will be empty.
-* `--required_acks N`: This specifies the requires ACKs value to send in
-produce requests, as documented
-[here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol).
-The default value is -1.
-* `--replication_timeout N`: specifies the time in milliseconds the broker will
-wait for successful replication to occur, as described
-[here](https://cwiki.apache.org/confluence/display/KAFKA/A+Guide+To+The+Kafka+Protocol#AGuideToTheKafkaProtocol-ProduceRequest),
-before returning an error.  The default value is 10000.
-* `--shutdown_max_delay N`: This specifies the maximum time in milliseconds
-Dory will spend trying to send queued messages and receive ACKs before
-shutting down once it receives a shutdown signal.  If the time limit expires
-and Dory still has queued messages, they will be discarded.  The recommended
-way to shut down Dory is to stop all clients and let Dory empty its queues
-*before* sending Dory a shutdown signal.  The default value is 30000.
-* `--dispatcher_restart_max_delay N`: This specifies the maximum allowed delay
-in milliseconds for dispatcher shutdown during a pause or metadata update
-event.  During this time period, each dispatcher thread will attempt to finish
-sending any message currently being sent before shutting down.  Each dispatcher
-thread will also attempt to drain its queue of sent produce requests waiting
-for responses from Kafka.  Any unsent messages in remaining in a dispatcher
-thread's queue after it shuts down will be sent after the dispatcher is
-restarted with new metadata.  The messages contained in any remaining sent
-produce requests in a dispatcher thread's "ACK waiting" queue on dispatcher
-shutdown will be resent after the dispatcher is restarted with new metadata.
-These messages will be reported as possible duplicates in Dory's discard
-reporting interface.  The default value is 5000.
-* `--metadata_refresh_interval N`: This specifies Dory's metadata refresh
-interval in minutes.  The actual interval will vary somewhat due to added
-randomness.  This will spread out the metadata requests of multiple Dory
-instances to prevent them from all requesting metadata at the same time.  The
-default value is 15.
-* `--kafka_socket_timeout N`: This specifies the socket timeout in seconds that
-Dory uses when communicating with the Kafka brokers.  The default value is 60.
-* `--min_pause_delay N`: This specifies a lower bound on the initial time
-period in milliseconds Dory will wait before sending a metadata request in
-response to a pause event or retrying a failed metadata request.  The default
-value is 5000.  See also --pause_rate_limit_initial and
---pause_rate_limit_max_double below.
-* `--pause_rate_limit_initial N`: This specifies an initial delay in
-milliseconds that Dory will wait before sending a metadata request in response
-to a pause event or retrying a failed metadata request.  The --min_pause_delay
-option described above places a lower bound on the actual value, which has a
-bit of randomness added to it.  The default value is 5000.
-* `--pause_rate_limit_max_double N`: On repeated failed metadata requests or
-errors that cause pause events, the delay before requesting metadata (as
-specified by --pause_rate_limit_initial) is doubled each time up to a maximum
-number of times specified here.  The actual delay has some randomness added to
-it.  The default value is 4.
-* `--discard_report_interval N`: This specifies the discard report interval in
-seconds.  The default value is 600.
-* `--no_log_discard`: This prevents Dory from writing syslog messages when
-discards occur.  Discards will still be reported through Dory's web interface.
-* `--debug_dir DIR`: This specifies a directory for debug instrumentation
-files, as described
-[here](troubleshooting.md).  If unspecified, the debug instrumentation file
-option is disabled.
-* `--msg_debug_time_limit N`: This specifies a message debugging time limit in
-seconds, as described [here](troubleshooting.md).
-The default value is 3600.
-* `--msg_debug_byte_limit N`: This specifies a message debugging byte limit, as
-described [here](troubleshooting.md).
-The default value is (2 * 1024 8 1024 * 1024).
-* `--skip_compare_metadata_on_refresh`: On metadata refresh, don't compare new
-metadata to old metadata.  Always replace the metadata even if it is unchanged.
-This should be disabled for normal operation, but enabling it may be useful for
-testing.
-* `--discard_log_path PATH`: Absolute pathname of local file where discards
-will be logged.  This is intended for debugging.  If unspecified, logging of
-discards to a file will be disabled.
-* `--discard_log_bad_msg_prefix_size N`: Maximum bad message prefix size in
-bytes to write to discard logfile when discarding.  The default value is 256.
-* `--discard_log_max_file_size N`: Maximum size (in Kb) of discard logfile.
-When the next log entry e would exceed the maximum, the logfile (with name f)
-is renamed to f.N wnere N is the current time in milliseconds since the epoch.
-Then a new file f is opened, and e is written to f.  The default value is 1024.
-See also --discard_log_max_archive_size.
-* `--discard_log_max_archive_size N`: See description of
---discard_log_max_file_size.  Once a discard logfile is renamed from f to f.N
-due to the size restriction imposed by discard_log_max_file_size, the directory
-containing f.N is scanned for all old discard logfiles.  If their combined size
-exceeds discard_log_max_archive_size (specified in Kb), then old logfiles are
-deleted, starting with the oldest, until their combined size no longer exceeds
-the maximum.  The default value is 8192.
-* `--discard_report_bad_msg_prefix_size N`: Maximum bad message prefix size in
-bytes to write to discard report available from Dory's web interface.  The
-default value is 256.
-* `--topic_autocreate`: Enable automatic topic creation.  For this to work, the
-brokers must be configured with `auto.create.topics.enable=true`.
 
 Now that you are familiar with all of Dory's configuration options, you may
 find information on [troubleshooting](troubleshooting.md) helpful.
