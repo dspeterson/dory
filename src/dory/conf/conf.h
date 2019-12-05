@@ -25,6 +25,7 @@
 #include <cstring>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -46,28 +47,46 @@
 #include <dory/conf/msg_delivery_conf.h>
 #include <dory/conf/topic_rate_conf.h>
 #include <dory/util/host_and_port.h>
+#include <xml/config/config_errors.h>
 
 namespace Dory {
 
   namespace Conf {
 
-    class TLoggingInvalidLevel final : public TConfError {
+    class TDiscardLoggingInvalidMaxFileSize final
+        : public Xml::Config::TElementError {
       public:
-      TLoggingInvalidLevel()
-          : TConfError("Log level must be one of {\"ERR\", \"WARNING\", "
-                "\"NOTICE\", \"INFO\", \"DEBUG\"}") {
-      }
-    };  // TLoggingInvalidLevel
-
-    class TDiscardLoggingInvalidMaxFileSize final : public TConfError {
-      public:
-      TDiscardLoggingInvalidMaxFileSize()
-          : TConfError(
+      TDiscardLoggingInvalidMaxFileSize(const xercesc::DOMElement &elem)
+          : TElementError(elem,
                 "If discard logging is enabled, discard_log_max_file_size "
                 "must be at least twice the maximum input datagram or stream "
                 "message size.") {
       }
     };  // TDiscardLoggingInvalidMaxFileSize
+
+    class TInvalidBatchingConfig final : public Xml::Config::TElementError {
+      public:
+      TInvalidBatchingConfig(const xercesc::DOMElement &elem, const char *msg)
+          : TElementError(elem, msg) {
+      }
+    };  // TInvalidBatchingConfig
+
+    class TNoInputSource final : public Xml::Config::TElementError {
+      public:
+      TNoInputSource(const xercesc::DOMElement &elem)
+          : TElementError(elem,
+                "Input sources config must enable at least one of "
+                "{unixDatagram, unixStream, tcp}") {
+      }
+    };  // TNoInputSource
+
+    class TInitialBrokersMissing final : public Xml::Config::TElementError {
+      public:
+      TInitialBrokersMissing(const xercesc::DOMElement &elem)
+          : TElementError(elem,
+                "At least one initial broker must be specified") {
+      }
+    };  // TInitialBrokersMissing
 
     struct TConf final {
       class TBuilder;
@@ -129,17 +148,28 @@ namespace Dory {
       void ProcessTopicBatchConfig(const xercesc::DOMElement &topic_elem,
           TBatchConf::TTopicAction &action, std::string &config);
 
+      void ProcessBatchingTopicConfigsElem(
+          const xercesc::DOMElement &topic_configs_elem);
+
       void ProcessBatchingElem(const xercesc::DOMElement &batching_elem);
 
       void ProcessSingleCompressionNamedConfig(
           const xercesc::DOMElement &config_elem);
 
+      void ProcessCompressionTopicConfigsElem(
+          const xercesc::DOMElement &topic_configs_elem);
+
       void ProcessCompressionElem(const xercesc::DOMElement &compression_elem);
+
+      void ProcessTopicRateTopicConfigsElem(
+          const xercesc::DOMElement &topic_configs_elem);
 
       void ProcessTopicRateElem(const xercesc::DOMElement &topic_rate_elem);
 
       std::pair<std::string, Base::TOpt<mode_t>>
-      ProcessFileSectionElem(const xercesc::DOMElement &elem);
+      ProcessFileSectionElem(const xercesc::DOMElement &elem,
+          std::unordered_map<std::string, const xercesc::DOMElement *>
+              &subsection_map);
 
       void ProcessInputSourcesElem(
           const xercesc::DOMElement &input_sources_elem);

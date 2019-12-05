@@ -27,77 +27,97 @@
 #include <cstddef>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 #include <xercesc/dom/DOMElement.hpp>
 #include <xercesc/dom/DOMException.hpp>
 #include <xercesc/dom/DOMNode.hpp>
 #include <xercesc/sax/SAXParseException.hpp>
 #include <xercesc/util/XMLException.hpp>
+
+#include <base/opt.h>
 #include <base/to_integer.h>
 
 namespace Xml {
 
   namespace Config {
 
-    class TXmlConfigError : public std::runtime_error {
-      protected:
-      explicit TXmlConfigError(const char *msg)
-          : std::runtime_error(msg) {
+    struct TFileLocation {
+      explicit TFileLocation(size_t line) noexcept
+          : Line(line) {
       }
-    };  // TXmlConfigError
 
-    class TErrorLineInfo {
-      public:
-      virtual size_t GetLine() const noexcept = 0;
+      TFileLocation(size_t line, size_t column) noexcept
+          : Line(line),
+            Column(column) {
+      }
 
-      virtual ~TErrorLineInfo() = default;
-    };  // TErrorLineInfo
-
-    class TErrorLineOnlyInfo : public TErrorLineInfo {
-      public:
-      ~TErrorLineOnlyInfo() override = default;
-    };  // TErrorLineOnlyInfo
-
-    class TErrorLineAndColumnInfo : public TErrorLineInfo {
-      public:
-      virtual size_t GetColumn() const noexcept = 0;
-    };  // TErrorLineInfo
-
-    class TXmlException : public TXmlConfigError,
-        public TErrorLineOnlyInfo {
-      public:
-      explicit TXmlException(const xercesc::XMLException &x);
-
-      size_t GetLine() const noexcept override;
-
-      private:
-      size_t Line;
-    };  // TXmlException
-
-    class TSaxParseException : public TXmlConfigError,
-        public TErrorLineAndColumnInfo {
-      public:
-      explicit TSaxParseException(const xercesc::SAXParseException &x);
-
-      size_t GetLine() const noexcept override;
-
-      size_t GetColumn() const noexcept override;
-
-      private:
       size_t Line;
 
-      size_t Column;
-    };  // TSaxParseException
+      Base::TOpt<size_t> Column;
+    };  // TFileLocation
 
-    class TDomException : public TXmlConfigError {
+    class TXmlError : public std::runtime_error {
       public:
-      explicit TDomException(const xercesc::DOMException &x);
-    };  // TDomException
+      TXmlError(const Base::TOpt<TFileLocation> &location,
+          const char *msg)
+          : std::runtime_error(BuildMsg(location, msg)),
+            Location(location) {
+      }
 
-    class TDocumentEncodingError : public TXmlConfigError {
+      explicit TXmlError(const xercesc::XMLException &x)
+          : TXmlError(BuildInfo(x)) {
+      }
+
+      const Base::TOpt<TFileLocation> &GetLocation() const noexcept {
+        assert(this);
+        return Location;
+      }
+
+      private:
+      static std::pair<TFileLocation, std::string>
+      BuildInfo(const xercesc::XMLException &x);
+
+      static std::string BuildMsg(const Base::TOpt<TFileLocation> &location,
+          const char *msg);
+
+      explicit TXmlError(const std::pair<TFileLocation, std::string> &info)
+          : TXmlError(info.first, info.second.c_str()) {
+      }
+
+      Base::TOpt<TFileLocation> Location;
+    };  // TXmlError
+
+    class TSaxParseError : public TXmlError {
+      public:
+      explicit TSaxParseError(const xercesc::SAXParseException &x)
+          : TSaxParseError(BuildInfo(x)) {
+      }
+
+      private:
+      static std::pair<TFileLocation, std::string> BuildInfo(
+          const xercesc::SAXParseException &x);
+
+      explicit TSaxParseError(
+          const std::pair<TFileLocation, std::string> &info)
+          : TXmlError(info.first, info.second.c_str()) {
+      }
+    };  // TSaxParseError
+
+    class TDomError : public TXmlError {
+      public:
+      explicit TDomError(const xercesc::DOMException &x)
+          : TXmlError(Base::TOpt<TFileLocation>(), BuildMsg(x).c_str()) {
+      }
+
+      private:
+      static std::string BuildMsg(const xercesc::DOMException &x);
+    };  // TDomError
+
+    class TDocumentEncodingError : public TXmlError {
       protected:
       explicit TDocumentEncodingError(const char *msg)
-          : TXmlConfigError(msg) {
+          : TXmlError(Base::TOpt<TFileLocation>(), msg) {
       }
     };  // TDocumentEncodingError
 
@@ -110,7 +130,12 @@ namespace Xml {
 
     class TWrongEncoding : public TDocumentEncodingError {
       public:
-      TWrongEncoding(const char *encoding, const char *expected_encoding);
+      TWrongEncoding(const char *encoding, const char *expected_encoding)
+          : TDocumentEncodingError(
+                BuildMsg(encoding, expected_encoding).c_str()),
+          Encoding(encoding),
+          ExpectedEncoding(expected_encoding) {
+      }
 
       /* Return the document's actual encoding (not the expected one). */
       const std::string &GetEncoding() const noexcept {
@@ -125,36 +150,29 @@ namespace Xml {
       }
 
       private:
+      static std::string BuildMsg(const char *encoding,
+          const char *expected_encoding);
+
       std::string Encoding;
 
       std::string ExpectedEncoding;
     };  // TWrongEncoding
 
-    class TContentError : public TXmlConfigError,
-        public TErrorLineAndColumnInfo {
-      public:
-      size_t GetLine() const noexcept override {
-        assert(this);
-        return Line;
+    class TContentError : public TXmlError {
+      protected:
+      TContentError(const xercesc::DOMNode &node, const char *msg)
+          : TXmlError(BuildLocation(node), msg) {
       }
-
-      size_t GetColumn() const noexcept override {
-        assert(this);
-        return Column;
-      }
-
-      TContentError(const char *msg, const xercesc::DOMNode &location);
 
       private:
-      size_t Line;
-
-      size_t Column;
+      static Base::TOpt<TFileLocation> BuildLocation(
+          const xercesc::DOMNode &node);
     };  // TContentError
 
     class TUnexpectedText : public TContentError {
       public:
-      explicit TUnexpectedText(const xercesc::DOMNode &location)
-          : TContentError("XML document contains unexpected text", location) {
+      explicit TUnexpectedText(const xercesc::DOMNode &node)
+          : TContentError(node, "XML document contains unexpected text") {
       }
     };  // TUnexpectedText
 
@@ -165,7 +183,8 @@ namespace Xml {
         return ElementName;
       }
 
-      TElementError(const char *msg, const xercesc::DOMElement &location);
+      protected:
+      TElementError(const xercesc::DOMElement &elem, const char *msg);
 
       private:
       std::string ElementName;
@@ -173,30 +192,34 @@ namespace Xml {
 
     class TDuplicateElement : public TElementError {
       public:
-      explicit TDuplicateElement(const xercesc::DOMElement &location)
-          : TElementError("XML document contains unexpected duplicate element",
-                location) {
+      explicit TDuplicateElement(const xercesc::DOMElement &elem)
+          : TElementError(elem, BuildMsg(elem).c_str()) {
       }
+
+      private:
+      static std::string BuildMsg(const xercesc::DOMElement &elem);
     };  // TDuplicateElement
 
     class TUnknownElement : public TElementError {
       public:
-      TUnknownElement(const char *msg, const xercesc::DOMElement &location)
-          : TElementError(msg, location) {
+      TUnknownElement(const xercesc::DOMElement &elem, const char *msg)
+          : TElementError(elem, msg) {
       }
 
-      explicit TUnknownElement(const xercesc::DOMElement &location)
-          : TUnknownElement("XML document contains unknown element",
-                location) {
+      explicit TUnknownElement(const xercesc::DOMElement &elem)
+          : TUnknownElement(elem, BuildMsg(elem).c_str()) {
       }
+
+      private:
+      static std::string BuildMsg(const xercesc::DOMElement &elem);
     };  // TUnknownElement
 
     class TUnexpectedElementName : public TUnknownElement {
       public:
-      TUnexpectedElementName(const xercesc::DOMElement &location,
-          const char *expected_element_name)
-          : TUnknownElement("XML element is not of expected type", location),
-            ExpectedElementName(expected_element_name) {
+      TUnexpectedElementName(const xercesc::DOMElement &elem,
+          const char *expected_elem_name)
+          : TUnknownElement(elem, BuildMsg(elem, expected_elem_name).c_str()),
+            ExpectedElementName(expected_elem_name) {
       }
 
       const std::string &GetExpectedElementName() const noexcept {
@@ -205,15 +228,18 @@ namespace Xml {
       }
 
       private:
+      static std::string BuildMsg(const xercesc::DOMElement &elem,
+          const char *expected_elem_name);
+
       std::string ExpectedElementName;
     };  // TUnexpectedElementName
 
     class TMissingChildElement : public TElementError {
       public:
-      TMissingChildElement(const xercesc::DOMElement &location,
-          const char *child_element_name)
-          : TElementError("XML element is missing child element", location),
-            ChildElementName(child_element_name) {
+      TMissingChildElement(const xercesc::DOMElement &elem,
+          const char *child_elem_name)
+          : TElementError(elem, BuildMsg(elem, child_elem_name).c_str()),
+            ChildElementName(child_elem_name) {
       }
 
       const std::string &GetChildElementName() const noexcept {
@@ -222,14 +248,20 @@ namespace Xml {
       }
 
       private:
+      static std::string BuildMsg(const xercesc::DOMElement &elem,
+          const char *child_elem_name);
+
       std::string ChildElementName;
     };  // TMissingChildElement
 
     class TExpectedLeaf : public TElementError {
       public:
-      explicit TExpectedLeaf(const xercesc::DOMElement &location)
-          : TElementError("XML element must be a leaf node", location) {
+      explicit TExpectedLeaf(const xercesc::DOMElement &elem)
+          : TElementError(elem, BuildMsg(elem).c_str()) {
       }
+
+      private:
+      static std::string BuildMsg(const xercesc::DOMElement &elem);
     };  // TExpectedLeaf
 
     class TAttrError : public TElementError {
@@ -239,9 +271,10 @@ namespace Xml {
         return AttrName;
       }
 
-      TAttrError(const char *msg, const xercesc::DOMElement &location,
-          const char *attr_name)
-          : TElementError(msg, location),
+      protected:
+      TAttrError(const xercesc::DOMElement &elem, const char *attr_name,
+          const char *msg)
+          : TElementError(elem, msg),
             AttrName(attr_name) {
       }
 
@@ -251,25 +284,27 @@ namespace Xml {
 
     class TMissingAttrValue : public TAttrError {
       public:
-      TMissingAttrValue(const xercesc::DOMElement &location,
-          const char *attr_name)
-          : TAttrError("XML element is missing attribute value", location,
-                attr_name) {
+      TMissingAttrValue(const xercesc::DOMElement &elem, const char *attr_name)
+          : TAttrError(elem, attr_name, BuildMsg(elem, attr_name).c_str()) {
       }
+
+      private:
+      static std::string BuildMsg(const xercesc::DOMElement &elem,
+          const char *attr_name);
     };  // TMissingAttrValue
 
     class TInvalidAttr : public TAttrError {
       public:
-      TInvalidAttr(const char *msg, const xercesc::DOMElement &location,
-          const char *attr_name, const char *attr_value)
-          : TAttrError(msg, location, attr_name),
+      TInvalidAttr(const xercesc::DOMElement &elem, const char *attr_name,
+          const char *attr_value, const char *msg)
+          : TAttrError(elem, attr_name, msg),
             AttrValue(attr_value) {
       }
 
-      TInvalidAttr(const xercesc::DOMElement &location, const char *attr_name,
+      TInvalidAttr(const xercesc::DOMElement &elem, const char *attr_name,
           const char *attr_value)
-          : TInvalidAttr("XML attribute value is invalid", location, attr_name,
-              attr_value) {
+          : TInvalidAttr(elem, attr_name, attr_value,
+                BuildMsg(elem, attr_name, attr_value).c_str()) {
       }
 
       const std::string &GetAttrValue() const noexcept {
@@ -278,14 +313,23 @@ namespace Xml {
       }
 
       private:
+      static std::string BuildMsg(const xercesc::DOMElement &elem,
+          const char *attr_name, const char *attr_value);
+
       std::string AttrValue;
     };  // TInvalidAttr
 
     class TInvalidBoolAttr : public TInvalidAttr {
       public:
-      TInvalidBoolAttr(const xercesc::DOMElement &location,
+      TInvalidBoolAttr(const xercesc::DOMElement &elem,
           const char *attr_name, const char *attr_value,
-          const char *true_value, const char *false_value);
+          const char *true_value, const char *false_value)
+          : TInvalidAttr(elem, attr_name, attr_value,
+                BuildMsg(elem, attr_name, attr_value, true_value,
+                    false_value).c_str()),
+            TrueValue(true_value),
+            FalseValue(false_value) {
+      }
 
       const std::string &GetTrueValue() const noexcept {
         assert(this);
@@ -298,47 +342,43 @@ namespace Xml {
       }
 
       private:
+      static std::string BuildMsg(const xercesc::DOMElement &elem,
+          const char *attr_name, const char *attr_value,
+          const char *true_value, const char *false_value);
+
       std::string TrueValue;
 
       std::string FalseValue;
     };  // TInvalidBoolAttr
 
-    class TInvalidIntegerAttr : public TInvalidAttr {
+    class TAttrOutOfRange : public TInvalidAttr {
       public:
-      TInvalidIntegerAttr(const char *msg, const xercesc::DOMElement &location,
-          const char *attr_name, const char *attr_value)
-          : TInvalidAttr(msg, location, attr_name, attr_value) {
+      TAttrOutOfRange(const xercesc::DOMElement &elem, const char *attr_name,
+          const char *attr_value)
+          : TInvalidAttr(elem, attr_name, attr_value,
+                BuildMsg(elem, attr_name, attr_value).c_str()) {
+      }
+
+      private:
+      static std::string BuildMsg(const xercesc::DOMElement &elem,
+          const char *attr_name, const char *attr_value);
+    };  // TAttrOutOfRange
+
+    class TInvalidIntegerAttr : public TInvalidAttr {
+      protected:
+      TInvalidIntegerAttr(const xercesc::DOMElement &elem,
+          const char *attr_name, const char *attr_value, const char *msg)
+          : TInvalidAttr(elem, attr_name, attr_value, msg) {
       }
     };  // TInvalidIntegerAttr
 
-    class TInvalidUnsignedIntegerAttr : public TInvalidIntegerAttr {
-      public:
-      TInvalidUnsignedIntegerAttr(const xercesc::DOMElement &location,
-          const char *attr_name, const char *attr_value)
-          : TInvalidIntegerAttr(
-              "XML attribute is not a valid unsigned integer", location,
-              attr_name, attr_value) {
-      }
-    };  // TInvalidUnsignedIntegerAttr
-
-    class TInvalidSignedIntegerAttr : public TInvalidIntegerAttr {
-      public:
-      TInvalidSignedIntegerAttr(const xercesc::DOMElement &location,
-          const char *attr_name, const char *attr_value)
-          : TInvalidIntegerAttr(
-              "XML attribute is not a valid signed integer", location,
-              attr_name, attr_value) {
-      }
-    };  // TInvalidSignedIntegerAttr
-
     class TWrongUnsignedIntegerBase : public TInvalidIntegerAttr {
       public:
-      TWrongUnsignedIntegerBase(const xercesc::DOMElement &location,
+      TWrongUnsignedIntegerBase(const xercesc::DOMElement &elem,
           const char *attr_name, const char *attr_value, Base::TBase found,
           unsigned int allowed)
-          : TInvalidIntegerAttr(
-                "XML attribute unsigned integer value has unsupported base",
-                location, attr_name, attr_value),
+          : TInvalidIntegerAttr(elem, attr_name, attr_value,
+                BuildMsg(elem, attr_name, attr_value, found, allowed).c_str()),
             Found(found),
             Allowed(allowed) {
       }
@@ -354,20 +394,41 @@ namespace Xml {
       }
 
       private:
+      static std::string BuildMsg(const xercesc::DOMElement &elem,
+          const char *attr_name, const char *attr_value, Base::TBase found,
+          unsigned int allowed);
+
       Base::TBase Found;
 
       /* This is a bitfield of values found in Base::TBase. */
       unsigned int Allowed;
     };
 
-    class TAttrOutOfRange : public TInvalidAttr {
+    class TInvalidUnsignedIntegerAttr : public TInvalidIntegerAttr {
       public:
-      TAttrOutOfRange(const xercesc::DOMElement &location,
+      TInvalidUnsignedIntegerAttr(const xercesc::DOMElement &elem,
           const char *attr_name, const char *attr_value)
-          : TInvalidAttr("XML attribute value is out of range", location,
-              attr_name, attr_value) {
+          : TInvalidIntegerAttr(elem, attr_name, attr_value,
+                BuildMsg(elem, attr_name, attr_value).c_str()) {
       }
-    };  // TAttrOutOfRange
+
+      private:
+      static std::string BuildMsg(const xercesc::DOMElement &elem,
+          const char *attr_name, const char *attr_value);
+    };  // TInvalidUnsignedIntegerAttr
+
+    class TInvalidSignedIntegerAttr : public TInvalidIntegerAttr {
+      public:
+      TInvalidSignedIntegerAttr(const xercesc::DOMElement &elem,
+          const char *attr_name, const char *attr_value)
+          : TInvalidIntegerAttr(elem, attr_name, attr_value,
+                BuildMsg(elem, attr_name, attr_value).c_str()) {
+      }
+
+      private:
+      static std::string BuildMsg(const xercesc::DOMElement &elem,
+          const char *attr_name, const char *attr_value);
+    };  // TInvalidSignedIntegerAttr
 
   }  // Config
 

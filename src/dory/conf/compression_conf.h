@@ -183,6 +183,11 @@ namespace Dory {
       void SetTopicConfig(const std::string &topic,
           const std::string &config_name);
 
+      bool IsNamedConfigsEmpty() const noexcept {
+        assert(this);
+        return NamedConfigs.empty();
+      }
+
       TCompressionConf Build();
 
       private:

@@ -52,13 +52,13 @@
 #include <dory/kafka_proto/produce/version_util.h>
 #include <dory/msg_state_tracker.h>
 #include <dory/test_util/mock_kafka_config.h>
-#include <dory/test_util/xml_util.h>
 #include <dory/util/misc_util.h>
 #include <dory/util/dory_xml_init.h>
 #include <log/log.h>
 #include <log/pri.h>
 #include <test_util/test_logging.h>
 #include <thread/fd_managed_thread.h>
+#include <xml/config/config_errors.h>
 #include <xml/test/xml_test_initializer.h>
 
 #include <gtest/gtest.h>
@@ -79,6 +79,7 @@ using namespace Log;
 using namespace ::TestUtil;
 using namespace Thread;
 using namespace Xml;
+using namespace Xml::Config;
 using namespace Xml::Test;
 
 namespace {
@@ -312,7 +313,15 @@ namespace {
     try {
       Dory::TCmdLineArgs args(static_cast<int>(arg_vec.size()) - 1,
           &arg_vec[0]);
-      TConf conf = XmlToConf(ReadFileIntoString(args.ConfigPath));
+      TConf conf;
+
+      try {
+        conf = TConf::TBuilder(true /* allow_input_bind_ephemeral */,
+            true /* enable_lz4 */).Build(ReadFileIntoString(args.ConfigPath));
+      } catch (const TXmlError &x) {
+        LOG(TPri::ERR) << x.what();
+        throw;
+      }
 
       if (TDoryServer::CheckUnixDgSize(conf)) {
         std::cout << "Large sendbuf required" << std::endl;

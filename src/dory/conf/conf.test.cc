@@ -26,10 +26,11 @@
 
 #include <base/tmp_file.h>
 #include <dory/compress/compression_type.h>
-#include <dory/test_util/xml_util.h>
 #include <dory/util/dory_xml_init.h>
+#include <log/log.h>
 #include <log/pri.h>
 #include <test_util/test_logging.h>
+#include <xml/config/config_errors.h>
 #include <xml/test/xml_test_initializer.h>
 
 #include <gtest/gtest.h>
@@ -38,11 +39,11 @@ using namespace Base;
 using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::Conf;
-using namespace Dory::TestUtil;
 using namespace Dory::Util;
 using namespace Log;
 using namespace ::TestUtil;
 using namespace Xml;
+using namespace Xml::Config;
 using namespace Xml::Test;
 
 namespace {
@@ -231,7 +232,15 @@ namespace {
         << "        <broker host=\"host2\" port=\"9093\" />" << std::endl
         << "    </initialBrokers>" << std::endl
         << "</doryConfig>" << std::endl;
-    TConf conf = XmlToConf(os.str());
+    TConf conf;
+
+    try {
+      conf = TConf::TBuilder(true /* allow_input_bind_ephemeral */,
+          true /* enable_lz4 */).Build(os.str());
+    } catch (const TXmlError &x) {
+      LOG(TPri::ERR) << x.what();
+      ASSERT_TRUE(false);
+    }
 
     ASSERT_EQ(conf.BatchConf.ProduceRequestDataLimit, 100U);
     ASSERT_EQ(conf.BatchConf.MessageMaxBytes, 200U);
@@ -523,7 +532,15 @@ namespace {
         << "        <broker host=\"host2\" port=\"9093\" />" << std::endl
         << "    </initialBrokers>" << std::endl
         << "</doryConfig>" << std::endl;
-    TConf conf = XmlToConf(os.str());
+    TConf conf;
+
+    try {
+      conf = TConf::TBuilder(true /* allow_input_bind_ephemeral */,
+          true /* enable_lz4 */).Build(os.str());
+    } catch (const TXmlError &x) {
+      LOG(TPri::ERR) << x.what();
+      ASSERT_TRUE(false);
+    }
 
     ASSERT_EQ(conf.InputSourcesConf.UnixDgPath, "/var/run/dory/input_d");
     ASSERT_FALSE(conf.InputSourcesConf.UnixDgMode.IsKnown());
@@ -662,7 +679,14 @@ namespace {
         << "        <broker host=\"host2\" port=\"9093\" />" << std::endl
         << "    </initialBrokers>" << std::endl
         << "</doryConfig>" << std::endl;
-    TConf conf = XmlToConf(os.str());
+    TConf conf;
+
+    try {
+      conf = TConf::TBuilder(true /* allow_input_bind_ephemeral */,
+          true /* enable_lz4 */).Build(os.str());
+    } catch (const TXmlError &x) {
+      LOG(TPri::ERR) << x.what();
+    }
 
     ASSERT_EQ(conf.InputSourcesConf.UnixDgPath, "/var/run/dory/input_d");
     ASSERT_TRUE(conf.InputSourcesConf.UnixDgMode.IsKnown());
@@ -804,9 +828,11 @@ namespace {
     bool caught = false;
 
     try {
-      TConf conf = XmlToConf(os.str());
-    } catch (const TLoggingInvalidLevel &) {
+      TConf conf = TConf::TBuilder(true /* allow_input_bind_ephemeral */,
+          true /* enable_lz4 */).Build(os.str());
+    } catch (const TInvalidAttr &x) {
       caught = true;
+      ASSERT_EQ(x.GetElementName(), "level");
     }
 
     ASSERT_TRUE(caught);
@@ -939,9 +965,11 @@ namespace {
     bool caught = false;
 
     try {
-      TConf conf = XmlToConf(os.str());
-    } catch (const std::runtime_error &) {
+      TConf conf = TConf::TBuilder(true /* allow_input_bind_ephemeral */,
+          true /* enable_lz4 */).Build(os.str());
+    } catch (const TNoInputSource &x) {
       caught = true;
+      ASSERT_EQ(x.GetElementName(), "inputSources");
     }
 
     ASSERT_TRUE(caught);
@@ -1073,9 +1101,11 @@ namespace {
     bool caught = false;
 
     try {
-      TConf conf = XmlToConf(os.str());
-    } catch (const TLoggingRelativePath &) {
+      TConf conf = TConf::TBuilder(true /* allow_input_bind_ephemeral */,
+          true /* enable_lz4 */).Build(os.str());
+    } catch (const TInvalidAttr &x) {
       caught = true;
+      ASSERT_EQ(x.GetElementName(), "path");
     }
 
     ASSERT_TRUE(caught);
@@ -1207,9 +1237,11 @@ namespace {
     bool caught = false;
 
     try {
-      TConf conf = XmlToConf(os.str());
-    } catch (const TLoggingInvalidFileMode &) {
+      TConf conf = TConf::TBuilder(true /* allow_input_bind_ephemeral */,
+          true /* enable_lz4 */).Build(os.str());
+    } catch (const TInvalidAttr &x) {
       caught = true;
+      ASSERT_EQ(x.GetElementName(), "mode");
     }
 
     ASSERT_TRUE(caught);

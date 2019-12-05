@@ -23,84 +23,263 @@
 
 #include <memory>
 
+#include <base/no_default_case.h>
 #include <xml/xml_input_line_info.h>
 #include <xml/xml_string_util.h>
 
 using namespace xercesc;
 
+using namespace Base;
 using namespace Xml;
 using namespace Xml::Config;
 
-TXmlException::TXmlException(const XMLException &x)
-    : TXmlConfigError(GetTranscoded(x.getMessage()).get()),
-      Line(x.getSrcLine()) {
+std::pair<TFileLocation, std::string> TXmlError::BuildInfo(
+    const XMLException &x) {
+  return std::make_pair(TFileLocation(x.getSrcLine()),
+      std::string(GetTranscoded(x.getMessage()).get()));
 }
 
-size_t TXmlException::GetLine() const noexcept {
-  assert(this);
-  return Line;
+std::string TXmlError::BuildMsg(const TOpt<TFileLocation> &location,
+    const char *msg) {
+  std::string result;
+
+  if (location.IsKnown()) {
+    result = "(line ";
+    result += std::to_string(location->Line);
+
+    if (location->Column.IsKnown()) {
+      result += ", column ";
+      result += std::to_string(*location->Column);
+    }
+
+    result += "): ";
+  }
+
+  result += msg;
+  return result;
 }
 
-TSaxParseException::TSaxParseException(const SAXParseException &x)
-    : TXmlConfigError(GetTranscoded(x.getMessage()).get()),
-      Line(x.getLineNumber()),
-      Column(x.getColumnNumber()) {
+std::pair<TFileLocation, std::string>
+TSaxParseError::BuildInfo(const SAXParseException &x) {
+  std::string msg("XML document parse error: ");
+  msg += GetTranscoded(x.getMessage()).get();
+  return std::make_pair(TFileLocation(x.getLineNumber(), x.getColumnNumber()),
+      std::move(msg));
 }
 
-size_t TSaxParseException::GetLine() const noexcept {
-  assert(this);
-  return Line;
+std::string TDomError::BuildMsg(const DOMException &x) {
+  std::string result("XML DOM error: ");
+  result += GetTranscoded(x.getMessage()).get();
+  return result;
 }
 
-size_t TSaxParseException::GetColumn() const noexcept {
-  assert(this);
-  return Column;
+std::string TWrongEncoding::BuildMsg(const char *encoding,
+    const char *expected_encoding) {
+  std::string result("XML document has wrong encoding of [");
+  result += encoding;
+  result += "]: expected value is [";
+  result += expected_encoding;
+  result += "]";
+  return result;
 }
 
-TDomException::TDomException(const DOMException &x)
-    : TXmlConfigError(GetTranscoded(x.getMessage()).get()) {
-}
-
-TWrongEncoding::TWrongEncoding(const char *encoding,
-    const char *expected_encoding)
-    : TDocumentEncodingError("XML document has wrong encoding"),
-      Encoding(encoding),
-      ExpectedEncoding(expected_encoding) {
-}
-
-TContentError::TContentError(const char *msg, const DOMNode &location)
-    : TXmlConfigError(msg),
-      Line(0),
-      Column(0) {
-  const TXmlInputLineInfo *info = TXmlInputLineInfo::Get(location);
+TOpt<TFileLocation> TContentError::BuildLocation(const DOMNode &node) {
+  TOpt<TFileLocation> result;
+  const TXmlInputLineInfo *info = TXmlInputLineInfo::Get(node);
 
   if (info) {
-    Line = info->GetLineNum();
-    Column = info->GetColumnNum();
+    result.MakeKnown(info->GetLineNum(), info->GetColumnNum());
   }
+
+  return result;
 }
 
-TElementError::TElementError(const char *msg, const DOMElement &location)
-    : TContentError(msg, location),
-      ElementName(GetTranscoded(location.getNodeName()).get()) {
+TElementError::TElementError(const xercesc::DOMElement &elem, const char *msg)
+    : TContentError(elem, msg),
+      ElementName(GetTranscoded(elem.getNodeName()).get()) {
 }
 
-static std::string MakeInvalidBoolAttrMsg(const char *true_value,
-    const char *false_value) {
-  std::string msg("XML attribute must be either \"");
-  msg += true_value;
-  msg += "\" or \"";
-  msg += false_value;
-  msg += "\"";
-  return msg;
+std::string TDuplicateElement::BuildMsg(const DOMElement &elem) {
+  std::string result("XML document contains unexpected duplicate element [");
+  result += GetTranscoded(elem.getNodeName()).get();
+  result += "]";
+  return result;
 }
 
-TInvalidBoolAttr::TInvalidBoolAttr(const xercesc::DOMElement &location,
+std::string TUnknownElement::BuildMsg(const DOMElement &elem) {
+  std::string result("XML document contains unknown element [");
+  result += GetTranscoded(elem.getNodeName()).get();
+  result += "]";
+  return result;
+}
+
+std::string TUnexpectedElementName::BuildMsg(const DOMElement &elem,
+    const char *expected_elem_name) {
+  std::string result("XML document contains unexpected element [");
+  result += GetTranscoded(elem.getNodeName()).get();
+  result += "]: expected element is [";
+  result += expected_elem_name;
+  result += "]";
+  return result;
+}
+
+std::string TMissingChildElement::BuildMsg(const DOMElement &elem,
+    const char *child_elem_name) {
+  std::string result("XML  element [");
+  result += GetTranscoded(elem.getNodeName()).get();
+  result += "] is missing child element [";
+  result += child_elem_name;
+  result += "]";
+  return result;
+}
+
+std::string TExpectedLeaf::BuildMsg(const DOMElement &elem) {
+  std::string result("XML element [");
+  result += GetTranscoded(elem.getNodeName()).get();
+  result += "] must not have any children";
+  return result;
+}
+
+std::string TMissingAttrValue::BuildMsg(const DOMElement &elem,
+    const char *attr_name) {
+  std::string result("XML  element [");
+  result += GetTranscoded(elem.getNodeName()).get();
+  result += "] is missing attribute [";
+  result += attr_name;
+  result += "]";
+  return result;
+}
+
+std::string TInvalidAttr::BuildMsg(const DOMElement &elem,
+    const char *attr_name, const char *attr_value) {
+  std::string result("Value [");
+  result += attr_value;
+  result += "] for attribute [";
+  result += attr_name;
+  result += "] of XML element [";
+  result += GetTranscoded(elem.getNodeName()).get();
+  result += "] is invalid";
+  return result;
+}
+
+std::string TInvalidBoolAttr::BuildMsg(const DOMElement &elem,
     const char *attr_name, const char *attr_value, const char *true_value,
-    const char *false_value)
-    : TInvalidAttr(
-          MakeInvalidBoolAttrMsg(true_value, false_value).c_str(),
-              location, attr_name, attr_value),
-      TrueValue(true_value),
-      FalseValue(false_value) {
+    const char *false_value) {
+  std::string result("Value [");
+  result += attr_value;
+  result += "] for boolean attribute [";
+  result += attr_name;
+  result += "] of XML element [";
+  result += GetTranscoded(elem.getNodeName()).get();
+  result += "] is invalid: allowed values are [";
+  result += true_value;
+  result += "] and [";
+  result += false_value;
+  result += "]";
+  return result;
+}
+
+std::string TAttrOutOfRange::BuildMsg(const DOMElement &elem,
+    const char *attr_name, const char *attr_value) {
+  std::string result("Value [");
+  result += attr_value;
+  result += "] for attribute [";
+  result += attr_name;
+  result += "] of XML element [";
+  result += GetTranscoded(elem.getNodeName()).get();
+  result += "] is out of range";
+  return result;
+}
+
+static const char *ToString(TBase b) {
+  switch (b) {
+    case TBase::BIN: {
+      return "binary";
+    }
+    case TBase::OCT: {
+      return "octal";
+    }
+    case TBase ::DEC: {
+      return "decimal";
+    }
+    case TBase::HEX: {
+      break;
+    }
+    NO_DEFAULT_CASE;
+  };
+
+  return "hexadecimal";
+}
+
+std::string TWrongUnsignedIntegerBase::BuildMsg(const DOMElement &elem,
+    const char *attr_name, const char *attr_value, Base::TBase found,
+    unsigned int allowed) {
+  std::string result("Value [");
+  result += attr_value;
+  result += "] for attribute [";
+  result += attr_name;
+  result += "] of XML element [";
+  result += GetTranscoded(elem.getNodeName()).get();
+  result += "] is in an unsupported ";
+  result += ToString(found);
+  result += " base.  Allowed bases are {";
+  bool following = false;
+
+  if (allowed & TBase::BIN) {
+    result += "binary";
+    following = true;
+  }
+
+  if (allowed & TBase::OCT) {
+    if (following) {
+      result += ", ";
+    }
+
+    result += "octal";
+    following = true;
+  }
+
+  if (allowed & TBase::DEC) {
+    if (following) {
+      result += ", ";
+    }
+
+    result += "decimal";
+    following = true;
+  }
+
+  if (allowed & TBase::HEX) {
+    if (following) {
+      result += ", ";
+    }
+
+    result += "hexadecimal";
+  }
+
+  result += "}";
+  return result;
+}
+
+std::string TInvalidUnsignedIntegerAttr::BuildMsg(const DOMElement &elem,
+    const char *attr_name, const char *attr_value) {
+  std::string result("Value [");
+  result += attr_value;
+  result += "] for attribute [";
+  result += attr_name;
+  result += "] of XML element [";
+  result += GetTranscoded(elem.getNodeName()).get();
+  result += "] is not a vaild unsigned integer";
+  return result;
+}
+
+std::string TInvalidSignedIntegerAttr::BuildMsg(const DOMElement &elem,
+    const char *attr_name, const char *attr_value) {
+  std::string result("Value [");
+  result += attr_value;
+  result += "] for attribute [";
+  result += attr_name;
+  result += "] of XML element [";
+  result += GetTranscoded(elem.getNodeName()).get();
+  result += "] is not a vaild signed integer";
+  return result;
 }

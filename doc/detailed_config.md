@@ -295,8 +295,8 @@ in the above-mentioned design section.
              UNIX domain datagrams.  This limit does NOT apply to messages sent
              by UNIX domain stream socket or local TCP (see maxStreamMsgSize).
              Input datagrams larger than this value will be discarded.
-             Suffix k may be used to specify a value, where k means "multiply
-             by 1024".
+             Suffixes k or m may be used to specify a value, where k means
+             "multiply by 1024" and m means "multiply by (1024 * 1024)".
           -->
         <maxDatagramMsgSize value="64k" />
 
@@ -315,10 +315,11 @@ in the above-mentioned design section.
              messages.  Even if a message doesn't exceed this limit, it may
              still be discarded if it is too large to send in a single produce
              request.  However, in this case Dory will still leave the
-             connection open and continue reading messages.  Suffix k may be
-             used to specify a value, where k means "multiply by 1024".
+             connection open and continue reading messages.  Suffixes k or m
+             may be used to specify a value, where k means "multiply by 1024"
+             and m means "multiply by (1024 * 1024)".
           -->
-        <maxStreamMsgSize value="16384k" />
+        <maxStreamMsgSize value="16m" />
     </inputConfig>
 
     <msgDelivery>
@@ -405,7 +406,7 @@ in the above-mentioned design section.
              Suffixes k or m may be used to specify a value, where k means
              "multiply by 1024" and m means "multiply by (1024 * 1024)".
           -->
-        <maxFileSize value="1m" />
+        <maxFileSize value="32m" />
 
         <!-- See description of maxFileSize.  Once a discard logfile is renamed
              from f to f.N due to the size restriction imposed by maxFileSize,
@@ -416,7 +417,7 @@ in the above-mentioned design section.
              m may be used to specify a value, where k means "multiply by 1024"
              and m means "multiply by (1024 * 1024)".
           -->
-        <maxArchiveSize value="32m" />
+        <maxArchiveSize value="256m" />
 
         <!-- Maximum message prefix size in bytes to write to discard logfile
              when discarding.  Messages larger than this limit will be

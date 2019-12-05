@@ -116,10 +116,13 @@ namespace {
 
     try {
       doc.reset(ParseXmlConfig(xml.data(), xml.size(), "US-ASCII"));
-    } catch (const TSaxParseException &x) {
+    } catch (const TSaxParseError &x) {
       caught = true;
-      ASSERT_EQ(x.GetLine(), 4U);
-      ASSERT_EQ(x.GetColumn(), 3U);
+      const TOpt<TFileLocation> &loc = x.GetLocation();
+      ASSERT_TRUE(loc.IsKnown());
+      ASSERT_TRUE(loc->Column.IsKnown());
+      ASSERT_EQ(loc->Line, 4U);
+      ASSERT_EQ(*loc->Column, 3U);
     }
 
     ASSERT_TRUE(caught);
@@ -204,15 +207,24 @@ namespace {
     ASSERT_EQ(child->getNodeType(), DOMNode::ELEMENT_NODE);
     ASSERT_EQ(TranscodeToString(child->getNodeName()), "testElement3");
     elem = static_cast<const DOMElement *>(child);
+
+    const DOMElement *child_ptr = TryGetChildElement(*elem, "testElement3a");
+    ASSERT_TRUE(child_ptr != nullptr);
+    ASSERT_EQ(TranscodeToString(child_ptr->getNodeName()), "testElement3a");
+    child_ptr = TryGetChildElement(*elem, "nonexistent");
+    ASSERT_TRUE(child_ptr == nullptr);
     bool caught = false;
 
     try {
       RequireLeaf(*elem);
     } catch (const TExpectedLeaf &x) {
       caught = true;
+      const TOpt<TFileLocation> &loc = x.GetLocation();
       ASSERT_EQ(x.GetElementName(), "testElement3");
-      ASSERT_EQ(x.GetLine(), 5U);
-      ASSERT_EQ(x.GetColumn(), 17U);
+      ASSERT_TRUE(loc.IsKnown());
+      ASSERT_TRUE(loc->Column.IsKnown());
+      ASSERT_EQ(loc->Line, 5U);
+      ASSERT_EQ(*loc->Column, 17U);
     }
 
     ASSERT_TRUE(caught);
@@ -223,8 +235,11 @@ namespace {
     } catch (const TUnknownElement &x) {
       caught = true;
       ASSERT_EQ(x.GetElementName(), "testElement3a");
-      ASSERT_EQ(x.GetLine(), 5U);
-      ASSERT_EQ(x.GetColumn(), 34U);
+      const TOpt<TFileLocation> &loc = x.GetLocation();
+      ASSERT_TRUE(loc.IsKnown());
+      ASSERT_TRUE(loc->Column.IsKnown());
+      ASSERT_EQ(loc->Line, 5U);
+      ASSERT_EQ(*loc->Column, 34U);
     }
 
     ASSERT_TRUE(caught);
@@ -272,8 +287,11 @@ namespace {
     } catch (const TUnknownElement &x) {
       caught = true;
       ASSERT_EQ(x.GetElementName(), "testElement4aa");
-      ASSERT_EQ(x.GetLine(), 6U);
-      ASSERT_EQ(x.GetColumn(), 50U);
+      const TOpt<TFileLocation> &loc = x.GetLocation();
+      ASSERT_TRUE(loc.IsKnown());
+      ASSERT_TRUE(loc->Column.IsKnown());
+      ASSERT_EQ(loc->Line, 6U);
+      ASSERT_EQ(*loc->Column, 50U);
     }
 
     ASSERT_TRUE(caught);
@@ -343,8 +361,11 @@ namespace {
     } catch (const TExpectedLeaf &x) {
       caught = true;
       ASSERT_EQ(x.GetElementName(), "elem2b");
-      ASSERT_EQ(x.GetLine(), 4U);
-      ASSERT_EQ(x.GetColumn(), 28U);
+      const TOpt<TFileLocation> &loc = x.GetLocation();
+      ASSERT_TRUE(loc.IsKnown());
+      ASSERT_TRUE(loc->Column.IsKnown());
+      ASSERT_EQ(loc->Line, 4U);
+      ASSERT_EQ(*loc->Column, 28U);
     }
 
     ASSERT_TRUE(caught);
@@ -471,7 +492,11 @@ namespace {
     } catch (const TDuplicateElement &x) {
       caught = true;
       ASSERT_EQ(x.GetElementName(), "sub2");
-      ASSERT_EQ(x.GetLine(), 11U);
+      const TOpt<TFileLocation> &loc = x.GetLocation();
+      ASSERT_TRUE(loc.IsKnown());
+      ASSERT_TRUE(loc->Column.IsKnown());
+      ASSERT_EQ(loc->Line, 11U);
+      ASSERT_EQ(*loc->Column, 13U);
     }
 
     ASSERT_TRUE(caught);
@@ -494,7 +519,11 @@ namespace {
           {{"sub1", true}, {"sub2", true}}, false);
     } catch (const TUnexpectedText &x) {
       caught = true;
-      ASSERT_EQ(x.GetLine(), 13U);
+      const TOpt<TFileLocation> &loc = x.GetLocation();
+      ASSERT_TRUE(loc.IsKnown());
+      ASSERT_TRUE(loc->Column.IsKnown());
+      ASSERT_EQ(loc->Line, 13U);
+      ASSERT_EQ(*loc->Column, 17U);
     }
 
     ASSERT_TRUE(caught);
@@ -600,8 +629,11 @@ namespace {
       caught = true;
       ASSERT_EQ(x.GetElementName(), "crap");
       ASSERT_EQ(x.GetExpectedElementName(), "item");
-      ASSERT_EQ(x.GetLine(), 12U);
-      ASSERT_EQ(x.GetColumn(), 13U);
+      const TOpt<TFileLocation> &loc = x.GetLocation();
+      ASSERT_TRUE(loc.IsKnown());
+      ASSERT_TRUE(loc->Column.IsKnown());
+      ASSERT_EQ(loc->Line, 12U);
+      ASSERT_EQ(*loc->Column, 13U);
     }
 
     ASSERT_TRUE(caught);
@@ -622,8 +654,11 @@ namespace {
       item_list = GetItemListElements(*elem, "item");
     } catch (const TUnexpectedText &x) {
       caught = true;
-      ASSERT_EQ(x.GetLine(), 15U);
-      ASSERT_EQ(x.GetColumn(), 17U);
+      const TOpt<TFileLocation> &loc = x.GetLocation();
+      ASSERT_TRUE(loc.IsKnown());
+      ASSERT_TRUE(loc->Column.IsKnown());
+      ASSERT_EQ(loc->Line, 15U);
+      ASSERT_EQ(*loc->Column, 17U);
     }
 
     ASSERT_TRUE(caught);
@@ -695,8 +730,11 @@ namespace {
       caught = true;
       ASSERT_EQ(x.GetAttrName(), "wrong_attr");
       ASSERT_EQ(x.GetElementName(), "elem");
-      ASSERT_EQ(x.GetLine(), 5U);
-      ASSERT_EQ(x.GetColumn(), 26U);
+      const TOpt<TFileLocation> &loc = x.GetLocation();
+      ASSERT_TRUE(loc.IsKnown());
+      ASSERT_TRUE(loc->Column.IsKnown());
+      ASSERT_EQ(loc->Line, 5U);
+      ASSERT_EQ(*loc->Column, 26U);
     }
 
     ASSERT_TRUE(caught);
@@ -708,8 +746,11 @@ namespace {
       caught = true;
       ASSERT_EQ(x.GetAttrName(), "attr1");
       ASSERT_EQ(x.GetElementName(), "elem");
-      ASSERT_EQ(x.GetLine(), 5U);
-      ASSERT_EQ(x.GetColumn(), 26U);
+      const TOpt<TFileLocation> &loc = x.GetLocation();
+      ASSERT_TRUE(loc.IsKnown());
+      ASSERT_TRUE(loc->Column.IsKnown());
+      ASSERT_EQ(loc->Line, 5U);
+      ASSERT_EQ(*loc->Column, 26U);
     }
 
     ASSERT_TRUE(caught);
@@ -799,8 +840,11 @@ namespace {
       caught = true;
       ASSERT_EQ(x.GetAttrName(), "wrong_attr");
       ASSERT_EQ(x.GetElementName(), "elem");
-      ASSERT_EQ(x.GetLine(), 10U);
-      ASSERT_EQ(x.GetColumn(), 25U);
+      const TOpt<TFileLocation> &loc = x.GetLocation();
+      ASSERT_TRUE(loc.IsKnown());
+      ASSERT_TRUE(loc->Column.IsKnown());
+      ASSERT_EQ(loc->Line, 10U);
+      ASSERT_EQ(*loc->Column, 25U);
     }
 
     ASSERT_TRUE(caught);
@@ -953,8 +997,11 @@ namespace {
       caught = true;
       ASSERT_EQ(x.GetAttrName(), "wrong_attr");
       ASSERT_EQ(x.GetElementName(), "elem");
-      ASSERT_EQ(x.GetLine(), 8U);
-      ASSERT_EQ(x.GetColumn(), 33U);
+      const TOpt<TFileLocation> &loc = x.GetLocation();
+      ASSERT_TRUE(loc.IsKnown());
+      ASSERT_TRUE(loc->Column.IsKnown());
+      ASSERT_EQ(loc->Line, 8U);
+      ASSERT_EQ(*loc->Column, 33U);
     }
 
     ASSERT_TRUE(caught);
@@ -1124,8 +1171,11 @@ namespace {
       caught = true;
       ASSERT_EQ(x.GetAttrName(), "wrong_attr");
       ASSERT_EQ(x.GetElementName(), "elem");
-      ASSERT_EQ(x.GetLine(), 25U);
-      ASSERT_EQ(x.GetColumn(), 29U);
+      const TOpt<TFileLocation> &loc = x.GetLocation();
+      ASSERT_TRUE(loc.IsKnown());
+      ASSERT_TRUE(loc->Column.IsKnown());
+      ASSERT_EQ(loc->Line, 25U);
+      ASSERT_EQ(*loc->Column, 29U);
     }
 
     ASSERT_TRUE(caught);

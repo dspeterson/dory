@@ -70,6 +70,12 @@ namespace Xml {
     GetItemListElements(const xercesc::DOMElement &parent,
         const char *item_name);
 
+    /* Return a non-owning pointer to the first found child element of 'parent'
+       with the given name if one exists, or nullptr otherwise. */
+    const xercesc::DOMElement *
+    TryGetChildElement(const xercesc::DOMElement &parent,
+        const char *child_name);
+
     /* Verify that 'elem' has no child elements.  If a child element is found,
        throw a TUnknownElement exception that references a found child element.
        A nonelement child node (for instance, a DOMCharacterData node) will

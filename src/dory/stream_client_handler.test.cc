@@ -48,11 +48,13 @@
 #include <dory/msg_state_tracker.h>
 #include <dory/stream_client_handler.h>
 #include <dory/test_util/misc_util.h>
-#include <dory/test_util/xml_util.h>
 #include <dory/util/dory_xml_init.h>
+#include <log/log.h>
+#include <log/pri.h>
 #include <server/unix_stream_server.h>
 #include <test_util/test_logging.h>
 #include <thread/gate.h>
+#include <xml/config/config_errors.h>
 
 #include <gtest/gtest.h>
 
@@ -64,9 +66,12 @@ using namespace Dory::Conf;
 using namespace Dory::Debug;
 using namespace Dory::TestUtil;
 using namespace Dory::Util;
+using namespace Log;
 using namespace Server;
 using namespace ::TestUtil;
 using namespace Thread;
+using namespace Xml;
+using namespace Xml::Config;
 
 namespace {
 
@@ -193,7 +198,14 @@ namespace {
         << "    </kafkaConfig>" << std::endl
         << std::endl
         << "</doryConfig>" << std::endl;
-    Conf = XmlToConf(os.str());
+    try {
+      Conf = TConf::TBuilder(true /* allow_input_bind_ephemeral */,
+          true /* enable_lz4 */).Build(os.str());
+    } catch (const TXmlError &x) {
+      LOG(TPri::ERR) << x.what();
+      throw;
+    }
+
     OutputQueue.reset(new TGate<TMsg::TPtr>);
     StreamClientWorkerPool.reset(new TWorkerPool);
     UnixStreamServer.reset(new TUnixStreamServer(16,

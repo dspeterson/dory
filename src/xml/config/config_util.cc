@@ -74,11 +74,11 @@ DOMDocument *Xml::Config::ParseXmlConfig(const void *buf, size_t buf_size,
 
     return doc.release();
   } catch (const XMLException &x) {
-    throw TXmlException(x);
+    throw TXmlError(x);
   } catch (const SAXParseException &x) {
-    throw TSaxParseException(x);
+    throw TSaxParseError(x);
   } catch (const DOMException &x) {
-    throw TDomException(x);
+    throw TDomError(x);
   }
 }
 
@@ -151,6 +151,24 @@ Xml::Config::GetSubsectionElements(const DOMElement &parent,
   }
 
   return result;
+}
+
+const DOMElement * Xml::Config::TryGetChildElement(
+    const xercesc::DOMElement &parent, const char *child_name) {
+  assert(&parent);
+  assert(child_name);
+
+  for (const DOMElement *child = parent.getFirstElementChild();
+      child;
+      child = child->getNextElementSibling()) {
+    std::string name(TranscodeToString(child->getTagName()));
+
+    if (name == child_name) {
+      return child;
+    }
+  }
+
+  return nullptr;
 }
 
 std::vector<const DOMElement *>
