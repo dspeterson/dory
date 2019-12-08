@@ -354,10 +354,10 @@ namespace {
 
     ASSERT_EQ(conf.InputSourcesConf.UnixDgPath, "/var/run/dory/input_d");
     ASSERT_TRUE(conf.InputSourcesConf.UnixDgMode.IsKnown());
-    ASSERT_EQ(*conf.InputSourcesConf.UnixDgMode, 0200);
+    ASSERT_EQ(*conf.InputSourcesConf.UnixDgMode, 0200U);
     ASSERT_EQ(conf.InputSourcesConf.UnixStreamPath, "/var/run/dory/input_s");
     ASSERT_TRUE(conf.InputSourcesConf.UnixStreamMode.IsKnown());
-    ASSERT_EQ(*conf.InputSourcesConf.UnixStreamMode, 0020);
+    ASSERT_EQ(*conf.InputSourcesConf.UnixStreamMode, 0020U);
     ASSERT_TRUE(conf.InputSourcesConf.LocalTcpPort.IsKnown());
     ASSERT_EQ(*conf.InputSourcesConf.LocalTcpPort, 54321U);
 
@@ -399,7 +399,7 @@ namespace {
     ASSERT_FALSE(conf.LoggingConf.EnableSyslog);
     ASSERT_EQ(conf.LoggingConf.FilePath, "/log/file/path");
     ASSERT_TRUE(conf.LoggingConf.FileMode.IsKnown());
-    ASSERT_EQ(*conf.LoggingConf.FileMode, 0664);
+    ASSERT_EQ(*conf.LoggingConf.FileMode, 0664U);
 
     ASSERT_EQ(conf.InitialBrokers.size(), 2U);
     ASSERT_EQ(conf.InitialBrokers[0].Host, "host1");
@@ -690,7 +690,7 @@ namespace {
 
     ASSERT_EQ(conf.InputSourcesConf.UnixDgPath, "/var/run/dory/input_d");
     ASSERT_TRUE(conf.InputSourcesConf.UnixDgMode.IsKnown());
-    ASSERT_EQ(*conf.InputSourcesConf.UnixDgMode, 0222);
+    ASSERT_EQ(*conf.InputSourcesConf.UnixDgMode, 0222U);
     ASSERT_EQ(conf.InputSourcesConf.UnixStreamPath, "/var/run/dory/input_s");
     ASSERT_FALSE(conf.InputSourcesConf.UnixStreamMode.IsKnown());
     ASSERT_FALSE(conf.InputSourcesConf.LocalTcpPort.IsKnown());
