@@ -1,10 +1,5 @@
 %define _bindir /usr/bin
 
-# Trying to build the debuginfo package on CentOS 6 causes problems.
-%if 0%{?rhel} == 6
-%define debug_package %{nil}
-%endif
-
 # The right hand sides of these definitions get replaced during preprocessing
 # by the 'pkg' script.
 #
@@ -15,6 +10,11 @@
 %define build_type BUILD_TYPE
 %define dory_pkg_name DORY_PKG_NAME
 %define asan SANITIZE_ADDRESS
+
+# Trying to build the debuginfo package on CentOS 6 causes problems.
+%if 0%{?rhel} == 6 || "%{build_type}" == "release"
+%define debug_package %{nil}
+%endif
 
 Name:		%{dory_pkg_name}
 Version:	DORY_VERSION
