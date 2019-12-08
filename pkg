@@ -101,16 +101,18 @@ make_rpm() {
                 sed 's/BUILD_TYPE/release/' | \
                 sed 's/DORY_PKG_NAME/dory/' | \
                 sed 's/SANITIZE_ADDRESS/no/' > $base/SPECS/dory.spec
+        opts=--nodebuginfo
     else
         sed "s/DORY_VERSION/${version}/" < $spec_in | \
                 sed 's/BUILD_TYPE/debug/' | \
                 sed 's/DORY_PKG_NAME/dory_debug/' | \
                 sed "s/SANITIZE_ADDRESS/${asan}/" > $base/SPECS/dory.spec
+        opts=
     fi
 
     cp out/pkg/tar/${pkg_name}-${version}.tar.gz $base/SOURCES
     cd $base
-    rpmbuild --define "_topdir `pwd`" -ba SPECS/dory.spec
+    rpmbuild $opts --define "_topdir `pwd`" -ba SPECS/dory.spec
 
     if [ "$?" -ne 0 ]; then
         echo RPM build failed 1>&2
