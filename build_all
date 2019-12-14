@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # -----------------------------------------------------------------------------
 # Copyright 2014 if(we)
@@ -33,9 +33,6 @@ def parse_args():
     parser.add_argument('-v', '--verbose', help='Show verbose output.',
             action='store_true')
     parser.add_argument('-c', '--clean', help='Delete build results.',
-            action='store_true')
-    parser.add_argument('-p', '--import_path',
-            help='Import PATH environment variable into build environment.',
             action='store_true')
     parser.add_argument('-m', '--mode', help='Specify build mode.',
             action='store', dest='mode', choices=('debug', 'release'),
@@ -110,11 +107,11 @@ def get_scons_path():
         sys.stderr.write('Got empty scons path\n')
         sys.exit(1)
 
+    out = out.decode('utf-8')
     return out.rstrip()
 
 
-def build_targets(targets, path_filter, verbose, mode, import_path, asan,
-        run_tests):
+def build_targets(targets, path_filter, verbose, mode, asan, run_tests):
     filtered_targets = apply_path_filter(targets, path_filter)
     scons_path = get_scons_path()
 
@@ -128,16 +125,13 @@ def build_targets(targets, path_filter, verbose, mode, import_path, asan,
         # Doing things this way rather than directly executing scons command
         # will cause us to use the desired version of python when inside a
         # virtualenv.
-        cmd = ['python', scons_path, '-Q', '--up']
+        cmd = ['python3', scons_path, '-Q', '--up']
 
         if not verbose:
             cmd.append('-s')
 
         if mode == 'release':
             cmd.append('--release')
-
-        if import_path:
-            cmd.append('--import_path')
 
         if asan == 'no':
             cmd.append('--asan=no')
@@ -172,7 +166,7 @@ if args.clean:
         # Doing things this way rather than directly executing scons command
         # will cause us to use the desired version of python when inside a
         # virtualenv.
-        subprocess.check_call(['python', get_scons_path(), '-c'])
+        subprocess.check_call(['python3', get_scons_path(), '-c'])
         sys.exit(0)
     except subprocess.CalledProcessError:
         sys.stderr.write('Stopping on failure\n')
@@ -209,26 +203,26 @@ for target in target_set:
         print('Building apps:')
         print('')
         build_targets(all_apps, args.path_filter, args.verbose, args.mode,
-                      args.import_path, args.asan, False)
+                      args.asan, False)
         print('============================================================')
     elif target == 'client_libs':
         print('============================================================')
         print('Building client_libs:')
         print('')
         build_targets(client_libs, args.path_filter, args.verbose, args.mode,
-                      args.import_path, args.asan, False)
+                      args.asan, False)
         print('============================================================')
     elif target == 'tests':
         print('============================================================')
         print('Building tests:')
         print('')
         build_targets(get_test_targets(), args.path_filter, args.verbose,
-                      args.mode, args.import_path, args.asan, False)
+                      args.mode, args.asan, False)
         print('============================================================')
     elif target == 'run_tests':
         print('============================================================')
         print('Building and running tests:')
         print('')
         build_targets(get_test_targets(), args.path_filter, args.verbose,
-                      args.mode, args.import_path, args.asan, True)
+                      args.mode, args.asan, True)
         print('============================================================')

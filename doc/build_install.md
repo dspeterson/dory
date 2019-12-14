@@ -1,10 +1,9 @@
 ## Building and Installing Dory
 
 Once you have finished [setting up your build environment](../README.md#setting-up-a-build-environment),
-you are ready to build Dory.  If you are building on CentOS 6, remember to set
-your `PATH` and `LD_LIBRARY_PATH` environment variables and activate your
-Python virtualenv environment before building, as detailed
-[here](centos_6_8_env.md).  The first step is to clone Dory's Git repository:
+you are ready to build Dory.  If you are building on CentOS/RHEL 7, remember to
+build within a shell started by `scl enable devtoolset-8 bash`, as detailed
+[here](centos_7_env.md).  The first step is to clone Dory's Git repository:
 
 ```
 git clone https://github.com/dspeterson/dory.git
@@ -42,14 +41,13 @@ In the former case, the resulting RPM packages can be found in directory
 
 The init script for Dory (see [config/dory.init](../config/dory.init)) is an
 older System V type of script.  Scripts that work with the newer *systemd*
-included in CentOS 7 and *upstart* included in recent Ubuntu distributions are
+included in CentOS 7 and *upstart* included in some Ubuntu distributions are
 currently not available.  Contributions from the community would be much
 appreciated.
 
 ### Building Dory Directly
 
-For all platforms except CentOS 6, Dory may be built directly using SCons as
-follows:
+Dory may be built directly using SCons as follows:
 
 ```
 cd dory
@@ -59,17 +57,11 @@ build --release dory
 cd ../..
 ```
 
-For CentOS 6, the steps are identical except that instead of
-`build --release dory` you should type `build --release --import_path dory`.
-The `--import_path` option tells the SCons build configuration to use the PATH
-environment variable setting from the external environment.  This is needed
-so that your customized PATH setting (as described
-[here](centos_6_8_env.md#building-and-installing-gcc-482)) is seen and the
-newer version of gcc is used.  After performing the above steps, the path to
-the newly built Dory executable is now `out/release/dory/dory`.  If you omit
-`--release` above, you will create a debug build of Dory and the location of
-the executable will be `out/debug/dory/dory`.  Before creating a debug build,
-you should read [this](dev_info.md#debug-builds).
+After performing the above steps, the path to the newly built Dory executable
+is now `out/release/dory/dory`.  If you omit `--release` above, you will create
+a debug build of Dory and the location of the executable will be
+`out/debug/dory/dory`.  Before creating a debug build, you should read
+[this](dev_info.md#debug-builds).
 
 ### Building Dory's Client Library
 
@@ -87,15 +79,14 @@ build --release to_dory
 cd ../../..
 ```
 
-In the case of CentOS 6, remember to use the `--import_path` option with the
-`build` command.  As above, if you omit the `--release`, then you will create a
-debug build, which is documented [here](dev_info.md#debug-builds).  The newly
-built library files and client program are now located in
-`out/release/dory/client`.  If installing them manually, rename
-`libdory_client.so` to `libdory_client.so.0` when copying it to your system's
-library directory (`/usr/lib64` on CentOS/RedHat, or `/usr/lib` on Ubuntu), and
-remember to run `/sbin/ldconfig` afterwards.  Also remember to install the
-client library header files as follows:
+As above, if you omit the `--release`, then you will create a debug build,
+which is documented [here](dev_info.md#debug-builds).  The newly built library
+files and client program are now located in `out/release/dory/client`.  If
+installing them manually, rename `libdory_client.so` to `libdory_client.so.0`
+when copying it to your system's library directory (`/usr/lib64` on
+CentOS/RHEL, or `/usr/lib` on Ubuntu), and remember to run `/sbin/ldconfig`
+afterwards.  Also remember to install the client library header files as
+follows:
 
 ```
 mkdir -p /usr/include/dory/client
@@ -124,18 +115,15 @@ If you built an RPM package containing Dory, then you can install it using an
 RPM command such as:
 
 ```
-rpm -Uvh out/pkg/rpm/dory-1.0.6.38.g66c5a2d-1.el6.x86_64.rpm
+rpm -Uvh out/pkg/release/rpm/dory-3.0.4-1.el8.x86_64.rpm
 ```
 
 Otherwise, you can copy the Dory executable to a location of your choice, such
-as `/usr/bin`.  If you are running on CentOS 6, remember that the gcc482 RPM
-package described [here](centos_6_8_env.md#building-and-installing-gcc-482)
-must be installed, and `LD_LIBRARY_PATH` must contain `/opt/gcc/lib64` in the
-shell that you execute Dory from.  If you built your RPM package using the
-`rpm_noconfig` option described above, or you built Dory directly using SCons,
-you will need to install Dory's init script, sysconfig file, and configuration
-file separately.  Assuming you are in the root of the Git repository (where
-Dory's [SConstruct](../SConstruct) file is found), you can do this as follows:
+as `/usr/bin`.  If you built your RPM package using the `rpm_noconfig` option
+described above, or you built Dory directly using SCons, you will need to
+install Dory's init script, sysconfig file, and configuration file separately.
+Assuming you are in the root of the Git repository (where Dory's
+[SConstruct](../SConstruct) file is found), you can do this as follows:
 
 ```
 cp config/dory.init /etc/init.d/dory

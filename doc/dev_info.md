@@ -23,12 +23,8 @@ build msg.o  # compile source file msg.cc
 build conf/conf.o  # compile source file conf/conf.cc
 ```
 
-If you are building on CentOS 6, remember to set your `PATH` and
-`LD_LIBRARY_PATH` environment variables and activate your Python virtualenv
-environment before building, as detailed [here](centos_6_8_env.md).  On CentOS
-6, you must also add the `--import_path` command line option to the `build`
-command (for instance, `build --import_path client/to_dory` or
-`build --import_path msg.o`).
+If you are building on CentOS/RHEL 7, remember to build within a shell started
+by `scl enable devtoolset-8 bash`, as detailed [here](centos_7_env.md).
 
 All build results are in the `out` directory (relative to the root of the Git
 repository).  For instance, the built `dory` executable will be
@@ -52,33 +48,57 @@ repository.  If you wish to change any compiler or linker flags, look for the
 section of code in the SConstruct file that looks roughly like this:
 
 ```Python
-# Environment.
-prog_libs = {'pthread', 'dl', 'rt'}
-env = Environment(CFLAGS=['-Wwrite-strings'],
-                  CCFLAGS=['-Wall', '-Wextra', '-Werror', '-Wformat=2',
-                          '-Winit-self', '-Wunused-parameter', '-Wshadow',
-                          '-Wpointer-arith', '-Wcast-align', '-Wlogical-op'],
-                  CPPDEFINES=[('SRC_ROOT', '\'"' + src.abspath + '"\'')],
-                  CPPPATH=[src, tclap, gtestincdir],
-                  CXXFLAGS=['-std=c++11', '-Wold-style-cast'],
-                  DEP_SUFFIXES=['.cc', '.cpp', '.c', '.cxx', '.c++', '.C'],
-                  TESTSUFFIX='.test',
-                  PROG_LIBS=[lib for lib in prog_libs],
-                  GENERATED_SOURCE_MAP={},
-                  LIB_HEADER_MAP={})
+xerces_lib_deps = ['xerces-c']
 
-if GetOption('import_path'):
-    env['ENV']['PATH'] = os.environ['PATH']
+ext_lib_deps = [
+    [r'^dory/dory\.test$', xerces_lib_deps],
+    [r'^dory/unix_dg_input_agent\.test$', xerces_lib_deps],
+    [r'^dory/stream_client_handler\.test$', xerces_lib_deps],
+    [r'^dory/conf/conf\.test$', xerces_lib_deps],
+    [r'^xml/.*', xerces_lib_deps],
+    [r'^dory/dory$', xerces_lib_deps]
+]
+
+env = Environment()
+
+# As documented here:
+#
+#     https://www.softwarecollections.org/en/scls/rhscl/devtoolset-8/
+#
+# gcc 8 is enabled on CentOS 7 by building in an environment set up by the
+# following command:
+#
+#     scl enable devtoolset-8 bash
+#
+# See if we are executing in this kind of environment.  If so, we must inject
+# our environment variables into the build environment so gcc 8 is used.
+if 'X_SCLS' in os.environ and \
+        'devtoolset-8' in os.environ['X_SCLS'].split(' '):
+    env.Append(ENV=os.environ)
+
+prog_libs = {'pthread', 'dl', 'rt', 'z'}
+env.Append(CFLAGS=['-Wwrite-strings'],
+        CCFLAGS=['-Wall', '-Wextra', '-Werror', '-Wformat=2', '-Winit-self',
+                '-Wunused-parameter', '-Wshadow', '-Wpointer-arith',
+                '-Wcast-align', '-Wlogical-op', '-Wno-nonnull-compare'],
+        CPPDEFINES=[('SRC_ROOT', '\'"' + src.abspath + '"\'')],
+        CPPPATH=[src, tclap, gtestincdir],
+        CXXFLAGS=['-std=c++17', '-Wold-style-cast', '-Wno-noexcept-type'],
+        DEP_SUFFIXES=['.cc', '.cpp', '.c', '.cxx', '.c++', '.C'],
+        PROG_LIBS=[lib for lib in prog_libs],
+        TESTSUFFIX='.test',
+        EXT_LIB_DEPS=ext_lib_deps)
 
 
 def set_debug_options():
     # Note: If you specify -fsanitize=address, you must also specify
     # -fno-omit-frame-pointer and be sure libasan is installed (RPM package
     # libasan on RHEL, Fedora, and CentOS).
-    env.AppendUnique(CCFLAGS=['-g', '-fno-omit-frame-pointer',
+    env.AppendUnique(CCFLAGS=['-g3', '-ggdb', '-fno-omit-frame-pointer',
                               '-fvisibility=hidden'])
     env.AppendUnique(CXXFLAGS=['-D_GLIBCXX_DEBUG',
-                               '-D_GLIBCXX_DEBUG_PEDANTIC'])
+                               '-D_GLIBCXX_DEBUG_PEDANTIC',
+                               '-DTRACK_FILE_DESCRIPTORS'])
     env.AppendUnique(LINKFLAGS=['-rdynamic'])
 
     if GetOption('asan') == 'yes':
@@ -87,10 +107,10 @@ def set_debug_options():
 
 
 def set_release_options():
+    # TODO: Enable link-time optimizations.
     env.AppendUnique(CCFLAGS=['-O2', '-DNDEBUG', '-Wno-unused',
-                              '-Wno-unused-parameter', '-flto',
-                              '-fvisibility=hidden'])
-    env.AppendUnique(LINKFLAGS=['-flto', '-rdynamic'])
+                              '-Wno-unused-parameter', '-fvisibility=hidden'])
+    env.AppendUnique(LINKFLAGS=['-rdynamic'])
 ```
 
 Note that SCons build files are actually Python scripts, so you can add
@@ -100,12 +120,9 @@ the dependencies on their own.  If you want to build all targets (or a
 substantial subset of all targets) with a single command, you can execute the
 [build_all](../build_all) script in the root of the Git repository.  For
 instance, `build_all run_tests` will build and run all unit tests.  Type
-`build_all --help` for a full description of the command line options.  As with
-the `build` command, if you are building on CentOS 6, you must use the
-`--import_path` command line option with `build_all` (for instance,
-`build_all --import_path`).  Eventually it would be nice to eliminate the
-`build_all` script and integrate its functionality directly into the SCons
-configuration.
+`build_all --help` for a full description of the command line options.
+Eventually it would be nice to eliminate the `build_all` script and integrate
+its functionality directly into the SCons configuration.
 
 ### Debug Builds
 
@@ -117,7 +134,7 @@ script, debug versions of binaries will be built by default.  As documented
 for building an RPM package.  By default, `pkg` builds a release version of
 Dory.  To build a debug version, specify `--debug`.
 
-In GCC 4.8, support was added for
+GCC provides support for
 [AddressSanitizer](http://code.google.com/p/address-sanitizer/), a useful
 debugging tool.  This is enabled by default in debug builds.  When running Dory
 with the address sanitizer, you may notice that it uses a large amount of
@@ -217,7 +234,9 @@ Information on contributing to Dory is provided [here](../CONTRIBUTING.md).
 
 -----
 
-dev_info.md: Copyright 2014 if(we), Inc.
+dev_info.md:
+Copyright 2019 Dave Peterson (dave@dspeterson.com)
+Copyright 2014 if(we), Inc.
 
 dev_info.md is licensed under a Creative Commons Attribution-ShareAlike 4.0
 International License.

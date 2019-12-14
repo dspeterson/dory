@@ -89,11 +89,10 @@ available:
 Code contributions for clients in other programming languages are much
 appreciated.  Technical details on how to send messages to Dory are provided
 [here](doc/sending_messages.md).  Support for [running Dory inside a Docker
-container](Docker) is also available.  Dory requires at least version 0.8 of
-Kafka, and has been tested on versions 2.2, 0.11, 0.10, 0.9, and 0.8.  It runs
-on Linux, and has been tested on CentOS (versions 7 and 6.8), Ubuntu (versions
-19.04, 18.04, 17.04, 16.04 LTS, 15.04, and 14.04.1 LTS), and Debian (versions 9
-and 8).
+container](Docker) is also available.  Dory works with Kafka versions from 0.8
+through the latest.  It runs on Linux, and is supported on CentOS/RHEL versions
+8 and 7, Ubuntu versions 18.04 LTS and 16.04 LTS, and Debian versions 10
+(Buster) and 9 (Stretch).
 
 Dory is the successor to [Bruce](https://github.com/ifwe/bruce), and is
 maintained by [Dave Peterson](https://github.com/dspeterson), who created Bruce
@@ -106,11 +105,13 @@ things you would like to see in future versions of Dory, please add them
 
 ## Setting Up a Build Environment
 
-To get Dory working, you need to set up a build environment.  Currently,
-instructions are available for [CentOS 7](doc/centos_7_env.md),
-[CentOS 6.8](doc/centos_6_8_env.md),
-[Ubuntu (19.04, 18.04, 17.04, 16.04 LTS, 15.04, and 14.04.1 LTS)](doc/ubuntu_env.md),
-and [Debian (versions 9 and 8)](doc/debian_env.md).
+To get Dory working, you need to set up a build environment.  Instructions are
+available for [CentOS/RHEL 8](doc/centos_8_env.md),
+[CentOS/RHEL 7](doc/centos_7_env.md),
+[Ubuntu 18.04 LTS](doc/ubuntu_18_04_lts_env.md),
+[Ubuntu 16.04 LTS](doc/ubuntu_16_04_lts_env.md),
+[Debian 10 (Buster)](doc/debian_10_env.md), and
+[Debian 9 (Stretch)](doc/debian_9_env.md).
 
 ## Building and Installing Dory
 
@@ -158,7 +159,9 @@ If you have questions about Dory, contact Dave Peterson (dave@dspeterson.com).
 
 -----
 
-README.md: Copyright 2014 if(we), Inc.
+README.md:
+Copyright 2019 Dave Peterson (dave@dspeterson.com)
+Copyright 2014 if(we), Inc.
 
 README.md is licensed under a Creative Commons Attribution-ShareAlike 4.0
 International License.

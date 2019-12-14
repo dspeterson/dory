@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # -----------------------------------------------------------------------------
 # The copyright notice below is for the SCons build scripts included with this
@@ -68,9 +68,6 @@ AddOption('--test',
 AddOption('--release',
           action='store_true',
           help='Build release targets (debug targets are built by default).')
-AddOption('--import_path',
-          action='store_true',
-          help='Import PATH environment variable into build environment.')
 AddOption('--asan',
           action='store',
           help='Enable or disable address sanitizer in debug build ' + \
@@ -142,22 +139,35 @@ ext_lib_deps = [
     [r'^dory/dory$', xerces_lib_deps]
 ]
 
-# Environment.
+env = Environment()
+
+# As documented here:
+#
+#     https://www.softwarecollections.org/en/scls/rhscl/devtoolset-8/
+#
+# gcc 8 is enabled on CentOS 7 by building in an environment set up by the
+# following command:
+#
+#     scl enable devtoolset-8 bash
+#
+# See if we are executing in this kind of environment.  If so, we must inject
+# our environment variables into the build environment so gcc 8 is used.
+if 'X_SCLS' in os.environ and \
+        'devtoolset-8' in os.environ['X_SCLS'].split(' '):
+    env.Append(ENV=os.environ)
+
 prog_libs = {'pthread', 'dl', 'rt', 'z'}
-env = Environment(CFLAGS=['-Wwrite-strings'],
+env.Append(CFLAGS=['-Wwrite-strings'],
         CCFLAGS=['-Wall', '-Wextra', '-Werror', '-Wformat=2', '-Winit-self',
                 '-Wunused-parameter', '-Wshadow', '-Wpointer-arith',
                 '-Wcast-align', '-Wlogical-op', '-Wno-nonnull-compare'],
         CPPDEFINES=[('SRC_ROOT', '\'"' + src.abspath + '"\'')],
         CPPPATH=[src, tclap, gtestincdir],
-        CXXFLAGS=['-std=c++11', '-Wold-style-cast', '-Wno-noexcept-type'],
+        CXXFLAGS=['-std=c++17', '-Wold-style-cast', '-Wno-noexcept-type'],
         DEP_SUFFIXES=['.cc', '.cpp', '.c', '.cxx', '.c++', '.C'],
         PROG_LIBS=[lib for lib in prog_libs],
         TESTSUFFIX='.test',
         EXT_LIB_DEPS=ext_lib_deps)
-
-if GetOption('import_path'):
-    env['ENV']['PATH'] = os.environ['PATH']
 
 
 def set_debug_options():

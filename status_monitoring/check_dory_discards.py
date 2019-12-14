@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ###############################################################################
 # -----------------------------------------------------------------------------
@@ -186,6 +186,8 @@ def GetNagiosDir():
     if not out:
         Die(EC_UNKNOWN, 'Got empty result from shell command to determine '
             'Nagios home directory')
+
+    out = out.decode('utf-8')
 
     if out[0] == '~':
         Die(EC_UNKNOWN, 'Nagios home directory not found')

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # -----------------------------------------------------------------------------
 # Copyright 2015 Dave Peterson <dave@dspeterson.com>
@@ -111,7 +111,7 @@ if args.create_tag:
     if (exit_code != 0):
         die('Got nonzero exit code from "git" command')
 
-    print 'Created tag [' + args.create_tag + '].  Remember to push.'
+    print('Created tag [' + args.create_tag + '].  Remember to push.')
 elif args.push_tag:
     check_tag(args.push_tag)
 
@@ -144,8 +144,8 @@ elif args.list_all:
     if sort != 0:
         die('Got nonzero exit code from "sort" command')
 elif args.unpushed:
-    print 'Unpushed tags:'
-    print
+    print('Unpushed tags:')
+    print('')
 
     try:
         exit_code = subprocess.call(['git', 'push', '--tags', '--dry-run'])
