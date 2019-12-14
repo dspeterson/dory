@@ -54,8 +54,6 @@ mkdir -p %{buildroot}/%{_includedir}/dory/client
 cp src/dory/client/dory_client.h %{buildroot}/%{_includedir}/dory/client
 cp src/dory/client/dory_client_socket.h %{buildroot}/%{_includedir}/dory/client
 cp src/dory/client/status_codes.h %{buildroot}/%{_includedir}/dory/client
-cp status_monitoring/check_dory_counters.py %{buildroot}/%{_bindir}
-cp status_monitoring/check_dory_discards.py %{buildroot}/%{_bindir}
 mkdir -p %{buildroot}/%{_sysconfdir}/sysconfig
 cp config/dory.sysconfig %{buildroot}/%{_sysconfdir}/sysconfig/dory
 mkdir -p %{buildroot}/%{_sysconfdir}/dory
@@ -88,8 +86,6 @@ fi
 %{_includedir}/dory/client/dory_client.h
 %{_includedir}/dory/client/dory_client_socket.h
 %{_includedir}/dory/client/status_codes.h
-%{_bindir}/check_dory_counters.py
-%{_bindir}/check_dory_discards.py
 %{_sysconfdir}/sysconfig/dory
 %{_sysconfdir}/dory/dory_conf.xml
 %{_sysconfdir}/init.d/dory
