@@ -48,8 +48,8 @@ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 50 \
     --slave /usr/bin/gcov-tool gcov-tool /usr/bin/gcov-tool-6
 ```
 
-This configures gcc 8 as the systemwide default gcc version.  To switch between
-gcc versions, execute the following:
+This configures gcc 8 as the systemwide default version.  To switch between gcc
+versions, execute the following:
 
 ```
 sudo update-alternatives --config gcc
