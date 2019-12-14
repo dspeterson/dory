@@ -25,7 +25,6 @@
 #include <memory>
 #include <new>
 #include <string>
-#include <type_traits>
 #include <utility>
 
 #include <sys/types.h>
@@ -57,12 +56,6 @@ using namespace Xml;
 using namespace Xml::Config;
 
 static int DoryMain(int argc, char *const argv[]) {
-  if constexpr (std::is_integral<decltype(argc)>::value) {
-    std::cout << "DSP HACK: yes" << std::endl;
-  } else {
-    std::cout << "DSP HACK: no" << std::endl;
-  }
-
   TDoryXmlInit xml_init(false /* init_on_construction */);
   TCmdLineArgs args;
   bool large_sendbuf_required = false;
