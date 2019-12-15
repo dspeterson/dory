@@ -43,15 +43,7 @@ bool Base::Wr::IsFatal(int err, TDisp disp,
   switch (disp) {
     case TDisp::AddFatal: {
       fatal_if_found = true;
-
-      /* TODO: Once C++17 support is enabled, fallthrough to next case and
-         annotate with [[fallthrough]]. */
-
-      if (contains(err_list, err)) {
-        return fatal_if_found;
-      }
-
-      break;
+      [[fallthrough]];
     }
     case TDisp::AddNonfatal: {
       if (contains(err_list, err)) {
@@ -62,11 +54,7 @@ bool Base::Wr::IsFatal(int err, TDisp disp,
     }
     case TDisp::Fatal: {
       fatal_if_found = true;
-
-      /* TODO: Once C++17 support is enabled, fallthrough to next case and
-         annotate with [[fallthrough]]. */
-
-      return (contains(err_list, err) == fatal_if_found);
+      [[fallthrough]];
     }
     case TDisp::Nonfatal: {
       return (contains(err_list, err) == fatal_if_found);
