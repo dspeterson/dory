@@ -103,8 +103,9 @@ void TMsgSetWriter::OpenMsg(TCompressionType compression_type,
   assert(this);
   assert(State == TState::InMsgSet);
   assert(Buf);
-  assert(key_size <= std::numeric_limits<int32_t>::max());
-  assert(value_size <= std::numeric_limits<int32_t>::max());
+  assert(key_size <= static_cast<size_t>(std::numeric_limits<int32_t>::max()));
+  assert(value_size <=
+      static_cast<size_t>(std::numeric_limits<int32_t>::max()));
   size_t msg_minus_value_size = ComputeMsgMinusValueSize(key_size);
   size_t msg_size = msg_minus_value_size + value_size;
   size_t msg_set_item_size = ComputeMsgSetItemSize(msg_size);
@@ -217,11 +218,12 @@ void TMsgSetWriter::AddMsg(TCompressionType compression_type,
   assert(key_begin || (!key_begin && !key_end));
   assert(key_end >= key_begin);
   size_t key_size = key_end - key_begin;
-  assert(key_size <= std::numeric_limits<int32_t>::max());
+  assert(key_size <= static_cast<size_t>(std::numeric_limits<int32_t>::max()));
   assert(value_begin || (!value_begin && !value_end));
   assert(value_end >= value_begin);
   size_t value_size = value_end - value_begin;
-  assert(value_size <= std::numeric_limits<int32_t>::max());
+  assert(value_size <=
+      static_cast<size_t>(std::numeric_limits<int32_t>::max()));
   OpenMsg(compression_type, key_size, value_size);
 
   if (key_size) {
@@ -242,6 +244,7 @@ size_t TMsgSetWriter::CloseMsgSet() {
   assert(AtOffset >= FirstMsgSetItemOffset);
   assert(MsgSetSize == (AtOffset - FirstMsgSetItemOffset));
   State = TState::Idle;
-  assert(MsgSetSize <= std::numeric_limits<int32_t>::max());
+  assert(MsgSetSize <=
+      static_cast<size_t>(std::numeric_limits<int32_t>::max()));
   return MsgSetSize;
 }

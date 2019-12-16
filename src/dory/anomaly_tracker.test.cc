@@ -62,6 +62,8 @@ namespace {
       *ValueStore = timestamp;
     }
 
+    TMockClock(const TMockClock &) = default;
+
     uint64_t operator()() const {
       assert(this);
       return *ValueStore;

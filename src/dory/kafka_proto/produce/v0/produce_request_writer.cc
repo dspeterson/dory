@@ -63,7 +63,8 @@ void TProduceRequestWriter::OpenRequest(std::vector<uint8_t> &result_buf,
   assert(client_id_begin || (!client_id_begin && !client_id_end));
   assert(client_id_end >= client_id_begin);
   size_t client_id_len = client_id_end - client_id_begin;
-  assert(client_id_len <= std::numeric_limits<int16_t>::max());
+  assert(client_id_len <=
+      static_cast<size_t>(std::numeric_limits<int16_t>::max()));
   Buf = &result_buf;
   assert(Buf);
   Buf->resize(REQUEST_OR_RESPONSE_SIZE_SIZE + PRC::API_KEY_SIZE +
@@ -137,8 +138,9 @@ void TProduceRequestWriter::OpenMsg(TCompressionType compression_type,
   assert(this);
   assert(State == TState::InMsgSet);
   assert(Buf);
-  assert(key_size <= std::numeric_limits<int32_t>::max());
-  assert(value_size <= std::numeric_limits<int32_t>::max());
+  assert(key_size <= static_cast<size_t>(std::numeric_limits<int32_t>::max()));
+  assert(value_size <=
+      static_cast<size_t>(std::numeric_limits<int32_t>::max()));
   MsgSetWriter.OpenMsg(compression_type, key_size, value_size);
 }
 
@@ -221,7 +223,8 @@ void TProduceRequestWriter::CloseRequest() {
   /* The request size field contains the size of the entire request minus the
      size of the request size field itself. */
   size_t request_size_field_value = total_request_size - 4;
-  assert(request_size_field_value <= std::numeric_limits<int32_t>::max());
+  assert(request_size_field_value <=
+      static_cast<size_t>(std::numeric_limits<int32_t>::max()));
 
   WriteInt32(0, static_cast<int32_t>(request_size_field_value));
   Buf = nullptr;

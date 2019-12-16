@@ -36,6 +36,8 @@ namespace Base {
       Time.tv_nsec = 0;
     }
 
+    TTime(const TTime &) = default;
+
     TTime(time_t sec, long nsec) noexcept {
       Time.tv_sec = sec;
       Time.tv_nsec = nsec;

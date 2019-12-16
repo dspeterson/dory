@@ -40,14 +40,14 @@ static std::string MakeInvalidPathMsg(const std::string &path) {
   std::string msg("Logfile path must be absolute: [");
   msg += path;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 static std::string MakeInvalidFileModeMsg(const std::string &path) {
   std::string msg("Invalid mode for logfile: [");
   msg += path;
   msg += "]";
-  return std::move(msg);
+  return msg;
 }
 
 static std::string ValidateFilePathAndMode(const std::string &path,
