@@ -121,7 +121,6 @@ size_t TTransceiver::Send(int sock_fd, int flags) {
 
 void TTransceiver::InitHdr(msghdr &hdr) const noexcept {
   assert(this);
-  assert(&hdr);
   Zero(hdr);
   hdr.msg_iov = DataStart;
   hdr.msg_iovlen = DataLimit - DataStart;

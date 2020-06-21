@@ -54,7 +54,6 @@ void TProduceResponseWriter::OpenResponse(std::vector<uint8_t> &out,
   /* Make sure we start in a sane state. */
   Reset();
 
-  assert(&out);
   assert(OutBuf == nullptr);
   assert(!TopicStarted);
   OutBuf = &out;

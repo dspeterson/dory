@@ -53,7 +53,6 @@ namespace Capped {
          of this block is ignored and overwritten. */
       void Link(TBlock *&first_block) noexcept {
         assert(this);
-        assert(&first_block);
         NextBlock = first_block;
         first_block = this;
       }
@@ -61,7 +60,6 @@ namespace Capped {
       /* Unlink and return the first block from a list, updating the list
          pointer.  If the list is empty, do nothing and return null. */
       static TBlock *Unlink(TBlock *&first_block) noexcept {
-        assert(&first_block);
         TBlock *result;
 
         if (first_block) {

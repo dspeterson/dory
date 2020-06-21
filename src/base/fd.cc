@@ -73,8 +73,6 @@ bool TFd::IsReadableIntr(int timeout) const {
 }
 
 void TFd::Pipe(TFd &readable, TFd &writeable, int flags) noexcept {
-  assert(&readable);
-  assert(&writeable);
   int fds[2];
   Wr::pipe2(fds, flags);
   readable = TFd(fds[0], NoThrow);
@@ -83,8 +81,6 @@ void TFd::Pipe(TFd &readable, TFd &writeable, int flags) noexcept {
 
 void TFd::SocketPair(TFd &lhs, TFd &rhs, int domain, int type,
     int proto) noexcept {
-  assert(&lhs);
-  assert(&rhs);
   int fds[2];
   Wr::socketpair(domain, type, proto, fds);
   lhs = TFd(fds[0], NoThrow);

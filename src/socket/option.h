@@ -74,7 +74,6 @@ namespace Socket {
      which is fine for everything but strings. */
   template <typename TArg>
   void GetSockOpt(int sock, int code, TArg &arg) noexcept {
-    assert(&arg);
     socklen_t dummy = sizeof(arg);
     Base::Wr::getsockopt(sock, SOL_SOCKET, code, &arg, &dummy);
   }
@@ -84,7 +83,6 @@ namespace Socket {
      which is fine for everything but strings. */
   template <typename TArg>
   void SetSockOpt(int sock, int code, const TArg &arg) noexcept {
-    assert(&arg);
     Base::Wr::setsockopt(sock, SOL_SOCKET, code, &arg, sizeof(arg));
   }
 
@@ -144,7 +142,6 @@ namespace Socket {
 
     /* See forward declaration of generic Conv<>. */
     static void GetSockOpt(int sock, int code, TVal &val) noexcept {
-      assert(&val);
       int temp;
       Socket::GetSockOpt(sock, code, temp);
       val = (temp != 0);
@@ -188,7 +185,6 @@ namespace Socket {
 
     /* See forward declaration of generic Conv<>. */
     static void GetSockOpt(int sock, int code, TVal &val) noexcept {
-      assert(&val);
       linger temp;
       Socket::GetSockOpt(sock, code, temp);
       if (temp.l_onoff) {
@@ -200,7 +196,6 @@ namespace Socket {
 
     /* See forward declaration of generic Conv<>. */
     static void SetSockOpt(int sock, int code, const TVal &val) noexcept {
-      assert(&val);
       linger temp;
       temp.l_onoff = val;
       temp.l_linger = static_cast<int>(temp.l_onoff ? val->count() : 0);
@@ -239,7 +234,6 @@ namespace Socket {
 
     /* See forward declaration of generic Conv<>. */
     static void GetSockOpt(int sock, int code, TVal &val) noexcept {
-      assert(&val);
       timeval temp;
       Socket::GetSockOpt(sock, code, temp);
       val = TTimeout(temp.tv_sec * 1000000 + temp.tv_usec);
@@ -247,7 +241,6 @@ namespace Socket {
 
     /* See forward declaration of generic Conv<>. */
     static void SetSockOpt(int sock, int code, const TVal &val) noexcept {
-      assert(&val);
       auto count = val.count();
       timeval temp;
       temp.tv_sec  = count / 1000000;
@@ -267,7 +260,6 @@ namespace Socket {
 
     /* See forward declaration of generic Conv<>. */
     static void GetSockOpt(int sock, int code, TVal &val) noexcept {
-      assert(&val);
       char temp[MaxSize];
       auto size = static_cast<socklen_t>(MaxSize);
       Base::Wr::getsockopt(sock, SOL_SOCKET, code, temp, &size);
@@ -276,7 +268,6 @@ namespace Socket {
 
     /* See forward declaration of generic Conv<>. */
     static void SetSockOpt(int sock, int code, const TVal &val) noexcept {
-      assert(&val);
       Base::Wr::setsockopt(sock, SOL_SOCKET, code, val.c_str(),
           static_cast<socklen_t>(val.size()));
     }
@@ -309,7 +300,6 @@ namespace Socket {
     public:
     /* See forward declaration of generic Format<>. */
     static void Dump(std::ostream &strm, bool val) {
-      assert(&strm);
       strm << std::boolalpha << val;
     }
   };  // Format<bool>
@@ -322,7 +312,6 @@ namespace Socket {
     public:
     /* See forward declaration of generic Format<>. */
     static void Dump(std::ostream &strm, int val) {
-      assert(&strm);
       strm << val;
     }
   };  // Format<int>
@@ -335,8 +324,6 @@ namespace Socket {
     public:
     /* See forward declaration of generic Format<>. */
     static void Dump(std::ostream &strm, const TLinger &val) {
-      assert(&strm);
-      assert(&val);
       if (val) {
         strm << val->count() << " sec(s)";
       } else {
@@ -353,8 +340,6 @@ namespace Socket {
     public:
     /* See forward declaration of generic Format<>. */
     static void Dump(std::ostream &strm, const ucred &val) {
-      assert(&strm);
-      assert(&val);
       strm << "{ pid: " << val.pid << ", uid: " << val.uid << ", gid: "
           << val.gid << " }";
     }
@@ -368,8 +353,6 @@ namespace Socket {
     public:
     /* See forward declaration of generic Format<>. */
     static void Dump(std::ostream &strm, const TTimeout &val) {
-      assert(&strm);
-      assert(&val);
       strm << val.count() << " usec(s)";
     }
   };  // Format<TTimeout>
@@ -382,8 +365,6 @@ namespace Socket {
     public:
     /* See forward declaration of generic Format<>. */
     static void Dump(std::ostream &strm, const std::string &val) {
-      assert(&strm);
-      assert(&val);
       strm << '"' << val << '"';
     }
   };  // Format<TLinger>
@@ -457,7 +438,6 @@ namespace Socket {
     /* See base class. */
     void Dump(std::ostream &strm, int sock) const final {
       assert(this);
-      assert(&strm);
       strm << TAnyOption::GetName() << ": ";
       TVal val;
       Get(sock, val);

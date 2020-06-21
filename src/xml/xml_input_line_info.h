@@ -45,7 +45,6 @@ namespace Xml {
        tagged with, or nullptr if there is no such tag. */
     static const TXmlInputLineInfo *Get(const xercesc::DOMNode &node,
         const XMLCh *line_info_key) {
-      assert(&node);
       return static_cast<const TXmlInputLineInfo *>(
           node.getUserData(line_info_key));
     }

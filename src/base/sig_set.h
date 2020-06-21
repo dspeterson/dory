@@ -91,14 +91,12 @@ namespace Base {
 
     /* Copy constructor. */
     TSigSet(const TSigSet &that) noexcept {
-      assert(&that);
       std::memcpy(&OsObj, &that.OsObj, sizeof(OsObj));
     }
 
     /* Assignment operator. */
     TSigSet &operator=(const TSigSet &that) noexcept {
       assert(this);
-      assert(&that);
       std::memcpy(&OsObj, &that.OsObj, sizeof(OsObj));
       return *this;
     }

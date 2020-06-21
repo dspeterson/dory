@@ -879,21 +879,18 @@ namespace Base {
   /* Special hasher for char. */
   template <>
   inline size_t GetHashHelper(const char &val) {
-    assert(&val);
     return val;
   }
 
   /* Special hasher for unsigned char. */
   template <>
   inline size_t GetHashHelper(const unsigned char &val) {
-    assert(&val);
     return val;
   }
 
   /* Special hasher for std::string. */
   template <>
   inline size_t GetHashHelper(const std::string &val) {
-    assert(&val);
     return AsPiece(val).GetHash();
   }
 

@@ -181,7 +181,6 @@ bool TDispatcher::ForEachHandler(const TCb &cb) {
 void TDispatcher::Run(const TTimeout &grace_period,
     const std::vector<int> &allow_signals, int shutdown_signal_number) {
   assert(this);
-  assert(&grace_period);
 
   /* Install a do-nothing handler for the shutdown signal, so the shutdown
      won't abort the whole process.  We'll mask out all signals while we're
@@ -237,7 +236,6 @@ void TDispatcher::Run(const TTimeout &grace_period,
 
 void TDispatcher::Shutdown(std::thread &t, int signal_number) {
   assert(this);
-  assert(&t);
   ShuttingDown = true;
   pthread_kill(t.native_handle(), signal_number);
   t.join();
@@ -259,7 +257,6 @@ void TDispatcher::ShutdownSigHandler(int /*signum*/) noexcept {
 bool TDispatcher::Dispatch(const TOptTimeout &max_timeout,
     const sigset_t *mask_set) {
   assert(this);
-  assert(&max_timeout);
 
   /* Walk the list of regsitered handlers and initialze the poller and handler
      pointer arrays.  Also look for the nearest deadline, if any, among the

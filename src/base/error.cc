@@ -39,7 +39,6 @@ TError::TError() : WhatPtr("PostCtor() was not called") {}
 void TError::PostCtor(const TCodeLocation &code_location,
     const char *details) {
   assert(this);
-  assert(&code_location);
 
   try {
     CodeLocation = code_location;
@@ -68,7 +67,6 @@ void TError::PostCtor(const TCodeLocation &code_location,
 void TError::PostCtor(const TCodeLocation &code_location,
     const char *details_start, const char* details_end) {
   assert(this);
-  assert(&code_location);
 
   try {
     CodeLocation = code_location;

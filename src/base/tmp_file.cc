@@ -98,7 +98,6 @@ void TTmpFile::Reset() noexcept {
 
 TTmpFile &TTmpFile::operator=(TTmpFile &&that) noexcept {
   assert(this);
-  assert(&that);
 
   if (&that != this) {
     Reset();
@@ -115,7 +114,6 @@ TTmpFile &TTmpFile::operator=(TTmpFile &&that) noexcept {
 
 void TTmpFile::Swap(TTmpFile &that) noexcept {
   assert(this);
-  assert(&that);
   Name.swap(that.Name);
   std::swap(DeleteOnDestroy, that.DeleteOnDestroy);
   Fd.Swap(that.Fd);

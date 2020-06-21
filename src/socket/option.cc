@@ -52,7 +52,6 @@ const TAnyOption *Socket::AllOptions[] = {
 };
 
 void Socket::DumpAllOptions(std::ostream &strm, int sock) {
-  assert(&strm);
   strm << "socket_ops: {";
   bool has_written = false;
 

@@ -83,7 +83,6 @@ DOMDocument *Xml::Config::ParseXmlConfig(const void *buf, size_t buf_size,
 }
 
 bool Xml::Config::IsAllWhitespace(const DOMText &node) {
-  assert(&node);
   auto transcoded = GetTranscoded(node.getData());
   const char *data = transcoded.get();
 
@@ -100,7 +99,6 @@ std::unordered_map<std::string, const DOMElement *>
 Xml::Config::GetSubsectionElements(const DOMElement &parent,
     const std::vector<std::pair<std::string, bool>> &subsection_vec,
     bool allow_unknown_subsection) {
-  assert(&parent);
   std::unordered_map<std::string, const DOMElement *> result;
   std::unordered_map<std::string, bool> subsection_map;
 
@@ -155,7 +153,6 @@ Xml::Config::GetSubsectionElements(const DOMElement &parent,
 
 const DOMElement * Xml::Config::TryGetChildElement(
     const xercesc::DOMElement &parent, const char *child_name) {
-  assert(&parent);
   assert(child_name);
 
   for (const DOMElement *child = parent.getFirstElementChild();
@@ -174,7 +171,6 @@ const DOMElement * Xml::Config::TryGetChildElement(
 std::vector<const DOMElement *>
 Xml::Config::GetItemListElements(const DOMElement &parent,
     const char *item_name) {
-  assert(&parent);
   std::vector<const DOMElement *> result;
 
   for (const DOMNode *child = parent.getFirstChild();
@@ -212,8 +208,6 @@ Xml::Config::GetItemListElements(const DOMElement &parent,
 }
 
 void Xml::Config::RequireNoChildElement(const DOMElement &elem) {
-  assert(&elem);
-
   for (const DOMNode *child = elem.getFirstChild();
       child;
       child = child->getNextSibling()) {
@@ -224,8 +218,6 @@ void Xml::Config::RequireNoChildElement(const DOMElement &elem) {
 }
 
 void Xml::Config::RequireNoGrandchildElement(const DOMElement &elem) {
-  assert(&elem);
-
   for (const DOMNode *child = elem.getFirstChild();
       child;
       child = child->getNextSibling()) {
@@ -236,16 +228,12 @@ void Xml::Config::RequireNoGrandchildElement(const DOMElement &elem) {
 }
 
 void Xml::Config::RequireLeaf(const DOMElement &elem) {
-  assert(&elem);
-
   if (elem.getFirstChild()) {
     throw TExpectedLeaf(elem);
   }
 }
 
 void Xml::Config::RequireAllChildElementLeaves(const DOMElement &elem) {
-  assert(&elem);
-
   for (const DOMNode *child = elem.getFirstChild();
       child;
       child = child->getNextSibling()) {
@@ -257,7 +245,6 @@ void Xml::Config::RequireAllChildElementLeaves(const DOMElement &elem) {
 
 TOpt<std::string> TAttrReader::GetOptString(const DOMElement &elem,
     const char *attr_name, unsigned int opts) {
-  assert(&elem);
   assert(attr_name);
   assert(opts == (opts & TOpts::TRIM_WHITESPACE));
   TOpt<std::string> result;
@@ -278,7 +265,6 @@ TOpt<std::string> TAttrReader::GetOptString(const DOMElement &elem,
 
 std::string TAttrReader::GetString(const DOMElement &elem,
     const char *attr_name, unsigned int opts) {
-  assert(&elem);
   assert(attr_name);
   assert(opts == (opts & (TOpts::THROW_IF_EMPTY | TOpts::TRIM_WHITESPACE)));
   const DOMAttr *attr = elem.getAttributeNode(GetTranscoded(attr_name).get());
@@ -320,7 +306,6 @@ static bool StringToBool(const std::string &s, const char *true_value,
 TOpt<bool> TAttrReader::GetOptNamedBool(const DOMElement &elem,
     const char *attr_name, const char *true_value, const char *false_value,
     unsigned int opts) {
-  assert(&elem);
   assert(attr_name);
   assert(true_value);
   assert(false_value);
@@ -344,7 +329,6 @@ TOpt<bool> TAttrReader::GetOptNamedBool(const DOMElement &elem,
 bool TAttrReader::GetNamedBool(const xercesc::DOMElement &elem,
     const char *attr_name, const char *true_value, const char *false_value,
     unsigned int opts) {
-  assert(&elem);
   assert(attr_name);
   assert(true_value);
   assert(false_value);
@@ -445,7 +429,6 @@ static uintmax_t AttrToUintMax(const std::string &attr, const DOMElement &elem,
 
 static intmax_t GetIntMaxAttr(const DOMElement &elem, const char *attr_name,
     unsigned int opts) {
-  assert(&elem);
   assert(attr_name);
   using TOpts = TAttrReader::TOpts;
   std::string s = TAttrReader::GetString(elem, attr_name,
@@ -455,7 +438,6 @@ static intmax_t GetIntMaxAttr(const DOMElement &elem, const char *attr_name,
 
 static uintmax_t GetUintMaxAttr(const DOMElement &elem, const char *attr_name,
     unsigned int allowed_bases, unsigned int opts) {
-  assert(&elem);
   assert(attr_name);
   using TOpts = TAttrReader::TOpts;
   std::string s = TAttrReader::GetString(elem, attr_name,
@@ -478,7 +460,6 @@ uintmax_t TAttrReader::GetIntHelper<uintmax_t>(const DOMElement &elem,
 
 static TOpt<std::string> GetOptInAttrHelper(const DOMElement &elem,
     const char *attr_name, const char *empty_value_name, unsigned int opts) {
-  assert(&elem);
   assert(attr_name);
   using TOpts = TAttrReader::TOpts;
   TOpt<std::string> opt_s = TAttrReader::GetOptString(elem, attr_name,

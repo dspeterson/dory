@@ -60,7 +60,6 @@ void TMsgSetWriter::OpenMsgSet(std::vector<uint8_t> &result_buf, bool append) {
   Reset();
 
   assert(State == TState::Idle);
-  assert(&result_buf);
 
   if (!append) {
     result_buf.clear();

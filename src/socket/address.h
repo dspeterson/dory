@@ -94,7 +94,6 @@ namespace Socket {
     /* Swaperator. */
     TAddress &operator=(TAddress &&that) noexcept {
       assert(this);
-      assert(&that);
       std::swap(Storage, that.Storage);
       return *this;
     }
@@ -153,7 +152,6 @@ namespace Socket {
     /* Copy the naked address to the given buffer. */
     void CopyOut(sockaddr_storage &storage) const noexcept {
       assert(this);
-      assert(&storage);
       memcpy(&storage, &Storage, GetLen());
     }
 
@@ -248,7 +246,6 @@ namespace Socket {
 
   /* A version of accept() using TAddress. */
   inline int Accept(int socket, TAddress &address) {
-    assert(&address);
     int result;
     socklen_t len = TAddress::MaxLen;
     Base::IfLt0(result = Base::Wr::accept(socket, address, &len));
@@ -258,7 +255,6 @@ namespace Socket {
 
   /* A version of bind() using TAddress. */
   inline void Bind(int socket, const TAddress &address) {
-    assert(&address);
     Base::IfLt0(Base::Wr::bind(socket, address, address.GetLen()));
   }
 
@@ -268,7 +264,6 @@ namespace Socket {
 
   /* A version of connect() using TAddress. */
   inline void Connect(int socket, const TAddress &address) {
-    assert(&address);
     Base::IfLt0(Base::Wr::connect(socket, address, address.GetLen()));
   }
 
@@ -293,7 +288,6 @@ namespace Socket {
   /* A version of recvfrom() using TAddress. */
   inline size_t RecvFrom(int socket, void *buffer, size_t max_size, int flags,
       TAddress &address) {
-    assert(&address);
     ssize_t result;
     socklen_t len = TAddress::MaxLen;
     Base::IfLt0(result = Base::Wr::recvfrom(socket, buffer, max_size, flags,
@@ -305,7 +299,6 @@ namespace Socket {
   /* A version of sendto() using TAddress. */
   inline size_t SendTo(int socket, const void *buffer, size_t max_size,
       int flags, const TAddress &address) {
-    assert(&address);
     ssize_t result;
     Base::IfLt0(result = Base::Wr::sendto(socket, buffer, max_size, flags,
         address, address.GetLen()));
@@ -315,8 +308,6 @@ namespace Socket {
   /* A async version of accept() using TAddress.
      Returns false iff. it would block. */
   inline bool TryAccept(int socket, int &new_socket, TAddress &address) {
-    assert(&new_socket);
-    assert(&address);
     socklen_t len = TAddress::MaxLen;
     int result = Base::Wr::accept(socket, address, &len);
 
@@ -336,8 +327,6 @@ namespace Socket {
   /* An async version of connect() using TAddress.
      Returns false iff. it would block. */
   inline bool TryConnect(int socket, const TAddress &address) {
-    assert(&address);
-
     if (Base::Wr::connect(socket, address, address.GetLen()) < 0) {
       if (errno == EWOULDBLOCK) {
         return false;
@@ -353,8 +342,6 @@ namespace Socket {
      Returns false iff. it would block. */
   inline size_t TryRecvFrom(int socket, void *buffer, size_t max_size,
       int flags, TAddress &address, size_t &size) {
-    assert(&address);
-    assert(&size);
     socklen_t len = TAddress::MaxLen;
     ssize_t result = Base::Wr::recvfrom(socket, buffer, max_size, flags,
         address, &len);
@@ -376,9 +363,6 @@ namespace Socket {
      block. */
   inline bool TrySendTo(int socket, const void *buffer, size_t max_size,
       int flags, const TAddress &address, size_t &size) {
-    assert(&address);
-    assert(&size);
-
     ssize_t result = Base::Wr::sendto(socket, buffer, max_size, flags, address,
         address.GetLen());
 
@@ -396,14 +380,12 @@ namespace Socket {
 
   /* A standard stream extractor for Socket::TAddress. */
   inline std::istream &operator>>(std::istream &strm, TAddress &that) {
-    assert(&that);
     that = std::move(strm);
     return strm;
   }
 
   /* A standard stream inserter for Socket::TAddress. */
   inline std::ostream &operator<<(std::ostream &strm, const TAddress &that) {
-    assert(&that);
     that.Write(strm);
     return strm;
   }
@@ -416,7 +398,6 @@ namespace std {
   template <>
   struct hash<Socket::TAddress> {
     inline size_t operator()(const Socket::TAddress &that) const noexcept {
-      assert(&that);
       return that.GetHash();
     }
   };  // hash

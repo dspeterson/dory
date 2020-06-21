@@ -94,7 +94,6 @@ namespace Base {
   /* Standard stream inserter for Base::TCodeLocation. */
   inline std::ostream &operator<<(std::ostream &strm,
       const Base::TCodeLocation &that) {
-    assert(&that);
     that.Write(strm);
     return strm;
   }

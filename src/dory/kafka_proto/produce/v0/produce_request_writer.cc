@@ -59,7 +59,6 @@ void TProduceRequestWriter::OpenRequest(std::vector<uint8_t> &result_buf,
   Reset();
 
   assert(State == TState::Idle);
-  assert(&result_buf);
   assert(client_id_begin || (!client_id_begin && !client_id_end));
   assert(client_id_end >= client_id_begin);
   size_t client_id_len = client_id_end - client_id_begin;

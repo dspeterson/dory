@@ -35,7 +35,6 @@ namespace {
 
   void GetParts(const char *msg, std::vector<std::string> &parts) {
     assert(msg);
-    assert(&parts);
     parts.clear();
     const char
         *start  = nullptr,

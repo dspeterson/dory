@@ -31,16 +31,12 @@ const char *TXmlInputLineInfo::GetDefaultKey() {
 
 const TXmlInputLineInfo *TXmlInputLineInfo::Get(const xercesc::DOMNode &node,
     const char *line_info_key) {
-  assert(&node);
-
   /* This isn't very efficient, since it creates and destroys a temporary
      transcoded version of 'line_info_key'. */
   return Get(node, GetTranscoded(line_info_key).get());
 }
 
 const TXmlInputLineInfo *TXmlInputLineInfo::Get(const xercesc::DOMNode &node) {
-  assert(&node);
-
   /* This isn't very efficient, since it delegates to an inefficient
      implementation. */
   return Get(node, GetDefaultKey());

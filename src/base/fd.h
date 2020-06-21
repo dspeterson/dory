@@ -64,7 +64,6 @@ namespace Base {
     /* Move-construct, leaving the donor in the default-constructed state. */
     TFd(TFd &&that) noexcept
         : OsHandle(that.OsHandle) {
-      assert(&that);
       that.OsHandle = -1;
     }
 
@@ -96,14 +95,12 @@ namespace Base {
 
     void Swap(TFd &that) noexcept {
       assert(this);
-      assert(&that);
       std::swap(OsHandle, that.OsHandle);
     }
 
     /* Swaperator. */
     TFd &operator=(TFd &&that) noexcept {
       assert(this);
-      assert(&that);
       Swap(that);
       return *this;
     }

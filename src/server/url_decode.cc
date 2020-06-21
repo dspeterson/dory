@@ -54,9 +54,6 @@ static inline unsigned char HexToNum(const char *c_in, const char *start) {
 }
 
 void Server::UrlDecode(const TPiece<const char> &in, std::string &out) {
-  assert(&in);
-  assert(&out);
-
   // If the in string is empty, clear out and no-op.
   if(!in) {
     out.clear();
