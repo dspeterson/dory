@@ -57,13 +57,10 @@ namespace Dory {
     }
 
     ~TWebInterface() override {
-      assert(this);
       StopHttpServer();
     }
 
     void StartHttpServer(bool loopback_only = false) {
-      assert(this);
-
       if (!HttpServerStarted) {
         DoStartHttpServer(loopback_only);
         HttpServerStarted = true;
@@ -71,8 +68,6 @@ namespace Dory {
     }
 
     void StopHttpServer() {
-      assert(this);
-
       if (HttpServerStarted) {
         DoStopHttpServer();
         HttpServerStarted = false;
@@ -113,7 +108,6 @@ namespace Dory {
         const mg_request_info *request_info, TRequestType &request_type);
 
     void DoStopHttpServer() {
-      assert(this);
       Stop();
     }
 

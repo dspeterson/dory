@@ -39,8 +39,6 @@ TMainThread::~TMainThread() {
 }
 
 void TMainThread::RequestShutdown() {
-  assert(this);
-
   /* The standalone executable version of the mock Kafka server expects to get
      a shutdown signal, so here we mimic that behavior.
 
@@ -52,7 +50,6 @@ void TMainThread::RequestShutdown() {
 }
 
 void TMainThread::Run() {
-  assert(this);
   OkShutdown = false;
 
   try {

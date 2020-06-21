@@ -37,7 +37,6 @@ TMsgSetReader::TMsgSetReader() {
 }
 
 void TMsgSetReader::Clear() {
-  assert(this);
   Begin = nullptr;
   End = nullptr;
   Size = 0;
@@ -51,7 +50,6 @@ void TMsgSetReader::Clear() {
 }
 
 void TMsgSetReader::SetMsgSet(const void *msg_set, size_t msg_set_size) {
-  assert(this);
   Clear();
   Begin = reinterpret_cast<const uint8_t *>(msg_set);
   End = Begin + msg_set_size;
@@ -59,7 +57,6 @@ void TMsgSetReader::SetMsgSet(const void *msg_set, size_t msg_set_size) {
 }
 
 bool TMsgSetReader::FirstMsg() {
-  assert(this);
   assert(Begin);
   assert(End >= Begin);
   CurrentMsg = Begin;
@@ -73,7 +70,6 @@ bool TMsgSetReader::FirstMsg() {
 }
 
 bool TMsgSetReader::NextMsg() {
-  assert(this);
   assert(Begin);
   assert(End >= Begin);
 
@@ -109,13 +105,11 @@ bool TMsgSetReader::NextMsg() {
 }
 
 bool TMsgSetReader::CurrentMsgCrcIsOk() const {
-  assert(this);
   assert((CurrentMsg >= Begin) && (CurrentMsg < End));
   return CurrentMsgCrcOk;
 }
 
 TCompressionType TMsgSetReader::GetCurrentMsgCompressionType() const {
-  assert(this);
   assert((CurrentMsg >= Begin) && (CurrentMsg < End));
   uint8_t attrs =  *(CurrentMsg + PRC::MSG_OFFSET_SIZE +
       PRC::MSG_SIZE_SIZE + PRC::CRC_SIZE + PRC::MAGIC_BYTE_SIZE);
@@ -142,31 +136,26 @@ TCompressionType TMsgSetReader::GetCurrentMsgCompressionType() const {
 }
 
 const uint8_t *TMsgSetReader::GetCurrentMsgKeyBegin() const {
-  assert(this);
   assert((CurrentMsg >= Begin) && (CurrentMsg < End));
   return CurrentMsgKeyBegin;
 }
 
 const uint8_t *TMsgSetReader::GetCurrentMsgKeyEnd() const {
-  assert(this);
   assert((CurrentMsg >= Begin) && (CurrentMsg < End));
   return CurrentMsgKeyEnd;
 }
 
 const uint8_t *TMsgSetReader::GetCurrentMsgValueBegin() const {
-  assert(this);
   assert((CurrentMsg >= Begin) && (CurrentMsg < End));
   return CurrentMsgValueBegin;
 }
 
 const uint8_t *TMsgSetReader::GetCurrentMsgValueEnd() const {
-  assert(this);
   assert((CurrentMsg >= Begin) && (CurrentMsg < End));
   return CurrentMsgValueEnd;
 }
 
 void TMsgSetReader::InitCurrentMsg() {
-  assert(this);
   assert(Begin);
   assert(End > Begin);
   assert(CurrentMsg >= Begin);

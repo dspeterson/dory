@@ -28,8 +28,6 @@ using namespace Dory;
 using namespace Dory::Batch;
 
 TOpt<TMsg::TTimestamp> TBatcherCore::GetNextCompleteTime() const noexcept {
-  assert(this);
-
   if (IsEmpty() || !TimeLimitIsEnabled(Config)) {
     return TOpt<TMsg::TTimestamp>();
   }
@@ -40,7 +38,6 @@ TOpt<TMsg::TTimestamp> TBatcherCore::GetNextCompleteTime() const noexcept {
 TBatcherCore::TAction
 TBatcherCore::ProcessNewMsg(TMsg::TTimestamp now,
     const TMsg::TPtr &msg) noexcept {
-  assert(this);
   assert(msg);
 
   if (!Dory::Batch::BatchingIsEnabled(Config)) {
@@ -81,7 +78,6 @@ TBatcherCore::ProcessNewMsg(TMsg::TTimestamp now,
 }
 
 void TBatcherCore::ClearState() noexcept {
-  assert(this);
   MinTimestamp = std::numeric_limits<TMsg::TTimestamp>::max();
   MsgCount = 0;
   ByteCount = 0;
@@ -89,8 +85,6 @@ void TBatcherCore::ClearState() noexcept {
 
 bool TBatcherCore::TestTimeLimit(TMsg::TTimestamp now,
     TMsg::TTimestamp new_msg_timestamp) const noexcept {
-  assert(this);
-
   if (!TimeLimitIsEnabled(Config)) {
     return false;
   }
@@ -100,8 +94,6 @@ bool TBatcherCore::TestTimeLimit(TMsg::TTimestamp now,
 }
 
 bool TBatcherCore::TestMsgCount(bool adding_msg) const noexcept {
-  assert(this);
-
   if (!MsgCountLimitIsEnabled(Config)) {
     return false;
   }
@@ -111,8 +103,6 @@ bool TBatcherCore::TestMsgCount(bool adding_msg) const noexcept {
 }
 
 bool TBatcherCore::TestByteCount(size_t bytes_to_add) const noexcept {
-  assert(this);
-
   if (!ByteCountLimitIsEnabled(Config)) {
     return false;
   }
@@ -121,8 +111,6 @@ bool TBatcherCore::TestByteCount(size_t bytes_to_add) const noexcept {
 }
 
 bool TBatcherCore::TestByteCountExceeded(size_t bytes_to_add) const noexcept {
-  assert(this);
-
   if (!ByteCountLimitIsEnabled(Config)) {
     return false;
   }
@@ -132,7 +120,6 @@ bool TBatcherCore::TestByteCountExceeded(size_t bytes_to_add) const noexcept {
 
 void TBatcherCore::UpdateState(TMsg::TTimestamp timestamp,
     size_t body_size) noexcept {
-  assert(this);
   MinTimestamp = std::min(MinTimestamp, timestamp);
   ++MsgCount;
   ByteCount += body_size;

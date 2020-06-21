@@ -35,7 +35,6 @@ TProduceRequestReader::TProduceRequestReader() {
 }
 
 void TProduceRequestReader::Clear() {
-  assert(this);
   Begin = nullptr;
   End = nullptr;
   Size = 0;
@@ -55,7 +54,6 @@ void TProduceRequestReader::Clear() {
 
 void TProduceRequestReader::SetRequest(const void *request,
     size_t request_size) {
-  assert(this);
   Clear();
   Begin = reinterpret_cast<const uint8_t *>(request);
   End = Begin + GetRequestOrResponseSize(Begin);
@@ -107,13 +105,11 @@ void TProduceRequestReader::SetRequest(const void *request,
 }
 
 int32_t TProduceRequestReader::GetCorrelationId() const {
-  assert(this);
   return ReadInt32FromHeader(Begin + REQUEST_OR_RESPONSE_SIZE_SIZE +
       PRC::API_KEY_SIZE + PRC::API_VERSION_SIZE);
 }
 
 const char *TProduceRequestReader::GetClientIdBegin() const {
-  assert(this);
   return reinterpret_cast<const char *>(Begin) +
       REQUEST_OR_RESPONSE_SIZE_SIZE + PRC::API_KEY_SIZE +
       PRC::API_VERSION_SIZE + PRC::CORRELATION_ID_SIZE +
@@ -121,27 +117,22 @@ const char *TProduceRequestReader::GetClientIdBegin() const {
 }
 
 const char *TProduceRequestReader::GetClientIdEnd() const {
-  assert(this);
   return GetClientIdBegin() + ClientIdLen;
 }
 
 int16_t TProduceRequestReader::GetRequiredAcks() const {
-  assert(this);
   return ReadInt16FromHeader(GetClientIdEnd());
 }
 
 int32_t TProduceRequestReader::GetReplicationTimeout() const {
-  assert(this);
   return ReadInt32FromHeader(GetClientIdEnd() + PRC::REQUIRED_ACKS_SIZE);
 }
 
 size_t TProduceRequestReader::GetNumTopics() const {
-  assert(this);
   return static_cast<size_t>(NumTopics);
 }
 
 bool TProduceRequestReader::FirstTopic() {
-  assert(this);
   assert(Begin);
   assert(End > Begin);
   assert(NumTopics >= 0);
@@ -159,7 +150,6 @@ bool TProduceRequestReader::FirstTopic() {
 }
 
 bool TProduceRequestReader::NextTopic() {
-  assert(this);
   assert(Begin);
   assert(End > Begin);
   assert(NumTopics >= 0);
@@ -200,26 +190,22 @@ bool TProduceRequestReader::NextTopic() {
 }
 
 const char *TProduceRequestReader::GetCurrentTopicNameBegin() const {
-  assert(this);
   assert((CurrentTopicBegin > Begin) && (CurrentTopicBegin < End));
   return reinterpret_cast<const char *>(CurrentTopicBegin) +
       PRC::TOPIC_NAME_LEN_SIZE;
 }
 
 const char *TProduceRequestReader::GetCurrentTopicNameEnd() const {
-  assert(this);
   assert((CurrentTopicNameEnd > Begin) && (CurrentTopicNameEnd < End));
   return reinterpret_cast<const char *>(CurrentTopicNameEnd);
 }
 
 size_t TProduceRequestReader::GetNumMsgSetsInCurrentTopic() const {
-  assert(this);
   assert((CurrentTopicNameEnd > Begin) && (CurrentTopicNameEnd < End));
   return static_cast<size_t>(NumPartitionsInTopic);
 }
 
 bool TProduceRequestReader::FirstMsgSetInTopic() {
-  assert(this);
   assert(Begin);
   assert(End > Begin);
   assert((CurrentTopicIndex >= 0) && (CurrentTopicIndex < NumTopics));
@@ -238,7 +224,6 @@ bool TProduceRequestReader::FirstMsgSetInTopic() {
 }
 
 bool TProduceRequestReader::NextMsgSetInTopic() {
-  assert(this);
   assert(Begin);
   assert(End > Begin);
   assert(CurrentTopicBegin > Begin);
@@ -270,13 +255,11 @@ bool TProduceRequestReader::NextMsgSetInTopic() {
 }
 
 int32_t TProduceRequestReader::GetPartitionOfCurrentMsgSet() const {
-  assert(this);
   assert((CurrentPartitionBegin > Begin) && (CurrentPartitionBegin < End));
   return ReadInt32FromHeader(CurrentPartitionBegin);
 }
 
 bool TProduceRequestReader::FirstMsgInMsgSet() {
-  assert(this);
   assert(Begin);
   assert(End > Begin);
   assert((CurrentTopicIndex >= 0) && (CurrentTopicIndex < NumTopics));
@@ -292,7 +275,6 @@ bool TProduceRequestReader::FirstMsgInMsgSet() {
 }
 
 bool TProduceRequestReader::NextMsgInMsgSet() {
-  assert(this);
   assert(Begin);
   assert(End > Begin);
   assert((CurrentTopicIndex >= 0) && (CurrentTopicIndex < NumTopics));
@@ -308,37 +290,30 @@ bool TProduceRequestReader::NextMsgInMsgSet() {
 }
 
 bool TProduceRequestReader::CurrentMsgCrcIsOk() const {
-  assert(this);
   return MsgSetReader.CurrentMsgCrcIsOk();
 }
 
 TCompressionType TProduceRequestReader::GetCurrentMsgCompressionType() const {
-  assert(this);
   return MsgSetReader.GetCurrentMsgCompressionType();
 }
 
 const uint8_t *TProduceRequestReader::GetCurrentMsgKeyBegin() const {
-  assert(this);
   return MsgSetReader.GetCurrentMsgKeyBegin();
 }
 
 const uint8_t *TProduceRequestReader::GetCurrentMsgKeyEnd() const {
-  assert(this);
   return MsgSetReader.GetCurrentMsgKeyEnd();
 }
 
 const uint8_t *TProduceRequestReader::GetCurrentMsgValueBegin() const {
-  assert(this);
   return MsgSetReader.GetCurrentMsgValueBegin();
 }
 
 const uint8_t *TProduceRequestReader::GetCurrentMsgValueEnd() const {
-  assert(this);
   return MsgSetReader.GetCurrentMsgValueEnd();
 }
 
 void TProduceRequestReader::InitCurrentTopic() {
-  assert(this);
   assert(Begin);
   assert(End > Begin);
   assert(CurrentTopicBegin > Begin);
@@ -378,7 +353,6 @@ void TProduceRequestReader::InitCurrentTopic() {
 }
 
 void TProduceRequestReader::InitCurrentPartition() {
-  assert(this);
   assert(Begin);
   assert(End > Begin);
   assert(CurrentPartitionBegin > Begin);

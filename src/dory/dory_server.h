@@ -76,18 +76,15 @@ namespace Dory {
         const Base::TFd &shutdown_fd);
 
     const TCmdLineArgs &GetCmdLineArgs() const noexcept {
-      assert(this);
       return CmdLineArgs;
     }
 
     const Conf::TConf &GetConf() const noexcept {
-      assert(this);
       return Conf;
     }
 
     /* Used for testing. */
     const TAnomalyTracker &GetAnomalyTracker() const noexcept {
-      assert(this);
       return AnomalyTracker;
     }
 
@@ -95,7 +92,6 @@ namespace Dory {
     void BindStatusSocket(bool bind_ephemeral = false);
 
     in_port_t GetStatusPort() const noexcept {
-      assert(this);
       return StatusPort;
     }
 
@@ -103,20 +99,17 @@ namespace Dory {
        Do not call until server has been started.  This is intended for test
        code to use for finding the ephemeral port chosen by the kernel. */
     in_port_t GetInputPort() const noexcept {
-      assert(this);
       return TcpInputAgent.IsKnown() ? TcpInputAgent->GetBindPort() : 0;
     }
 
     /* Return a file descriptor that becomes readable when the server has
        finished initialization or is shutting down.  Test code calls this. */
     const Base::TFd &GetInitWaitFd() const noexcept {
-      assert(this);
       return InitWaitSem.GetFd();
     }
 
     /* This is called by test code. */
     size_t GetAckCount() const noexcept {
-      assert(this);
       return Dispatcher.GetAckCount();
     }
 

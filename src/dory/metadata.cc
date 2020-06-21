@@ -41,7 +41,6 @@ DEFINE_COUNTER(MetadataSanityCheckFail);
 DEFINE_COUNTER(MetadataSanityCheckSuccess);
 
 bool TMetadata::TBroker::operator==(const TBroker &that) const noexcept {
-  assert(this);
   return (Id == that.Id) && (Hostname == that.Hostname) &&
          (Port == that.Port) && (InService == that.InService);
 }
@@ -51,14 +50,12 @@ TMetadata::TBuilder::TBuilder()
 }
 
 void TMetadata::TBuilder::OpenBrokerList() {
-  assert(this);
   assert(State == TState::Initial);
   State = TState::AddingBrokers;
 }
 
 void TMetadata::TBuilder::AddBroker(int32_t kafka_id, std::string &&hostname,
     uint16_t port) {
-  assert(this);
   assert(State == TState::AddingBrokers);
   auto result = BrokerMap.insert(std::make_pair(kafka_id, Brokers.size()));
 
@@ -72,13 +69,11 @@ void TMetadata::TBuilder::AddBroker(int32_t kafka_id, std::string &&hostname,
 }
 
 void TMetadata::TBuilder::CloseBrokerList() {
-  assert(this);
   assert(State == TState::AddingBrokers);
   State = TState::AddingTopics;
 }
 
 bool TMetadata::TBuilder::OpenTopic(const std::string &name) {
-  assert(this);
   assert(State == TState::AddingTopics);
   bool success =
       TopicNameToIndex.insert(std::make_pair(name, Topics.size())).second;
@@ -101,7 +96,6 @@ bool TMetadata::TBuilder::OpenTopic(const std::string &name) {
 
 void TMetadata::TBuilder::AddPartitionToTopic(int32_t partition_id,
     int32_t broker_id, bool can_send_to_partition, int16_t error_code) {
-  assert(this);
   assert(State == TState::AddingOneTopic);
   auto iter = BrokerMap.find(broker_id);
 
@@ -154,7 +148,6 @@ void TMetadata::TBuilder::AddPartitionToTopic(int32_t partition_id,
 }
 
 void TMetadata::TBuilder::CloseTopic() {
-  assert(this);
   assert(State == TState::AddingOneTopic);
   assert(TopicNameToIndex.size() == Topics.size());
 
@@ -238,7 +231,6 @@ void TMetadata::TBuilder::CloseTopic() {
 }
 
 std::unique_ptr<TMetadata> TMetadata::TBuilder::Build() {
-  assert(this);
   assert((State != TState::AddingBrokers) &&
          (State != TState::AddingOneTopic));
   assert(TopicNameToIndex.size() == Topics.size());
@@ -253,8 +245,6 @@ std::unique_ptr<TMetadata> TMetadata::TBuilder::Build() {
 }
 
 void TMetadata::TBuilder::GroupInServiceBrokers() {
-  assert(this);
-
   /* Rearrange 'Brokers' vector so all out of service brokers are at the end.
    */
 
@@ -324,8 +314,6 @@ void TMetadata::TBuilder::GroupInServiceBrokers() {
 }
 
 bool TMetadata::operator==(const TMetadata &that) const {
-  assert(this);
-
   if ((Brokers.size() != that.Brokers.size()) ||
       (TopicBrokerVec.size() != that.TopicBrokerVec.size()) ||
       (Topics.size() != that.Topics.size())) {
@@ -340,7 +328,6 @@ bool TMetadata::operator==(const TMetadata &that) const {
 }
 
 int TMetadata::FindTopicIndex(const std::string &topic) const noexcept {
-  assert(this);
   auto iter = TopicNameToIndex.find(topic);
 
   if (iter == TopicNameToIndex.end()) {
@@ -362,7 +349,6 @@ int TMetadata::FindTopicIndex(const std::string &topic) const noexcept {
 
 const int32_t *TMetadata::FindPartitionChoices(const std::string &topic,
     size_t broker_index, size_t &num_choices) const noexcept {
-  assert(this);
   num_choices = 0;
   int topic_index = FindTopicIndex(topic);
 
@@ -427,8 +413,6 @@ bool TMetadata::SanityCheckOkPartitions(const TTopic &t,
     std::unordered_set<int32_t> &id_set_ok,
     std::unordered_map<size_t, std::unordered_set<int32_t>>
         &broker_partition_map) const {
-  assert(this);
-
   for (const TPartition &p : t.OkPartitions) {
     id_set_ok.insert(p.Id);
 
@@ -473,8 +457,6 @@ bool TMetadata::SanityCheckOkPartitions(const TTopic &t,
 
 bool TMetadata::SanityCheckOutOfServicePartitions(const TTopic &t,
     std::unordered_set<int32_t> &id_set_bad) const {
-  assert(this);
-
   for (const TPartition &p : t.OutOfServicePartitions) {
     id_set_bad.insert(p.Id);
 
@@ -517,8 +499,6 @@ bool TMetadata::SanityCheckBrokerPartitionMap(const TTopic &t,
     const std::unordered_map<size_t, std::unordered_set<int32_t>>
         &broker_partition_map,
         std::vector<size_t> &topic_broker_vec_access) const {
-  assert(this);
-
   for (const auto &map_item : broker_partition_map) {
     auto iter = t.PartitionChoiceMap.find(map_item.first);
 
@@ -576,8 +556,6 @@ bool TMetadata::SanityCheckBrokerPartitionMap(const TTopic &t,
 bool TMetadata::SanityCheckOneTopic(const TTopic &t,
     std::unordered_set<size_t> &in_service_broker_indexes,
     std::vector<size_t> &topic_broker_vec_access) const {
-  assert(this);
-
   if (t.AllPartitions.size() !=
       (t.OkPartitions.size() + t.OutOfServicePartitions.size())) {
     LOG(TPri::ERR)
@@ -629,7 +607,6 @@ bool TMetadata::SanityCheckOneTopic(const TTopic &t,
 
 bool TMetadata::SanityCheckTopics(
     std::unordered_set<size_t> &in_service_broker_indexes) const {
-  assert(this);
   std::unordered_set<size_t> topic_indexes;
 
   for (const auto &map_item : TopicNameToIndex) {
@@ -679,7 +656,6 @@ bool TMetadata::SanityCheck() const {
 }
 
 bool TMetadata::DoSanityCheck() const {
-  assert(this);
   std::unordered_set<size_t> in_service_broker_indexes;
 
   if (!SanityCheckTopics(in_service_broker_indexes)) {
@@ -729,11 +705,8 @@ bool TMetadata::DoSanityCheck() const {
 }
 
 bool TMetadata::CompareBrokers(const TMetadata &that) const {
-  assert(this);
-
   struct t_hasher {
     size_t operator()(const TBroker &broker) const noexcept {
-      assert(this);
       return StringHash(broker.Hostname) ^
              Int32Hash(broker.Id ^ broker.Port ^ broker.InService);
     }
@@ -757,8 +730,6 @@ bool TMetadata::CompareBrokers(const TMetadata &that) const {
 
 bool TMetadata::SingleTopicCompare(const TMetadata &that,
     const TTopic &this_topic, const TTopic &that_topic) const {
-  assert(this);
-
   struct t_part {
     int32_t Id;
     int32_t BrokerId;
@@ -774,20 +745,17 @@ bool TMetadata::SingleTopicCompare(const TMetadata &that,
     t_part &operator=(const t_part &) noexcept = default;
 
     bool operator==(const t_part &that) const noexcept {
-      assert(this);
       return (Id == that.Id) && (BrokerId == that.BrokerId) &&
              (ErrorCode == that.ErrorCode);
     }
 
     bool operator!=(const t_part &that) const noexcept {
-      assert(this);
       return !(*this == that);
     }
   };  // t_part
 
   struct t_hasher {
     size_t operator()(const t_part &part) const noexcept {
-      assert(this);
       return Int32Hash(part.Id ^ part.BrokerId ^ part.ErrorCode);
     }
 
@@ -836,8 +804,6 @@ bool TMetadata::SingleTopicCompare(const TMetadata &that,
 }
 
 bool TMetadata::CompareTopics(const TMetadata &that) const {
-  assert(this);
-
   for (const auto &map_item : TopicNameToIndex) {
     auto iter = that.TopicNameToIndex.find(map_item.first);
 

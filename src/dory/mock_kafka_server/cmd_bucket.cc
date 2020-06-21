@@ -30,14 +30,12 @@ using namespace Dory::MockKafkaServer;
 using namespace Log;
 
 void TCmdBucket::Put(const TCmd &cmd) {
-  assert(this);
   LOG(TPri::DEBUG) << "append cmd to queue";
   std::lock_guard<std::mutex> lock(Mutex);
   CmdQueue.emplace_back(std::make_pair(++SequenceNumCounter, cmd));
 }
 
 bool TCmdBucket::CopyOut(size_t &sequence_num, TCmd &out_cmd) const {
-  assert(this);
   std::lock_guard<std::mutex> lock(Mutex);
 
   if (CmdQueue.empty()) {
@@ -51,7 +49,6 @@ bool TCmdBucket::CopyOut(size_t &sequence_num, TCmd &out_cmd) const {
 }
 
 bool TCmdBucket::Remove(size_t sequence_num) {
-  assert(this);
   bool ret = true;
 
   {

@@ -41,32 +41,26 @@ namespace Socket {
     TNamedUnixSocket(int type, int protocol);
 
     ~TNamedUnixSocket() {
-      assert(this);
       Reset();
     }
 
     const Base::TFd &GetFd() const noexcept {
-      assert(this);
       return Fd;
     }
 
     const std::string &GetPath() const noexcept {
-      assert(this);
       return Path;
     }
 
     operator int() const noexcept {
-      assert(this);
       return Fd;
     }
 
     bool IsBound() const noexcept {
-      assert(this);
       return !Path.empty();
     }
 
     bool IsOpen() const noexcept {
-      assert(this);
       return Fd.IsOpen();
     }
 

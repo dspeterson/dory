@@ -150,7 +150,6 @@ namespace Dory {
       TBuilder() = default;
 
       void Reset() {
-        assert(this);
         *this = TBuilder();
       }
 

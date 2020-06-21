@@ -77,47 +77,38 @@ namespace Base {
     };  // TDataInvalidReason
 
     size_t GetSizeFieldSize() const noexcept {
-      assert(this);
       return SizeFieldSize;
     }
 
     bool GetSizeFieldIsSigned() const noexcept {
-      assert(this);
       return SizeFieldIsSigned;
     }
 
     bool GetSizeIncludesSizeField() const noexcept {
-      assert(this);
       return SizeIncludesSizeField;
     }
 
     bool GetIncludeSizeFieldInMsg() const noexcept {
-      assert(this);
       return IncludeSizeFieldInMsg;
     }
 
     size_t GetMaxMsgBodySize() const noexcept {
-      assert(this);
       return MaxMsgBodySize;
     }
 
     void SetMaxMsgBodySize(size_t size) noexcept {
-      assert(this);
       MaxMsgBodySize = size;
     }
 
     size_t GetPreferredReadSize() const noexcept {
-      assert(this);
       return PreferredReadSize;
     }
 
     void SetPreferredReadSize(size_t size) noexcept {
-      assert(this);
       PreferredReadSize = size;
     }
 
     TOpt<TDataInvalidReason> GetDataInvalidReason() const noexcept {
-      assert(this);
       return OptDataInvalidReason;
     }
 

@@ -45,8 +45,6 @@ TUnixStreamServer::TUnixStreamServer(int backlog, const char *path,
 }
 
 void TUnixStreamServer::SetMode(mode_t mode) noexcept {
-  assert(this);
-
   if (Mode.IsKnown()) {
     *Mode = mode;
   } else {
@@ -55,7 +53,6 @@ void TUnixStreamServer::SetMode(mode_t mode) noexcept {
 }
 
 void TUnixStreamServer::InitListeningSocket(TFd &sock) {
-  assert(this);
   TFd sock_fd(IfLt0(Wr::socket(AF_LOCAL, SOCK_STREAM, 0)));
   struct sockaddr_un serv_addr;
   std::memset(&serv_addr, 0, sizeof(serv_addr));
@@ -83,7 +80,6 @@ void TUnixStreamServer::CloseListeningSocket(TFd &sock) {
 }
 
 void TUnixStreamServer::UnlinkPath() {
-  assert(this);
   int ret = Wr::unlink(Path.c_str());
 
   if ((ret < 0) && (errno != ENOENT)) {

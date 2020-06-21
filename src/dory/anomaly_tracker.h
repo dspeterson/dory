@@ -125,12 +125,10 @@ namespace Dory {
 
       public:
       size_t GetReportId() const {
-        assert(this);
         return ReportId;
       }
 
       uint64_t GetStartTime() const {
-        assert(this);
         return StartTime;
       }
 
@@ -229,7 +227,6 @@ namespace Dory {
 
     /* Same as above, except the message is passed by smart pointer. */
     void TrackDiscard(const TMsg::TPtr &msg_ptr, TDiscardReason reason) {
-      assert(this);
       TrackDiscard(*msg_ptr, reason);
     }
 
@@ -240,7 +237,6 @@ namespace Dory {
 
     /* Same as above, except the message is passed by smart pointer. */
     void TrackDuplicate(const TMsg::TPtr &msg_ptr) {
-      assert(this);
       TrackDuplicate(*msg_ptr);
     }
 
@@ -290,7 +286,6 @@ namespace Dory {
 
     /* Same as above, but takes TMsg::TPtr as parameter. */
     void TrackBadTopicDiscard(const TMsg::TPtr &msg_ptr) {
-      assert(this);
       TrackBadTopicDiscard(*msg_ptr);
     }
 
@@ -300,7 +295,6 @@ namespace Dory {
 
     /* Same as above, except the message is passed by smart pointer. */
     void TrackLongMsgDiscard(const TMsg::TPtr &msg_ptr) {
-      assert(this);
       TrackLongMsgDiscard(*msg_ptr);
     }
 
@@ -319,7 +313,6 @@ namespace Dory {
 
     /* Return the reporting interval length in seconds. */
     size_t GetReportInterval() const {
-      assert(this);
       return ReportInterval;
     }
 

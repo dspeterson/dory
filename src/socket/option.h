@@ -382,13 +382,11 @@ namespace Socket {
     /* The code number used by getsockopt() and setsockopt() when referring to
        this option. */
     int GetCode() const noexcept {
-      assert(this);
       return Code;
     }
 
     /* The human-readable name of this option. */
     const std::string &GetName() const noexcept {
-      assert(this);
       return Name;
     }
 
@@ -423,7 +421,6 @@ namespace Socket {
 
     /* The option's value for the given socket, returned by value. */
     TVal Get(int sock) const noexcept {
-      assert(this);
       TVal val;
       Get(sock, val);
       return val;
@@ -431,13 +428,11 @@ namespace Socket {
 
     /* The option's value for the given socket, returned via out-parameter. */
     void Get(int sock, TVal &val) const noexcept {
-      assert(this);
       Conv<TSelector>::GetSockOpt(sock, TAnyOption::GetCode(), val);
     }
 
     /* See base class. */
     void Dump(std::ostream &strm, int sock) const final {
-      assert(this);
       strm << TAnyOption::GetName() << ": ";
       TVal val;
       Get(sock, val);

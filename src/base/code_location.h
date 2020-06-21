@@ -67,7 +67,6 @@ namespace Base {
 
     /* Returns the line number.  Always returns > 0. */
     unsigned GetLineNumber() const {
-      assert(this);
       return LineNumber;
     }
 

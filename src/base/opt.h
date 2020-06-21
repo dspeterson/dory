@@ -97,16 +97,12 @@ namespace Base {
     /* If we're known, destroy our value as we go.  Implicitly noexcept if
        Reset() is noexcept. */
     ~TOpt() {
-      assert(this);
       Reset();
     }
 
     TOpt &operator=(TOpt &&that)
         noexcept(std::is_nothrow_move_constructible<TVal>::value &&
             std::is_nothrow_move_assignable<TVal>::value) {
-      assert(this);
-      assert(&that);
-
       if (this != &that) {
         if (Val) {
           if (that.Val) {
@@ -125,9 +121,6 @@ namespace Base {
     TOpt &operator=(const TOpt &that)
         noexcept(std::is_nothrow_copy_constructible<TVal>::value &&
             std::is_nothrow_copy_assignable<TVal>::value) {
-      assert(this);
-      assert(&that);
-
       if (this != &that) {
         if (Val) {
           if (that.Val) {
@@ -146,9 +139,6 @@ namespace Base {
     TOpt &operator=(TVal &&that)
         noexcept(std::is_nothrow_move_constructible<TVal>::value &&
             std::is_nothrow_move_assignable<TVal>::value) {
-      assert(this);
-      assert(&that);
-
       if (Val != &that) {
         if (Val) {
             *Val = std::move(that);
@@ -165,9 +155,6 @@ namespace Base {
     TOpt &operator=(const TVal &that)
         noexcept(std::is_nothrow_copy_constructible<TVal>::value &&
             std::is_nothrow_copy_assignable<TVal>::value) {
-      assert(this);
-      assert(&that);
-
       if (Val != &that) {
         if (Val) {
           *Val = that;
@@ -181,61 +168,52 @@ namespace Base {
 
     /* True iff. we're known. */
     operator bool() const noexcept {
-      assert(this);
       return IsKnown();
     }
 
     /* Our value.  We must already be known. */
     const TVal &operator*() const noexcept {
-      assert(this);
       assert(Val);
       return *Val;
     }
 
     /* Our value.  We must already be known. */
     TVal &operator*() noexcept {
-      assert(this);
       assert(Val);
       return *Val;
     }
 
     /* Our value.  We must already be known. */
     const TVal *operator->() const noexcept {
-      assert(this);
       assert(Val);
       return Val;
     }
 
     /* Our value.  We must already be known. */
     TVal *operator->() noexcept {
-      assert(this);
       assert(Val);
       return Val;
     }
 
     /* A pointer to our value.  We must already be known. */
     const TVal *Get() const noexcept {
-      assert(this);
       assert(Val);
       return Val;
     }
 
     /* A pointer to our value.  We must already be known. */
     TVal *Get() noexcept {
-      assert(this);
       assert(Val);
       return Val;
     }
 
     /* True iff. we're known. */
     bool IsKnown() const noexcept {
-      assert(this);
       return Val != nullptr;
     }
 
     /* True iff. we're not known. */
     bool IsUnknown() const noexcept {
-      assert(this);
       return !IsKnown();
     }
 
@@ -245,8 +223,6 @@ namespace Base {
     template <typename... TArgs>
     TVal &MakeKnown(TArgs &&... args) noexcept(
         noexcept(TVal(std::forward<TArgs>(args)...))) {
-      assert(this);
-
       if (!Val) {
         Val = new (Storage) TVal(std::forward<TArgs>(args)...);
       }
@@ -256,8 +232,6 @@ namespace Base {
 
     /* Reset to the unknown state. */
     TOpt &Reset() noexcept(std::is_nothrow_destructible<TVal>::value) {
-      assert(this);
-
       if (Val) {
         Val->~TVal();
         Val = nullptr;
@@ -268,13 +242,11 @@ namespace Base {
 
     /* A pointer to our value.  If we're not known, return nullptr. */
     const TVal *TryGet() const noexcept {
-      assert(this);
       return Val;
     }
 
     /* A pointer to our value.  If we're not known, return nullptr. */
     TVal *TryGet() noexcept {
-      assert(this);
       return Val;
     }
 
@@ -303,9 +275,6 @@ namespace Base {
      this function inserts nothing. */
   template <typename TVal>
   std::ostream &operator<<(std::ostream &strm, const Base::TOpt<TVal> &that) {
-    assert(&strm);
-    assert(&that);
-
     if (that) {
       strm << *that;
     }
@@ -316,9 +285,6 @@ namespace Base {
   /* A std stream extractor for Base::TOpt<>. */
   template <typename TVal>
   std::istream &operator>>(std::istream &strm, Base::TOpt<TVal> &that) {
-    assert(&strm);
-    assert(&that);
-
     if (!strm.eof()) {
       strm >> that.MakeKnown();
     } else {

@@ -56,7 +56,6 @@ namespace Dory {
       void LogMsg(const TMsg &msg);
 
       void LogMsg(const TMsg::TPtr &msg_ptr) {
-        assert(this);
         LogMsg(*msg_ptr);
       }
 
@@ -71,7 +70,6 @@ namespace Dory {
       static unsigned long Now() noexcept;
 
       unsigned long SecondsSinceEnabled() const noexcept {
-        assert(this);
         unsigned long t = Now();
         return (t >= LoggingEnabledAt) ? (t - LoggingEnabledAt): 0;
       }

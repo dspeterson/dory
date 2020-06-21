@@ -67,120 +67,99 @@ namespace Base {
           const TIsPrintableFn &is_printable_fn);
 
       size_t GetBytesPerLine() const noexcept {
-        assert(this);
         return BytesPerLine;
       }
 
       TFormat &SetBytesPerLine(size_t bytes_per_line) noexcept {
-        assert(this);
         BytesPerLine = bytes_per_line;
         return *this;
       }
 
       size_t GetAddrPrintWidth() const noexcept {
-        assert(this);
         return AddrPrintWidth;
       }
 
       TFormat &SetAddrPrintWidth(size_t addr_print_width) noexcept {
-        assert(this);
         AddrPrintWidth = addr_print_width;
         return *this;
       }
 
       const std::string &GetIndent() const noexcept {
-        assert(this);
         return Indent;
       }
 
       TFormat &SetIndent(const std::string &indent) {
-        assert(this);
         Indent = indent;
         return *this;
       }
 
       TFormat &SetIndent(std::string &&indent) noexcept {
-        assert(this);
         Indent = std::move(indent);
         return *this;
       }
 
       const std::string &GetSep1() const noexcept {
-        assert(this);
         return Sep1;
       }
 
       TFormat &SetSep1(const std::string &sep1) {
-        assert(this);
         Sep1 = sep1;
         return *this;
       }
 
       TFormat &SetSep1(std::string &&sep1) noexcept {
-        assert(this);
         Sep1 = std::move(sep1);
         return *this;
       }
 
       const std::string &GetSep2() const noexcept {
-        assert(this);
         return Sep2;
       }
 
       TFormat &SetSep2(const std::string &sep2) {
-        assert(this);
         Sep2 = sep2;
         return *this;
       }
 
       TFormat &SetSep2(std::string &&sep2) noexcept {
-        assert(this);
         Sep2 = std::move(sep2);
         return *this;
       }
 
       const std::string &GetSep3() const noexcept {
-        assert(this);
         return Sep3;
       }
 
       TFormat &SetSep3(const std::string &sep3) {
-        assert(this);
         Sep3 = sep3;
         return *this;
       }
 
       TFormat &SetSep3(std::string &&sep3) noexcept {
-        assert(this);
         Sep3 = std::move(sep3);
         return *this;
       }
 
       char GetNonprintable() const noexcept {
-        assert(this);
         return Nonprintable;
       }
 
       TFormat &SetNonprintable(char nonprintable) noexcept {
-        assert(this);
         Nonprintable = nonprintable;
         return *this;
       }
 
       const TIsPrintableFn &GetIsPrintableFn() const noexcept {
-        assert(this);
         return IsPrintableFn;
       }
 
       TFormat &SetIsPrintableFn(
           const TIsPrintableFn &is_printable_fn) {
-        assert(this);
         IsPrintableFn = is_printable_fn;
         return *this;
       }
 
       TFormat &SetIsPrintableFn(TIsPrintableFn &&is_printable_fn) {
-        assert(this);
         IsPrintableFn = std::move(is_printable_fn);
         return *this;
       }

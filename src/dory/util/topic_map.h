@@ -45,12 +45,10 @@ namespace Dory {
 
       /* A true value indicates that map contains no messages. */
       bool IsEmpty() const noexcept {
-        assert(this);
         return TopicHash.empty();
       }
 
       void Clear() noexcept {
-        assert(this);
         TopicHash.clear();
       }
 

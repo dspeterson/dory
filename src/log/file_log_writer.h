@@ -44,7 +44,6 @@ namespace Log {
     class TError : public std::runtime_error {
       public:
       const std::string &GetPath() const noexcept {
-        assert(this);
         return Path;
       }
 
@@ -68,7 +67,6 @@ namespace Log {
       TInvalidMode(const std::string &path, mode_t mode);
 
       mode_t GetMode() const noexcept {
-        assert(this);
         return Mode;
       }
 
@@ -89,7 +87,6 @@ namespace Log {
     TFileLogWriter(const TFileLogWriter &) = default;
 
     bool IsEnabled() const noexcept {
-      assert(this);
       const bool is_open = FdRef->IsOpen();
       assert(Path.empty() == !is_open);
       return is_open;
@@ -97,13 +94,11 @@ namespace Log {
 
     /* Returns empty string if no logfile is open. */
     const std::string &GetPath() const noexcept {
-      assert(this);
       assert(Path.empty() == !IsEnabled());
       return Path;
     }
 
     Base::TOpt<mode_t> GetOpenMode() const noexcept {
-      assert(this);
       return OpenMode;
     }
 

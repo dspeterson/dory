@@ -36,7 +36,6 @@ TMsgSetWriter::TMsgSetWriter() {
 }
 
 void TMsgSetWriter::Reset() {
-  assert(this);
   Buf = nullptr;
   State = TState::Idle;
   AtOffset = 0;
@@ -52,8 +51,6 @@ void TMsgSetWriter::Reset() {
 }
 
 void TMsgSetWriter::OpenMsgSet(std::vector<uint8_t> &result_buf, bool append) {
-  assert(this);
-
   /* Make sure we start in a sane state.  This guards against cases where an
      exception previously thrown by this object leaves it in a bad state and we
      later reuse it for another produce request. */
@@ -99,7 +96,6 @@ static int8_t XlateCompressionType(TCompressionType compression_type) {
 
 void TMsgSetWriter::OpenMsg(TCompressionType compression_type,
     size_t key_size, size_t value_size) {
-  assert(this);
   assert(State == TState::InMsgSet);
   assert(Buf);
   assert(key_size <= static_cast<size_t>(std::numeric_limits<int32_t>::max()));
@@ -131,7 +127,6 @@ void TMsgSetWriter::OpenMsg(TCompressionType compression_type,
 }
 
 size_t TMsgSetWriter::GetCurrentMsgKeyOffset() const {
-  assert(this);
   assert(State == TState::InMsg);
   assert(Buf);
   assert(CurrentMsgKeyOffset > CurrentMsgSetItemOffset);
@@ -139,7 +134,6 @@ size_t TMsgSetWriter::GetCurrentMsgKeyOffset() const {
 }
 
 size_t TMsgSetWriter::GetCurrentMsgValueOffset() const {
-  assert(this);
   assert(State == TState::InMsg);
   assert(Buf);
   assert(CurrentMsgValueOffset > CurrentMsgSetItemOffset);
@@ -147,7 +141,6 @@ size_t TMsgSetWriter::GetCurrentMsgValueOffset() const {
 }
 
 void TMsgSetWriter::AdjustValueSize(size_t new_size) {
-  assert(this);
   assert(State == TState::InMsg);
   assert(Buf->size() > CurrentMsgValueSize);
   size_t size_of_buf_minus_value = Buf->size() - CurrentMsgValueSize;
@@ -156,7 +149,6 @@ void TMsgSetWriter::AdjustValueSize(size_t new_size) {
 }
 
 void TMsgSetWriter::RollbackOpenMsg() {
-  assert(this);
   assert(State == TState::InMsg);
   assert(Buf);
   assert(CurrentMsgCrcOffset > CurrentMsgSetItemOffset);
@@ -174,7 +166,6 @@ void TMsgSetWriter::RollbackOpenMsg() {
 }
 
 void TMsgSetWriter::CloseMsg() {
-  assert(this);
   assert(State == TState::InMsg);
   assert(Buf);
   assert(CurrentMsgCrcOffset > CurrentMsgSetItemOffset);
@@ -211,7 +202,6 @@ void TMsgSetWriter::CloseMsg() {
 void TMsgSetWriter::AddMsg(TCompressionType compression_type,
     const uint8_t *key_begin, const uint8_t *key_end,
     const uint8_t *value_begin, const uint8_t *value_end) {
-  assert(this);
   assert(State == TState::InMsgSet);
   assert(Buf);
   assert(key_begin || (!key_begin && !key_end));
@@ -237,7 +227,6 @@ void TMsgSetWriter::AddMsg(TCompressionType compression_type,
 }
 
 size_t TMsgSetWriter::CloseMsgSet() {
-  assert(this);
   assert(State == TState::InMsgSet);
   assert(Buf);
   assert(AtOffset >= FirstMsgSetItemOffset);

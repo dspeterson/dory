@@ -108,35 +108,29 @@ namespace {
     virtual ~TDoryTestServer();
 
     void UseUnixDgSocket() {
-      assert(this);
       assert(!IsStarted());
       UnixDgSocketName = MakeTmpFilename("/tmp/dory_test_dg_sock.XXXXXX");
     }
 
     void UseUnixStreamSocket() {
-      assert(this);
       assert(!IsStarted());
       UnixStreamSocketName =
           MakeTmpFilename("/tmp/dory_test_stream_sock.XXXXXX");
     }
 
     void UseTcpInputSocket() {
-      assert(this);
       TcpInputActive = true;
     }
 
     const char *GetUnixDgSocketName() const {
-      assert(this);
       return UnixDgSocketName.c_str();
     }
 
     const char *GetUnixStreamSocketName() const {
-      assert(this);
       return UnixStreamSocketName.c_str();
     }
 
     in_port_t GetInputPort() const {
-      assert(this);
       return Dory->GetInputPort();
     }
 
@@ -147,7 +141,6 @@ namespace {
        pointer to dory server object, or nullptr on dory server initialization
        failure. */
     TDoryServer *GetDory() {
-      assert(this);
       return Dory.get();
     }
 
@@ -156,7 +149,6 @@ namespace {
     using TFdManagedThread::Join;
 
     int GetDoryReturnValue() const {
-      assert(this);
       return DoryReturnValue;
     }
 
@@ -195,7 +187,6 @@ namespace {
   }
 
   bool TDoryTestServer::SyncStart() {
-    assert(this);
     std::ostringstream os;
     const std::string produce_request_data_limit(
         EnableBatching ? "1024k" : "0");
@@ -351,12 +342,10 @@ namespace {
   }
 
   void TDoryTestServer::RequestShutdown() {
-    assert(this);
     Dory::Util::RequestShutdown();
   }
 
   void TDoryTestServer::Run() {
-    assert(this);
     DoryReturnValue = EXIT_FAILURE;
 
     try {
@@ -1656,7 +1645,7 @@ namespace {
   };  // TMsgBlaster
 
   void TMsgBlaster::Run() {
-    assert(this);
+    
     std::vector<uint8_t> msg_buf;
 
     for (const std::string &msg : MsgVec) {

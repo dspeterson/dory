@@ -50,36 +50,30 @@ namespace Dory {
       TSingleTopicBatcher &operator=(TSingleTopicBatcher &&) = default;
 
       bool IsEmpty() const noexcept {
-        assert(this);
         return CoreState.IsEmpty();
       }
 
       const TBatchConfig &GetConfig() const noexcept {
-        assert(this);
         return CoreState.GetConfig();
       }
 
       bool BatchingIsEnabled() const noexcept {
-        assert(this);
         return CoreState.BatchingIsEnabled();
       }
 
       std::list<TMsg::TPtr>
       AddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
-        assert(this);
         std::list<TMsg::TPtr> result = DoAddMsg(std::move(msg), now);
         assert(MsgList.size() == CoreState.GetMsgCount());
         return result;
       }
 
       Base::TOpt<TMsg::TTimestamp> GetNextCompleteTime() const noexcept {
-        assert(this);
         return CoreState.GetNextCompleteTime();
       }
 
       /* Empty out the batcher, and return all messages it contained. */
       std::list<TMsg::TPtr> TakeBatch() {
-        assert(this);
         CoreState.ClearState();
         assert(CoreState.GetMsgCount() == 0);
         return std::move(MsgList);

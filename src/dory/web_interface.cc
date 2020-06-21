@@ -106,7 +106,6 @@ const char *TWebInterface::ToErrorBlurb(TRequestType request_type) {
 
 void *TWebInterface::OnEvent(mg_event event, mg_connection *conn,
     const mg_request_info *request_info) {
-  assert(this);
   bool is_handled = false;
   TRequestType request_type = TRequestType::UNIMPLEMENTED_REQUEST_METHOD;
   const char *error_blurb = "";
@@ -163,7 +162,6 @@ void *TWebInterface::OnEvent(mg_event event, mg_connection *conn,
 }
 
 void TWebInterface::WriteFrontPage(std::ostream &os) {
-  assert(this);
   os << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << std::endl
       << "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\""
       << std::endl
@@ -208,8 +206,6 @@ void TWebInterface::WriteFrontPage(std::ostream &os) {
 
 void TWebInterface::HandleHttpRequest(mg_connection *conn,
     const mg_request_info *request_info, TRequestType &request_type) {
-  assert(this);
-
   /* For each request type handled below, set this as soon as the request type
      is identified.  Then the caller will have that information for error
      reporting even if an exception is thrown. */
@@ -350,7 +346,6 @@ void TWebInterface::HandleHttpRequest(mg_connection *conn,
 }
 
 void TWebInterface::DoStartHttpServer(bool loopback_only) {
-  assert(this);
   std::ostringstream oss;
 
   if (loopback_only) {

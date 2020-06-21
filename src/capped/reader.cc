@@ -30,8 +30,6 @@ using namespace Base;
 using namespace Capped;
 
 TReader &TReader::Advance(void *data, size_t size) {
-  assert(this);
-
   /* Getting the block size will fail in the case where the blob is empty, so
      we first protect ourselves. */
 

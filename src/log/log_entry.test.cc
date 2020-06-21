@@ -49,33 +49,27 @@ namespace {
     TTestLogWriter() = default;
 
     size_t GetWrittenCount() const noexcept {
-      assert(this);
       return WrittenCount;
     }
 
     const std::string &GetEntry() const noexcept {
-      assert(this);
       return Entry;
     }
 
     const std::string &GetEntryWithNewline() const noexcept {
-      assert(this);
       return EntryWithNewline;
     }
 
     const std::string &GetEntryWithPrefix() const noexcept {
-      assert(this);
       return EntryWithPrefix;
     };
 
     const std::string &GetEntryWithPrefixAndNewline() const noexcept {
-      assert(this);
       return EntryWithPrefixAndNewline;
     }
 
     void WriteEntry(TLogEntryAccessApi &entry,
         bool /* no_stdout_stderr */) const noexcept override {
-      assert(this);
       Entry = entry.Get(false /* with_prefix */,
           false /* with_trailing_newline */).first;
       EntryWithNewline = entry.Get(false /* with_prefix */,
@@ -90,7 +84,6 @@ namespace {
     void WriteStackTrace(TPri /* pri */, void *const * /* buffer */,
         size_t /* size */,
         bool /* no_stdout_stderr */) const noexcept override {
-      assert(this);
       ASSERT_TRUE(false);
     }
 

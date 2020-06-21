@@ -77,7 +77,6 @@ namespace {
     }
 
     void Join() {
-      assert(this);
       Worker.join();
     }
 
@@ -89,7 +88,6 @@ namespace {
     }
 
     const struct sockaddr *GetSockaddr() const noexcept {
-      assert(this);
       return reinterpret_cast<const struct sockaddr *>(&Sockaddr[0]);
     }
 
@@ -100,7 +98,6 @@ namespace {
        int32_t rather than int) because both communication endpoints are on the
        same host. */
     void Run() {
-      assert(this);
       int values[2];
 
       for (; ; ) {
@@ -153,7 +150,6 @@ namespace {
 
     void HandleConnection(TFd &&sock, const struct sockaddr *addr,
         socklen_t addr_len) override {
-      assert(this);
       Workers.emplace_back(std::move(sock), addr, addr_len);
     }
 

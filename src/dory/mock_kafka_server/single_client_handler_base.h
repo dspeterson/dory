@@ -116,7 +116,6 @@ namespace Dory {
           const std::string &error_topic, size_t delay) = 0;
 
       size_t GetMetadataRequestCount() const {
-        assert(this);
         return MetadataRequestCount;
       }
 

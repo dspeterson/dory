@@ -92,7 +92,6 @@ namespace Dory {
          be called unless ProcessResponse() returned
          TAction::PauseAndFinishNow. */
       std::list<std::list<TMsg::TPtr>> TakeMsgsWithoutAcks() {
-        assert(this);
         return std::move(MsgsWithoutAcks);
       }
 
@@ -102,7 +101,6 @@ namespace Dory {
          be called unless ProcessResponse() returned
          TAction::PauseAndFinishNow or TAction::PauseAndDeferFinish. */
       std::list<std::list<TMsg::TPtr>> TakePauseAndResendAckMsgs() {
-        assert(this);
         return std::move(PauseAndResendAckMsgs);
       }
 
@@ -111,7 +109,6 @@ namespace Dory {
          without rerouting based on new metadata.  This method must be called
          regardless of what value ProcessResponse() returned. */
       std::list<std::list<TMsg::TPtr>> TakeImmediateResendAckMsgs() {
-        assert(this);
         return std::move(ImmediateResendAckMsgs);
       }
 

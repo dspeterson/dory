@@ -187,7 +187,6 @@ TDoryServer::TDoryServer(TCmdLineArgs &&args, TConf &&conf,
 }
 
 void TDoryServer::BindStatusSocket(bool bind_ephemeral) {
-  assert(this);
   TAddress status_address(
       Conf.HttpInterfaceConf.LoopbackOnly ?
           TAddress::IPv4Loopback : TAddress::IPv4Any,
@@ -209,8 +208,6 @@ void TDoryServer::BindStatusSocket(bool bind_ephemeral) {
 }
 
 int TDoryServer::Run() {
-  assert(this);
-
   /* Regardless of what happens, we must notify test code when we have either
      finished initialization or are shutting down (possibly due to a fatal
      exception). */
@@ -260,7 +257,6 @@ int TDoryServer::Run() {
 
 std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>
     TDoryServer::CreateStreamClientHandler(bool is_tcp) {
-  assert(this);
   return std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>(
       new TStreamClientHandler(is_tcp, Conf, Pool, MsgStateTracker,
           AnomalyTracker, RouterThread.GetMsgChannel(),
@@ -268,8 +264,6 @@ std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>
 }
 
 bool TDoryServer::StartMsgHandlingThreads() {
-  assert(this);
-
   if (!Conf.DiscardLoggingConf.Path.empty()) {
     /* We must do this before starting the input agents so all discards are
        tracked properly when discard file logging is enabled.  This starts a
@@ -353,8 +347,6 @@ static void ReportStreamClientWorkerErrors(
 }
 
 bool TDoryServer::HandleEvents() {
-  assert(this);
-
   /* This is for periodically verifying that we are getting queried for discard
      info. */
   TTimerFd discard_query_check_timer(
@@ -495,8 +487,6 @@ static void ShutDownInputAgent(Thread::TFdManagedThread &agent,
 }
 
 void TDoryServer::DiscardFinalMsgs(std::list<TMsg::TPtr> &msg_list) {
-  assert(this);
-
   for (TMsg::TPtr &msg : msg_list) {
     if (msg) {
       if (Conf.LoggingConf.LogDiscards) {
@@ -517,7 +507,6 @@ void TDoryServer::DiscardFinalMsgs(std::list<TMsg::TPtr> &msg_list) {
 }
 
 bool TDoryServer::Shutdown() {
-  assert(this);
   bool shutdown_ok = true;
 
   /* We could parallelize the shutdown by first calling each agent's

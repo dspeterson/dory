@@ -42,7 +42,6 @@ namespace Base {
     }
 
     bool Test() noexcept {
-      assert(this);
       std::lock_guard<std::mutex> lock(Mutex);
       return Limiter.Test();
     }

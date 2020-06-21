@@ -44,22 +44,18 @@ namespace Base {
     {}
 
     size_t GetInitialCount() const noexcept {
-      assert(this);
       return InitialCount;
     }
 
     size_t GetMaxDouble() const noexcept {
-      assert(this);
       return MaxDouble;
     }
 
     size_t GetCurrentBaseCount() const noexcept {
-      assert(this);
       return BaseCount;
     }
 
     size_t GetCurrentDoubleTimesLeft() const noexcept {
-      assert(this);
       return DoubleTimesLeft;
     }
 
@@ -78,8 +74,6 @@ namespace Base {
     /* This reinitializes the object to its initially constructed state,
        allowing it to generate a new sequence of values. */
     void Reset() noexcept {
-      assert(this);
-
       BaseCount = InitialCount;
       DoubleTimesLeft = MaxDouble;
     }

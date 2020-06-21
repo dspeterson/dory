@@ -43,12 +43,10 @@ TPool::TPool(size_t block_size, size_t block_count, TSync sync_policy)
 }
 
 TPool::~TPool() {
-  assert(this);
   delete [] Storage;
 }
 
 void *TPool::Alloc() {
-  assert(this);
   TOpt<std::lock_guard<std::mutex>> opt_lock;
 
   if (Guarded) {
@@ -65,7 +63,6 @@ void *TPool::Alloc() {
 }
 
 TPool::TBlock *TPool::AllocList(size_t block_count) {
-  assert(this);
   TBlock *first_block = nullptr;
 
   if (block_count) {
@@ -92,8 +89,6 @@ TPool::TBlock *TPool::AllocList(size_t block_count) {
 }
 
 void TPool::Free(void *ptr) noexcept {
-  assert(this);
-
   if (ptr) {
     TOpt<std::lock_guard<std::mutex>> opt_lock;
 
@@ -106,8 +101,6 @@ void TPool::Free(void *ptr) noexcept {
 }
 
 void TPool::FreeList(TBlock *first_block) noexcept {
-  assert(this);
-
   if (first_block == nullptr) {
     return;
   }
@@ -122,7 +115,6 @@ void TPool::FreeList(TBlock *first_block) noexcept {
 }
 
 void TPool::DoFree(void *ptr) noexcept {
-  assert(this);
   assert(ptr);
   assert(Storage <= ptr);
   assert(ptr < Storage + BlockSize * BlockCount);
@@ -130,7 +122,6 @@ void TPool::DoFree(void *ptr) noexcept {
 }
 
 void TPool::DoFreeList(TBlock *first_block) noexcept {
-  assert(this);
   assert(first_block);
 
   do {

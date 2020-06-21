@@ -127,7 +127,6 @@ TErrorInjector::MakeCmdDisconnectBeforeAllTopicsMetadataResponse(
 }
 
 bool TErrorInjector::Connect(const char *host, in_port_t port) {
-  assert(this);
   assert(host);
   Disconnect();
   ConnectToHost(host, port, Sock);
@@ -135,7 +134,6 @@ bool TErrorInjector::Connect(const char *host, in_port_t port) {
 }
 
 bool TErrorInjector::SendCmd(const TCmd &cmd) {
-  assert(this);
   assert(Sock.IsOpen());
   std::vector<uint8_t> buf;
   SerializeCmd(cmd, buf);
@@ -158,7 +156,6 @@ bool TErrorInjector::SendCmd(const TCmd &cmd) {
 }
 
 bool TErrorInjector::ReceiveAck() {
-  assert(this);
   assert(Sock.IsOpen());
   uint8_t response = 0;
   bool success = true;

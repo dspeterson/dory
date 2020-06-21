@@ -36,7 +36,7 @@
 #include <base/no_copy_semantics.h>
 #include <base/opt.h>
 
-namespace Fiber{
+namespace Fiber {
 
   /* Handles overlapped I/O in a single thread, dispatching I/O events to their
      registered handlers. */
@@ -76,21 +76,18 @@ namespace Fiber{
       /* The dispatcher with which we are registered, or null if we're not
          registered with a dispatcher. */
       TDispatcher *GetDispatcher() const noexcept {
-        assert(this);
         return Dispatcher;
       }
 
       /* The fd for which we wait, or -1 if we're not registered with a
          dispatcher. */
       int GetFd() const noexcept {
-        assert(this);
         return Fd;
       }
 
       /* The I/O flags for which we wait, or 0 if we're not registred with a
          dispatcher. */
       short GetFlags() const noexcept {
-        assert(this);
         return Flags;
       }
 
@@ -98,7 +95,6 @@ namespace Fiber{
          handler in our dispatcher or if we're not registered with a
          dispatcher. */
       THandler *GetNextHandler() const noexcept {
-        assert(this);
         return NextHandler;
       }
 
@@ -106,13 +102,11 @@ namespace Fiber{
          first handler in our dispatcher or if we're not registered with a
          dispatcher. */
       THandler *GetPrevHandler() const noexcept {
-        assert(this);
         return PrevHandler;
       }
 
       /* The current deadline for this handler, if any. */
       const TOptDeadline &GetDeadline() const noexcept {
-        assert(this);
         return Deadline;
       }
 
@@ -226,7 +220,6 @@ namespace Fiber{
 
     /* The number of handlers currently registered with this dispatcher. */
     size_t GetHandlerCount() const noexcept {
-      assert(this);
       return HandlerCount;
     }
 

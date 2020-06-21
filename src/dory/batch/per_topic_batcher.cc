@@ -41,7 +41,6 @@ TPerTopicBatcher::TPerTopicBatcher(std::shared_ptr<TConfig> &&config)
 
 std::list<std::list<TMsg::TPtr>>
 TPerTopicBatcher::AddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
-  assert(this);
   assert(msg);
   const std::string &topic = msg->GetTopic();
   auto iter = BatchMap.find(topic);
@@ -133,7 +132,6 @@ TPerTopicBatcher::AddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
 
 std::list<std::list<TMsg::TPtr>>
 TPerTopicBatcher::GetCompleteBatches(TMsg::TTimestamp now) {
-  assert(this);
   std::list<std::list<TMsg::TPtr>> result;
 
   for (TExpiryRef iter = ExpiryTracker.begin();
@@ -168,8 +166,6 @@ TPerTopicBatcher::GetCompleteBatches(TMsg::TTimestamp now) {
 }
 
 TOpt<TMsg::TTimestamp> TPerTopicBatcher::GetNextCompleteTime() const noexcept {
-  assert(this);
-
   if (ExpiryTracker.empty()) {
     return TOpt<TMsg::TTimestamp>();
   }
@@ -178,7 +174,6 @@ TOpt<TMsg::TTimestamp> TPerTopicBatcher::GetNextCompleteTime() const noexcept {
 }
 
 std::list<std::list<TMsg::TPtr>> TPerTopicBatcher::GetAllBatches() {
-  assert(this);
   std::list<std::list<TMsg::TPtr>> result;
   std::list<TMsg::TPtr> batch;
 
@@ -198,7 +193,6 @@ std::list<std::list<TMsg::TPtr>> TPerTopicBatcher::GetAllBatches() {
 }
 
 std::list<TMsg::TPtr> TPerTopicBatcher::DeleteTopic(const std::string &topic) {
-  assert(this);
   auto iter = BatchMap.find(topic);
 
   if (iter == BatchMap.end()) {
@@ -220,8 +214,6 @@ std::list<TMsg::TPtr> TPerTopicBatcher::DeleteTopic(const std::string &topic) {
 }
 
 bool TPerTopicBatcher::SanityCheck() const {
-  assert(this);
-
   for (const auto &map_item : BatchMap) {
     const std::string &topic = map_item.first;
     const TBatchMapEntry &entry = map_item.second;

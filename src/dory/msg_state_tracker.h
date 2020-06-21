@@ -137,22 +137,18 @@ namespace Dory {
       TDeltaComputer() noexcept = default;
 
       long GetNewDelta() const noexcept {
-        assert(this);
         return NewDelta;
       }
 
       long GetBatchingDelta() const noexcept {
-        assert(this);
         return BatchingDelta;
       }
 
       long GetSendWaitDelta() const noexcept {
-        assert(this);
         return SendWaitDelta;
       }
 
       long GetAckWaitDelta() const noexcept {
-        assert(this);
         return AckWaitDelta;
       }
 

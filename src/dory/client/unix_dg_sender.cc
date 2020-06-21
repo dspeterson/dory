@@ -32,8 +32,6 @@ using namespace Dory;
 using namespace Dory::Client;
 
 void TUnixDgSender::DoPrepareToSend() {
-  assert(this);
-
   switch (Sock.Bind(Path.c_str())) {
     case DORY_OK: {
       break;
@@ -52,7 +50,6 @@ void TUnixDgSender::DoPrepareToSend() {
 }
 
 void TUnixDgSender::DoSend(const uint8_t *msg, size_t msg_size) {
-  assert(this);
   int ret = Sock.Send(msg, msg_size);
 
   if (ret != DORY_OK) {
@@ -62,6 +59,5 @@ void TUnixDgSender::DoSend(const uint8_t *msg, size_t msg_size) {
 }
 
 void TUnixDgSender::DoReset() {
-  assert(this);
   Sock.Close();
 }

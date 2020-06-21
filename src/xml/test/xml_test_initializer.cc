@@ -33,7 +33,6 @@ using namespace Xml;
 using namespace Xml::Test;
 
 bool TXmlTestInitializer::HandleInitError(const XMLException &x) {
-  assert(this);
   std::cerr << "Xerces XML library initialization error: "
       << TranscodeToString(x.getMessage()) << std::endl;
   std::exit(1);
@@ -41,8 +40,6 @@ bool TXmlTestInitializer::HandleInitError(const XMLException &x) {
 }
 
 void TXmlTestInitializer::HandleCleanupError(const XMLException &x) noexcept {
-  assert(this);
-
   try {
     std::cerr << "Xerces XML library cleanup error: "
         << TranscodeToString(x.getMessage()) << std::endl;
@@ -52,8 +49,6 @@ void TXmlTestInitializer::HandleCleanupError(const XMLException &x) noexcept {
 }
 
 void TXmlTestInitializer::HandleUnknownErrorOnCleanup() noexcept {
-  assert(this);
-
   try {
     std::cerr << "Unknown error while doing Xerces XML library cleanup"
         << std::endl;

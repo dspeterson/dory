@@ -112,8 +112,6 @@ namespace Base {
     }
 
     TBacktraceSymbols &operator=(TBacktraceSymbols &&other) noexcept {
-      assert(this);
-
       if (&other != this) {
         Clear();
         Buf = other.Buf;
@@ -128,19 +126,16 @@ namespace Base {
     void Clear() noexcept {
       /* As specified by the man page for backtrace_symbols(), free Buf, but
          not the individual pointers in the array it points to. */
-      assert(this);
       free(Buf);
       Buf = nullptr;
       BufSize = 0;
     }
 
     size_t Size() const noexcept {
-      assert(this);
       return BufSize;
     }
 
     const char *operator[](size_t index) const noexcept {
-      assert(this);
       assert(index < BufSize);
       return Buf[index];
     }

@@ -47,7 +47,6 @@ namespace Base {
     ~TTmpFile();
 
     bool IsEmpty() const noexcept {
-      assert(this);
       return Name.empty();
     }
 
@@ -62,22 +61,18 @@ namespace Base {
     void Swap(TTmpFile &that) noexcept;
 
     const std::string &GetName() const {
-      assert(this);
       return Name;
     }
 
     const TFd &GetFd() const {
-      assert(this);
       return Fd;
     }
 
     bool GetDeleteOnDestroy() const noexcept {
-      assert(this);
       return DeleteOnDestroy;
     }
 
     void SetDeleteOnDestroy(bool delete_on_destroy) {
-      assert(this);
       DeleteOnDestroy = delete_on_destroy;
     }
 

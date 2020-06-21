@@ -54,7 +54,6 @@ namespace Xml {
     TDomParserWithLineInfo();
 
     const XMLCh *GetLineInfoKey() const {
-      assert(this);
       return LineInfoKey.get();
     }
 

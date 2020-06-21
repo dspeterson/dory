@@ -36,13 +36,11 @@ namespace Base {
     /* Will not return until the lock is granted. */
     TSharedLock(const TAsset &asset)
         : Asset(asset) {
-      assert(&asset);
       asset.AcquireShared();
     }
 
     /* Releases the lock. */
     ~TSharedLock() {
-      assert(this);
       Asset.ReleaseShared();
     }
 

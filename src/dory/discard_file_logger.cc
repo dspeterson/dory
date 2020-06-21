@@ -95,8 +95,6 @@ static void CreateDir(const char *dir) {
 }
 
 TDiscardFileLogger::~TDiscardFileLogger() {
-  assert(this);
-
   try {
     Shutdown();
   } catch (const std::exception &x) {
@@ -114,8 +112,6 @@ TDiscardFileLogger::~TDiscardFileLogger() {
 
 void TDiscardFileLogger::Init(const char *log_path, uint64_t max_file_size,
     uint64_t max_archive_size, size_t max_msg_prefix_len) {
-  assert(this);
-
   /* Will contain absolute path of directory containing logfile. */
   std::string log_dir;
 
@@ -158,8 +154,6 @@ void TDiscardFileLogger::Init(const char *log_path, uint64_t max_file_size,
 }
 
 void TDiscardFileLogger::Shutdown() {
-  assert(this);
-
   std::lock_guard<std::mutex> lock(Mutex);
   DisableLogging();
 
@@ -193,8 +187,6 @@ static const char *ReasonToBlurb(TDiscardFileLogger::TDiscardReason reason) {
 }
 
 void TDiscardFileLogger::LogDiscard(const TMsg &msg, TDiscardReason reason) {
-  assert(this);
-
   if (!Enabled) {
     return;  // fast path for case where logging is disabled
   }
@@ -213,8 +205,6 @@ void TDiscardFileLogger::LogDiscard(const TMsg &msg, TDiscardReason reason) {
 }
 
 void TDiscardFileLogger::LogDuplicate(const TMsg &msg) {
-  assert(this);
-
   if (!Enabled) {
     return;  // fast path for case where logging is disabled
   }
@@ -235,7 +225,6 @@ void TDiscardFileLogger::LogDuplicate(const TMsg &msg) {
 void TDiscardFileLogger::LogNoMemDiscard(TMsg::TTimestamp timestamp,
     const char *topic_begin, const char *topic_end, const void *key_begin,
     const void *key_end, const void *value_begin, const void *value_end) {
-  assert(this);
   assert(topic_begin);
   assert(topic_end >= topic_begin);
   assert(key_begin || (key_end == key_begin));
@@ -259,8 +248,6 @@ void TDiscardFileLogger::LogNoMemDiscard(TMsg::TTimestamp timestamp,
 
 void TDiscardFileLogger::LogMalformedMsgDiscard(const void *msg_begin,
     const void *msg_end) {
-  assert(this);
-
   if (!Enabled) {
     return;  // fast path for case where logging is disabled
   }
@@ -274,8 +261,6 @@ void TDiscardFileLogger::LogMalformedMsgDiscard(const void *msg_begin,
 
 void TDiscardFileLogger::LogUncleanDisconnectMsgDiscard(bool is_tcp,
     const void *msg_begin, const void *msg_end) {
-  assert(this);
-
   if (!Enabled) {
     return;  // fast path for case where logging is disabled
   }
@@ -289,8 +274,6 @@ void TDiscardFileLogger::LogUncleanDisconnectMsgDiscard(bool is_tcp,
 
 void TDiscardFileLogger::LogUnsupportedApiKeyDiscard(const void *msg_begin,
     const void *msg_end, int api_key) {
-  assert(this);
-
   if (!Enabled) {
     return;  // fast path for case where logging is disabled
   }
@@ -307,8 +290,6 @@ void TDiscardFileLogger::LogUnsupportedApiKeyDiscard(const void *msg_begin,
 
 void TDiscardFileLogger::LogUnsupportedMsgVersionDiscard(const void *msg_begin,
     const void *msg_end, int version) {
-  assert(this);
-
   if (!Enabled) {
     return;  // fast path for case where logging is disabled
   }
@@ -326,7 +307,6 @@ void TDiscardFileLogger::LogUnsupportedMsgVersionDiscard(const void *msg_begin,
 void TDiscardFileLogger::LogBadTopicDiscard(TMsg::TTimestamp timestamp,
     const char *topic_begin, const char *topic_end, const void *key_begin,
     const void *key_end, const void *value_begin, const void *value_end) {
-  assert(this);
   assert(topic_begin);
   assert(topic_end >= topic_begin);
   assert(key_begin || (key_end == key_begin));
@@ -349,8 +329,6 @@ void TDiscardFileLogger::LogBadTopicDiscard(TMsg::TTimestamp timestamp,
 }
 
 void TDiscardFileLogger::LogBadTopicDiscard(const TMsg &msg) {
-  assert(this);
-
   if (!Enabled) {
     return;  // fast path for case where logging is disabled
   }
@@ -369,8 +347,6 @@ void TDiscardFileLogger::LogBadTopicDiscard(const TMsg &msg) {
 }
 
 void TDiscardFileLogger::LogLongMsgDiscard(const TMsg &msg) {
-  assert(this);
-
   if (!Enabled) {
     return;  // fast path for case where logging is disabled
   }
@@ -401,7 +377,6 @@ TDiscardFileLogger::TArchiveCleaner::~TArchiveCleaner() {
 }
 
 void TDiscardFileLogger::TArchiveCleaner::Run() {
-  assert(this);
   int tid = static_cast<int>(Gettid());
   LOG(TPri::INFO) << "Discard log cleaner thread " << tid << " started";
   bool caught_fatal_exception = false;
@@ -451,8 +426,6 @@ struct TOldLogFileInfo {
   TOldLogFileInfo& operator=(const TOldLogFileInfo &) = default;
 
   TOldLogFileInfo& operator=(TOldLogFileInfo &&that) noexcept {
-    assert(this);
-
     if (this != &that) {
       AbsolutePath = std::move(that.AbsolutePath);
       Size = that.Size;
@@ -563,7 +536,6 @@ GetOldLogFileSizes(const char *log_dir, const char *log_filename) {
 }
 
 bool TDiscardFileLogger::TArchiveCleaner::HandleCleanRequest() {
-  assert(this);
   std::vector<TOldLogFileInfo> old_log_files;
 
   try {
@@ -616,7 +588,6 @@ bool TDiscardFileLogger::TArchiveCleaner::HandleCleanRequest() {
 }
 
 void TDiscardFileLogger::TArchiveCleaner::DoRun() {
-  assert(this);
   std::array<struct pollfd, 2> events;
   struct pollfd &shutdown_request_event = events[0];
   struct pollfd &clean_request_event = events[1];
@@ -709,7 +680,6 @@ void TDiscardFileLogger::ParseLogPath(const char *log_path,
 
 const uint8_t *TDiscardFileLogger::EnforceMaxPrefixLen(const void *msg_begin,
     const void *msg_end) {
-  assert(this);
   const auto *p1 = reinterpret_cast<const uint8_t *>(msg_begin);
   const auto *p2 = reinterpret_cast<const uint8_t *>(msg_end);
   assert(p2 >= p1);
@@ -718,8 +688,6 @@ const uint8_t *TDiscardFileLogger::EnforceMaxPrefixLen(const void *msg_begin,
 }
 
 void TDiscardFileLogger::EnforceMaxPrefixLen(std::vector<uint8_t> &msg) {
-  assert(this);
-
   if (msg.size() > MaxMsgPrefixLen) {
     msg.resize(MaxMsgPrefixLen);
   }
@@ -741,7 +709,6 @@ TFd TDiscardFileLogger::OpenLogPath(const char *log_path) {
 }
 
 void TDiscardFileLogger::DisableLogging() {
-  assert(this);
   Enabled = false;
   LogFd.Reset();
 }
@@ -750,7 +717,6 @@ void TDiscardFileLogger::DisableLogging() {
    logfile size to exceed the limit.  If so, rename the logfile, create a new
    one in its place, and return true.  Otherwise return false. */
 bool TDiscardFileLogger::CheckMaxFileSize(uint64_t next_entry_size) {
-  assert(this);
   assert(Enabled);
   assert(ArchiveCleaner);
   assert(LogFd.IsOpen());
@@ -790,8 +756,6 @@ bool TDiscardFileLogger::CheckMaxFileSize(uint64_t next_entry_size) {
 }
 
 void TDiscardFileLogger::WriteToLog(const std::string &log_entry) {
-  assert(this);
-
   if (log_entry.empty()) {
     return;
   }

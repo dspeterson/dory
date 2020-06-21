@@ -80,8 +80,6 @@ static const int MAX_LEVEL = 16;
 
 TOpt<int> TLz4Codec::GetRealCompressionLevel(
     const TOpt<int> &requested_level) const noexcept {
-  assert(this);
-
   if (requested_level.IsUnknown()) {
     return TOpt<int>(DEFAULT_LEVEL);
   }
@@ -94,7 +92,6 @@ TOpt<int> TLz4Codec::GetRealCompressionLevel(
 
 size_t TLz4Codec::ComputeUncompressedResultBufSpace(
     const void *compressed_data, size_t compressed_size) const {
-  assert(this);
   LZ4F_decompressionContext_t dctx = nullptr;
   CheckLz4Status(LZ4F_createDecompressionContext(&dctx, LZ4F_VERSION),
       "LZ4F_createDecompressionContext");
@@ -172,7 +169,6 @@ static void CheckWriteBufferOverflow(size_t bytes_written, size_t capacity,
 
 size_t TLz4Codec::Uncompress(const void *input_buf, size_t input_buf_size,
     void *output_buf, size_t output_buf_size) const {
-  assert(this);
   LZ4F_decompressionContext_t dctx = nullptr;
   CheckLz4Status(LZ4F_createDecompressionContext(&dctx, LZ4F_VERSION),
       "LZ4F_createDecompressionContext");
@@ -234,14 +230,12 @@ size_t TLz4Codec::Uncompress(const void *input_buf, size_t input_buf_size,
 size_t TLz4Codec::DoComputeCompressedResultBufSpace(
     const void * /*uncompressed_data*/, size_t uncompressed_size,
     int /*compression_level*/) const {
-  assert(this);
   return CheckLz4Status(LZ4F_compressBound(uncompressed_size, nullptr),
       "LZ4F_compressBound");
 }
 
 size_t TLz4Codec::DoCompress(const void *input_buf, size_t input_buf_size,
     void *output_buf, size_t output_buf_size, int compression_level) const {
-  assert(this);
   assert((compression_level >= MIN_LEVEL) && (compression_level <= MAX_LEVEL));
   auto *out_buf = reinterpret_cast<uint8_t *>(output_buf);
   LZ4F_compressionContext_t cctx = nullptr;

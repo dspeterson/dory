@@ -51,22 +51,18 @@ namespace Server {
     ~TTcpIpv6Server() override = default;
 
     const in6_addr &GetBindAddr() const noexcept {
-      assert(this);
       return BindAddr;
     }
 
     in_port_t GetPort() const noexcept {
-      assert(this);
       return Port;
     }
 
     uint32_t GetScopeId() const noexcept {
-      assert(this);
       return ScopeId;
     }
 
     const sockaddr_in6 &GetClientAddr() const noexcept {
-      assert(this);
       return ClientAddr;
     }
 

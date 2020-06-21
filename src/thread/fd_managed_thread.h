@@ -100,13 +100,11 @@ namespace Thread {
     void Join();
 
     const std::thread &GetThread() const noexcept {
-      assert(this);
       assert(Thread.joinable());
       return Thread;
     }
 
     std::thread &GetThread() noexcept {
-      assert(this);
       assert(Thread.joinable());
       return Thread;
     }
@@ -132,7 +130,6 @@ namespace Thread {
        shutdown request, which is indicated when the descriptor becomes
        readable. */
     const Base::TFd &GetShutdownRequestFd() const noexcept {
-      assert(this);
       return ShutdownRequestedSem.GetFd();
     }
 
@@ -142,7 +139,6 @@ namespace Thread {
        monitor the FD in case it becomes readable due to some emergency
        scenario causing unexpected destructor invocation. */
     void ClearShutdownRequest() noexcept {
-      assert(this);
       ShutdownRequestedSem.Pop();
     }
 

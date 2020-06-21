@@ -33,7 +33,6 @@ using namespace Dory::TestUtil;
 
 TMsg::TPtr TTestMsgCreator::NewMsg(const std::string &topic,
     const std::string &value, TMsg::TTimestamp timestamp, bool set_processed) {
-  assert(this);
   TMsg::TPtr msg = TMsgCreator::CreateAnyPartitionMsg(timestamp, topic.data(),
       topic.data() + topic.size(), nullptr, 0, value.data(), value.size(),
       false, *Pool, MsgStateTracker);

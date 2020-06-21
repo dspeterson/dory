@@ -47,17 +47,14 @@ namespace Server {
     ~TTcpIpv4Server() override = default;
 
     in_addr_t GetBindAddr() const noexcept {
-      assert(this);
       return BindAddr;
     }
 
     in_port_t GetPort() const noexcept {
-      assert(this);
       return Port;
     }
 
     const sockaddr_in &GetClientAddr() const noexcept {
-      assert(this);
       return ClientAddr;
     }
 

@@ -38,7 +38,6 @@ namespace Base {
         bool nonblocking = false) noexcept;
 
     const TFd &GetFd() const noexcept {
-      assert(this);
       return Fd;
     }
 

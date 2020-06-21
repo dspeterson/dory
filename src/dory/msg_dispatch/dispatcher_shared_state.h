@@ -70,12 +70,10 @@ namespace Dory {
           const Debug::TDebugSetup &debug_setup);
 
       size_t GetAckCount() const noexcept {
-        assert(this);
         return AckCount.load();
       }
 
       void IncrementAckCount() noexcept {
-        assert(this);
         ++AckCount;
       }
 
@@ -88,12 +86,10 @@ namespace Dory {
                    TAnomalyTracker::TDiscardReason reason);
 
       const Base::TFd &GetShutdownWaitFd() const noexcept {
-        assert(this);
         return ShutdownFinished.GetFd();
       }
 
       size_t GetRunningThreadCount() const noexcept {
-        assert(this);
         return RunningThreadCount.load();
       }
 

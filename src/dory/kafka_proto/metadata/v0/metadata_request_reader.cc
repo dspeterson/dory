@@ -94,14 +94,12 @@ TMetadataRequestReader::TMetadataRequestReader(const void *request,
 }
 
 const char *TMetadataRequestReader::GetTopicBegin() const {
-  assert(this);
   return AllTopics ?
       nullptr :
       reinterpret_cast<const char *>(Begin + SingleTopicHeaderSize());
 }
 
 const char *TMetadataRequestReader::GetTopicEnd() const {
-  assert(this);
   return AllTopics ?
       nullptr :
       reinterpret_cast<const char *>(Begin + SingleTopicHeaderSize() +

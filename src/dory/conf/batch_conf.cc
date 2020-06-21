@@ -96,7 +96,6 @@ std::string TBatchUnknownTopicConfig::CreateMsg(
 
 void TBatchConf::TBuilder::AddNamedConfig(const std::string &name,
     const TBatchValues &values) {
-  assert(this);
   const auto result = NamedConfigs.insert(std::make_pair(name, values));
 
   if (!result.second) {
@@ -105,8 +104,6 @@ void TBatchConf::TBuilder::AddNamedConfig(const std::string &name,
 }
 
 void TBatchConf::TBuilder::SetProduceRequestDataLimit(size_t limit) {
-  assert(this);
-
   if (GotProduceRequestDataLimit) {
     throw TBatchDuplicateProduceRequestDataLimit();
   }
@@ -116,8 +113,6 @@ void TBatchConf::TBuilder::SetProduceRequestDataLimit(size_t limit) {
 }
 
 void TBatchConf::TBuilder::SetMessageMaxBytes(size_t message_max_bytes) {
-  assert(this);
-
   if (GotMessageMaxBytes) {
     throw TBatchDuplicateMessageMaxBytes();
   }
@@ -128,7 +123,6 @@ void TBatchConf::TBuilder::SetMessageMaxBytes(size_t message_max_bytes) {
 
 void TBatchConf::TBuilder::SetCombinedTopicsConfig(bool enabled,
     const std::string *config_name) {
-  assert(this);
   assert(!enabled || config_name);
 
   if (GotCombinedTopics) {
@@ -152,7 +146,6 @@ void TBatchConf::TBuilder::SetCombinedTopicsConfig(bool enabled,
 
 void TBatchConf::TBuilder::SetDefaultTopicConfig(TTopicAction action,
     const std::string *config_name) {
-  assert(this);
   assert((action != TTopicAction::PerTopic) || config_name);
 
   if (GotDefaultTopic) {
@@ -176,7 +169,6 @@ void TBatchConf::TBuilder::SetDefaultTopicConfig(TTopicAction action,
 
 void TBatchConf::TBuilder::SetTopicConfig(const std::string &topic,
     TTopicAction action, const std::string *config_name) {
-  assert(this);
   assert((action != TTopicAction::PerTopic) || config_name);
 
   if (BuildResult.TopicConfigs.find(topic) != BuildResult.TopicConfigs.end()) {
@@ -200,8 +192,6 @@ void TBatchConf::TBuilder::SetTopicConfig(const std::string &topic,
 }
 
 TBatchConf TBatchConf::TBuilder::Build() {
-  assert(this);
-
   if (!GotProduceRequestDataLimit) {
     throw TBatchMissingProduceRequestDataLimit();
   }

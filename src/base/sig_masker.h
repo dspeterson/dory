@@ -48,12 +48,10 @@ namespace Base {
 
     /* Restore the mask. */
     ~TSigMasker() {
-      assert(this);
       Wr::pthread_sigmask(SIG_SETMASK, &OldSet, nullptr);
     }
 
     const sigset_t &GetOldSet() const noexcept {
-      assert(this);
       return OldSet;
     }
 

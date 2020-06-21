@@ -42,69 +42,56 @@ namespace Dory {
       }
 
       size_t Size() const {
-        assert(this);
         return SIZE;
       }
 
       const struct pollfd &operator[](TEnum index) const {
-        assert(this);
         size_t n = static_cast<size_t>(index);
         assert(n < SIZE);
         return Items[n];
       }
 
       struct pollfd &operator[](TEnum index) {
-        assert(this);
         size_t n = static_cast<size_t>(index);
         assert(n < SIZE);
         return Items[n];
       }
 
       operator const struct pollfd *() const {
-        assert(this);
         return Items;
       }
 
       operator struct pollfd *() {
-        assert(this);
         return Items;
       }
 
       void ClearRevents() {
-        assert(this);
-
         for (size_t i = 0; i < SIZE; ++i) {
           DoClearRevents(i);
         }
       }
 
       void ClearRevents(TEnum index) {
-        assert(this);
         DoClearRevents(static_cast<size_t>(index));
       }
 
       void Clear() {
-        assert(this);
-
         for (size_t i = 0; i < SIZE; ++i) {
           DoClear(i);
         }
       }
 
       void Clear(TEnum index) {
-        assert(this);
         DoClear(static_cast<size_t>(index));
       }
 
       private:
       void DoClearRevents(size_t index) {
-        assert(this);
         assert(index < SIZE);
         Items[index].revents = 0;
       }
 
       void DoClear(size_t index) {
-        assert(this);
         assert(index < SIZE);
         struct pollfd &item = Items[index];
         item.fd = -1;

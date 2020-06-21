@@ -39,7 +39,6 @@ TCmdWorker::~TCmdWorker() {
 }
 
 void TCmdWorker::Run() {
-  assert(this);
   LOG(TPri::DEBUG) << "got connection on command port";
   const TFd &shutdown_request_fd = GetShutdownRequestFd();
 
@@ -53,8 +52,6 @@ void TCmdWorker::Run() {
 }
 
 bool TCmdWorker::GetCmd() {
-  assert(this);
-
   /* Start by reading just enough data to determine the size of the entire
      command, and then read the rest of the command.  It would be more
      efficient to avoid reading in little pieces, but efficiency is not a big
@@ -105,7 +102,6 @@ bool TCmdWorker::GetCmd() {
 }
 
 bool TCmdWorker::SendReply(bool success) {
-  assert(this);
   uint8_t reply = success ? 0 : 1;
 
   switch (TryWriteExactlyOrShutdown(ClientSocket, &reply, sizeof(reply))) {

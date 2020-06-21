@@ -67,7 +67,6 @@ DEFINE_COUNTER(UnixStreamInputUncleanDisconnect);
 
 TStreamClientWorkFn &TStreamClientWorkFn::TStreamClientWorkFn::operator=(
     nullptr_t) noexcept {
-  assert(this);
   IsTcp = false;
   Conf = nullptr;
   Pool = nullptr;
@@ -81,7 +80,6 @@ TStreamClientWorkFn &TStreamClientWorkFn::TStreamClientWorkFn::operator=(
 }
 
 void TStreamClientWorkFn::operator()() {
-  assert(this);
   assert(Conf);
   assert(Pool);
   assert(MsgStateTracker);
@@ -125,7 +123,6 @@ void TStreamClientWorkFn::SetState(bool is_tcp, const TConf &conf, TPool &pool,
     TMsgStateTracker &msg_state_tracker, TAnomalyTracker &anomaly_tracker,
     TGatePutApi<TMsg::TPtr> &output_queue, const TFd &shutdown_request_fd,
     TFd &&client_socket) noexcept {
-  assert(this);
   IsTcp = is_tcp;
   Conf = &conf;
   Pool = &pool;
@@ -165,7 +162,6 @@ void TStreamClientWorkFn::HandleClientClosed() const {
 }
 
 void TStreamClientWorkFn::HandleDataInvalid() {
-  assert(this);
   assert(StreamReader.GetDataInvalidReason().IsKnown());
 
   switch (*StreamReader.GetDataInvalidReason()) {
@@ -204,8 +200,6 @@ void TStreamClientWorkFn::HandleDataInvalid() {
 }
 
 bool TStreamClientWorkFn::HandleSockReadReady() {
-  assert(this);
-
   if (IsTcp) {
     TcpInputSocketRead.Increment();
   } else {

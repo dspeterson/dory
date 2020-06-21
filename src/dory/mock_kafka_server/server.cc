@@ -43,8 +43,6 @@ using namespace Socket;
 using namespace Thread;
 
 int TServer::Init() {
-  assert(this);
-
   if (InitSucceeded) {
     Die("Init() method already called");
   }
@@ -75,8 +73,6 @@ int TServer::Init() {
 }
 
 int TServer::Run() {
-  assert(this);
-
   class t_shutdown final {
     NO_COPY_SEMANTICS(t_shutdown);
 
@@ -135,7 +131,6 @@ bool TServer::InitOutputDir() {
 }
 
 void TServer::ShutDownWorkers() {
-  assert(this);
   std::unordered_map<int, TSharedState::TPerConnectionState> &state_map =
       Ss.PerConnectionMap;
 
@@ -161,7 +156,6 @@ void TServer::ShutDownWorkers() {
 }
 
 bool TServer::InitCmdPort() {
-  assert(this);
   in_port_t kafka_port_begin = Ss.Setup.BasePort;
   auto kafka_port_end =
       static_cast<in_port_t>(kafka_port_begin + Ss.Setup.Ports.size());
@@ -189,8 +183,6 @@ bool TServer::InitCmdPort() {
 }
 
 void TServer::InitKafkaPorts() {
-  assert(this);
-
   if (!ClientHandlerFactory) {
     ClientHandlerFactory = TClientHandlerFactoryBase::CreateFactory(
         Ss.CmdLineArgs, Ss.Setup);

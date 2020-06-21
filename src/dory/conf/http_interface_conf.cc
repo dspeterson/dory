@@ -27,8 +27,6 @@ using namespace Dory;
 using namespace Dory::Conf;
 
 void THttpInterfaceConf::SetPort(in_port_t port) {
-  assert(this);
-
   if (port < 1) {
     throw THttpInterfaceInvalidPort();
   }
@@ -37,8 +35,6 @@ void THttpInterfaceConf::SetPort(in_port_t port) {
 }
 
 void THttpInterfaceConf::SetDiscardReportInterval(size_t value) {
-  assert(this);
-
   if (value < 1) {
     throw THttpInterfaceInvalidDiscardReportInterval();
   }

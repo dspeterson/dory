@@ -95,8 +95,6 @@ std::string TCompressionUnknownTopicConfig::CreateMsg(const std::string &topic,
 
 void TCompressionConf::TBuilder::AddNamedConfig(const std::string &name,
     TCompressionType type, size_t min_size, const TOpt<int> &level) {
-  assert(this);
-
   if (type == TCompressionType::None) {
     min_size = 0;
   }
@@ -111,8 +109,6 @@ void TCompressionConf::TBuilder::AddNamedConfig(const std::string &name,
 
 void TCompressionConf::TBuilder::SetSizeThresholdPercent(
     size_t size_threshold_percent) {
-  assert(this);
-
   if (GotSizeThresholdPercent) {
     throw TCompressionDuplicateSizeThresholdPercent();
   }
@@ -127,8 +123,6 @@ void TCompressionConf::TBuilder::SetSizeThresholdPercent(
 
 void TCompressionConf::TBuilder::SetDefaultTopicConfig(
     const std::string &config_name) {
-  assert(this);
-
   if (GotDefaultTopic) {
     throw TCompressionDuplicateDefaultTopicConfig();
   }
@@ -145,8 +139,6 @@ void TCompressionConf::TBuilder::SetDefaultTopicConfig(
 
 void TCompressionConf::TBuilder::SetTopicConfig(const std::string &topic,
     const std::string &config_name) {
-  assert(this);
-
   if (BuildResult.TopicConfigs.find(topic) != BuildResult.TopicConfigs.end()) {
     throw TCompressionDuplicateTopicConfig(topic);
   }
@@ -161,8 +153,6 @@ void TCompressionConf::TBuilder::SetTopicConfig(const std::string &topic,
 }
 
 TCompressionConf TCompressionConf::TBuilder::Build() {
-  assert(this);
-
   if (!GotDefaultTopic) {
     throw TCompressionMissingDefaultTopic();
   }

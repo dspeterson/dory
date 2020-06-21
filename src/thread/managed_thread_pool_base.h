@@ -138,7 +138,6 @@ namespace Thread {
          obtained from the pool.  This may facilitate maintaining metrics on
          the pool's effectiveness. */
       bool IsNew() const noexcept {
-        assert(this);
         assert(Worker);
         return !Worker->IsStarted();
       }
@@ -149,8 +148,6 @@ namespace Thread {
          configured with a maximum size, client must call IsLaunchable() to
          verify that thread allocation succeeded before calling this method. */
       std::thread::id Launch() {
-        assert(this);
-
         if (!IsLaunchable()) {
           Base::Die("Cannot call Launch() method on empty TReadyWorkerBase");
         }
@@ -166,8 +163,6 @@ namespace Thread {
          this is a no-op.  Once this has been called, IsLaunchable() will
          return false and Launch() can no longer be called. */
       void PutBack() noexcept {
-        assert(this);
-
         if (Worker) {
           TWorkerBase::PutBack(Worker);
           Worker = nullptr;
@@ -180,7 +175,6 @@ namespace Thread {
          to indicate that a thread could not be allocated due to the size
          limit. */
       bool IsLaunchable() noexcept {
-        assert(this);
         return (Worker != nullptr);
       }
 
@@ -216,14 +210,12 @@ namespace Thread {
 
       /* Swap our internal state with 'that'. */
       void Swap(TReadyWorkerBase &that) noexcept {
-        assert(this);
         std::swap(Worker, that.Worker);
       }
 
       /* Return a pointer to the worker (if any) that we contain.  Return
          nullptr if we are empty.  We retain ownership of worker. */
       TWorkerBase *GetWorkerBase() const noexcept {
-        assert(this);
         return Worker;
       }
 
@@ -245,8 +237,6 @@ namespace Thread {
 
     /* Return the pool's current configuration. */
     TManagedThreadPoolConfig GetConfig() const noexcept {
-      assert(this);
-
       std::lock_guard<std::mutex> lock(PoolLock);
       return Config;
     }
@@ -265,7 +255,6 @@ namespace Thread {
     /* True when Start() has been called, but WaitForShutdown() has not yet
        been called. */
     bool IsStarted() const noexcept {
-      assert(this);
       return Manager.IsStarted();
     }
 
@@ -274,7 +263,6 @@ namespace Thread {
        supplied worker code.  The error details may be obtained by calling
        GetAllPendingErrors(). */
     const Base::TFd &GetErrorPendingFd() const noexcept {
-      assert(this);
       return ErrorPendingSem.GetFd();
     }
 
@@ -298,7 +286,6 @@ namespace Thread {
        of time must monitor this file descriptor and finish their work if it
        becomes readable. */
     const Base::TFd &GetShutdownRequestFd() const noexcept {
-      assert(this);
       return Manager.GetShutdownRequestFd();
     }
 
@@ -311,7 +298,6 @@ namespace Thread {
        descriptor should be monitored for readability so that fatal errors may
        be detected. */
     const Base::TFd &GetShutdownWaitFd() const noexcept {
-      assert(this);
       return Manager.GetShutdownWaitFd();
     }
 
@@ -359,7 +345,6 @@ namespace Thread {
       /* Return true if this object contains an actual thread, or false
          otherwise. */
       bool IsStarted() const noexcept {
-        assert(this);
         return WorkerThread.joinable();
       }
 
@@ -368,21 +353,18 @@ namespace Thread {
          before it returns to the idle list after finishing its work, thus
          preventing a race condition. */
       void SetWaitAfterDoWork() {
-        assert(this);
         WaitAfterDoWork = true;
       }
 
       /* Returns the thread ID.  It is assumed that the thread has been started
          (i.e. IsStarted() returns true). */
       std::thread::id GetId() const noexcept {
-        assert(this);
         assert(IsStarted());
         return WorkerThread.get_id();
       }
 
       /* Return a reference to the pool that this thread belongs to. */
       TManagedThreadPoolBase &GetPool() const noexcept {
-        assert(this);
         return MyPool;
       }
 
@@ -427,7 +409,6 @@ namespace Thread {
       /* The manager calls this after calling Terminate(), or when processing
          worker on 'JoinList'. */
       void Join() {
-        assert(this);
         WorkerThread.join();
       }
 

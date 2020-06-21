@@ -52,23 +52,18 @@ TV0ClientHandler::~TV0ClientHandler() {
 }
 
 TProduceRequestReaderApi &TV0ClientHandler::GetProduceRequestReader() {
-  assert(this);
   return ProduceRequestReader;
 }
 
 TMsgSetReaderApi &TV0ClientHandler::GetMsgSetReader() {
-  assert(this);
   return MsgSetReader;
 }
 
 TProduceResponseWriterApi &TV0ClientHandler::GetProduceResponseWriter() {
-  assert(this);
   return ProduceResponseWriter;
 }
 
 bool TV0ClientHandler::ValidateMetadataRequestHeader() {
-  assert(this);
-
   try {
     OptMetadataRequestReader.MakeKnown(&InputBuf[0], InputBuf.size());
   } catch (const std::runtime_error &x) {

@@ -41,19 +41,15 @@ TCursor::TCursor(const char *node, const char *serv, int family, int socktype,
 }
 
 TCursor::~TCursor() {
-  assert(this);
   freeaddrinfo(First);
 }
 
 TFd TCursor::NewCompatSocket() const {
-  assert(this);
   Freshen();
   return TFd(Wr::socket(Csr->ai_family, Csr->ai_socktype, Csr->ai_protocol));
 }
 
 void TCursor::TryFreshen() const noexcept {
-  assert(this);
-
   if (!Csr) {
     Csr = Next;
 

@@ -54,22 +54,18 @@ namespace Dory {
         TTopicGroup &operator=(TTopicGroup &&) = default;
 
         void AddMsgSet(const TMsgSet &msg_set) {
-          assert(this);
           MsgSetVec.push_back(msg_set);
         }
 
         void AddMsgSet(TMsgSet &&msg_set) {
-          assert(this);
           MsgSetVec.push_back(std::move(msg_set));
         }
 
         const std::string &GetTopic() const {
-          assert(this);
           return Topic;
         }
 
         const std::vector<TMsgSet> &GetMsgSetVec() const {
-          assert(this);
           return MsgSetVec;
         }
 

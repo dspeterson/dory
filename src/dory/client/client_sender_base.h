@@ -38,17 +38,14 @@ namespace Dory {
       virtual ~TClientSenderBase() = default;
 
       void PrepareToSend() {
-        assert(this);
         DoPrepareToSend();
       }
 
       void Send(const void *msg, size_t msg_size) {
-        assert(this);
         DoSend(reinterpret_cast<const uint8_t *>(msg), msg_size);
       }
 
       void Reset() {
-        assert(this);
         DoReset();
       }
 

@@ -63,7 +63,6 @@ namespace Dory {
       bool Connect(const char *host, in_port_t port);
 
       void Disconnect() {
-        assert(this);
         Sock.Reset();
       }
 
@@ -71,7 +70,6 @@ namespace Dory {
          null then match any message body. */
       bool InjectAckError(int16_t error_code, const char *msg_body_to_match,
           const char *client_addr_to_match) {
-        assert(this);
         return InjectCmd(MakeCmdAckError(error_code, msg_body_to_match,
                                          client_addr_to_match));
       }
@@ -80,7 +78,6 @@ namespace Dory {
          null then match any message body. */
       bool InjectDisconnectBeforeAck(const char *msg_body_to_match,
           const char *client_addr_to_match) {
-        assert(this);
         return InjectCmd(MakeCmdDisconnectBeforeAck(msg_body_to_match,
                                                     client_addr_to_match));
       }
@@ -88,7 +85,6 @@ namespace Dory {
       /* Return true on success or false on error. */
       bool InjectMetadataResponseError(int16_t error_code, const char *topic,
           const char *client_addr_to_match) {
-        assert(this);
         return InjectCmd(MakeCmdMetadataResponseError(error_code, topic,
                                                       client_addr_to_match));
       }
@@ -98,7 +94,6 @@ namespace Dory {
          gets the error. */
       bool InjectAllTopicsMetadataResponseError(int16_t error_code,
           const char *topic, const char *client_addr_to_match) {
-        assert(this);
         return InjectCmd(MakeCmdAllTopicsMetadataResponseError(
             error_code, topic, client_addr_to_match));
       }
@@ -106,7 +101,6 @@ namespace Dory {
       /* Return true on success or false on error. */
       bool InjectDisconnectBeforeMetadataResponse(const char *topic,
           const char *client_addr_to_match) {
-        assert(this);
         return InjectCmd(MakeCmdDisconnectBeforeMetadataResponse(topic,
             client_addr_to_match));
       }
@@ -114,14 +108,12 @@ namespace Dory {
       /* Return true on success or false on error. */
       bool InjectDisconnectBeforeAllTopicsMetadataResponse(
           const char *client_addr_to_match) {
-        assert(this);
         return InjectCmd(MakeCmdDisconnectBeforeAllTopicsMetadataResponse(
             client_addr_to_match));
       }
 
       /* Return true on success or false on error. */
       bool InjectCmd(const TCmd &cmd) {
-        assert(this);
         assert(Sock.IsOpen());
         return SendCmd(cmd) && ReceiveAck();
       }

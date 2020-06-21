@@ -28,8 +28,6 @@ using namespace Dory;
 using namespace Dory::Conf;
 
 void TKafkaConfigConf::SetReplicationTimeout(size_t value) {
-  assert(this);
-
   if (value > static_cast<size_t>(std::numeric_limits<int32_t>::max())) {
     throw TKafkaConfigInvalidReplicationTimeout();
   }

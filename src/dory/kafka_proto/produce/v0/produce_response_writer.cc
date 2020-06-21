@@ -37,7 +37,6 @@ TProduceResponseWriter::TProduceResponseWriter() {
 }
 
 void TProduceResponseWriter::Reset() {
-  assert(this);
   OutBuf = nullptr;
   TopicStarted = false;
   CurrentTopicOffset = 0;
@@ -49,8 +48,6 @@ void TProduceResponseWriter::Reset() {
 
 void TProduceResponseWriter::OpenResponse(std::vector<uint8_t> &out,
     int32_t correlation_id) {
-  assert(this);
-
   /* Make sure we start in a sane state. */
   Reset();
 
@@ -65,7 +62,6 @@ void TProduceResponseWriter::OpenResponse(std::vector<uint8_t> &out,
 
 void TProduceResponseWriter::OpenTopic(const char *topic_begin,
     const char *topic_end) {
-  assert(this);
   assert(topic_begin);
   assert(topic_end >= topic_begin);
   assert(OutBuf);
@@ -91,7 +87,6 @@ void TProduceResponseWriter::OpenTopic(const char *topic_begin,
 
 void TProduceResponseWriter::AddPartition(int32_t partition,
     int16_t error_code, int64_t offset) {
-  assert(this);
   assert(partition >= 0);
   assert(offset >= 0);
   assert(OutBuf);
@@ -111,7 +106,6 @@ void TProduceResponseWriter::AddPartition(int32_t partition,
 }
 
 void TProduceResponseWriter::CloseTopic() {
-  assert(this);
   assert(OutBuf);
   assert(TopicStarted);
   assert(CurrentTopicOffset >= REQUEST_OR_RESPONSE_SIZE_SIZE +
@@ -131,7 +125,6 @@ void TProduceResponseWriter::CloseTopic() {
 }
 
 void TProduceResponseWriter::CloseResponse() {
-  assert(this);
   assert(OutBuf);
   assert(!TopicStarted);
   assert(CurrentTopicOffset >= REQUEST_OR_RESPONSE_SIZE_SIZE +

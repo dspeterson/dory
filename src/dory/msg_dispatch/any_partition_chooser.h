@@ -39,8 +39,6 @@ namespace Dory {
 
       int32_t GetChoice(size_t broker_index, const TMetadata &md,
           const std::string &topic) {
-        assert(this);
-
         if (Choice.IsUnknown()) {
           Choose(broker_index, md, topic);
         }
@@ -49,12 +47,10 @@ namespace Dory {
       }
 
       void SetChoiceUsed() {
-        assert(this);
         ChoiceUsed = true;
       }
 
       void ClearChoice() {
-        assert(this);
         Choice.Reset();
 
         if (ChoiceUsed) {

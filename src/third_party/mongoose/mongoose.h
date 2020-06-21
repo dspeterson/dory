@@ -233,7 +233,6 @@ namespace Mongoose {
 
     /* TODO */
     virtual ~TMongoose() {
-      assert(this);
       assert(!Handle);
     }
 
@@ -245,7 +244,6 @@ namespace Mongoose {
 
     /* TODO */
     void Start(const char **options) {
-      assert(this);
       Stop();
       Handle = mg_start(Callback, this, options);
       if (!Handle) {
@@ -255,7 +253,6 @@ namespace Mongoose {
 
     /* TODO */
     void Stop() {
-      assert(this);
       if (Handle) {
         mg_stop(Handle);
         Handle = 0;

@@ -56,7 +56,6 @@ TConf::TBuilder::TBuilder(bool allow_input_bind_ephemeral, bool enable_lz4)
 }
 
 TConf TConf::TBuilder::Build(const void *buf, size_t buf_size) {
-  assert(this);
   assert(buf);
   Reset();
   XmlDoc.reset(ParseXmlConfig(buf, buf_size, "US-ASCII"));
@@ -76,7 +75,6 @@ TConf TConf::TBuilder::Build(const void *buf, size_t buf_size) {
 
 void TConf::TBuilder::ProcessSingleBatchingNamedConfig(
     const DOMElement &config_elem) {
-  assert(this);
   const std::string name = TAttrReader::GetString(config_elem, "name",
       TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
   RequireAllChildElementLeaves(config_elem);
@@ -125,7 +123,6 @@ void TConf::TBuilder::ProcessSingleBatchingNamedConfig(
 
 void TConf::TBuilder::ProcessTopicBatchConfig(const DOMElement &topic_elem,
     TBatchConf::TTopicAction &action, std::string &config) {
-  assert(this);
   RequireLeaf(topic_elem);
   const std::string action_str = TAttrReader::GetString(topic_elem, "action",
       TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
@@ -172,7 +169,6 @@ void TConf::TBuilder::ProcessTopicBatchConfig(const DOMElement &topic_elem,
 
 void TConf::TBuilder::ProcessBatchingTopicConfigsElem(
   const DOMElement &topic_configs_elem) {
-  assert(this);
   const auto item_vec = GetItemListElements(topic_configs_elem, "topic");
 
   for (const auto &item : item_vec) {
@@ -199,7 +195,6 @@ void TConf::TBuilder::ProcessBatchingTopicConfigsElem(
 }
 
 void TConf::TBuilder::ProcessBatchingElem(const DOMElement &batching_elem) {
-  assert(this);
   const auto subsection_map = GetSubsectionElements(batching_elem,
       {
         {"namedConfigs", false}, {"produceRequestDataLimit", true},
@@ -295,7 +290,6 @@ void TConf::TBuilder::ProcessBatchingElem(const DOMElement &batching_elem) {
 
 void TConf::TBuilder::ProcessSingleCompressionNamedConfig(
     const DOMElement &config_elem) {
-  assert(this);
   const std::string name = TAttrReader::GetString(config_elem, "name",
       TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
   TCompressionType type = TCompressionType::None;
@@ -328,7 +322,6 @@ void TConf::TBuilder::ProcessSingleCompressionNamedConfig(
 
 void TConf::TBuilder::ProcessCompressionTopicConfigsElem(
     const DOMElement &topic_configs_elem) {
-  assert(this);
   RequireAllChildElementLeaves(topic_configs_elem);
   const auto item_vec = GetItemListElements(topic_configs_elem, "topic");
 
@@ -356,7 +349,6 @@ void TConf::TBuilder::ProcessCompressionTopicConfigsElem(
 
 void TConf::TBuilder::ProcessCompressionElem(
     const DOMElement &compression_elem) {
-  assert(this);
   const auto subsection_map = GetSubsectionElements(compression_elem,
       {
         {"namedConfigs", true}, {"sizeThresholdPercent", false},
@@ -421,7 +413,6 @@ void TConf::TBuilder::ProcessCompressionElem(
 
 void TConf::TBuilder::ProcessTopicRateTopicConfigsElem(
     const DOMElement &topic_configs_elem) {
-  assert(this);
   RequireAllChildElementLeaves(topic_configs_elem);
   const auto topic_item_vec = GetItemListElements(topic_configs_elem,
       "topic");
@@ -450,7 +441,6 @@ void TConf::TBuilder::ProcessTopicRateTopicConfigsElem(
 }
 
 void TConf::TBuilder::ProcessTopicRateElem(const DOMElement &topic_rate_elem) {
-  assert(this);
   const auto subsection_map = GetSubsectionElements(topic_rate_elem,
       {
         {"namedConfigs", true}, {"defaultTopic", true}, {"topicConfigs", false}
@@ -524,7 +514,6 @@ void TConf::TBuilder::ProcessTopicRateElem(const DOMElement &topic_rate_elem) {
 std::pair<std::string, TOpt<mode_t>>
 TConf::TBuilder::ProcessFileSectionElem(const DOMElement &elem,
     std::unordered_map<std::string, const DOMElement *> &subsection_map) {
-  assert(this);
   const bool enable = TAttrReader::GetBool(elem, "enable");
   RequireAllChildElementLeaves(elem);
   subsection_map = GetSubsectionElements(elem,
@@ -552,7 +541,6 @@ TConf::TBuilder::ProcessFileSectionElem(const DOMElement &elem,
 
 void TConf::TBuilder::ProcessInputSourcesElem(
     const DOMElement &input_sources_elem) {
-  assert(this);
   const auto subsection_map = GetSubsectionElements(input_sources_elem,
       {
           {"unixDatagram", false}, {"unixStream", false}, {"tcp", false}
@@ -643,7 +631,6 @@ void TConf::TBuilder::ProcessInputSourcesElem(
 
 void TConf::TBuilder::ProcessInputConfigElem(
     const DOMElement &input_config_elem) {
-  assert(this);
   const auto subsection_map = GetSubsectionElements(input_config_elem,
       {
           {"maxBuffer", false}, {"maxDatagramMsgSize", false},
@@ -682,7 +669,6 @@ void TConf::TBuilder::ProcessInputConfigElem(
 
 void TConf::TBuilder::ProcessMsgDeliveryElem(
     const DOMElement &msg_delivery_elem) {
-  assert(this);
   const auto subsection_map = GetSubsectionElements(msg_delivery_elem,
       {
           {"topicAutocreate", false}, {"maxFailedDeliveryAttempts", false},
@@ -769,7 +755,6 @@ void TConf::TBuilder::ProcessMsgDeliveryElem(
 
 void TConf::TBuilder::ProcessHttpInterfaceElem(
     const DOMElement &http_interface_elem) {
-  assert(this);
   const auto subsection_map = GetSubsectionElements(http_interface_elem,
       {
           {"port", false}, {"loopbackOnly", false},
@@ -820,7 +805,6 @@ void TConf::TBuilder::ProcessHttpInterfaceElem(
 
 void TConf::TBuilder::ProcessDiscardLoggingElem(
     const DOMElement &discard_logging_elem) {
-  assert(this);
   const auto subsection_map = GetSubsectionElements(discard_logging_elem,
       {
           {"path", true}, {"maxFileSize", false},
@@ -874,7 +858,6 @@ void TConf::TBuilder::ProcessDiscardLoggingElem(
 
 void TConf::TBuilder::ProcessKafkaConfigElem(
     const DOMElement &kafka_config_elem) {
-  assert(this);
   const auto subsection_map = GetSubsectionElements(kafka_config_elem,
       {
           {"clientId", false}, {"replicationTimeout", false}
@@ -902,7 +885,6 @@ void TConf::TBuilder::ProcessKafkaConfigElem(
 }
 
 void TConf::TBuilder::ProcessMsgDebugElem(const DOMElement &msg_debug_elem) {
-  assert(this);
   const auto subsection_map = GetSubsectionElements(msg_debug_elem,
       {
           {"path", true}, {"timeLimit", false},
@@ -940,7 +922,6 @@ void TConf::TBuilder::ProcessMsgDebugElem(const DOMElement &msg_debug_elem) {
 }
 
 void TConf::TBuilder::ProcessLoggingElem(const DOMElement &logging_elem) {
-  assert(this);
   const auto subsection_map = GetSubsectionElements(logging_elem,
       {
           {"level", false}, {"stdoutStderr", false}, {"syslog", false},
@@ -1004,7 +985,6 @@ void TConf::TBuilder::ProcessLoggingElem(const DOMElement &logging_elem) {
 
 void TConf::TBuilder::ProcessInitialBrokersElem(
     const DOMElement &initial_brokers_elem) {
-  assert(this);
   std::vector<TBroker> broker_vec;
   RequireAllChildElementLeaves(initial_brokers_elem);
   const auto broker_elem_vec = GetItemListElements(initial_brokers_elem,
@@ -1028,7 +1008,6 @@ void TConf::TBuilder::ProcessInitialBrokersElem(
 }
 
 void TConf::TBuilder::ProcessRootElem(const DOMElement &root_elem) {
-  assert(this);
   const auto subsection_map = GetSubsectionElements(root_elem,
       {
         {"batching", false}, {"compression", false},

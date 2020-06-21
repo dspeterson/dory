@@ -90,7 +90,6 @@ namespace Thread {
 
       /* Swap internal state with 'that'. */
       void Swap(TReadyWorker &that) noexcept {
-        assert(this);
         TManagedThreadPoolBase::TReadyWorkerBase::Swap(that);
       }
 
@@ -98,7 +97,6 @@ namespace Thread {
          assign a value to it before calling Launch().  Must only be called
          when wrapper is nonempty (i.e. IsLaunchable() returns true). */
       TWorkCallable &GetWorkFn() noexcept {
-        assert(this);
         assert(GetWorker());
         return GetWorker()->GetWorkFn();
       }
@@ -106,7 +104,6 @@ namespace Thread {
       /* Get the pool that the contained worker belongs to.  Must only be
          called when wrapper is nonempty (i.e. IsLaunchable() returns true). */
       TManagedThreadPool &GetPool() const {
-        assert(this);
         assert(GetWorker());
         return static_cast<TManagedThreadPool &>(GetWorker()->GetPool());
       }
@@ -145,7 +142,6 @@ namespace Thread {
        attempting to launch the thread it contains (not necessary if no max
        pool size is configured). */
     TReadyWorker GetReadyWorker() {
-      assert(this);
       return TReadyWorker(static_cast<TWorker *>(GetAvailableWorker()));
     }
 
@@ -153,7 +149,6 @@ namespace Thread {
     /* Our base class calls this when it needs to create a new thread to add to
        the pool. */
     TWorkerBase *CreateWorker(bool start) override {
-      assert(this);
       return new TWorker(*this, start);
     }
 
@@ -178,20 +173,16 @@ namespace Thread {
       /* Return function pointer or object that worker calls to perform work.
        */
       TWorkCallable &GetWorkFn() noexcept {
-        assert(this);
         return WorkFn;
       }
 
       protected:
       /* Perform work by calling the client-defined callable object. */
       void DoWork() override {
-        assert(this);
         WorkFn();
       }
 
       void DoClearClientState() override {
-        assert(this);
-
         /* Depending on the type of TWorkCallable, this may invoke an
            overloaded operator function, which must not throw since any
            exception that escapes from here will cause invocation of the fatal

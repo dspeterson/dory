@@ -68,8 +68,6 @@ TUnixDgInputAgent::~TUnixDgInputAgent() {
 }
 
 bool TUnixDgInputAgent::SyncStart() {
-  assert(this);
-
   if (IsStarted()) {
     Die("Cannot call SyncStart() when UNIX datagram input agent is already "
         "started");
@@ -85,7 +83,6 @@ bool TUnixDgInputAgent::SyncStart() {
 }
 
 void TUnixDgInputAgent::Run() {
-  assert(this);
   int tid = static_cast<int>(Gettid());
   LOG(TPri::NOTICE) << "UNIX datagram input thread " << tid << " started";
 
@@ -117,7 +114,6 @@ void TUnixDgInputAgent::Run() {
 }
 
 void TUnixDgInputAgent::OpenUnixSocket() {
-  assert(this);
   LOG(TPri::NOTICE) << "UNIX datagram input thread opening socket";
   TAddress input_socket_address;
   input_socket_address.SetFamily(AF_LOCAL);
@@ -145,7 +141,6 @@ void TUnixDgInputAgent::OpenUnixSocket() {
 }
 
 TMsg::TPtr TUnixDgInputAgent::ReadOneMsg() {
-  assert(this);
   char * const msg_begin = reinterpret_cast<char *>(&InputBuf[0]);
   const ssize_t result = Wr::recv(Wr::TDisp::Nonfatal, {}, InputSocket,
       msg_begin, InputBuf.size(), 0);
@@ -156,7 +151,6 @@ TMsg::TPtr TUnixDgInputAgent::ReadOneMsg() {
 }
 
 void TUnixDgInputAgent::ForwardMessages() {
-  assert(this);
   std::array<struct pollfd, 2> events;
   struct pollfd &shutdown_request_event = events[0];
   struct pollfd &input_socket_event = events[1];

@@ -71,7 +71,6 @@ namespace Dory {
       void Reset();
 
       bool IsEmpty() const {
-        assert(this);
         return InputQueue.empty();
       }
 
@@ -80,30 +79,25 @@ namespace Dory {
 
       /* Queue a single batch. */
       void Put(std::list<TMsg::TPtr> &&batch) {
-        assert(this);
         InputQueue.push_back(std::move(batch));
       }
 
       /* Queue multiple batches. */
       void Put(std::list<std::list<TMsg::TPtr>> &&batch_list) {
-        assert(this);
         InputQueue.splice(InputQueue.end(), std::move(batch_list));
       }
 
       /* Used for resending messages. */
       void PutFront(std::list<TMsg::TPtr> &&batch) {
-        assert(this);
         InputQueue.push_front(std::move(batch));
       }
 
       /* Used for resending messages. */
       void PutFront(std::list<std::list<TMsg::TPtr>> &&batch_list) {
-        assert(this);
         InputQueue.splice(InputQueue.begin(), std::move(batch_list));
       }
 
       std::list<std::list<TMsg::TPtr>> GetAll() {
-        assert(this);
         return std::move(InputQueue);
       }
 

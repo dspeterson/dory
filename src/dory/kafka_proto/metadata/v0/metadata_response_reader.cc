@@ -76,12 +76,10 @@ TMetadataResponseReader::TMetadataResponseReader(const void *buf,
 }
 
 int32_t TMetadataResponseReader::GetCorrelationId() const {
-  assert(this);
   return ReadInt32FromHeader(Buf + THdr::CORRELATION_ID_OFFSET);
 }
 
 size_t TMetadataResponseReader::GetBrokerCount() const {
-  assert(this);
   int32_t count = ReadInt32FromHeader(Buf + THdr::BROKER_COUNT_OFFSET);
 
   if (count < 0) {
@@ -93,8 +91,6 @@ size_t TMetadataResponseReader::GetBrokerCount() const {
 }
 
 bool TMetadataResponseReader::FirstBroker() {
-  assert(this);
-
   if (BufSize < MinSize()) {
     MetadataResponseIncomplete1.Increment();
     THROW_ERROR(TIncompleteMetadataResponse);
@@ -108,8 +104,6 @@ bool TMetadataResponseReader::FirstBroker() {
 }
 
 bool TMetadataResponseReader::NextBroker() {
-  assert(this);
-
   if (State == TState::Initial) {
     return FirstBroker();
   }
@@ -123,7 +117,6 @@ bool TMetadataResponseReader::NextBroker() {
 }
 
 void TMetadataResponseReader::SkipRemainingBrokers() {
-  assert(this);
   assert(State <= TState::InBrokerList);
 
   if ((State == TState::Initial) && !FirstBroker()) {
@@ -138,7 +131,6 @@ void TMetadataResponseReader::SkipRemainingBrokers() {
 }
 
 int32_t TMetadataResponseReader::GetCurrentBrokerNodeId() const {
-  assert(this);
   assert(State == TState::InBrokerList);
   assert(BrokersLeft);
   int32_t result = ReadInt32FromHeader(Buf + CurrentBrokerOffset +
@@ -155,7 +147,6 @@ int32_t TMetadataResponseReader::GetCurrentBrokerNodeId() const {
 }
 
 const char *TMetadataResponseReader::GetCurrentBrokerHostBegin() const {
-  assert(this);
   assert(State == TState::InBrokerList);
   assert(BrokersLeft);
   return reinterpret_cast<const char *>(Buf + CurrentBrokerOffset +
@@ -163,14 +154,12 @@ const char *TMetadataResponseReader::GetCurrentBrokerHostBegin() const {
 }
 
 const char *TMetadataResponseReader::GetCurrentBrokerHostEnd() const {
-  assert(this);
   assert(State == TState::InBrokerList);
   assert(BrokersLeft);
   return GetCurrentBrokerHostBegin() + CurrentBrokerHostLength;
 }
 
 int32_t TMetadataResponseReader::GetCurrentBrokerPort() const {
-  assert(this);
   assert(State == TState::InBrokerList);
   assert(BrokersLeft);
   int32_t port = ReadInt32FromHeader(Buf + CurrentBrokerOffset +
@@ -186,7 +175,6 @@ int32_t TMetadataResponseReader::GetCurrentBrokerPort() const {
 }
 
 size_t TMetadataResponseReader::GetTopicCount() const {
-  assert(this);
   assert(State >= TState::InBrokerList);
   assert(BrokersLeft == 0);
   assert(BufSize >= CurrentBrokerOffset);
@@ -208,8 +196,6 @@ size_t TMetadataResponseReader::GetTopicCount() const {
 }
 
 bool TMetadataResponseReader::FirstTopic() {
-  assert(this);
-
   if (State <= TState::InBrokerList) {
     SkipRemainingBrokers();
   }
@@ -224,8 +210,6 @@ bool TMetadataResponseReader::FirstTopic() {
 }
 
 bool TMetadataResponseReader::NextTopic() {
-  assert(this);
-
   if (State <= TState::InBrokerList) {
     return FirstTopic();
   }
@@ -241,7 +225,6 @@ bool TMetadataResponseReader::NextTopic() {
 }
 
 void TMetadataResponseReader::SkipRemainingTopics() {
-  assert(this);
   assert(State >= TState::InBrokerList);
   assert(BrokersLeft == 0);
 
@@ -257,7 +240,6 @@ void TMetadataResponseReader::SkipRemainingTopics() {
 }
 
 int16_t TMetadataResponseReader::GetCurrentTopicErrorCode() const {
-  assert(this);
   assert(State >= TState::InTopicList);
   assert(TopicsLeft);
   return ReadInt16FromHeader(Buf + CurrentTopicOffset +
@@ -265,7 +247,6 @@ int16_t TMetadataResponseReader::GetCurrentTopicErrorCode() const {
 }
 
 const char *TMetadataResponseReader::GetCurrentTopicNameBegin() const {
-  assert(this);
   assert(State >= TState::InTopicList);
   assert(TopicsLeft);
   return reinterpret_cast<const char *>(Buf + CurrentTopicOffset +
@@ -273,14 +254,12 @@ const char *TMetadataResponseReader::GetCurrentTopicNameBegin() const {
 }
 
 const char *TMetadataResponseReader::GetCurrentTopicNameEnd() const {
-  assert(this);
   assert(State >= TState::InTopicList);
   assert(TopicsLeft);
   return GetCurrentTopicNameBegin() + CurrentTopicNameLength;
 }
 
 size_t TMetadataResponseReader::GetCurrentTopicPartitionCount() const {
-  assert(this);
   assert(State >= TState::InTopicList);
   assert(TopicsLeft);
   int32_t count = ReadInt32FromHeader(Buf + CurrentTopicOffset +
@@ -295,7 +274,6 @@ size_t TMetadataResponseReader::GetCurrentTopicPartitionCount() const {
 }
 
 bool TMetadataResponseReader::FirstPartitionInTopic() {
-  assert(this);
   assert(State >= TState::InTopicList);
   assert(TopicsLeft);
   PartitionsLeftInTopic = GetCurrentTopicPartitionCount();
@@ -308,7 +286,6 @@ bool TMetadataResponseReader::FirstPartitionInTopic() {
 }
 
 bool TMetadataResponseReader::NextPartitionInTopic() {
-  assert(this);
   assert(State >= TState::InTopicList);
   assert(TopicsLeft);
 
@@ -347,7 +324,6 @@ bool TMetadataResponseReader::NextPartitionInTopic() {
 }
 
 void TMetadataResponseReader::SkipRemainingPartitions() {
-  assert(this);
   assert(State >= TState::InTopicList);
   assert(TopicsLeft);
 
@@ -363,7 +339,6 @@ void TMetadataResponseReader::SkipRemainingPartitions() {
 }
 
 int16_t TMetadataResponseReader::GetCurrentPartitionErrorCode() const {
-  assert(this);
   assert(State >= TState::InPartitionList);
   assert(PartitionsLeftInTopic);
   return ReadInt16FromHeader(Buf + CurrentPartitionOffset +
@@ -371,7 +346,6 @@ int16_t TMetadataResponseReader::GetCurrentPartitionErrorCode() const {
 }
 
 int32_t TMetadataResponseReader::GetCurrentPartitionId() const {
-  assert(this);
   assert(State >= TState::InPartitionList);
   assert(PartitionsLeftInTopic);
   int32_t id = ReadInt32FromHeader(Buf + CurrentPartitionOffset +
@@ -388,7 +362,6 @@ int32_t TMetadataResponseReader::GetCurrentPartitionId() const {
 }
 
 int32_t TMetadataResponseReader::GetCurrentPartitionLeaderId() const {
-  assert(this);
   assert(State >= TState::InPartitionList);
   assert(PartitionsLeftInTopic);
   int32_t id = ReadInt32FromHeader(Buf + CurrentPartitionOffset +
@@ -406,7 +379,6 @@ int32_t TMetadataResponseReader::GetCurrentPartitionLeaderId() const {
 }
 
 size_t TMetadataResponseReader::GetCurrentPartitionReplicaCount() const {
-  assert(this);
   assert(State >= TState::InPartitionList);
   assert(PartitionsLeftInTopic);
   int32_t count = ReadInt32FromHeader(Buf + CurrentPartitionOffset +
@@ -421,7 +393,6 @@ size_t TMetadataResponseReader::GetCurrentPartitionReplicaCount() const {
 }
 
 bool TMetadataResponseReader::FirstReplicaInPartition() {
-  assert(this);
   assert(State >= TState::InPartitionList);
   assert(PartitionsLeftInTopic);
   ReplicasLeftInPartition = GetCurrentPartitionReplicaCount();
@@ -433,7 +404,6 @@ bool TMetadataResponseReader::FirstReplicaInPartition() {
 }
 
 bool TMetadataResponseReader::NextReplicaInPartition() {
-  assert(this);
   assert((State == TState::InPartitionList) ||
       (State == TState::InReplicaList));
   assert(PartitionsLeftInTopic);
@@ -450,7 +420,6 @@ bool TMetadataResponseReader::NextReplicaInPartition() {
 }
 
 void TMetadataResponseReader::SkipRemainingReplicas() {
-  assert(this);
   assert((State == TState::InPartitionList) ||
       (State == TState::InReplicaList));
   assert(PartitionsLeftInTopic);
@@ -467,7 +436,6 @@ void TMetadataResponseReader::SkipRemainingReplicas() {
 }
 
 int32_t TMetadataResponseReader::GetCurrentReplicaNodeId() const {
-  assert(this);
   assert(State == TState::InReplicaList);
   assert(ReplicasLeftInPartition);
   int32_t id = ReadInt32FromHeader(Buf + CurrentReplicaOffset);
@@ -484,7 +452,6 @@ int32_t TMetadataResponseReader::GetCurrentReplicaNodeId() const {
 
 size_t
 TMetadataResponseReader::GetCurrentPartitionCaughtUpReplicaCount() const {
-  assert(this);
   assert(State >= TState::InReplicaList);
   assert(ReplicasLeftInPartition == 0);
   assert(BufSize >= CurrentReplicaOffset);
@@ -505,7 +472,6 @@ TMetadataResponseReader::GetCurrentPartitionCaughtUpReplicaCount() const {
 }
 
 bool TMetadataResponseReader::FirstCaughtUpReplicaInPartition() {
-  assert(this);
   assert(State >= TState::InPartitionList);
 
   if (State <= TState::InReplicaList) {
@@ -523,7 +489,6 @@ bool TMetadataResponseReader::FirstCaughtUpReplicaInPartition() {
 }
 
 bool TMetadataResponseReader::NextCaughtUpReplicaInPartition() {
-  assert(this);
   assert(State >= TState::InPartitionList);
 
   if (State < TState::InCaughtUpReplicaList) {
@@ -538,7 +503,6 @@ bool TMetadataResponseReader::NextCaughtUpReplicaInPartition() {
 }
 
 void TMetadataResponseReader::SkipRemainingCaughtUpReplicas() {
-  assert(this);
   assert((State == TState::InReplicaList) ||
       (State == TState::InCaughtUpReplicaList));
   assert(ReplicasLeftInPartition == 0);
@@ -555,7 +519,6 @@ void TMetadataResponseReader::SkipRemainingCaughtUpReplicas() {
 }
 
 int32_t TMetadataResponseReader::GetCurrentCaughtUpReplicaNodeId() const {
-  assert(this);
   assert(State == TState::InCaughtUpReplicaList);
   assert(CaughtUpReplicasLeftInPartition);
   int32_t id = ReadInt32FromHeader(Buf + CurrentCaughtUpReplicaOffset);
@@ -571,8 +534,6 @@ int32_t TMetadataResponseReader::GetCurrentCaughtUpReplicaNodeId() const {
 }
 
 void TMetadataResponseReader::ClearStateVariables() {
-  assert(this);
-
   switch (State) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpragmas"
@@ -613,7 +574,6 @@ void TMetadataResponseReader::ClearStateVariables() {
 }
 
 bool TMetadataResponseReader::InitBroker() {
-  assert(this);
   CurrentBrokerHostLength = 0;
 
   if (BrokersLeft == 0) {
@@ -646,7 +606,6 @@ bool TMetadataResponseReader::InitBroker() {
 }
 
 bool TMetadataResponseReader::InitTopic() {
-  assert(this);
   CurrentTopicNameLength = 0;
 
   if (TopicsLeft == 0) {
@@ -681,8 +640,6 @@ bool TMetadataResponseReader::InitTopic() {
 }
 
 bool TMetadataResponseReader::InitPartition() {
-  assert(this);
-
   if (PartitionsLeftInTopic == 0) {
     return false;
   }
@@ -700,8 +657,6 @@ bool TMetadataResponseReader::InitPartition() {
 }
 
 bool TMetadataResponseReader::InitReplica() {
-  assert(this);
-
   if (ReplicasLeftInPartition == 0) {
     return false;
   }
@@ -718,8 +673,6 @@ bool TMetadataResponseReader::InitReplica() {
 }
 
 bool TMetadataResponseReader::InitCaughtUpReplica() {
-  assert(this);
-
   if (CaughtUpReplicasLeftInPartition == 0) {
     return false;
   }

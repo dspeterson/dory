@@ -53,7 +53,6 @@ DEFINE_COUNTER(ProduceResponseUnexpectedTopic);
 TProduceResponseProcessor::TAction
 TProduceResponseProcessor::ProcessResponse(TProduceRequest &request,
     const uint8_t *response_buf, size_t response_buf_size) {
-  assert(this);
   ResponseReader.SetResponse(response_buf, response_buf_size);
   TCorrId corr_id = ResponseReader.GetCorrelationId();
 
@@ -77,7 +76,6 @@ TProduceResponseProcessor::ProcessResponse(TProduceRequest &request,
 
 void TProduceResponseProcessor::ReportBadResponseTopic(
     const std::string &topic) const {
-  assert(this);
   LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Connector thread " << Gettid()
       << " (index " << MyBrokerIndex << " broker " << MyBrokerId
       << ") starting pause due to produce response with unexpected topic ["
@@ -87,7 +85,6 @@ void TProduceResponseProcessor::ReportBadResponseTopic(
 
 void TProduceResponseProcessor::ReportBadResponsePartition(
     int32_t partition) const {
-  assert(this);
   LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Connector thread " << Gettid()
       << " (index " << MyBrokerIndex << " broker " << MyBrokerId
       << ") starting pause due to produce response with unexpected partition: "
@@ -97,7 +94,6 @@ void TProduceResponseProcessor::ReportBadResponsePartition(
 
 void TProduceResponseProcessor::ReportShortResponsePartitionList(
     const std::string &topic) const {
-  assert(this);
   LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Connector thread " << Gettid()
       << " (index " << MyBrokerIndex << " broker " << MyBrokerId
       << ") starting pause due to produce response with short partition list "
@@ -106,7 +102,6 @@ void TProduceResponseProcessor::ReportShortResponsePartitionList(
 }
 
 void TProduceResponseProcessor::ReportShortResponseTopicList() const {
-  assert(this);
   LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Connector thread " << Gettid()
       << " (index " << MyBrokerIndex << " broker " << MyBrokerId
       << ") starting pause due to produce response with short topic list";
@@ -115,8 +110,6 @@ void TProduceResponseProcessor::ReportShortResponseTopicList() const {
 
 void TProduceResponseProcessor::CountFailedDeliveryAttempt(
     std::list<TMsg::TPtr> &msg_set, const std::string &topic) {
-  assert(this);
-
   for (auto iter = msg_set.begin(), next = iter;
       iter != msg_set.end();
       iter = next) {
@@ -143,7 +136,6 @@ void TProduceResponseProcessor::CountFailedDeliveryAttempt(
 
 void TProduceResponseProcessor::ProcessImmediateResendMsgSet(
     std::list<TMsg::TPtr> &&msg_set, const std::string &topic) {
-  assert(this);
   assert(!msg_set.empty());
   CountFailedDeliveryAttempt(msg_set, topic);
 
@@ -160,7 +152,6 @@ void TProduceResponseProcessor::ProcessImmediateResendMsgSet(
 
 void TProduceResponseProcessor::ProcessPauseAndResendMsgSet(
     std::list<TMsg::TPtr> &&msg_set, const std::string &topic) {
-  assert(this);
   assert(!msg_set.empty());
   CountFailedDeliveryAttempt(msg_set, topic);
 
@@ -176,7 +167,6 @@ void TProduceResponseProcessor::ProcessPauseAndResendMsgSet(
 }
 
 void TProduceResponseProcessor::ProcessNoAckMsgs(TAllTopics &all_topics) {
-  assert(this);
   std::list<std::list<TMsg::TPtr>> tmp;
   EmptyAllTopics(all_topics, tmp);
 
@@ -192,7 +182,6 @@ void TProduceResponseProcessor::ProcessNoAckMsgs(TAllTopics &all_topics) {
 
 bool TProduceResponseProcessor::ProcessOneAck(std::list<TMsg::TPtr> &&msg_set,
     int16_t ack, const std::string &topic) {
-  assert(this);
   assert(!msg_set.empty());
   Ds.IncrementAckCount();
 
@@ -265,7 +254,6 @@ bool TProduceResponseProcessor::ProcessOneAck(std::list<TMsg::TPtr> &&msg_set,
 
 TProduceResponseProcessor::TAction
 TProduceResponseProcessor::ProcessResponseAcks(TProduceRequest &request) {
-  assert(this);
   std::string topic;
   bool got_pause_ack = false;
   bool bad_response = false;

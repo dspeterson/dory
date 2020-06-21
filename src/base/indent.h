@@ -64,28 +64,23 @@ namespace Base {
     TIndent& operator=(const TIndent &) = delete;
 
     ~TIndent() {
-      assert(this);
       IndentStr.resize(InitialIndentSize);
     }
 
     void AddOnce(size_t count = DEFAULT_INDENT_COUNT,
                  char indent_char = DEFAULT_INDENT_CHAR) {
-      assert(this);
       IndentStr.append(count, indent_char);
     }
 
     void AddOnce(const char *extra_indent) {
-      assert(this);
       IndentStr += extra_indent;
     }
 
     void AddOnce(const std::string &extra_indent) {
-      assert(this);
       AddOnce(extra_indent.c_str());
     }
 
     const std::string &Get() const {
-      assert(this);
       return IndentStr;
     }
 

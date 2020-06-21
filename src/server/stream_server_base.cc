@@ -37,12 +37,10 @@ using namespace Server;
 
 void TStreamServerBase::TConnectionHandlerApi::HandleNonfatalAcceptError(
     int /*errno_value*/) {
-  assert(this);
   /* Base class version is no-op.  Subclasses can override. */
 }
 
 TStreamServerBase::~TStreamServerBase() {
-  assert(this);
   ShutdownOnDestroy();
 
   if (IsBound()) {
@@ -56,8 +54,6 @@ TStreamServerBase::~TStreamServerBase() {
 }
 
 void TStreamServerBase::Bind() {
-  assert(this);
-
   if (IsBound()) {
     Die("TStreamServerBase::Bind() has already been called");
   }
@@ -72,8 +68,6 @@ void TStreamServerBase::Bind() {
 }
 
 bool TStreamServerBase::SyncStart() {
-  assert(this);
-
   if (IsStarted()) {
     Die("Cannot call SyncStart() when server is already started");
   }
@@ -88,8 +82,6 @@ bool TStreamServerBase::SyncStart() {
 }
 
 void TStreamServerBase::Reset() {
-  assert(this);
-
   if (IsStarted()) {
     RequestShutdown();
     Join();
@@ -112,12 +104,10 @@ TStreamServerBase::TStreamServerBase(int backlog, struct sockaddr *addr,
 }
 
 void TStreamServerBase::CloseListeningSocket(TFd &sock) {
-  assert(this);
   sock.Reset();
 }
 
 void TStreamServerBase::Run() {
-  assert(this);
   auto close_socket = OnDestroy(
       [this]() noexcept {
         CloseListeningSocket(ListeningSocket);
@@ -146,7 +136,6 @@ void TStreamServerBase::Run() {
 }
 
 void TStreamServerBase::AcceptClients() {
-  assert(this);
   std::array<struct pollfd, 2> events;
   struct pollfd &shutdown_request_event = events[0];
   struct pollfd &new_client_event = events[1];

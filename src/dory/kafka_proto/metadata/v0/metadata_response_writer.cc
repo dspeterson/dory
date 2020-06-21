@@ -50,7 +50,6 @@ TMetadataResponseWriter::TMetadataResponseWriter()
 
 void TMetadataResponseWriter::OpenResponse(std::vector<uint8_t> &out,
     int32_t correlation_id) {
-  assert(this);
   assert(State == TState::Initial);
   assert(Result == nullptr);
   State = TState::InResponse;
@@ -62,7 +61,6 @@ void TMetadataResponseWriter::OpenResponse(std::vector<uint8_t> &out,
 }
 
 void TMetadataResponseWriter::OpenBrokerList() {
-  assert(this);
   assert(State == TState::InResponse);
   State = TState::InBrokerList;
   BrokerCount = 0;
@@ -72,7 +70,6 @@ void TMetadataResponseWriter::OpenBrokerList() {
 
 void TMetadataResponseWriter::AddBroker(int32_t node_id,
     const char *host_begin, const char *host_end, int32_t port) {
-  assert(this);
   assert(host_begin);
   assert(host_end > host_begin);
   assert(State == TState::InBrokerList);
@@ -92,14 +89,12 @@ void TMetadataResponseWriter::AddBroker(int32_t node_id,
 }
 
 void TMetadataResponseWriter::CloseBrokerList() {
-  assert(this);
   assert(State == TState::InBrokerList);
   State = TState::InResponse;
   WriteInt32ToHeader(Loc(THdr::BROKER_COUNT_OFFSET), BrokerCount);
 }
 
 void TMetadataResponseWriter::OpenTopicList() {
-  assert(this);
   assert(State == TState::InResponse);
   State = TState::InTopicList;
   GrowResult(THdr::TOPIC_COUNT_SIZE);
@@ -112,7 +107,6 @@ void TMetadataResponseWriter::OpenTopicList() {
 
 void TMetadataResponseWriter::OpenTopic(int16_t topic_error_code,
     const char *topic_name_begin, const char *topic_name_end) {
-  assert(this);
   assert(State == TState::InTopicList);
   assert(topic_name_begin);
   assert(topic_name_end > topic_name_begin);
@@ -131,7 +125,6 @@ void TMetadataResponseWriter::OpenTopic(int16_t topic_error_code,
 }
 
 void TMetadataResponseWriter::OpenPartitionList() {
-  assert(this);
   assert(State == TState::InTopic);
   State = TState::InPartitionList;
   PartitionCount = 0;
@@ -140,7 +133,6 @@ void TMetadataResponseWriter::OpenPartitionList() {
 
 void TMetadataResponseWriter::OpenPartition(int16_t partition_error_code,
     int32_t partition_id, int32_t leader_node_id) {
-  assert(this);
   assert(State == TState::InPartitionList);
   State = TState::InPartition;
   size_t replica_count_delta = THdr::PARTITION_ERROR_CODE_SIZE +
@@ -158,14 +150,12 @@ void TMetadataResponseWriter::OpenPartition(int16_t partition_error_code,
 }
 
 void TMetadataResponseWriter::OpenReplicaList() {
-  assert(this);
   assert(State == TState::InPartition);
   State = TState::InReplicaList;
   ReplicaCount = 0;
 }
 
 void TMetadataResponseWriter::AddReplica(int32_t replica_node_id) {
-  assert(this);
   assert(State == TState::InReplicaList);
   size_t offset = Size();
   GrowResult(THdr::REPLICA_NODE_ID_SIZE);
@@ -174,7 +164,6 @@ void TMetadataResponseWriter::AddReplica(int32_t replica_node_id) {
 }
 
 void TMetadataResponseWriter::CloseReplicaList() {
-  assert(this);
   assert(State == TState::InReplicaList);
   State = TState::InPartition;
   CaughtUpReplicaCountOffset = static_cast<int32_t>(Size());
@@ -183,14 +172,12 @@ void TMetadataResponseWriter::CloseReplicaList() {
 }
 
 void TMetadataResponseWriter::OpenCaughtUpReplicaList() {
-  assert(this);
   assert(State == TState::InPartition);
   State = TState::InCaughtUpReplicaList;
   CaughtUpReplicaCount = 0;
 }
 
 void TMetadataResponseWriter::AddCaughtUpReplica(int32_t replica_node_id) {
-  assert(this);
   assert(State == TState::InCaughtUpReplicaList);
   size_t offset = Size();
   GrowResult(THdr::CAUGHT_UP_REPLICA_NODE_ID_SIZE);
@@ -199,14 +186,12 @@ void TMetadataResponseWriter::AddCaughtUpReplica(int32_t replica_node_id) {
 }
 
 void TMetadataResponseWriter::CloseCaughtUpReplicaList() {
-  assert(this);
   assert(State == TState::InCaughtUpReplicaList);
   State = TState::InPartition;
   WriteInt32ToHeader(Loc(CaughtUpReplicaCountOffset), CaughtUpReplicaCount);
 }
 
 void TMetadataResponseWriter::ClosePartition() {
-  assert(this);
   assert(State == TState::InPartition);
   State = TState::InPartitionList;
   ++PartitionCount;
@@ -214,14 +199,12 @@ void TMetadataResponseWriter::ClosePartition() {
 }
 
 void TMetadataResponseWriter::ClosePartitionList() {
-  assert(this);
   assert(State == TState::InPartitionList);
   State = TState::InTopic;
   WriteInt32ToHeader(Loc(PartitionCountOffset), PartitionCount);
 }
 
 void TMetadataResponseWriter::CloseTopic() {
-  assert(this);
   assert(State == TState::InTopic);
   State = TState::InTopicList;
   ++TopicCount;
@@ -229,14 +212,12 @@ void TMetadataResponseWriter::CloseTopic() {
 }
 
 void TMetadataResponseWriter::CloseTopicList() {
-  assert(this);
   assert(State == TState::InTopicList);
   State = TState::InResponse;
   WriteInt32ToHeader(Loc(TopicCountOffset), TopicCount);
 }
 
 void TMetadataResponseWriter::CloseResponse() {
-  assert(this);
   assert(State == TState::InResponse);
   State = TState::Initial;
   assert(Size() >= REQUEST_OR_RESPONSE_SIZE_SIZE);
@@ -248,7 +229,6 @@ void TMetadataResponseWriter::CloseResponse() {
 }
 
 void TMetadataResponseWriter::ClearBookkeepingInfo() {
-  assert(this);
   BrokerCount = 0;
   BrokerOffset = 0;
   TopicCountOffset = 0;
@@ -264,13 +244,11 @@ void TMetadataResponseWriter::ClearBookkeepingInfo() {
 }
 
 void TMetadataResponseWriter::SetEmptyStr(size_t size_field_offset) {
-  assert(this);
   WriteInt16ToHeader(Loc(size_field_offset), THdr::EMPTY_STRING_LENGTH);
 }
 
 void TMetadataResponseWriter::SetStr(size_t size_field_offset,
     const char *str_begin, const char *str_end) {
-  assert(this);
   assert(str_begin || (str_end == str_begin));
   assert(str_end >= str_begin);
 

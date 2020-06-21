@@ -33,7 +33,6 @@
 using namespace Base;
 
 TStreamMsgReader::TState TStreamMsgReader::Read() {
-  assert(this);
   const size_t read_size = PrepareForRead();
 
   /* In case we get a read size of 0, return here so we don't get a return
@@ -49,8 +48,6 @@ TStreamMsgReader::TState TStreamMsgReader::Read() {
 }
 
 TStreamMsgReader::TState TStreamMsgReader::ConsumeReadyMsg() noexcept {
-  assert(this);
-
   if (Impl.State != TState::MsgReady) {
     Die("Invalid call to TStreamMsgReader::ConsumeReadyMsg()");
   }
@@ -73,7 +70,6 @@ TStreamMsgReader::TState TStreamMsgReader::ConsumeReadyMsg() noexcept {
 }
 
 const uint8_t *TStreamMsgReader::GetReadyMsg() const noexcept {
-  assert(this);
   static const uint8_t empty_data = 0;
 
   /* We use a lot of defensive programming below to prevent buggy code from
@@ -110,14 +106,11 @@ const uint8_t *TStreamMsgReader::GetReadyMsg() const noexcept {
 }
 
 const uint8_t *TStreamMsgReader::GetData() const noexcept {
-  assert(this);
   static const uint8_t empty_data = 0;
   return Impl.Buf.DataIsEmpty() ? &empty_data : Impl.Buf.Data();
 }
 
 void TStreamMsgReader::Reset(int fd) noexcept {
-  assert(this);
-
   /* Give subclass code a chance to reset its state before we reset ours. */
   Impl.RestrictReadyMsgCalls = true;
   HandleReset();
@@ -132,7 +125,6 @@ TStreamMsgReader::TStreamMsgReader(int fd)
 }
 
 TStreamMsgReader::TState TStreamMsgReader::TryAdvanceToNextMsg() noexcept {
-  assert(this);
   Impl.RestrictReadyMsgCalls = true;
   TGetMsgResult result = GetNextMsg();
   Impl.RestrictReadyMsgCalls = false;
@@ -170,8 +162,6 @@ TStreamMsgReader::TState TStreamMsgReader::TryAdvanceToNextMsg() noexcept {
 }
 
 size_t TStreamMsgReader::PrepareForRead() {
-  assert(this);
-
   if (Impl.State != TState::ReadNeeded) {
     Die("Invalid call to TStreamMsgReader::Read()");
   }
@@ -187,8 +177,6 @@ size_t TStreamMsgReader::PrepareForRead() {
 
 TStreamMsgReader::TState TStreamMsgReader::ProcessReadResult(
     ssize_t read_result) {
-  assert(this);
-
   if (read_result < 0) {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wlogical-op"

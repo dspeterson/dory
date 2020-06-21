@@ -47,28 +47,24 @@ namespace Socket {
 
       /* True iff. we have a current address. */
       operator bool() const noexcept {
-        assert(this);
         TryFreshen();
         return Csr != nullptr;
       }
 
       /* The current address. */
       const TAddress &operator*() const noexcept {
-        assert(this);
         Freshen();
         return Address;
       }
 
       /* The current address. */
       const TAddress *operator->() const noexcept {
-        assert(this);
         Freshen();
         return &Address;
       }
 
       /* Move to the next address, if any. */
       TCursor &operator++() noexcept {
-        assert(this);
         Freshen();
         Csr = nullptr;
         return *this;
@@ -79,7 +75,6 @@ namespace Socket {
 
       /* Go back to the first address, if any. */
       TCursor &Rewind() noexcept {
-        assert(this);
         Csr = nullptr;
         Next = First;
         return *this;
@@ -88,7 +83,6 @@ namespace Socket {
       private:
       /* Make sure we have a current address. */
       void Freshen() const noexcept {
-        assert(this);
         TryFreshen();
         assert(Csr);
       }

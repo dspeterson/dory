@@ -46,7 +46,6 @@ TCombinedLogWriter::TCombinedLogWriter(const TCombinedLogWriter &old_writer,
 
 void TCombinedLogWriter::WriteEntry(
     Log::TLogEntryAccessApi &entry, bool no_stdout_stderr) const noexcept {
-  assert(this);
   StdoutStderrLogWriter.WriteEntry(entry, no_stdout_stderr);
   FileLogWriter.WriteEntry(entry, no_stdout_stderr);
   SyslogLogWriter.WriteEntry(entry, no_stdout_stderr);
@@ -54,7 +53,6 @@ void TCombinedLogWriter::WriteEntry(
 
 void TCombinedLogWriter::WriteStackTrace(Log::TPri pri, void *const *buffer,
     size_t size, bool no_stdout_stderr) const noexcept {
-  assert(this);
   StdoutStderrLogWriter.WriteStackTrace(pri, buffer, size, no_stdout_stderr);
   FileLogWriter.WriteStackTrace(pri, buffer, size, no_stdout_stderr);
   SyslogLogWriter.WriteStackTrace(pri, buffer, size, no_stdout_stderr);

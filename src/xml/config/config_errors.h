@@ -70,7 +70,6 @@ namespace Xml {
       }
 
       const Base::TOpt<TFileLocation> &GetLocation() const noexcept {
-        assert(this);
         return Location;
       }
 
@@ -139,13 +138,13 @@ namespace Xml {
 
       /* Return the document's actual encoding (not the expected one). */
       const std::string &GetEncoding() const noexcept {
-        assert(this);
+        
         return Encoding;
       }
 
       /* Return the document's expected encoding. */
       const std::string &GetExpectedEncoding() const noexcept {
-        assert(this);
+        
         return ExpectedEncoding;
       }
 
@@ -179,7 +178,6 @@ namespace Xml {
     class TElementError : public TContentError {
       public:
       const std::string &GetElementName() const noexcept {
-        assert(this);
         return ElementName;
       }
 
@@ -223,7 +221,6 @@ namespace Xml {
       }
 
       const std::string &GetExpectedElementName() const noexcept {
-        assert(this);
         return ExpectedElementName;
       }
 
@@ -243,7 +240,6 @@ namespace Xml {
       }
 
       const std::string &GetChildElementName() const noexcept {
-        assert(this);
         return ChildElementName;
       }
 
@@ -267,7 +263,6 @@ namespace Xml {
     class TAttrError : public TElementError {
       public:
       const std::string &GetAttrName() const noexcept {
-        assert(this);
         return AttrName;
       }
 
@@ -308,7 +303,6 @@ namespace Xml {
       }
 
       const std::string &GetAttrValue() const noexcept {
-        assert(this);
         return AttrValue;
       }
 
@@ -332,12 +326,10 @@ namespace Xml {
       }
 
       const std::string &GetTrueValue() const noexcept {
-        assert(this);
         return TrueValue;
       }
 
       const std::string &GetFalseValue() const noexcept {
-        assert(this);
         return FalseValue;
       }
 
@@ -384,12 +376,10 @@ namespace Xml {
       }
 
       Base::TBase GetFoundBase() const noexcept {
-        assert(this);
         return Found;
       }
 
       unsigned int GetAllowedBases() const noexcept {
-        assert(this);
         return Allowed;
       }
 

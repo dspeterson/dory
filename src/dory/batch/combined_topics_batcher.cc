@@ -39,15 +39,12 @@ TCombinedTopicsBatcher::TCombinedTopicsBatcher(const TConfig &config)
 }
 
 bool TCombinedTopicsBatcher::BatchingIsEnabled() const noexcept {
-  assert(this);
   return (ExcludeTopicFilter || !TopicFilter->empty()) &&
          CoreState.BatchingIsEnabled();
 }
 
 bool TCombinedTopicsBatcher::BatchingIsEnabled(
     const std::string &topic) const noexcept {
-  assert(this);
-
   if (!CoreState.BatchingIsEnabled()) {
     return false;
   }
@@ -62,7 +59,6 @@ bool TCombinedTopicsBatcher::BatchingIsEnabled(
 
 std::list<std::list<TMsg::TPtr>>
 TCombinedTopicsBatcher::AddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
-  assert(this);
   assert(msg);
   const std::string &topic = msg->GetTopic();
 
@@ -101,7 +97,6 @@ TCombinedTopicsBatcher::AddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
 
 std::list<std::list<TMsg::TPtr>>
 TCombinedTopicsBatcher::TakeBatch() {
-  assert(this);
   std::list<std::list<TMsg::TPtr>> result = TopicMap.Get();
   CoreState.ClearState();
   return result;

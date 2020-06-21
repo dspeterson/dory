@@ -50,8 +50,6 @@ TTcpIpv6Server::TTcpIpv6Server(int backlog, const in6_addr &bind_addr,
 }
 
 in_port_t TTcpIpv6Server::GetBindPort() const noexcept {
-  assert(this);
-
   if (!IsBound()) {
     Die("Cannot get bind port for unbound listening socket");
   }
@@ -64,7 +62,6 @@ in_port_t TTcpIpv6Server::GetBindPort() const noexcept {
 }
 
 void TTcpIpv6Server::InitListeningSocket(TFd &sock) {
-  assert(this);
   TFd sock_fd(Wr::socket(Wr::TDisp::Nonfatal, {}, AF_INET6, SOCK_STREAM, 0));
   int flag = true;
   Wr::setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));

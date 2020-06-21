@@ -86,12 +86,10 @@ namespace Base {
     TWrongBase(TBase found, unsigned int allowed);
 
     TBase GetFound() const noexcept {
-      assert(this);
       return Found;
     }
 
     unsigned int GetAllowed() const noexcept {
-      assert(this);
       return Allowed;
     }
 

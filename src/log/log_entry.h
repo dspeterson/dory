@@ -122,12 +122,10 @@ namespace Log {
             LOG(TPri::INFO) << "The answer is " << ComputeAnswer();
        */
     explicit operator bool() const noexcept {
-      assert(this);
       return true;
     }
 
     void AssignPrefix(const char *start, size_t len) noexcept override {
-      assert(this);
       assert(start || (len == 0));
       PrefixLen = std::min(len, PrefixSpace);
       std::memcpy(&this->GetBuf()[PrefixSpace - PrefixLen], start, PrefixLen);
@@ -136,15 +134,12 @@ namespace Log {
     /* This will be 0 until Get() has been called with a true value for
        with_prefix.  In other words, the prefix is assigned on-demand. */
     size_t PrefixSize() const noexcept override {
-      assert(this);
       assert(PrefixLen <= PrefixSpace);
       return PrefixLen;
     }
 
     std::pair<const char *, const char *>
     Get(bool with_prefix, bool with_trailing_newline) noexcept override {
-      assert(this);
-
       if (with_prefix && !HasPrefix()) {
         WritePrefix(*this);
       }
@@ -164,22 +159,18 @@ namespace Log {
     }
 
     TPri GetLevel() const noexcept override {
-      assert(this);
       return Level;
     }
 
     /* True indicates that entry was written (either successfully or
        unsuccessfully). */
     bool IsWritten() const noexcept {
-      assert(this);
       return Written;
     }
 
     /* If log entry has not already been written, write it by invoking
        TLogWriterApi passed to constructor. */
     void Write() noexcept {
-      assert(this);
-
       if (!Written) {
         Written = true;
 

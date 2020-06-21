@@ -36,7 +36,6 @@ using namespace Dory;
 using namespace Dory::Client;
 
 void TUnixStreamSender::DoPrepareToSend() {
-  assert(this);
   Sock = IfLt0(socket(AF_LOCAL, SOCK_STREAM, 0));
   struct sockaddr_un servaddr;
   std::memset(&servaddr, 0, sizeof(servaddr));
@@ -53,11 +52,9 @@ void TUnixStreamSender::DoPrepareToSend() {
 }
 
 void TUnixStreamSender::DoSend(const uint8_t *msg, size_t msg_size) {
-  assert(this);
   IfLt0(send(Sock, msg, msg_size, MSG_NOSIGNAL));
 }
 
 void TUnixStreamSender::DoReset() {
-  assert(this);
   Sock.Reset();
 }

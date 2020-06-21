@@ -96,66 +96,56 @@ namespace Dory {
           };  // TState
 
           void WriteInt8(size_t offset, int8_t value) {
-            assert(this);
             assert(Buf);
             assert(Buf->size() > offset);
             (*Buf)[offset] = static_cast<uint8_t>(value);
           }
 
           void WriteInt8AtOffset(int8_t value) {
-            assert(this);
             WriteInt8(AtOffset, value);
             ++AtOffset;
           }
 
           void WriteInt16(size_t offset, int16_t value) {
-            assert(this);
             assert(Buf);
             assert(Buf->size() > (offset + 1));
             WriteInt16ToHeader(&(*Buf)[offset], value);
           }
 
           void WriteInt16AtOffset(int16_t value) {
-            assert(this);
             WriteInt16(AtOffset, value);
             AtOffset += 2;
           }
 
           void WriteInt32(size_t offset, int32_t value) {
-            assert(this);
             assert(Buf);
             assert(Buf->size() > (offset + 3));
             WriteInt32ToHeader(&(*Buf)[offset], value);
           }
 
           void WriteInt32AtOffset(int32_t value) {
-            assert(this);
             WriteInt32(AtOffset, value);
             AtOffset += 4;
           }
 
           void WriteInt64(size_t offset, int64_t value) {
-            assert(this);
             assert(Buf);
             assert(Buf->size() > (offset + 7));
             WriteInt64ToHeader(&(*Buf)[offset], value);
           }
 
           void WriteInt64AtOffset(int64_t value) {
-            assert(this);
             WriteInt64(AtOffset, value);
             AtOffset += 8;
           }
 
           void WriteData(size_t offset, const void *data, size_t data_size) {
-            assert(this);
             assert(Buf);
             assert(Buf->size() > (offset + data_size - 1));
             std::memcpy(&(*Buf)[offset], data, data_size);
           }
 
           void WriteDataAtOffset(const void *data, size_t data_size) {
-            assert(this);
             WriteData(AtOffset, data, data_size);
             AtOffset += data_size;
           }

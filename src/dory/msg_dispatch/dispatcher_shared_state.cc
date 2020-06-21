@@ -50,7 +50,6 @@ TDispatcherSharedState::TDispatcherSharedState(const TCmdLineArgs &args,
 
 void TDispatcherSharedState::Discard(TMsg::TPtr &&msg,
     TAnomalyTracker::TDiscardReason reason) {
-  assert(this);
   assert(msg);
   TMsg::TPtr to_discard(std::move(msg));
   AnomalyTracker.TrackDiscard(to_discard, reason);
@@ -59,7 +58,6 @@ void TDispatcherSharedState::Discard(TMsg::TPtr &&msg,
 
 void TDispatcherSharedState::Discard(std::list<TMsg::TPtr> &&msg_list,
                    TAnomalyTracker::TDiscardReason reason) {
-  assert(this);
   std::list<TMsg::TPtr> to_discard(std::move(msg_list));
 
   for (TMsg::TPtr &msg : to_discard) {
@@ -72,7 +70,6 @@ void TDispatcherSharedState::Discard(std::list<TMsg::TPtr> &&msg_list,
 
 void TDispatcherSharedState::Discard(std::list<std::list<TMsg::TPtr>> &&batch,
                    TAnomalyTracker::TDiscardReason reason) {
-  assert(this);
   std::list<std::list<TMsg::TPtr>> to_discard(std::move(batch));
 
   for (auto &msg_list : to_discard) {
@@ -87,15 +84,12 @@ void TDispatcherSharedState::Discard(std::list<std::list<TMsg::TPtr>> &&batch,
 
 void TDispatcherSharedState::MarkAllThreadsRunning(
     size_t in_service_broker_count) {
-  assert(this);
   assert(RunningThreadCount.load() == 0);
   assert(!ShutdownFinished.GetFd().IsReadable());
   std::atomic_store(&RunningThreadCount, in_service_broker_count);
 }
 
 void TDispatcherSharedState::MarkThreadFinished() {
-  assert(this);
-
   if (--RunningThreadCount == 0) {
     HandleAllThreadsFinished();
   }
@@ -108,7 +102,6 @@ void TDispatcherSharedState::HandleAllThreadsFinished() {
 }
 
 void TDispatcherSharedState::ResetThreadFinishedState() {
-  assert(this);
   assert(RunningThreadCount.load() == 0);
   assert(ShutdownFinished.GetFd().IsReadable());
   ShutdownFinished.Reset();

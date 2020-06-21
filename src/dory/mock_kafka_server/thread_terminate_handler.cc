@@ -30,8 +30,6 @@ using namespace Dory;
 using namespace Dory::MockKafkaServer;
 
 void TThreadTerminateHandler::OnEvent(int /*fd*/, short /*flags*/) {
-  assert(this);
-
   /* The terminate handler deletes the object whose method we are now
      executing.  To be safe, make sure are not trying to access any of our own
      object state while it is being deleted. */
@@ -40,6 +38,5 @@ void TThreadTerminateHandler::OnEvent(int /*fd*/, short /*flags*/) {
 }
 
 void TThreadTerminateHandler::OnShutdown() {
-  assert(this);
   Unregister();
 }

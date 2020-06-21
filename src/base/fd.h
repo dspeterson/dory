@@ -86,21 +86,17 @@ namespace Base {
     /* Close the file descriptor we own, if any.  If the descriptor is in the
        stdio range (0-2), then don't close it. */
     ~TFd() {
-      assert(this);
-
       if (OsHandle >= 3) {
         Wr::close(OsHandle);
       }
     }
 
     void Swap(TFd &that) noexcept {
-      assert(this);
       std::swap(OsHandle, that.OsHandle);
     }
 
     /* Swaperator. */
     TFd &operator=(TFd &&that) noexcept {
-      assert(this);
       Swap(that);
       return *this;
     }
@@ -108,7 +104,6 @@ namespace Base {
     /* Assignment.  This will duplicate the file descriptor, if any, using the
        OS function dup(). */
     TFd &operator=(const TFd &that) noexcept {
-      assert(this);
       return *this = TFd(that);
     }
 
@@ -118,19 +113,16 @@ namespace Base {
        legal file descriptor, this function will throw the appropriate
        error. */
     TFd &operator=(int os_handle) {
-      assert(this);
       return *this = TFd(os_handle);
     }
 
     /* Returns the naked file descriptor, which may be -1. */
     operator int() const noexcept {
-      assert(this);
       return OsHandle;
     }
 
     /* True iff. this handle is open. */
     bool IsOpen() const noexcept {
-      assert(this);
       return OsHandle >= 0;
     }
 
@@ -148,7 +140,6 @@ namespace Base {
        default-constructed state.  This is how to get the naked file desciptor
        away from the object without the object attempting to close it. */
     int Release() noexcept {
-      assert(this);
       int result = OsHandle;
       OsHandle = -1;
       return result;
@@ -156,7 +147,6 @@ namespace Base {
 
     /* Return to the default-constructed state. */
     TFd &Reset() noexcept {
-      assert(this);
       return *this = TFd();
     }
 

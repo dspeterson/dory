@@ -68,19 +68,16 @@ namespace Dory {
       void SetMetadata(const std::shared_ptr<TMetadata> &md);
 
       void Dispatch(TMsg::TPtr &&msg) {
-        assert(this);
         InputQueue.Put(Base::GetEpochMilliseconds(), std::move(msg));
         assert(!msg);
       }
 
       void DispatchNow(TMsg::TPtr &&msg) {
-        assert(this);
         InputQueue.PutNow(Base::GetEpochMilliseconds(), std::move(msg));
         assert(!msg);
       }
 
       void DispatchNow(std::list<std::list<TMsg::TPtr>> &&batch) {
-        assert(this);
         InputQueue.PutNow(Base::GetEpochMilliseconds(), std::move(batch));
         assert(batch.empty());
       }
@@ -94,17 +91,14 @@ namespace Dory {
       void CleanupAfterJoin();
 
       bool ShutdownWasOk() const {
-        assert(this);
         return OkShutdown;
       }
 
       std::list<std::list<TMsg::TPtr>> GetNoAckQueueAfterShutdown() {
-        assert(this);
         return std::move(NoAckAfterShutdown);
       }
 
       std::list<std::list<TMsg::TPtr>> GetSendWaitQueueAfterShutdown() {
-        assert(this);
         return std::move(SendWaitAfterShutdown);
       }
 
@@ -113,17 +107,14 @@ namespace Dory {
 
       private:
       const TMetadata::TBroker &MyBroker() const {
-        assert(this);
         return Metadata->GetBrokers()[MyBrokerIndex];
       }
 
       long MyBrokerId() const {
-        assert(this);
         return MyBroker().GetId();
       }
 
       bool SendInProgress() const {
-        assert(this);
         return !SendBuf.DataIsEmpty();
       }
 

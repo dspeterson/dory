@@ -112,7 +112,6 @@ static void AppendHexByteToString(std::string &dst, uint8_t byte) {
 
 void THexDumpWriter::Write(const void *mem, size_t bytes,
         uint64_t start_addr) const {
-  assert(this);
   auto *p = static_cast<const uint8_t *>(mem);
   size_t index = 0;
   size_t bytes_left = bytes;
@@ -199,7 +198,6 @@ void THexDumpWriter::Write(const void *mem, size_t bytes,
 /* Append to string 'dst' the character representation of 'byte'. */
 void THexDumpWriter::AppendByteCharToString(std::string &dst,
     uint8_t byte) const {
-  assert(this);
   dst += Format.IsPrintableFn(byte) ?
       static_cast<char>(byte) : Format.Nonprintable;
 }

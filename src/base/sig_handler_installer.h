@@ -52,13 +52,11 @@ namespace Base {
 
     /* Restore the old action. */
     ~TSigHandlerInstaller() {
-      assert(this);
       Wr::sigaction(SignalNumber, &OldAct, nullptr);
     }
 
     /* The signal we handle. */
     int GetSignalNumber() const noexcept {
-      assert(this);
       return SignalNumber;
     }
 

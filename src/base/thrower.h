@@ -86,7 +86,6 @@ namespace Base {
 
     /* Boom goes the dynamite. */
     [[ noreturn ]] ~TThrower() noexcept(false) {
-      assert(this);
       throw TError(Strm.str().c_str());
     }
 
@@ -95,8 +94,6 @@ namespace Base {
        delimiter before the value. */
     template <typename TVal>
     void Write(const TVal &val) {
-      assert(this);
-
       if (AtEndOfPart) {
         Strm << PartDelimiter;
         AtEndOfPart = false;
@@ -109,7 +106,6 @@ namespace Base {
        This doesn't actually add anything to the message, it just marks the
        position as being the end of a part. */
     void Write(const TEndOfPart &) {
-      assert(this);
       AtEndOfPart = true;
     }
 
@@ -139,7 +135,6 @@ namespace Base {
   template <typename TError, typename TVal>
   Base::TThrower<TError> &&operator<<(Base::TThrower<TError> &&thrower,
       const TVal &val) {
-    assert(&thrower);
     thrower.Write(val);
     return std::move(thrower);
   }

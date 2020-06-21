@@ -40,7 +40,6 @@ using namespace Dory::MockKafkaServer;
 TMockKafkaWorker::TIoResult
 TMockKafkaWorker::TryReadExactlyOrShutdown(int fd, void *buf,
     size_t size) {
-  assert(this);
   std::array<struct pollfd, 2> events;
   struct pollfd &fd_event = events[0];
   struct pollfd &shutdown_request_event = events[1];
@@ -103,7 +102,6 @@ TMockKafkaWorker::TryReadExactlyOrShutdown(int fd, void *buf,
 TMockKafkaWorker::TIoResult
 TMockKafkaWorker::TryWriteExactlyOrShutdown(int fd, const void *buf,
     size_t size) {
-  assert(this);
   struct stat stat_buf;
   IfLt0(Wr::fstat(fd, &stat_buf));
   bool is_socket = S_ISSOCK(stat_buf.st_mode);

@@ -71,7 +71,6 @@ for class `TMsg`, which represents a single message:
 
 ```C++
 TMsg::~TMsg() {
-  assert(this);
   MsgDestroy.Increment();
 
   if (State != TState::Processed) {

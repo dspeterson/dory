@@ -89,33 +89,27 @@ namespace Dory {
        the case where the Kafka cluster is temporarily unavailable, router
        thread initialization can take arbitrarily long. */
     const Base::TFd &GetInitWaitFd() const noexcept {
-      assert(this);
       return InitFinishedSem.GetFd();
     }
 
     bool ShutdownWasOk() const noexcept {
-      assert(this);
       return OkShutdown;
     }
 
     Thread::TGatePutApi<TMsg::TPtr> &GetMsgChannel() noexcept {
-      assert(this);
       return MsgChannel;
     }
 
     Base::TEventSemaphore &GetMetadataUpdateRequestSem() noexcept {
-      assert(this);
       return MetadataUpdateRequestSem;
     }
 
     const TMetadataTimestamp &GetMetadataTimestamp() const noexcept {
-      assert(this);
       return MetadataTimestamp;
     }
 
     /* Used by main thread during shutdown. */
     std::list<TMsg::TPtr> GetRemainingMsgs() {
-      assert(this);
       return MsgChannel.NonblockingGet();
     }
 
@@ -182,7 +176,6 @@ namespace Dory {
        metadata and return its metadata. */
     const TMetadata::TTopic &GetValidTopicMetadata(
         const std::string &topic) const noexcept {
-      assert(this);
       assert(Metadata);
       return Metadata->GetTopics()[LookupValidTopicIndex(topic)];
     }
@@ -194,7 +187,6 @@ namespace Dory {
 
     const TMetadata::TPartition &ChoosePartitionByKey(const std::string &topic,
         int32_t partition_key) {
-      assert(this);
       assert(Metadata);
 
       /* All topics are validated before routing, so parameter 'topic' should

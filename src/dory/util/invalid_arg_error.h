@@ -44,12 +44,10 @@ namespace Dory {
       }
 
       const std::string &GetMsg() const {
-        assert(this);
         return Msg;
       }
 
       const std::string &GetArgId() const {
-        assert(this);
         return ArgId;
       }
 

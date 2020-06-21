@@ -29,8 +29,6 @@ using namespace Dory::Conf;
 
 void TLoggingConf::SetFileConf(const std::string &path,
     const TOpt<mode_t> &mode) {
-  assert(this);
-
   if (!path.empty() && (path[0] != '/')) {
     throw TLoggingRelativePath();
   }

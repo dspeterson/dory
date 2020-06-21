@@ -55,28 +55,23 @@ namespace Log {
         const std::string &file_path, const Base::TOpt<mode_t> &file_mode);
 
     bool StdoutStderrLoggingIsEnabled() const noexcept {
-      assert(this);
       return StdoutStderrLogWriter.IsEnabled();
     }
 
     bool SyslogLoggingIsEnabled() const noexcept {
-      assert(this);
       return SyslogLogWriter.IsEnabled();
     }
 
     bool FileLoggingIsEnabled() const noexcept {
-      assert(this);
       return FileLogWriter.IsEnabled();
     }
 
     /* Returns empty string if no logfile is open. */
     const std::string &GetFilePath() const noexcept {
-      assert(this);
       return FileLogWriter.GetPath();
     }
 
     Base::TOpt<mode_t> GetFileOpenMode() const noexcept {
-      assert(this);
       return FileLogWriter.GetOpenMode();
     }
 

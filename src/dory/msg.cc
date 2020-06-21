@@ -63,7 +63,6 @@ TMsg::TPtr TMsg::CreatePartitionKeyMsg(int32_t partition_key,
 }
 
 TMsg::~TMsg() {
-  assert(this);
   MsgDestroy.Increment();
 
   if (State != TState::Processed) {

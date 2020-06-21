@@ -60,7 +60,6 @@ namespace Dory {
         TConfig& operator=(TConfig &&) = default;
 
         const TBatchConfig &Get(const std::string &topic) const noexcept {
-          assert(this);
           auto iter = PerTopic.find(topic);
           return (iter == PerTopic.end()) ? DefaultTopic : iter->second;
         }
@@ -77,12 +76,10 @@ namespace Dory {
 
       /* TODO: Eliminate need for clients to call this method. */
       bool IsEnabled() const noexcept {
-        assert(this);
         return bool(Config);
       }
 
       const std::shared_ptr<TConfig> &GetConfig() const noexcept {
-        assert(this);
         return Config;
       }
 
@@ -134,8 +131,6 @@ namespace Dory {
         }
 
         TBatchExpiryRecord &operator=(TBatchExpiryRecord &&that) noexcept {
-          assert(this);
-
           if (this != &that) {
             Expiry = that.Expiry;
             Topic = std::move(that.Topic);
@@ -145,17 +140,14 @@ namespace Dory {
         }
 
         bool operator<(const TBatchExpiryRecord &that) const noexcept {
-          assert(this);
           return (Expiry < that.Expiry);
         }
 
         TMsg::TTimestamp GetExpiry() const noexcept {
-          assert(this);
           return Expiry;
         }
 
         const std::string &GetTopic() const noexcept {
-          assert(this);
           return Topic;
         }
 

@@ -60,7 +60,6 @@ namespace Base {
        the internal state of the rate limiter so it will correctly compute the
        next delay value. */
     void OnAction() noexcept {
-      assert(this);
       GetCurrentTime(LastEventTime);
     }
 

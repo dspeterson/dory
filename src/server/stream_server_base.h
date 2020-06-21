@@ -87,7 +87,6 @@ namespace Server {
     void Bind();
 
     bool IsBound() const noexcept {
-      assert(this);
       return ListeningSocket.IsOpen();
     }
 
@@ -135,7 +134,6 @@ namespace Server {
     void Run() override;
 
     const Base::TFd &GetListeningSocket() const noexcept {
-      assert(this);
       return ListeningSocket;
     }
 

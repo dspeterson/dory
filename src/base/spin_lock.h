@@ -43,7 +43,6 @@ namespace Base {
       }
 
       ~TLock() {
-        assert(this);
         SpinLock.Lock.clear(std::memory_order_release);
       }
 
@@ -69,7 +68,6 @@ namespace Base {
       }
 
       ~TSoftLock() {
-        assert(this);
         SpinLock.Lock.clear(std::memory_order_release);
       }
 

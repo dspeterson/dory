@@ -74,8 +74,6 @@ std::string TTopicRateUnknownTopicConfig::CreateMsg(
 
 void TTopicRateConf::TBuilder::AddBoundedNamedConfig(const std::string &name,
     size_t interval, size_t max_count) {
-  assert(this);
-
   if (interval == 0) {
     throw TTopicRateZeroRateLimitInterval(name);
   }
@@ -90,7 +88,6 @@ void TTopicRateConf::TBuilder::AddBoundedNamedConfig(const std::string &name,
 
 void TTopicRateConf::TBuilder::AddUnlimitedNamedConfig(
     const std::string &name) {
-  assert(this);
   const auto result =
       NamedConfigs.insert(std::make_pair(name, TConf()));
 
@@ -101,8 +98,6 @@ void TTopicRateConf::TBuilder::AddUnlimitedNamedConfig(
 
 void TTopicRateConf::TBuilder::SetDefaultTopicConfig(
     const std::string &config_name) {
-  assert(this);
-
   if (GotDefaultTopic) {
     throw TTopicRateDuplicateDefaultTopicConfig();
   }
@@ -119,8 +114,6 @@ void TTopicRateConf::TBuilder::SetDefaultTopicConfig(
 
 void TTopicRateConf::TBuilder::SetTopicConfig(const std::string &topic,
     const std::string &config_name) {
-  assert(this);
-
   if (BuildResult.TopicConfigs.find(topic) != BuildResult.TopicConfigs.end()) {
     throw TTopicRateDuplicateTopicConfig(topic);
   }
@@ -135,8 +128,6 @@ void TTopicRateConf::TBuilder::SetTopicConfig(const std::string &topic,
 }
 
 TTopicRateConf TTopicRateConf::TBuilder::Build() {
-  assert(this);
-
   if (!GotDefaultTopic) {
     throw TTopicRateMissingDefaultTopic();
   }

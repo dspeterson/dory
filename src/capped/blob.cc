@@ -24,8 +24,6 @@
 using namespace Capped;
 
 size_t TBlob::DoGetDataInFirstBlock(char *&data) const noexcept {
-  assert(this);
-
   if (FirstBlock == nullptr) {
     data = nullptr;
     return 0;

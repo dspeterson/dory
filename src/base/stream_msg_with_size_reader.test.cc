@@ -49,8 +49,6 @@ namespace {
     }
 
     void CloseRead() {
-      assert(this);
-
       if (Read >= 0) {
         Wr::close(Read);
         Read = -1;
@@ -58,8 +56,6 @@ namespace {
     }
 
     void CloseWrite() {
-      assert(this);
-
       if (Write >= 0) {
         Wr::close(Write);
         Write = -1;

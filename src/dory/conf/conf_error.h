@@ -33,7 +33,6 @@ namespace Dory {
     class TConfError : public std::runtime_error {
       public:
       const char *what() const noexcept override {
-        assert(this);
         return Msg.c_str();
       }
 

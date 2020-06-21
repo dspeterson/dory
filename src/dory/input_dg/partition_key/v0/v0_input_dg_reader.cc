@@ -31,7 +31,6 @@ using namespace Dory::InputDg::PartitionKey;
 using namespace Dory::InputDg::PartitionKey::V0;
 
 TMsg::TPtr TV0InputDgReader::BuildMsg() {
-  assert(this);
   const uint8_t *pos = DataBegin;
 
   if ((DataEnd - pos) < INPUT_DG_P_KEY_V0_FLAGS_FIELD_SIZE) {

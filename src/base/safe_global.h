@@ -41,49 +41,41 @@ namespace Base {
         : Factory(factory), Val(0), Constructing(false) {}
 
     ~TSafeGlobal() {
-      assert(this);
       delete Val;
     }
 
     const TVal &operator*() const {
-      assert(this);
       Freshen();
       return *AssertTrue(Val);
     }
 
     TVal &operator*() {
-      assert(this);
       Freshen();
       return *AssertTrue(Val);
     }
 
     const TVal *operator->() const {
-      assert(this);
       Freshen();
       return AssertTrue(Val);
     }
 
     TVal *operator->() {
-      assert(this);
       Freshen();
       return AssertTrue(Val);
     }
 
     const TVal *GetObj() const {
-      assert(this);
       Freshen();
       return AssertTrue(Val);
     }
 
     TVal *GetObj() {
-      assert(this);
       Freshen();
       return AssertTrue(Val);
     }
 
     private:
     void Freshen() const {
-      assert(this);
       TSpinLock::TLock lock(SpinLock);
       if (!Val) {
         assert(!Constructing);

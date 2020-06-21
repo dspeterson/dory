@@ -56,7 +56,6 @@ namespace Capped {
 
     /* True iff. we have not yet reached the end of the blob. */
     operator bool() const noexcept {
-      assert(this);
       assert((Cursor == nullptr) == (BytesRemaining == 0));
       return Cursor;
     }
@@ -65,7 +64,6 @@ namespace Capped {
        read past the end of the blob, this function throws TMemoryCapReached.
        Note that a read of zero bytes is always safe. */
     TReader &Read(void *data, size_t size) {
-      assert(this);
       assert(data || (size == 0));
       return Advance(data, size);
     }
@@ -73,17 +71,14 @@ namespace Capped {
     /* Same as Read(), except data is skipped over rather than copied to
        caller-supplied buffer. */
     TReader &Skip(size_t size) {
-      assert(this);
       return Advance(nullptr, size);
     }
 
     size_t GetBytesRemaining() const noexcept {
-      assert(this);
       return BytesRemaining;
     }
 
     size_t GetBytesConsumed() const noexcept {
-      assert(this);
       size_t total = Blob->Size();
       assert(BytesRemaining <= total);
       return total - BytesRemaining;

@@ -35,7 +35,6 @@ namespace Server {
     }
 
     unsigned int GetOffset() const noexcept {
-      assert(this);
       return Offset;
     }
 

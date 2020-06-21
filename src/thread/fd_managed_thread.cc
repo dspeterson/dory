@@ -27,8 +27,6 @@ using namespace Base;
 using namespace Thread;
 
 TFdManagedThread::~TFdManagedThread() {
-  assert(this);
-
   /* This should have already been called by a subclass destructor.  Calling it
      here a second time is harmless and acts as a safeguard, just in case some
      subclass omits calling it. */
@@ -40,13 +38,10 @@ void TFdManagedThread::Start() {
 }
 
 bool TFdManagedThread::IsStarted() const noexcept {
-  assert(this);
   return Thread.joinable();
 }
 
 void TFdManagedThread::RequestShutdown() {
-  assert(this);
-
   if (!Thread.joinable()) {
     Die("Cannot request shutdown on nonexistent worker thread");
   }
@@ -55,13 +50,10 @@ void TFdManagedThread::RequestShutdown() {
 }
 
 const TFd &TFdManagedThread::GetShutdownWaitFd() const noexcept {
-  assert(this);
   return ShutdownFinishedSem.GetFd();
 }
 
 void TFdManagedThread::Join() {
-  assert(this);
-
   if (!Thread.joinable()) {
     Die("Cannot join nonexistent worker thread");
   }
@@ -78,8 +70,6 @@ void TFdManagedThread::Join() {
 }
 
 void TFdManagedThread::DoStart() {
-  assert(this);
-
   if (Thread.joinable()) {
     Die("Worker thread is already started");
   }
@@ -96,8 +86,6 @@ void TFdManagedThread::DoStart() {
 }
 
 void TFdManagedThread::ShutdownOnDestroy() noexcept {
-  assert(this);
-
   if (Thread.joinable()) {
     ShutdownRequestedSem.Push();
 
@@ -113,8 +101,6 @@ void TFdManagedThread::ShutdownOnDestroy() noexcept {
 }
 
 void TFdManagedThread::RunAndTerminate() {
-  assert(this);
-
   try {
     Run();
   } catch (...) {

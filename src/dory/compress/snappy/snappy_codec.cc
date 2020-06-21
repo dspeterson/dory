@@ -91,15 +91,12 @@ const TSnappyCodec &TSnappyCodec::The() {
 
 TOpt<int> TSnappyCodec::GetRealCompressionLevel(
     const TOpt<int> & /*requested_level*/) const noexcept {
-  assert(this);
-
   /* This algorithm does not support compression levels. */
   return TOpt<int>();
 }
 
 size_t TSnappyCodec::ComputeUncompressedResultBufSpace(
     const void *compressed_data, size_t compressed_size) const {
-  assert(this);
   size_t result = 0;
   CheckSnappyStatus(Lib.snappy_uncompressed_length(
       reinterpret_cast<const char *>(compressed_data), compressed_size,
@@ -110,7 +107,6 @@ size_t TSnappyCodec::ComputeUncompressedResultBufSpace(
 
 size_t TSnappyCodec::Uncompress(const void *input_buf, size_t input_buf_size,
     void *output_buf, size_t output_buf_size) const {
-  assert(this);
   CheckSnappyStatus(Lib.snappy_uncompress(
       reinterpret_cast<const char *>(input_buf), input_buf_size,
       reinterpret_cast<char *>(output_buf), &output_buf_size),
@@ -123,14 +119,12 @@ size_t TSnappyCodec::Uncompress(const void *input_buf, size_t input_buf_size,
 size_t TSnappyCodec::DoComputeCompressedResultBufSpace(
     const void * /*uncompressed_data*/, size_t uncompressed_size,
     int /*compression_level*/) const {
-  assert(this);
   return Lib.snappy_max_compressed_length(uncompressed_size);
 }
 
 size_t TSnappyCodec::DoCompress(const void *input_buf, size_t input_buf_size,
     void *output_buf, size_t output_buf_size,
     int /*compression_level*/) const {
-  assert(this);
   CheckSnappyStatus(Lib.snappy_compress(
       reinterpret_cast<const char *>(input_buf), input_buf_size,
       reinterpret_cast<char *>(output_buf), &output_buf_size),

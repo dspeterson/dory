@@ -51,7 +51,6 @@ TSetup::TFileFormatError::TFileFormatError(size_t line_num, const char *msg)
 }
 
 void TSetup::Get(const std::string &setup_file_path, TInfo &out) {
-  assert(this);
   Result.Clear();
   std::ifstream infile(setup_file_path);
 
@@ -73,7 +72,6 @@ void TSetup::Get(const std::string &setup_file_path, TInfo &out) {
 }
 
 void TSetup::NextInterestingLine(std::istream &in) {
-  assert(this);
   CurrentLineTokens.clear();
   std::string line;
   std::vector<std::string> split_result;
@@ -104,15 +102,12 @@ void TSetup::NextInterestingLine(std::istream &in) {
 }
 
 std::string TSetup::ErrorBlurb() {
-  assert(this);
   std::ostringstream oss;
   oss << "Error on line " << LineNum << " of setup file: ";
   return oss.str();
 }
 
 void TSetup::GetPortsLine(std::istream &in) {
-  assert(this);
-
   if (CurrentLineTokens.empty()) {
     throw TFileFormatError(LineNum, "\"ports\" line not found");
   }
@@ -183,7 +178,6 @@ static bool ParseDelayAndInterval(const std::string &s, size_t &delay,
 }
 
 void TSetup::GetPortLines(std::istream &in) {
-  assert(this);
   assert(!Result.Ports.empty());
   in_port_t min_port = Result.BasePort;
   in_port_t max_port = min_port +
@@ -248,8 +242,6 @@ void TSetup::GetPortLines(std::istream &in) {
 }
 
 void TSetup::GetTopicLines(std::istream &in) {
-  assert(this);
-
   for (; !CurrentLineTokens.empty() && (CurrentLineTokens[0] == "topic");
        NextInterestingLine(in)) {
     if (CurrentLineTokens.size() != 4) {
@@ -293,8 +285,6 @@ void TSetup::GetTopicLines(std::istream &in) {
 }
 
 void TSetup::GetPartitionErrorLines(std::istream &in) {
-  assert(this);
-
   for (; !CurrentLineTokens.empty() &&
            (CurrentLineTokens[0] == "partition_error");
        NextInterestingLine(in)) {
@@ -351,7 +341,6 @@ void TSetup::GetPartitionErrorLines(std::istream &in) {
 }
 
 void TSetup::FillResult(std::istream &in) {
-  assert(this);
   LineNum = 0;
   NextInterestingLine(in);
   GetPortsLine(in);

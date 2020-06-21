@@ -27,8 +27,6 @@ using namespace Dory::Conf;
 
 void TInputSourcesConf::SetUnixDgConf(const std::string &path,
     const TOpt<mode_t> &mode) {
-  assert(this);
-
   if (!path.empty() && (path[0] != '/')) {
     throw TInputSourcesRelativeUnixDgPath();
   }
@@ -43,8 +41,6 @@ void TInputSourcesConf::SetUnixDgConf(const std::string &path,
 
 void TInputSourcesConf::SetUnixStreamConf(const std::string &path,
     const TOpt<mode_t> &mode) {
-  assert(this);
-
   if (!path.empty() && (path[0] != '/')) {
     throw TInputSourcesRelativeUnixStreamPath();
   }
@@ -59,8 +55,6 @@ void TInputSourcesConf::SetUnixStreamConf(const std::string &path,
 
 void TInputSourcesConf::SetTcpConf(const TOpt<in_port_t> &port,
     bool allow_input_bind_ephemeral) {
-  assert(this);
-
   if (!allow_input_bind_ephemeral && port.IsKnown() && (*port == 0)) {
     throw TInvalidTcpInputPort();
   }

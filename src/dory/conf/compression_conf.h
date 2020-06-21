@@ -168,7 +168,6 @@ namespace Dory {
       TBuilder() = default;
 
       void Reset() {
-        assert(this);
         *this = TBuilder();
       }
 
@@ -184,7 +183,6 @@ namespace Dory {
           const std::string &config_name);
 
       bool IsNamedConfigsEmpty() const noexcept {
-        assert(this);
         return NamedConfigs.empty();
       }
 

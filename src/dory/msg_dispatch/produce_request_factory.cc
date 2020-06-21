@@ -72,7 +72,6 @@ TProduceRequestFactory::TProduceRequestFactory(const TConf &conf,
 void TProduceRequestFactory::Init(
     const TCompressionConf &compression_conf,
     const std::shared_ptr<TMetadata> &md) {
-  assert(this);
   DefaultTopicCompressionInfo =
       TCompressionInfo(compression_conf.DefaultTopicConfig);
   Metadata = md;
@@ -81,7 +80,6 @@ void TProduceRequestFactory::Init(
 }
 
 void TProduceRequestFactory::Reset() {
-  assert(this);
   Metadata.reset();
   CorrIdCounter = 0;
   TopicDataMap.clear();
@@ -89,8 +87,6 @@ void TProduceRequestFactory::Reset() {
 
 TOpt<TProduceRequest> TProduceRequestFactory::BuildRequest(
     std::vector<uint8_t> &dst) {
-  assert(this);
-
   if (IsEmpty()) {
     return TOpt<TProduceRequest>();
   }
@@ -176,7 +172,6 @@ TProduceRequestFactory::TTopicData::TTopicData(
 
 void TProduceRequestFactory::InitTopicDataMap(
     const TCompressionConf &compression_conf) {
-  assert(this);
   TopicDataMap.clear();
   const TCompressionConf::TTopicMap &topic_map = compression_conf.TopicConfigs;
 
@@ -187,7 +182,6 @@ void TProduceRequestFactory::InitTopicDataMap(
 
 TProduceRequestFactory::TTopicData &
 TProduceRequestFactory::GetTopicData(const std::string &topic) {
-  assert(this);
   auto iter = TopicDataMap.find(topic);
 
   if (iter == TopicDataMap.end()) {
@@ -259,7 +253,6 @@ static void SanityCheckRequestContents(TAllTopics &contents) {
 }
 
 size_t TProduceRequestFactory::AddFirstMsg(TAllTopics &result) {
-  assert(this);
   assert(!InputQueue.empty());
   TMsg::TPtr msg_ptr;
 
@@ -298,7 +291,6 @@ size_t TProduceRequestFactory::AddFirstMsg(TAllTopics &result) {
 bool TProduceRequestFactory::TryConsumeFrontMsg(
     std::list<TMsg::TPtr> &next_batch, const std::string &topic,
     TTopicData &topic_data, size_t &result_data_size, TAllTopics &result) {
-  assert(this);
   assert(!next_batch.empty());
   TMsg::TPtr &msg_ptr = next_batch.front();
   bool any_partition =
@@ -345,7 +337,6 @@ bool TProduceRequestFactory::TryConsumeFrontMsg(
 }
 
 TAllTopics TProduceRequestFactory::BuildRequestContents() {
-  assert(this);
   assert(!InputQueue.empty());
   TAllTopics result;
   size_t result_data_size = AddFirstMsg(result);
@@ -406,7 +397,6 @@ TAllTopics TProduceRequestFactory::BuildRequestContents() {
 
 void TProduceRequestFactory::SerializeUncompressedMsgSet(
     const std::list<TMsg::TPtr> &msg_set, std::vector<uint8_t> &dst) {
-  assert(this);
   assert(!msg_set.empty());
 
   for (const TMsg::TPtr &msg_ptr : msg_set) {
@@ -429,7 +419,6 @@ void TProduceRequestFactory::SerializeUncompressedMsgSet(
 
 void TProduceRequestFactory::SerializeToCompressionBuf(
     const std::list<TMsg::TPtr> &msg_set) {
-  assert(this);
   assert(!msg_set.empty());
   MsgSetWriter->OpenMsgSet(CompressionBuf, false);
 
@@ -455,8 +444,6 @@ void TProduceRequestFactory::SerializeToCompressionBuf(
 
 void TProduceRequestFactory::WriteOneMsgSet(const TMsgSet &msg_set,
     const TCompressionInfo &info, std::vector<uint8_t> &dst) {
-  assert(this);
-
   if (info.CompressionCodec && (msg_set.DataSize >= info.MinCompressionSize)) {
     SerializeToCompressionBuf(msg_set.Contents);
     assert(info.CompressionCodec);

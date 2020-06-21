@@ -78,7 +78,6 @@ namespace Base {
 
     /* True until we reach then end of the directory. */
     operator bool() const noexcept {
-      assert(this);
       return TryRefresh();
     }
 
@@ -86,7 +85,6 @@ namespace Base {
        Calling this function when we've already reached the end of the
        directory is a logic error. */
     TDirIter &operator++() {
-      assert(this);
       Refresh();
       Pos = NotFresh;
       return *this;
@@ -97,7 +95,6 @@ namespace Base {
        Calling this function when we've already reached the end of the
        directory is a logic error. */
     TKind GetKind() const {
-      assert(this);
       Refresh();
       return static_cast<TKind>(DirEnt.d_type);
     }
@@ -106,7 +103,6 @@ namespace Base {
        Calling this function when we've already reached the end of the
        directory is a logic error. */
     const char *GetName() const {
-      assert(this);
       Refresh();
       return DirEnt.d_name;
     }
@@ -131,8 +127,6 @@ namespace Base {
 
     /* Like TryRefresh(), but die if we're at the end. */
     void Refresh() const noexcept {
-      assert(this);
-
       if (!TryRefresh()) {
         Die("Past end of directory");
       }

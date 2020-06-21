@@ -45,7 +45,6 @@ TManagedThreadPoolBase::~TManagedThreadPoolBase() {
 
 void TManagedThreadPoolBase::SetConfig(
     const TManagedThreadPoolConfig &cfg) noexcept {
-  assert(this);
   bool notify = false;
 
   {
@@ -66,8 +65,6 @@ void TManagedThreadPoolBase::SetConfig(
 }
 
 void TManagedThreadPoolBase::Start(bool populate) {
-  assert(this);
-
   if (Manager.IsStarted()) {
     Die("Thread pool is already started");
   }
@@ -108,7 +105,6 @@ void TManagedThreadPoolBase::Start(bool populate) {
 
 std::list<TManagedThreadPoolBase::TWorkerError>
 TManagedThreadPoolBase::GetAllPendingErrors() {
-  assert(this);
   std::list<TWorkerError> result;
 
   {
@@ -124,8 +120,6 @@ TManagedThreadPoolBase::GetAllPendingErrors() {
 }
 
 TManagedThreadPoolStats TManagedThreadPoolBase::GetStats() const noexcept {
-  assert(this);
-
   std::lock_guard<std::mutex> lock(PoolLock);
   Stats.LiveWorkerCount = LiveWorkerCount;
   Stats.IdleWorkerCount = IdleList.Size();
@@ -133,8 +127,6 @@ TManagedThreadPoolStats TManagedThreadPoolBase::GetStats() const noexcept {
 }
 
 void TManagedThreadPoolBase::RequestShutdown() {
-  assert(this);
-
   if (!Manager.IsStarted()) {
     Die("Cannot call RequestShutdown() on thread pool that is not started");
   }
@@ -143,8 +135,6 @@ void TManagedThreadPoolBase::RequestShutdown() {
 }
 
 void TManagedThreadPoolBase::WaitForShutdown() {
-  assert(this);
-
   if (!Manager.IsStarted()) {
     Die("Cannot call WaitForShutdown() on thread pool that is not started");
   }
@@ -207,8 +197,6 @@ TManagedThreadPoolBase::TWorkerBase::~TWorkerBase() {
 }
 
 void TManagedThreadPoolBase::TWorkerBase::Activate() {
-  assert(this);
-
   if (WorkerThread.joinable()) {
     /* The thread was obtained from the idle list, and has been placed on the
        busy list but not yet awakened.  When we release 'WakeupWait' below, it
@@ -338,8 +326,6 @@ void TManagedThreadPoolBase::TWorkerBase::DoPutBack(TWorkerBase *worker) {
 }
 
 void TManagedThreadPoolBase::TWorkerBase::ClearClientState() noexcept {
-  assert(this);
-
   try {
     /* This should not throw, but be prepared just in case it does. */
     DoClearClientState();
@@ -354,7 +340,6 @@ void TManagedThreadPoolBase::TWorkerBase::ClearClientState() noexcept {
 }
 
 void TManagedThreadPoolBase::TWorkerBase::Terminate() {
-  assert(this);
   assert(WorkerThread.joinable());
   TerminateRequested = true;
   WakeupWait.unlock();
@@ -362,7 +347,6 @@ void TManagedThreadPoolBase::TWorkerBase::Terminate() {
 
 void TManagedThreadPoolBase::TWorkerBase::XferFromBusyList(
     std::list<TWorkerBasePtr> &dst) noexcept {
-  assert(this);
   assert(BusyListPos != MyPool.BusyList.end());
   dst.splice(dst.end(), MyPool.BusyList, BusyListPos);
   BusyListPos = MyPool.BusyList.end();
@@ -370,7 +354,6 @@ void TManagedThreadPoolBase::TWorkerBase::XferFromBusyList(
 
 TManagedThreadPoolBase::TWorkerBase::TAfterBusyAction
 TManagedThreadPoolBase::TWorkerBase::LeaveBusyList() noexcept {
-  assert(this);
   assert(BusyListPos != MyPool.BusyList.end());
   TAfterBusyAction next_action = TAfterBusyAction::BecomeIdle;
   std::list<TWorkerBasePtr> my_ptr;
@@ -399,7 +382,6 @@ TManagedThreadPoolBase::TWorkerBase::LeaveBusyList() noexcept {
 }
 
 void TManagedThreadPoolBase::TWorkerBase::DoBusyRun() {
-  assert(this);
   std::list<TWorkerError> error;
   TAfterBusyAction next_action = TAfterBusyAction::BecomeIdle;
 
@@ -480,8 +462,6 @@ void TManagedThreadPoolBase::TWorkerBase::DoBusyRun() {
 }
 
 void TManagedThreadPoolBase::TWorkerBase::BusyRun() {
-  assert(this);
-
   /* If an exception escapes from DoBusyRun(), the source is the thread pool
      implementation, not client code.  Any exceptions thrown by client code are
      caught inside DoBusyRun(). */
@@ -497,8 +477,6 @@ void TManagedThreadPoolBase::TWorkerBase::BusyRun() {
 }
 
 void TManagedThreadPoolBase::TWorkerBase::IdleRun() {
-  assert(this);
-
   /* If an exception escapes from DoBusyRun(), the source is the thread pool
      implementation, not client code.  Any exceptions thrown by client code are
      caught inside DoBusyRun(). */
@@ -529,8 +507,6 @@ TManagedThreadPoolBase::TManagedThreadPoolBase()
 
 TManagedThreadPoolBase::TWorkerBase *
 TManagedThreadPoolBase::GetAvailableWorker() {
-  assert(this);
-
   {
     std::lock_guard<std::mutex> lock(PoolLock);
     size_t max_pool_size = Config.GetMaxPoolSize();
@@ -588,8 +564,6 @@ TManagedThreadPoolBase::TManager::~TManager() {
 }
 
 void TManagedThreadPoolBase::TManager::Run() {
-  assert(this);
-
   try {
     DoRun();
   } catch (const std::exception &x) {
@@ -603,7 +577,6 @@ void TManagedThreadPoolBase::TManager::Run() {
 
 uint64_t TManagedThreadPoolBase::TManager::HandleReconfig(
     uint64_t old_prune_at, uint64_t now) noexcept {
-  assert(this);
   MyPool.ReconfigSem.Pop();
   bool reset_segments = false;
   size_t old_prune_quantum_ms = Config.GetPruneQuantumMs();
@@ -635,7 +608,6 @@ uint64_t TManagedThreadPoolBase::TManager::HandleReconfig(
 
 size_t
 TManagedThreadPoolBase::TManager::GetMaxThreadsToPrune() const noexcept {
-  assert(this);
   assert(MyPool.IdleList.Size() <= MyPool.LiveWorkerCount);
 
   if (MyPool.LiveWorkerCount <= Config.GetMinPoolSize()) {
@@ -718,7 +690,6 @@ TManagedThreadPoolBase::TManager::GetMaxThreadsToPrune() const noexcept {
 }
 
 void TManagedThreadPoolBase::TManager::PruneThreadPool() {
-  assert(this);
   std::list<TWorkerBasePtr> pruned;
 
   {
@@ -766,7 +737,6 @@ void TManagedThreadPoolBase::TManager::PruneThreadPool() {
 }
 
 void TManagedThreadPoolBase::TManager::HandleShutdownRequest() {
-  assert(this);
   std::list<TWorkerBasePtr> idle_workers, dead_workers;
   bool wait_for_workers = false;
 
@@ -821,8 +791,6 @@ void TManagedThreadPoolBase::TManager::HandleShutdownRequest() {
 }
 
 void TManagedThreadPoolBase::TManager::DoRun() {
-  assert(this);
-
   {
     /* make private copy of pool config */
     std::lock_guard<std::mutex> lock(MyPool.PoolLock);
@@ -876,7 +844,6 @@ void TManagedThreadPoolBase::TManager::DoRun() {
 TManagedThreadPoolBase::TWorkerBase *
 TManagedThreadPoolBase::AddToBusyList(
     std::list<TWorkerBasePtr> &ready_worker) noexcept {
-  assert(this);
   assert(ready_worker.size() == 1);
   BusyList.splice(BusyList.begin(), ready_worker);
   TWorkerBase &worker = *BusyList.front();

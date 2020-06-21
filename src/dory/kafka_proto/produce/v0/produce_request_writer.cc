@@ -35,7 +35,6 @@ TProduceRequestWriter::TProduceRequestWriter() {
 }
 
 void TProduceRequestWriter::Reset() {
-  assert(this);
   Buf = nullptr;
   State = TState::Idle;
   AtOffset = 0;
@@ -53,8 +52,6 @@ void TProduceRequestWriter::Reset() {
 void TProduceRequestWriter::OpenRequest(std::vector<uint8_t> &result_buf,
     int32_t corr_id, const char *client_id_begin, const char *client_id_end,
     int16_t required_acks, int32_t replication_timeout) {
-  assert(this);
-
   /* Make sure we start in a sane state. */
   Reset();
 
@@ -88,7 +85,6 @@ void TProduceRequestWriter::OpenRequest(std::vector<uint8_t> &result_buf,
 
 void TProduceRequestWriter::OpenTopic(const char *topic_name_begin,
     const char *topic_name_end) {
-  assert(this);
   assert(State == TState::InRequest);
   assert(topic_name_begin);
   assert(topic_name_end > topic_name_begin);
@@ -116,7 +112,6 @@ void TProduceRequestWriter::OpenTopic(const char *topic_name_begin,
 }
 
 void TProduceRequestWriter::OpenMsgSet(int32_t partition) {
-  assert(this);
   assert(State == TState::InTopic);
   assert(Buf);
   Buf->resize(Buf->size() + PRC::PARTITION_SIZE + PRC::MSG_SET_SIZE_SIZE);
@@ -134,7 +129,6 @@ void TProduceRequestWriter::OpenMsgSet(int32_t partition) {
 
 void TProduceRequestWriter::OpenMsg(TCompressionType compression_type,
     size_t key_size, size_t value_size) {
-  assert(this);
   assert(State == TState::InMsgSet);
   assert(Buf);
   assert(key_size <= static_cast<size_t>(std::numeric_limits<int32_t>::max()));
@@ -144,35 +138,30 @@ void TProduceRequestWriter::OpenMsg(TCompressionType compression_type,
 }
 
 size_t TProduceRequestWriter::GetCurrentMsgKeyOffset() const {
-  assert(this);
   assert(State == TState::InMsgSet);
   assert(Buf);
   return MsgSetWriter.GetCurrentMsgKeyOffset();
 }
 
 size_t TProduceRequestWriter::GetCurrentMsgValueOffset() const {
-  assert(this);
   assert(State == TState::InMsgSet);
   assert(Buf);
   return MsgSetWriter.GetCurrentMsgValueOffset();
 }
 
 void TProduceRequestWriter::AdjustValueSize(size_t new_size) {
-  assert(this);
   assert(State == TState::InMsgSet);
   assert(Buf);
   MsgSetWriter.AdjustValueSize(new_size);
 }
 
 void TProduceRequestWriter::RollbackOpenMsg() {
-  assert(this);
   assert(State == TState::InMsgSet);
   assert(Buf);
   MsgSetWriter.RollbackOpenMsg();
 }
 
 void TProduceRequestWriter::CloseMsg() {
-  assert(this);
   assert(State == TState::InMsgSet);
   assert(Buf);
   MsgSetWriter.CloseMsg();
@@ -181,7 +170,6 @@ void TProduceRequestWriter::CloseMsg() {
 void TProduceRequestWriter::AddMsg(TCompressionType compression_type,
     const uint8_t *key_begin, const uint8_t *key_end,
     const uint8_t *value_begin, const uint8_t *value_end) {
-  assert(this);
   assert(State == TState::InMsgSet);
   assert(Buf);
   MsgSetWriter.AddMsg(compression_type, key_begin, key_end, value_begin,
@@ -189,7 +177,6 @@ void TProduceRequestWriter::AddMsg(TCompressionType compression_type,
 }
 
 void TProduceRequestWriter::CloseMsgSet() {
-  assert(this);
   assert(State == TState::InMsgSet);
   assert(Buf);
   size_t msg_set_size = MsgSetWriter.CloseMsgSet();
@@ -202,7 +189,6 @@ void TProduceRequestWriter::CloseMsgSet() {
 }
 
 void TProduceRequestWriter::CloseTopic() {
-  assert(this);
   assert(State == TState::InTopic);
   assert(Buf);
   WriteInt32(CurrentTopicPartitionCountOffset,
@@ -212,7 +198,6 @@ void TProduceRequestWriter::CloseTopic() {
 }
 
 void TProduceRequestWriter::CloseRequest() {
-  assert(this);
   assert(State == TState::InRequest);
   assert(Buf);
   WriteInt32(TopicCountOffset, static_cast<int32_t>(TopicCount));

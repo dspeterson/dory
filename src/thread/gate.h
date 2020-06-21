@@ -43,8 +43,6 @@ namespace Thread {
     ~TGate() override = default;
 
     void Put(std::list<TMsgType> &&put_list) override {
-      assert(this);
-
       if (!put_list.empty()) {
         bool was_empty = false;
 
@@ -61,7 +59,6 @@ namespace Thread {
     }
 
     void Put(TMsgType &&put_item) override {
-      assert(this);
       bool was_empty = false;
 
       {
@@ -76,13 +73,11 @@ namespace Thread {
     }
 
     std::list<TMsgType> Get() override {
-      assert(this);
       Sem.Pop();
       return NonblockingGet();
     }
 
     std::list<TMsgType> NonblockingGet() override {
-      assert(this);
       std::list<TMsgType> result;
 
       {
@@ -94,12 +89,10 @@ namespace Thread {
     }
 
     const Base::TFd &GetMsgAvailableFd() const noexcept override {
-      assert(this);
       return Sem.GetFd();
     }
 
     void Reset() noexcept {
-      assert(this);
       Sem.Reset();
       MsgList.clear();
     }

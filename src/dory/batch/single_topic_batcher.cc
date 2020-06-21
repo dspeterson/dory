@@ -28,7 +28,6 @@ using namespace Dory::Batch;
 
 std::list<TMsg::TPtr>
 TSingleTopicBatcher::DoAddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
-  assert(this);
   assert(msg);
   std::list<TMsg::TPtr> result;
 

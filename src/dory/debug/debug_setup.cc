@@ -77,8 +77,6 @@ TDebugSetup::TSettings::TSettings(size_t version,
 }
 
 bool TDebugSetup::AddDebugTopic(const char *topic) {
-  assert(this);
-
   std::lock_guard<std::mutex> lock(Mutex);
   assert(Settings);
   const std::unordered_set<std::string> *tptr = Settings->GetDebugTopics();
@@ -106,8 +104,6 @@ bool TDebugSetup::AddDebugTopic(const char *topic) {
 }
 
 bool TDebugSetup::DelDebugTopic(const char *topic) {
-  assert(this);
-
   std::lock_guard<std::mutex> lock(Mutex);
   assert(Settings);
   const std::unordered_set<std::string> *tptr = Settings->GetDebugTopics();
@@ -134,8 +130,6 @@ bool TDebugSetup::DelDebugTopic(const char *topic) {
 
 void TDebugSetup::SetDebugTopics(
     std::unordered_set<std::string> *debug_topics) {
-  assert(this);
-
   std::lock_guard<std::mutex> lock(Mutex);
   assert(Settings);
 
@@ -148,8 +142,6 @@ void TDebugSetup::SetDebugTopics(
 }
 
 void TDebugSetup::TruncateDebugFiles() {
-  assert(this);
-
   if (Wr::truncate(GetLogPath(TLogId::MSG_RECEIVE).c_str(), 0) < 0) {
     LOG(TPri::ERR) << "Failed to truncate MSG_RECEIVE debug logfile";
   }
@@ -164,7 +156,6 @@ void TDebugSetup::TruncateDebugFiles() {
 }
 
 void TDebugSetup::CreateDebugDir() {
-  assert(this);
   std::string cmd("/bin/mkdir -p ");
   cmd += DebugDir;
 
@@ -203,8 +194,6 @@ static void SettingsFtruncate(const TDebugSetup::TSettings &settings) {
 
 void TDebugSetup::DeleteOldDebugFiles(
     const std::shared_ptr<TSettings> &old_settings) {
-  assert(this);
-
   /* Unlink the old files.  When we create new files to replace them, any
      threads still using the old file descriptors (and debug settings) will
      write to the unlinked files until they see that the debug settings have

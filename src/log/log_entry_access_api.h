@@ -36,7 +36,6 @@ namespace Log {
     virtual size_t PrefixSize() const noexcept = 0;
 
     bool HasPrefix() const noexcept {
-      assert(this);
       return (PrefixSize() > 0);
     }
 

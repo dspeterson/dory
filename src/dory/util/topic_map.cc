@@ -28,22 +28,18 @@ using namespace Dory;
 using namespace Dory::Util;
 
 void TTopicMap::Put(TMsg::TPtr &&msg) {
-  assert(this);
   assert(msg);
   std::list<TMsg::TPtr> &msg_list = PutCommon(msg->GetTopic());
   msg_list.push_back(std::move(msg));
 }
 
 void TTopicMap::Put(std::list<TMsg::TPtr> &&batch) {
-  assert(this);
   assert(!batch.empty());
   std::list<TMsg::TPtr> &msg_list = PutCommon(batch.front()->GetTopic());
   msg_list.splice(msg_list.end(), std::move(batch));
 }
 
 void TTopicMap::Put(std::list<std::list<TMsg::TPtr>> &&batch_list) {
-  assert(this);
-
   for (std::list<TMsg::TPtr> &batch : batch_list) {
     Put(std::move(batch));
   }
@@ -52,7 +48,6 @@ void TTopicMap::Put(std::list<std::list<TMsg::TPtr>> &&batch_list) {
 }
 
 std::list<TMsg::TPtr> TTopicMap::Get(const std::string &topic) {
-  assert(this);
   std::list<TMsg::TPtr> result;
   auto iter = TopicHash.find(topic);
 
@@ -65,7 +60,6 @@ std::list<TMsg::TPtr> TTopicMap::Get(const std::string &topic) {
 }
 
 std::list<std::list<TMsg::TPtr>> TTopicMap::Get() {
-  assert(this);
   std::list<std::list<TMsg::TPtr>> result;
 
   for (auto &item : TopicHash) {
@@ -79,8 +73,6 @@ std::list<std::list<TMsg::TPtr>> TTopicMap::Get() {
 }
 
 std::list<TMsg::TPtr> &TTopicMap::PutCommon(const std::string &topic) {
-  assert(this);
-
   /* We can eliminate this call to find() without affecting observed behavior.
      However, the common case should be a successful lookup, and then we avoid
      creating a temporary topic string while doing the insert. */

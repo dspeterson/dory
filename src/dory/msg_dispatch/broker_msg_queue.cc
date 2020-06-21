@@ -63,7 +63,6 @@ TBrokerMsgQueue::TBrokerMsgQueue(const TGlobalBatchConfig &batch_config,
 }
 
 void TBrokerMsgQueue::Put(TMsg::TTimestamp now, TMsg::TPtr &&msg) {
-  assert(this);
   assert(msg);
   TExpiryStatus per_topic_status, combined_topics_status;
   bool ready_list_empty_initial = false;
@@ -135,7 +134,6 @@ void TBrokerMsgQueue::Put(TMsg::TTimestamp now, TMsg::TPtr &&msg) {
 }
 
 void TBrokerMsgQueue::PutNow(TMsg::TTimestamp now, TMsg::TPtr &&msg) {
-  assert(this);
   assert(msg);
   MsgStateTracker.MsgEnterSendWait(*msg);
   std::list<TMsg::TPtr> single_item_list;
@@ -163,8 +161,6 @@ void TBrokerMsgQueue::PutNow(TMsg::TTimestamp now, TMsg::TPtr &&msg) {
 
 void TBrokerMsgQueue::PutNow(TMsg::TTimestamp now,
     std::list<std::list<TMsg::TPtr>> &&batch) {
-  assert(this);
-
   if (batch.empty()) {
     return;
   }
@@ -195,7 +191,6 @@ void TBrokerMsgQueue::PutNow(TMsg::TTimestamp now,
 bool TBrokerMsgQueue::NonblockingGet(TMsg::TTimestamp now,
     TMsg::TTimestamp &next_batch_complete_time,
     std::list<std::list<TMsg::TPtr>> &ready_msgs) {
-  assert(this);
   TExpiryStatus per_topic_status, combined_topics_status;
 
   {
@@ -220,21 +215,17 @@ bool TBrokerMsgQueue::NonblockingGet(TMsg::TTimestamp now,
 }
 
 std::list<std::list<TMsg::TPtr>> TBrokerMsgQueue::GetAllOnShutdown() {
-  assert(this);
-
   std::lock_guard<std::mutex> lock(Mutex);
   return GetAllMsgs();
 }
 
 std::list<std::list<TMsg::TPtr>> TBrokerMsgQueue::Reset() {
-  assert(this);
   SenderNotify.Reset();
   return GetAllMsgs();
 }
 
 void TBrokerMsgQueue::TryBatchPerTopic(TMsg::TTimestamp now,
     TMsg::TPtr &&msg_ptr, TExpiryStatus &expiry_status) {
-  assert(this);
   expiry_status.Clear();
 
   if (!PerTopicBatcher.IsEnabled()) {
@@ -266,7 +257,6 @@ void TBrokerMsgQueue::TryBatchPerTopic(TMsg::TTimestamp now,
 
 void TBrokerMsgQueue::TryBatchCombinedTopics(TMsg::TTimestamp now,
     TMsg::TPtr &&msg_ptr, TExpiryStatus &expiry_status) {
-  assert(this);
   expiry_status.OptInitialExpiry = CombinedTopicsBatcher.GetNextCompleteTime();
   TMsg &msg = *msg_ptr;
   std::list<std::list<TMsg::TPtr>> batch_list =
@@ -288,7 +278,6 @@ void TBrokerMsgQueue::TryBatchCombinedTopics(TMsg::TTimestamp now,
 std::list<std::list<TMsg::TPtr>>
 TBrokerMsgQueue::CheckPerTopicBatcher(TMsg::TTimestamp now,
     TExpiryStatus &expiry_status) {
-  assert(this);
   expiry_status.Clear();
   std::list<std::list<TMsg::TPtr>> ready_batches;
   expiry_status.OptInitialExpiry = PerTopicBatcher.GetNextCompleteTime();
@@ -310,7 +299,6 @@ TBrokerMsgQueue::CheckPerTopicBatcher(TMsg::TTimestamp now,
 std::list<std::list<TMsg::TPtr>>
 TBrokerMsgQueue::CheckCombinedTopicsBatcher(TMsg::TTimestamp now,
     TExpiryStatus &expiry_status) {
-  assert(this);
   expiry_status.Clear();
   std::list<std::list<TMsg::TPtr>> ready_batches;
   expiry_status.OptInitialExpiry = CombinedTopicsBatcher.GetNextCompleteTime();
@@ -332,7 +320,6 @@ TBrokerMsgQueue::CheckCombinedTopicsBatcher(TMsg::TTimestamp now,
 
 void TBrokerMsgQueue::CheckBothBatchers(TMsg::TTimestamp now,
     TExpiryStatus &per_topic_status, TExpiryStatus &combined_topics_status) {
-  assert(this);
   std::list<std::list<TMsg::TPtr>> per_topic_batches =
       CheckPerTopicBatcher(now, per_topic_status);
   std::list<std::list<TMsg::TPtr>> combined_topics_batches =
@@ -360,7 +347,6 @@ void TBrokerMsgQueue::CheckBothBatchers(TMsg::TTimestamp now,
 
 std::list<std::list<TMsg::TPtr>>
 TBrokerMsgQueue::GetAllMsgs() {
-  assert(this);
   TOpt<TMsg::TTimestamp> per_topic_expiry =
       PerTopicBatcher.GetNextCompleteTime();
   TOpt<TMsg::TTimestamp> combined_topics_expiry =

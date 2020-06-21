@@ -101,14 +101,12 @@ namespace Server {
 
       /* Signal handler calls this to record receipt of signal. */
       void Set(const siginfo_t &sig_info) noexcept {
-        assert(this);
         std::memcpy(&Info, &sig_info, sizeof(sig_info));
         Caught = true;
       }
 
       /* Thread calls this after calling client-provided callback. */
       void Clear() noexcept {
-        assert(this);
         Caught = false;
         Base::Zero(Info);
       }

@@ -72,7 +72,6 @@ namespace Base {
     /* Returns a human-readable description of what went wrong.  This message
        has the following pattern: (<file>,<line>),<error class>[,<details>] */
     const char *what() const noexcept override {
-      assert(this);
       return WhatPtr;
     }
 
@@ -83,7 +82,6 @@ namespace Base {
 
     /* Returns the location at which the exception was thrown. */
     const TCodeLocation &GetCodeLocation() const noexcept {
-      assert(this);
       return CodeLocation;
     }
 

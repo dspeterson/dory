@@ -115,7 +115,6 @@ namespace Dory {
 
     /* Same as above, except message is passed by smart pointer. */
     void LogDiscard(const TMsg::TPtr &msg_ptr, TDiscardReason reason) {
-      assert(this);
       LogDiscard(*msg_ptr, reason);
     }
 
@@ -125,7 +124,6 @@ namespace Dory {
 
     /* Same as above, except message is passed by smart pointer. */
     void LogDuplicate(const TMsg::TPtr &msg_ptr) {
-      assert(this);
       LogDuplicate(*msg_ptr);
     }
 
@@ -179,7 +177,6 @@ namespace Dory {
 
     /* Same as above, except message is passed by smart pointer. */
     void LogBadTopicDiscard(const TMsg::TPtr &msg_ptr) {
-      assert(this);
       LogBadTopicDiscard(*msg_ptr);
     }
 
@@ -189,7 +186,6 @@ namespace Dory {
 
     /* Same as above, except message is passed by smart pointer. */
     void LogLongMsgDiscard(const TMsg::TPtr &msg_ptr) {
-      assert(this);
       LogLongMsgDiscard(*msg_ptr);
     }
 
@@ -208,16 +204,13 @@ namespace Dory {
       /* Awaken thread.  It will then scan the log directory and delete old
          logfiles as necessary. */
       void SendCleanRequest() {
-        assert(this);
         CleanRequestSem.Push();
       }
 
       protected:
-
       void Run() override;
 
       private:
-
       bool HandleCleanRequest();
 
       void DoRun();

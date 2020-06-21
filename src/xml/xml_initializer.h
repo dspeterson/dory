@@ -55,7 +55,6 @@ namespace Xml {
     /* Return true if we have successfully initialized Xerces, or false
        othewise. */
     bool IsInitialized() const noexcept {
-      assert(this);
       return Initialized;
     }
 

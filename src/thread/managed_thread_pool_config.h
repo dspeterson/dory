@@ -85,53 +85,44 @@ namespace Thread {
     bool operator==(const TManagedThreadPoolConfig &that) const noexcept;
 
     bool operator!=(const TManagedThreadPoolConfig &that) const noexcept {
-      assert(this);
       return !(*this == that);
     }
 
     size_t GetMinPoolSize() const noexcept {
-      assert(this);
       return MinPoolSize;
     }
 
     void SetMinPoolSize(size_t min_pool_size) noexcept {
-      assert(this);
       MinPoolSize = min_pool_size;
     }
 
     size_t GetMaxPoolSize() const noexcept {
-      assert(this);
       return MaxPoolSize;
     }
 
     void SetMaxPoolSize(size_t max_pool_size) noexcept {
-      assert(this);
       MaxPoolSize = max_pool_size;
     }
 
     size_t GetPruneQuantumMs() const noexcept {
-      assert(this);
       return PruneQuantumMs;
     }
 
     void SetPruneQuantumMs(size_t prune_quantum_ms) noexcept;
 
     size_t GetPruneQuantumCount() const noexcept {
-      assert(this);
       return PruneQuantumCount;
     }
 
     void SetPruneQuantumCount(size_t prune_quantum_count) noexcept;
 
     size_t GetMaxPruneFraction() const noexcept {
-      assert(this);
       return MaxPruneFraction;
     }
 
     void SetMaxPruneFraction(size_t max_prune_fraction) noexcept;
 
     size_t GetMinIdleFraction() const noexcept {
-      assert(this);
       return MinIdleFraction;
     }
 

@@ -72,7 +72,6 @@ namespace Thread {
        independent of the number of segments.  For instance, true is returned
        even if there are many segments, as long as all segments are empty. */
     bool Empty() const noexcept {
-      assert(this);
       assert(!AllSegments.empty());
       assert(NumSegments > 0);
       assert((FirstNonempty == nullptr) == (LastNonempty == nullptr));
@@ -83,7 +82,6 @@ namespace Thread {
     /* Return the total number of items in all segments (not the number of
        segments). */
     size_t Size() const noexcept {
-      assert(this);
       assert(!AllSegments.empty());
       assert(NumSegments > 0);
       assert((FirstNonempty == nullptr) == (LastNonempty == nullptr));
@@ -94,7 +92,6 @@ namespace Thread {
     /* Return the number of segments.  Note that some or all segments may be
        empty.  The list always contains at least one segment. */
     size_t SegmentCount() const noexcept {
-      assert(this);
       assert(!AllSegments.empty());
       assert(NumSegments > 0);
       assert((FirstNonempty == nullptr) == (LastNonempty == nullptr));
@@ -104,7 +101,6 @@ namespace Thread {
 
     /* Copy 'item' to front of first segment. */
     void AddNew(const T &item) {
-      assert(this);
       assert(!AllSegments.empty());
       assert(NumSegments > 0);
       assert((FirstNonempty == nullptr) == (LastNonempty == nullptr));
@@ -120,7 +116,6 @@ namespace Thread {
 
     /* Move 'item' to front of first segment. */
     void AddNew(T &&item) {
-      assert(this);
       assert(!AllSegments.empty());
       assert(NumSegments > 0);
       assert((FirstNonempty == nullptr) == (LastNonempty == nullptr));
@@ -136,7 +131,6 @@ namespace Thread {
 
     /* Move contents of 'item_list' to front of first segment. */
     void AddNew(std::list<T> &item_list) {
-      assert(this);
       assert(!AllSegments.empty());
       assert(NumSegments > 0);
       assert((FirstNonempty == nullptr) == (LastNonempty == nullptr));
@@ -155,7 +149,6 @@ namespace Thread {
        initially empty, returned list will be empty.  Otherwise returned list
        will contain exactly one item. */
     std::list<T> RemoveOneNewest() {
-      assert(this);
       assert(!AllSegments.empty());
       assert(NumSegments > 0);
       assert((FirstNonempty == nullptr) == (LastNonempty == nullptr));
@@ -180,7 +173,6 @@ namespace Thread {
     /* Remove and return all items from last segment.  Returned list will be
        empty if last segment was empty. */
     std::list<T> EmptyOldest() {
-      assert(this);
       assert(!AllSegments.empty());
       assert(NumSegments > 0);
       assert((FirstNonempty == nullptr) == (LastNonempty == nullptr));
@@ -200,7 +192,6 @@ namespace Thread {
        segment.  Returned list will have fewer than 'max_count' items (possibly
        0) if oldest segment has fewer items than requested. */
     std::list<T> RemoveOldest(size_t max_count) {
-      assert(this);
       assert(!AllSegments.empty());
       assert(NumSegments > 0);
       assert((FirstNonempty == nullptr) == (LastNonempty == nullptr));
@@ -222,7 +213,6 @@ namespace Thread {
     /* Remove and return all items from all segments, but don't change the
        number of segments. */
     std::list<T> EmptyAll() {
-      assert(this);
       assert(!AllSegments.empty());
       assert(NumSegments > 0);
       assert((FirstNonempty == nullptr) == (LastNonempty == nullptr));
@@ -247,7 +237,6 @@ namespace Thread {
     /* Remove and return all items from all segments, and reset the segment
        count to 1. */
     std::list<T> EmptyAllAndResetSegments() {
-      assert(this);
       assert(!AllSegments.empty());
       assert(NumSegments > 0);
       assert((FirstNonempty == nullptr) == (LastNonempty == nullptr));
@@ -265,7 +254,6 @@ namespace Thread {
 
     /* Add a new empty segment, which becomes the first segment. */
     void AddNewSegment() {
-      assert(this);
       assert(!AllSegments.empty());
       assert(NumSegments > 0);
       assert((FirstNonempty == nullptr) == (LastNonempty == nullptr));
@@ -278,7 +266,6 @@ namespace Thread {
        from the last segment to the end of the next to last segment.  Then move
        the (now empty) last segment to the front. */
     void RecycleOldestSegment() {
-      assert(this);
       assert(!AllSegments.empty());
       assert(NumSegments > 0);
       assert((FirstNonempty == nullptr) == (LastNonempty == nullptr));
@@ -320,7 +307,6 @@ namespace Thread {
     /* Reorganize list so all items are in a single segment, maintaining their
        order.  On return, the segment count will be 1. */
     void ResetSegments() {
-      assert(this);
       assert(!AllSegments.empty());
       assert(NumSegments > 0);
       assert((FirstNonempty == nullptr) == (LastNonempty == nullptr));
@@ -357,7 +343,6 @@ namespace Thread {
 
     /* for testing */
     std::list<std::list<T>> CopyOutSegments() const {
-      assert(this);
       assert(!AllSegments.empty());
       assert(AllSegments.size() == NumSegments);
       assert((FirstNonempty == nullptr) == (LastNonempty == nullptr));
@@ -378,8 +363,6 @@ namespace Thread {
 
     /* for testing */
     bool SanityCheck() const noexcept {
-      assert(this);
-
       if (NumSegments != AllSegments.size()) {
         return false;
       }
@@ -446,21 +429,18 @@ namespace Thread {
 
       /* Return true if segment is empty or false otherwise. */
       bool Empty() const noexcept {
-        assert(this);
         assert(Items.empty() == (NumItems == 0));
         return (NumItems == 0);
       }
 
       /* Return number of items in segment. */
       size_t Size() const noexcept {
-        assert(this);
         assert(Items.empty() == (NumItems == 0));
         return NumItems;
       }
 
       /* Copy 'item' to front of segment. */
       void AddToFront(const T &item) {
-        assert(this);
         assert(Items.empty() == (NumItems == 0));
         Items.push_front(item);
         ++NumItems;
@@ -468,7 +448,6 @@ namespace Thread {
 
       /* Move 'item' to front of segment. */
       void AddToFront(T &&item) {
-        assert(this);
         assert(Items.empty() == (NumItems == 0));
         Items.push_front(std::move(item));
         ++NumItems;
@@ -476,7 +455,6 @@ namespace Thread {
 
       /* Move 'item_list' to front of segment. */
       void AddToFront(std::list<T> &item_list) {
-        assert(this);
         assert(Items.empty() == (NumItems == 0));
         size_t n = item_list.size();
         Items.splice(Items.begin(), item_list);
@@ -486,7 +464,6 @@ namespace Thread {
       /* Remove front item from segment and append it to 'dst'.  Segment must
          be initially nonempty. */
       void TakeFront(std::list<T> &dst) {
-        assert(this);
         assert(NumItems);
         assert(!Items.empty());
         dst.splice(dst.end(), Items, Items.begin());
@@ -497,7 +474,6 @@ namespace Thread {
          'pos'. */
       void TakeAll(std::list<T> &dst,
           typename std::list<T>::iterator pos) {
-        assert(this);
         assert(Items.empty() == (NumItems == 0));
         dst.splice(pos, Items);
         NumItems = 0;
@@ -505,7 +481,6 @@ namespace Thread {
 
       /* Remove and return all items from segment. */
       std::list<T> TakeAll() {
-        assert(this);
         assert(Items.empty() == (NumItems == 0));
         NumItems = 0;
         return std::move(Items);
@@ -514,7 +489,6 @@ namespace Thread {
       /* Remove and return last 'n' items from segment, or all items if segment
          initially has fewer than 'n' items. */
       std::list<T> TakeUpToLastN(size_t n) {
-        assert(this);
         assert(Items.empty() == (NumItems == 0));
 
         if (n >= NumItems) {
@@ -536,7 +510,6 @@ namespace Thread {
 
       /* Remove all items and append them to 'dst'. */
       void AppendAllTo(TSegment &dst) {
-        assert(this);
         assert(Items.empty() == (NumItems == 0));
         dst.Items.splice(dst.Items.end(), Items);
         dst.NumItems += NumItems;
@@ -545,14 +518,12 @@ namespace Thread {
 
       /* for testing */
       std::list<T> CopyOutContents() const {
-        assert(this);
         assert(Items.size() == NumItems);
         return Items;
       }
 
       /* for testing */
       bool SanityCheck() const noexcept {
-        assert(this);
         return (Items.size() == NumItems);
       }
 
@@ -572,7 +543,6 @@ namespace Thread {
     /* The first segment just became nonempty.  Add it to the front of the
        nonempty segment list. */
     void AddFirstSegToNonemptySegList() noexcept {
-      assert(this);
       TSegment &first_seg = AllSegments.front();
       assert(FirstNonempty != &first_seg);
       assert(LastNonempty != &first_seg);
@@ -598,7 +568,6 @@ namespace Thread {
     /* Remove front item from nonempty segment list, since segment just became
        empty. */
     void RemoveFrontItemFromNonemptySegList() noexcept {
-      assert(this);
       assert(NumSegments > 0);
       assert(FirstNonempty);
       assert(LastNonempty);
@@ -621,7 +590,6 @@ namespace Thread {
     /* The last segment just became empty.  Remove it from the back of the
        nonempty segment list. */
     void RemoveLastSegFromNonemptySegList() noexcept {
-      assert(this);
       assert(NumSegments > 0);
       assert(FirstNonempty);
       assert(LastNonempty);
@@ -645,7 +613,6 @@ namespace Thread {
     /* The last segment just became nonempty.  Add it to the back of the
        nonempty segment list. */
     void AddLastSegToNonemptySegList() noexcept {
-      assert(this);
       TSegment &last_seg = AllSegments.back();
       assert(FirstNonempty != &last_seg);
       assert(LastNonempty != &last_seg);

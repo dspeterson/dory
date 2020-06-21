@@ -27,7 +27,6 @@
 using namespace Base;
 
 size_t Base::TFileReader::GetSize() {
-  assert(this);
   Open();
   size_t size = 0;
 
@@ -43,7 +42,6 @@ size_t Base::TFileReader::GetSize() {
 }
 
 size_t Base::TFileReader::ReadIntoBuf(void *buf, size_t buf_size) {
-  assert(this);
   assert(buf);
   PrepareForRead();
 
@@ -61,7 +59,6 @@ size_t Base::TFileReader::ReadIntoBuf(void *buf, size_t buf_size) {
 }
 
 void Base::TFileReader::ReadIntoString(std::string &dst) {
-  assert(this);
   dst.reserve(GetSize());
   PrepareForRead();
 
@@ -74,14 +71,12 @@ void Base::TFileReader::ReadIntoString(std::string &dst) {
 }
 
 std::string Base::TFileReader::ReadIntoString() {
-  assert(this);
   std::string contents;
   ReadIntoString(contents);
   return contents;
 }
 
 void Base::TFileReader::ThrowFileOpenError() const {
-  assert(this);
   const char *sys_msg = std::strerror(errno);
   std::string msg("Cannot open file [");
   msg += Filename;
@@ -91,7 +86,6 @@ void Base::TFileReader::ThrowFileOpenError() const {
 }
 
 void Base::TFileReader::ThrowFileReadError() const {
-  assert(this);
   const char *sys_msg = std::strerror(errno);
   std::string msg("Cannot read file [");
   msg += Filename;
@@ -101,8 +95,6 @@ void Base::TFileReader::ThrowFileReadError() const {
 }
 
 void Base::TFileReader::Open() {
-  assert(this);
-
   try {
     /* Clear any errors remaining from a previous operation. */
     Stream.clear();
@@ -117,7 +109,6 @@ void Base::TFileReader::Open() {
 }
 
 void Base::TFileReader::PrepareForRead() {
-  assert(this);
   Open();
 
   try {

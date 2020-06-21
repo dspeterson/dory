@@ -65,13 +65,10 @@ namespace {
     TMockClock(const TMockClock &) = default;
 
     uint64_t operator()() const {
-      assert(this);
       return *ValueStore;
     }
 
     TMockClock &operator=(const TMockClock &that) {
-      assert(this);
-
       if (this != &that) {
         *ValueStore = *that.ValueStore;
       }
@@ -80,7 +77,6 @@ namespace {
     }
 
     TMockClock &operator=(uint64_t timestamp) {
-      assert(this);
       *ValueStore = timestamp;
       return *this;
     }

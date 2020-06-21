@@ -61,7 +61,6 @@ namespace Dory {
                  previously set, or the time limit changes to an earlier value.
        */
       const Base::TFd &GetSenderNotifyFd() {
-        assert(this);
         return SenderNotify.GetFd();
       }
 
@@ -99,7 +98,6 @@ namespace Dory {
       bool Get(TMsg::TTimestamp now,
                TMsg::TTimestamp &next_batch_complete_time,
                std::list<std::list<TMsg::TPtr>> &ready_msgs) {
-        assert(this);
         SenderNotify.Pop();
         return NonblockingGet(now, next_batch_complete_time, ready_msgs);
       }
@@ -128,7 +126,6 @@ namespace Dory {
         Base::TOpt<TMsg::TTimestamp> OptFinalExpiry;
 
         void Clear() {
-          assert(this);
           OptInitialExpiry.Reset();
           OptFinalExpiry.Reset();
         }

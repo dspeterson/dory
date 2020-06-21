@@ -37,13 +37,10 @@ using namespace Log;
 using namespace Thread;
 
 void TConnectHandlerBase::OnShutdown() {
-  assert(this);
   Unregister();
 }
 
 void TConnectHandlerBase::RunThread(std::unique_ptr<TMockKafkaWorker> &&w) {
-  assert(this);
-
   class t_cleanup final {
     NO_COPY_SEMANTICS(t_cleanup);
 
@@ -103,8 +100,6 @@ void TConnectHandlerBase::RunThread(std::unique_ptr<TMockKafkaWorker> &&w) {
 }
 
 void TConnectHandlerBase::DeleteThreadState(int shutdown_wait_fd) {
-  assert(this);
-
   auto iter = Ss.PerConnectionMap.find(shutdown_wait_fd);
   assert(iter != Ss.PerConnectionMap.end());
 

@@ -99,13 +99,11 @@ TStreamMsgWithSizeReaderBase::TStreamMsgWithSizeReaderBase(
 }
 
 size_t TStreamMsgWithSizeReaderBase::GetNextReadSize() noexcept {
-  assert(this);
   return PreferredReadSize;
 }
 
 TStreamMsgReader::TGetMsgResult
 TStreamMsgWithSizeReaderBase::GetNextMsg() noexcept {
-  assert(this);
   size_t data_size = GetDataSize();
 
   if (data_size < SizeFieldSize) {
@@ -159,13 +157,11 @@ TStreamMsgWithSizeReaderBase::GetNextMsg() noexcept {
 }
 
 void TStreamMsgWithSizeReaderBase::HandleReset() noexcept {
-  assert(this);
   OptMsgBodySize.Reset();
   OptDataInvalidReason.Reset();
 }
 
 void TStreamMsgWithSizeReaderBase::BeforeConsumeReadyMsg() noexcept {
-  assert(this);
   OptMsgBodySize.Reset();
 }
 

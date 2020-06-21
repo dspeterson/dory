@@ -62,37 +62,30 @@ namespace Dory {
         TProdReq &operator=(TProdReq &&) = default;
 
         void AddTopicGroup(const TTopicGroup &topic_group) {
-          assert(this);
           TopicGroupVec.push_back(topic_group);
         }
 
         void AddTopicGroup(TTopicGroup &&topic_group) {
-          assert(this);
           TopicGroupVec.push_back(std::move(topic_group));
         }
 
         int32_t GetCorrelationId() const {
-          assert(this);
           return CorrelationId;
         }
 
         const std::string &GetClientId() const {
-          assert(this);
           return ClientId;
         }
 
         int16_t GetRequiredAcks() const {
-          assert(this);
           return RequiredAcks;
         }
 
         int32_t GetReplicationTimeout() const {
-          assert(this);
           return ReplicationTimeout;
         }
 
         const std::vector<TTopicGroup> &GetTopicGroupVec() const {
-          assert(this);
           return TopicGroupVec;
         }
 

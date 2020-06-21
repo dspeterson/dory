@@ -73,7 +73,6 @@ namespace Dory {
       /* Return true if the algorithm supports compression levels, or false
          otherwise. */
       bool SupportsCompressionLevels() const noexcept {
-        assert(this);
         return GetRealCompressionLevel(Base::TOpt<int>()).IsKnown();
       }
 
@@ -84,7 +83,6 @@ namespace Dory {
       size_t ComputeCompressedResultBufSpace(const void *uncompressed_data,
           size_t uncompressed_size,
           const Base::TOpt<int> &compression_level) const {
-        assert(this);
         return DoComputeCompressedResultBufSpace(uncompressed_data,
             uncompressed_size, CompressionLevelParam(compression_level));
       }
@@ -99,7 +97,6 @@ namespace Dory {
       virtual size_t Compress(const void *input_buf, size_t input_buf_size,
           void *output_buf, size_t output_buf_size,
           const Base::TOpt<int> &compression_level) const {
-        assert(this);
         return DoCompress(input_buf, input_buf_size, output_buf,
             output_buf_size, CompressionLevelParam(compression_level));
       }

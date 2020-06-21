@@ -77,12 +77,10 @@ class TSimpleWorkFn {
   }
 
   void SetThrowAction(TThrowAction action) {
-    assert(this);
     ThrowAction = action;
   }
 
   void operator()() {
-    assert(this);
     ++Counter;
 
     switch (ThrowAction) {
@@ -132,7 +130,6 @@ class TStressTest1WorkFn {
   }
 
   void operator()() {
-    assert(this);
     size_t num_working = WorkingCount.load();
     ++Counter;
     uint64_t now = GetMonotonicRawMilliseconds();
@@ -221,39 +218,32 @@ class TStressTest2WorkFn {
   }
 
   TStressTest2WorkFn &operator=(nullptr_t) {
-    assert(this);
     Clear();
     return *this;
   }
 
   void SetPool(TManagedThreadFnObjPool &pool) {
-    assert(this);
     Pool = &pool;
   }
 
   void SetCounter(std::atomic<size_t> &counter) {
-    assert(this);
     Counter = &counter;
   }
 
   void SetWorkingCount(std::atomic<size_t> &working_count) {
-    assert(this);
     WorkingCount = &working_count;
   }
 
   void SetRemainingCount(size_t count) {
-    assert(this);
     RemainingCount = count;
   }
 
   bool IsClear() const {
-    assert(this);
     return (Pool == nullptr) && (Counter == nullptr) &&
         (WorkingCount == nullptr) && (RemainingCount == 1);
   }
 
   void operator()() {
-    assert(this);
     ++*Counter;
 
     if (--RemainingCount == 0) {
@@ -304,7 +294,6 @@ class TStressTest2WorkFn {
   TStressTest2WorkFn() = default;
 
   void Clear() {
-    assert(this);
     *this = TStressTest2WorkFn();
   }
 

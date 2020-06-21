@@ -26,7 +26,6 @@ using namespace Dory::MsgDispatch;
 
 void TAnyPartitionChooser::Choose(size_t broker_index, const TMetadata &md,
     const std::string &topic) {
-  assert(this);
   size_t num_choices = 0;
   const int32_t *choice_vec =
       md.FindPartitionChoices(topic, broker_index, num_choices);

@@ -29,15 +29,12 @@ using namespace Dory;
 using namespace Log;
 
 void TMsgStateTracker::MsgEnterNew() noexcept {
-  assert(this);
-
   std::lock_guard<std::mutex> lock(Mutex);
   ++NewCount;
   assert(NewCount > 0);
 }
 
 void TMsgStateTracker::MsgEnterBatching(TMsg &msg) {
-  assert(this);
   TDeltaComputer comp;
   comp.CountBatchingEntered(msg.GetState());
   msg.SetState(TMsg::TState::Batching);
@@ -45,7 +42,6 @@ void TMsgStateTracker::MsgEnterBatching(TMsg &msg) {
 }
 
 void TMsgStateTracker::MsgEnterSendWait(TMsg &msg) {
-  assert(this);
   TDeltaComputer comp;
   comp.CountSendWaitEntered(msg.GetState());
   msg.SetState(TMsg::TState::SendWait);
@@ -54,8 +50,6 @@ void TMsgStateTracker::MsgEnterSendWait(TMsg &msg) {
 
 void TMsgStateTracker::MsgEnterSendWait(
     const std::list<TMsg::TPtr> &msg_list) {
-  assert(this);
-
   if (msg_list.empty()) {
     return;
   }
@@ -76,15 +70,12 @@ void TMsgStateTracker::MsgEnterSendWait(
 
 void TMsgStateTracker::MsgEnterSendWait(
     const std::list<std::list<TMsg::TPtr>> &msg_list_list) {
-  assert(this);
-
   for (const auto &msg_list : msg_list_list) {
     MsgEnterSendWait(msg_list);
   }
 }
 
 void TMsgStateTracker::MsgEnterAckWait(TMsg &msg) {
-  assert(this);
   TDeltaComputer comp;
   comp.CountAckWaitEntered(msg.GetState());
   msg.SetState(TMsg::TState::AckWait);
@@ -92,8 +83,6 @@ void TMsgStateTracker::MsgEnterAckWait(TMsg &msg) {
 }
 
 void TMsgStateTracker::MsgEnterAckWait(const std::list<TMsg::TPtr> &msg_list) {
-  assert(this);
-
   if (msg_list.empty()) {
     return;
   }
@@ -114,15 +103,12 @@ void TMsgStateTracker::MsgEnterAckWait(const std::list<TMsg::TPtr> &msg_list) {
 
 void TMsgStateTracker::MsgEnterAckWait(
     const std::list<std::list<TMsg::TPtr>> &msg_list_list) {
-  assert(this);
-
   for (const auto &msg_list : msg_list_list) {
     MsgEnterAckWait(msg_list);
   }
 }
 
 void TMsgStateTracker::MsgEnterProcessed(TMsg &msg) {
-  assert(this);
   TDeltaComputer comp;
   comp.CountProcessedEntered(msg.GetState());
   msg.SetState(TMsg::TState::Processed);
@@ -131,8 +117,6 @@ void TMsgStateTracker::MsgEnterProcessed(TMsg &msg) {
 
 void TMsgStateTracker::MsgEnterProcessed(
     const std::list<TMsg::TPtr> &msg_list) {
-  assert(this);
-
   if (msg_list.empty()) {
     return;
   }
@@ -153,8 +137,6 @@ void TMsgStateTracker::MsgEnterProcessed(
 
 void TMsgStateTracker::MsgEnterProcessed(
     const std::list<std::list<TMsg::TPtr>> &msg_list_list) {
-  assert(this);
-
   for (const auto &msg_list : msg_list_list) {
     MsgEnterProcessed(msg_list);
   }
@@ -162,7 +144,6 @@ void TMsgStateTracker::MsgEnterProcessed(
 
 void TMsgStateTracker::GetStats(std::vector<TTopicStatsItem> &result,
     long &new_count) const {
-  assert(this);
   result.clear();
 
   std::lock_guard<std::mutex> lock(Mutex);
@@ -179,7 +160,6 @@ void TMsgStateTracker::GetStats(std::vector<TTopicStatsItem> &result,
 }
 
 void TMsgStateTracker::PruneTopics(const TTopicExistsFn &topic_exists_fn) {
-  assert(this);
   std::lock_guard<std::mutex> lock(Mutex);
 
   for (auto iter = TopicStats.begin(); iter != TopicStats.end(); ) {
@@ -198,8 +178,6 @@ void TMsgStateTracker::PruneTopics(const TTopicExistsFn &topic_exists_fn) {
 
 void TMsgStateTracker::TDeltaComputer::CountBatchingEntered(
     TMsg::TState prev_state) noexcept {
-  assert(this);
-
   switch (prev_state) {
     case TMsg::TState::New: {
       --NewDelta;
@@ -236,8 +214,6 @@ void TMsgStateTracker::TDeltaComputer::CountBatchingEntered(
 
 void TMsgStateTracker::TDeltaComputer::CountSendWaitEntered(
     TMsg::TState prev_state) noexcept {
-  assert(this);
-
   switch (prev_state) {
     case TMsg::TState::New: {
       --NewDelta;
@@ -269,8 +245,6 @@ void TMsgStateTracker::TDeltaComputer::CountSendWaitEntered(
 
 void TMsgStateTracker::TDeltaComputer::CountAckWaitEntered(
     TMsg::TState prev_state) noexcept {
-  assert(this);
-
   switch (prev_state) {
     case TMsg::TState::New: {
       LOG_R(TPri::ERR, std::chrono::seconds(30))
@@ -307,8 +281,6 @@ void TMsgStateTracker::TDeltaComputer::CountAckWaitEntered(
 
 void TMsgStateTracker::TDeltaComputer::CountProcessedEntered(
     TMsg::TState prev_state) noexcept {
-  assert(this);
-
   switch (prev_state) {
     case TMsg::TState::New: {
       --NewDelta;
@@ -340,7 +312,6 @@ void TMsgStateTracker::TDeltaComputer::CountProcessedEntered(
 
 void TMsgStateTracker::UpdateStats(const std::string &topic,
     const TDeltaComputer &comp) {
-  assert(this);
   long new_delta = comp.GetNewDelta();
   long batching_delta = comp.GetBatchingDelta();
   long send_wait_delta = comp.GetSendWaitDelta();

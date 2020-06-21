@@ -52,7 +52,6 @@ namespace Capped {
       /* Link this block to the head of the given list.  The previous linkage
          of this block is ignored and overwritten. */
       void Link(TBlock *&first_block) noexcept {
-        assert(this);
         NextBlock = first_block;
         first_block = this;
       }
@@ -110,19 +109,16 @@ namespace Capped {
 
     /* The size of the data field in each block. */
     size_t GetDataSize() const noexcept {
-      assert(this);
       return BlockSize - GetBlockOverhead();;
     }
 
     /* The number of blocks in the whole pool, free and allocated. */
     size_t GetBlockCount() const noexcept {
-      assert(this);
       return BlockCount;
     }
 
     /* The size of each block, in bytes. */
     size_t GetBlockSize() const noexcept {
-      assert(this);
       return BlockSize;
     }
 

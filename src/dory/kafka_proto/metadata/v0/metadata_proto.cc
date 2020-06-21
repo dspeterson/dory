@@ -46,14 +46,12 @@ DEFINE_COUNTER(TopicAutocreateUnexpectedTopicInResponse);
 
 void TMetadataProto::WriteAllTopicsMetadataRequest(
     std::vector<uint8_t> &result, int32_t correlation_id) const {
-  assert(this);
   TMetadataRequestWriter().WriteAllTopicsRequest(result, correlation_id);
 }
 
 void TMetadataProto::WriteSingleTopicMetadataRequest(
     std::vector<uint8_t> &result, const char *topic,
     int32_t correlation_id) const {
-  assert(this);
   TMetadataRequestWriter().WriteSingleTopicRequest(result, topic,
       topic + std::strlen(topic), correlation_id);
 }
@@ -67,7 +65,6 @@ static inline bool CanSendToPartition(int16_t error_code) {
 
 std::unique_ptr<TMetadata> TMetadataProto::BuildMetadataFromResponse(
     const void *response_buf, size_t response_buf_size) const {
-  assert(this);
   TMetadata::TBuilder builder;
   TMetadataResponseReader reader(response_buf, response_buf_size);
   std::string name;
@@ -109,7 +106,6 @@ std::unique_ptr<TMetadata> TMetadataProto::BuildMetadataFromResponse(
 
 bool TMetadataProto::TopicAutocreateWasSuccessful(const char *topic,
     const void *response_buf, size_t response_buf_size) const {
-  assert(this);
   TMetadataResponseReader reader(response_buf, response_buf_size);
 
   if (!reader.NextTopic()) {

@@ -48,7 +48,6 @@ TStreamClientHandler::TStreamClientHandler(bool is_tcp,
 
 void TStreamClientHandler::HandleConnection(Base::TFd &&sock,
     const struct sockaddr *, socklen_t) {
-  assert(this);
   TWorkerPool::TReadyWorker worker = WorkerPool.GetReadyWorker();
   worker.GetWorkFn().SetState(IsTcp, Conf, Pool, MsgStateTracker,
       AnomalyTracker, OutputQueue, WorkerPool.GetShutdownRequestFd(),
@@ -57,7 +56,6 @@ void TStreamClientHandler::HandleConnection(Base::TFd &&sock,
 }
 
 void TStreamClientHandler::HandleNonfatalAcceptError(int errno_value) {
-  assert(this);
   /* TODO: Consider implementing rate limiting on a per-errno-value basis. */
   LOG_ERRNO_R(TPri::ERR, errno_value, std::chrono::seconds(30))
       << "Error accepting " << (IsTcp ? "TCP" : "UNIX stream")

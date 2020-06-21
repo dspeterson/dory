@@ -72,7 +72,6 @@ size_t TAnomalyTracker::GetNoDiscardQueryCount() {
 }
 
 void TAnomalyTracker::TrackDiscard(TMsg &msg, TDiscardReason reason) {
-  assert(this);
   uint64_t now = ClockFn();
   DiscardFileLogger.LogDiscard(msg, reason);
   const std::string &msg_topic = msg.GetTopic();
@@ -97,7 +96,6 @@ void TAnomalyTracker::TrackDiscard(TMsg &msg, TDiscardReason reason) {
 }
 
 void TAnomalyTracker::TrackDuplicate(const TMsg &msg) {
-  assert(this);
   uint64_t now = ClockFn();
   DiscardFileLogger.LogDuplicate(msg);
   std::string topic(msg.GetTopic());
@@ -111,7 +109,6 @@ void TAnomalyTracker::TrackDuplicate(const TMsg &msg) {
 void TAnomalyTracker::TrackNoMemDiscard(TMsg::TTimestamp timestamp,
     const char *topic_begin, const char *topic_end, const void *key_begin,
     const void *key_end, const void *value_begin, const void *value_end) {
-  assert(this);
   assert(topic_begin);
   assert(topic_end >= topic_begin);
   assert(key_begin || (key_end == key_begin));
@@ -130,7 +127,6 @@ void TAnomalyTracker::TrackNoMemDiscard(TMsg::TTimestamp timestamp,
 
 void TAnomalyTracker::TrackMalformedMsgDiscard(const void *prefix_begin,
     const void *prefix_end) {
-  assert(this);
   uint64_t now = ClockFn();
   DiscardFileLogger.LogMalformedMsgDiscard(prefix_begin, prefix_end);
   prefix_end = EnforceMaxPrefixLen(prefix_begin, prefix_end);
@@ -146,7 +142,6 @@ void TAnomalyTracker::TrackMalformedMsgDiscard(const void *prefix_begin,
 
 void TAnomalyTracker::TrackStreamClientUncleanDisconnect(bool is_tcp,
     const void *prefix_begin, const void *prefix_end) {
-  assert(this);
   uint64_t now = ClockFn();
   DiscardFileLogger.LogUncleanDisconnectMsgDiscard(is_tcp, prefix_begin,
       prefix_end);
@@ -171,7 +166,6 @@ void TAnomalyTracker::TrackStreamClientUncleanDisconnect(bool is_tcp,
 
 void TAnomalyTracker::TrackUnsupportedApiKeyDiscard(
     const void *prefix_begin, const void *prefix_end, int api_key) {
-  assert(this);
   uint64_t now = ClockFn();
   DiscardFileLogger.LogUnsupportedApiKeyDiscard(prefix_begin, prefix_end,
       api_key);
@@ -183,7 +177,6 @@ void TAnomalyTracker::TrackUnsupportedApiKeyDiscard(
 
 void TAnomalyTracker::TrackUnsupportedMsgVersionDiscard(
     const void *prefix_begin, const void *prefix_end, int version) {
-  assert(this);
   uint64_t now = ClockFn();
   DiscardFileLogger.LogUnsupportedMsgVersionDiscard(prefix_begin, prefix_end,
       version);
@@ -202,7 +195,6 @@ void TAnomalyTracker::TrackUnsupportedMsgVersionDiscard(
 void TAnomalyTracker::TrackBadTopicDiscard(TMsg::TTimestamp timestamp,
     const char *topic_begin, const char *topic_end, const void *key_begin,
     const void *key_end, const void *value_begin, const void *value_end) {
-  assert(this);
   assert(topic_begin);
   assert(topic_end >= topic_begin);
   assert(key_begin || (key_end == key_begin));
@@ -221,7 +213,6 @@ void TAnomalyTracker::TrackBadTopicDiscard(TMsg::TTimestamp timestamp,
 }
 
 void TAnomalyTracker::TrackBadTopicDiscard(TMsg &msg) {
-  assert(this);
   uint64_t now = ClockFn();
   DiscardFileLogger.LogBadTopicDiscard(msg);
   std::string topic(msg.GetTopic());
@@ -233,8 +224,6 @@ void TAnomalyTracker::TrackBadTopicDiscard(TMsg &msg) {
 }
 
 void TAnomalyTracker::TrackLongMsgDiscard(TMsg &msg) {
-  assert(this);
-
   std::string topic(msg.GetTopic());
   size_t value_size = msg.GetValueSize();
   std::vector<uint8_t> tmp_buf(topic.size() + 1 + value_size);
@@ -263,7 +252,6 @@ void TAnomalyTracker::TrackLongMsgDiscard(TMsg &msg) {
 
 std::shared_ptr<const TAnomalyTracker::TInfo>
 TAnomalyTracker::GetInfo(TInfo &filling_report_copy) const {
-  assert(this);
   uint64_t now = ClockFn();
   LastGetInfoTime.store(now);
 
@@ -274,7 +262,6 @@ TAnomalyTracker::GetInfo(TInfo &filling_report_copy) const {
 }
 
 void TAnomalyTracker::CheckGetInfoRate() const {
-  assert(this);
   uint64_t now = ClockFn();
   uint64_t last_get_info_time = LastGetInfoTime.load();
 
@@ -291,7 +278,6 @@ void TAnomalyTracker::CheckGetInfoRate() const {
 
 const uint8_t *TAnomalyTracker::EnforceMaxPrefixLen(const void *msg_begin,
     const void *msg_end) {
-  assert(this);
   assert(msg_end >= msg_begin);
   const auto *begin = reinterpret_cast<const uint8_t *>(msg_begin);
   const auto *end = reinterpret_cast<const uint8_t *>(msg_end);
@@ -300,7 +286,6 @@ const uint8_t *TAnomalyTracker::EnforceMaxPrefixLen(const void *msg_begin,
 }
 
 void TAnomalyTracker::AdvanceReportPeriod(uint64_t now) const {
-  assert(this);
   assert(FillingReport);
   assert((FillingReport->GetReportId() == 0) || LastFullReport);
 
@@ -355,7 +340,6 @@ void TAnomalyTracker::AdvanceReportPeriod(uint64_t now) const {
 
 void TAnomalyTracker::UpdateTopicMap(TMap &topic_map, std::string &&topic,
     TMsg::TTimestamp timestamp) {
-  assert(this);
   auto result = topic_map.insert(
       std::make_pair(std::move(topic), TTopicInfo(timestamp)));
 

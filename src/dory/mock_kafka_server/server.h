@@ -58,7 +58,6 @@ namespace Dory {
       );
 
       const TCmdLineArgs &GetCmdLineArgs() const {
-        assert(this);
         return Ss.CmdLineArgs;
       }
 
@@ -81,17 +80,14 @@ namespace Dory {
       int Run();
 
       in_port_t GetCmdPort() const {
-        assert(this);
         return CmdPort;
       }
 
       in_port_t VirtualPortToPhys(in_port_t v_port) const {
-        assert(this);
         return PortMap->VirtualPortToPhys(v_port);
       }
 
       in_port_t PhysicalPortToVirt(in_port_t p_port) const {
-        assert(this);
         return PortMap->PhysicalPortToVirt(p_port);
       }
 
@@ -99,7 +95,6 @@ namespace Dory {
          server. */
       void GetHandledRequests(
           std::list<TReceivedRequestTracker::TRequestInfo> &result) {
-        assert(this);
         Ss.ReceivedRequests.GetRequestInfo(result);
       }
 
@@ -107,7 +102,6 @@ namespace Dory {
          server.  Nonblocking version of GetHandledRequests(). */
       void NonblockingGetHandledRequests(
           std::list<TReceivedRequestTracker::TRequestInfo> &result) {
-        assert(this);
         Ss.ReceivedRequests.NonblockingGetRequestInfo(result);
       }
 

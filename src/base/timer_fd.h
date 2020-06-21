@@ -38,7 +38,6 @@ namespace Base {
     explicit TTimerFd(size_t milliseconds) noexcept;
 
     const TFd &GetFd() const {
-      assert(this);
       return Fd;
     }
 

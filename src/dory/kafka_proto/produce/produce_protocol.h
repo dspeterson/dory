@@ -60,7 +60,6 @@ namespace Dory {
         /* Return the number of bytes in a message set containing a single
            empty message (i.e. empty key and value). */
         size_t GetSingleMsgOverhead() const {
-          assert(this);
           return Constants.SingleMsgOverhead;
         }
 

@@ -100,8 +100,6 @@ TFileLogWriter::TFileLogWriter(const std::string &path,
 
 void TFileLogWriter::WriteEntry(TLogEntryAccessApi &entry,
     bool /* no_stdout_stderr */) const noexcept {
-  assert(this);
-
   if (IsEnabled()) {
     switch (WriteToFd(*FdRef, entry)) {
       case TFdWriteResult::Ok: {
@@ -122,8 +120,6 @@ void TFileLogWriter::WriteEntry(TLogEntryAccessApi &entry,
 
 void TFileLogWriter::WriteStackTrace(TPri /* pri */, void *const *buffer,
     size_t size, bool /* no_stdout_stderr */) const noexcept {
-  assert(this);
-
   if (IsEnabled()) {
     backtrace_symbols_fd(buffer, static_cast<int>(size), *FdRef);
   }

@@ -41,8 +41,6 @@ TSignalHandlerThread &TSignalHandlerThread::The() {
 void TSignalHandlerThread::Init(
     Server::TSignalHandlerThread::THandler handler_callback,
     std::initializer_list<int> signals) {
-  assert(this);
-
   if (Initialized) {
     Die("TSignalHandlerThread already initialized");
   }
@@ -65,8 +63,6 @@ void TSignalHandlerThread::Init(
 }
 
 void TSignalHandlerThread::Start() {
-  assert(this);
-
   if (!Initialized) {
     Die("TSignalHandlerThread must be initialized before starting");
   }
@@ -82,7 +78,6 @@ void TSignalHandlerThread::Start() {
 }
 
 void TSignalHandlerThread::Run() {
-  assert(this);
   assert(Initialized);
   assert(HandlerCallback);
 
@@ -146,7 +141,6 @@ void TSignalHandlerThread::Handler(int signum, siginfo_t *info,
 }
 
 void TSignalHandlerThread::InstallHandler() const noexcept {
-  assert(this);
   TSigSet block_all(TSigSet::TListInit::Exclude, {});
 
   /* Install our handler for each client-specified signal. */

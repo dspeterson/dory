@@ -29,7 +29,6 @@ using namespace Dory::Util;
 DEFINE_COUNTER(PauseStarted);
 
 void TPauseButton::Push() {
-  assert(this);
   std::lock_guard<std::mutex> lock(Mutex);
 
   if (!PauseActivated) {
@@ -40,7 +39,6 @@ void TPauseButton::Push() {
 }
 
 void TPauseButton::Reset() {
-  assert(this);
   Button.Reset();
   PauseActivated = false;
 }

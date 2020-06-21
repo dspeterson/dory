@@ -43,12 +43,10 @@ namespace {
     }
 
     char *GetBuffer() noexcept {
-      assert(this);
       return TArrayOstreamBase<BufSize, PrefixSpace, SuffixSpace>::GetBuf();
     }
 
     char *GetEnd() noexcept {
-      assert(this);
       return TArrayOstreamBase<BufSize, PrefixSpace, SuffixSpace>::GetPos();
     }
   };  // TTestStream

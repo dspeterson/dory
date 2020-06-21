@@ -44,12 +44,10 @@ TTransceiver::TTransceiver()
 }
 
 TTransceiver::~TTransceiver() {
-  assert(this);
   free(AvailStart);
 }
 
 TTransceiver::operator bool() const noexcept {
-  assert(this);
   for (auto *desc = DataStart; desc < DataLimit; ++desc) {
     if (desc->iov_len) {
       return true;
@@ -59,8 +57,6 @@ TTransceiver::operator bool() const noexcept {
 }
 
 TTransceiver &TTransceiver::operator+=(size_t size) {
-  assert(this);
-
   /* Advance past all descriptors which have been entirely accounted for. */
   while (DataStart < DataLimit && size >= DataStart->iov_len) {
     size -= DataStart->iov_len;
@@ -81,7 +77,6 @@ TTransceiver &TTransceiver::operator+=(size_t size) {
 }
 
 iovec *TTransceiver::GetIoVecs(size_t size) {
-  assert(this);
   size_t avail_size = AvailLimit - AvailStart;
 
   if (size > avail_size) {
@@ -104,7 +99,6 @@ iovec *TTransceiver::GetIoVecs(size_t size) {
 }
 
 size_t TTransceiver::Recv(int sock_fd, int flags) {
-  assert(this);
   assert(sock_fd >= 0);
   msghdr hdr;
   InitHdr(hdr);
@@ -112,7 +106,6 @@ size_t TTransceiver::Recv(int sock_fd, int flags) {
 }
 
 size_t TTransceiver::Send(int sock_fd, int flags) {
-  assert(this);
   assert(sock_fd >= 0);
   msghdr hdr;
   InitHdr(hdr);
@@ -120,7 +113,6 @@ size_t TTransceiver::Send(int sock_fd, int flags) {
 }
 
 void TTransceiver::InitHdr(msghdr &hdr) const noexcept {
-  assert(this);
   Zero(hdr);
   hdr.msg_iov = DataStart;
   hdr.msg_iovlen = DataLimit - DataStart;

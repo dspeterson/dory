@@ -40,7 +40,6 @@ namespace Base {
     class TErrorBase : public std::runtime_error {
       public:
       virtual const char *what() const noexcept {
-        assert(this);
         return Msg.c_str();
       }
 
@@ -93,7 +92,6 @@ namespace Base {
        function signature. */
     template <typename T>
     T LoadSymNoexcept(const char *symname) noexcept {
-      assert(this);
       return reinterpret_cast<T>(dlsym(Handle, symname));
     }
 
@@ -101,7 +99,6 @@ namespace Base {
      */
     template <typename T>
     T LoadSym(const char *symname) {
-      assert(this);
       T sym = reinterpret_cast<T>(dlsym(Handle, symname));
 
       if (sym == nullptr) {

@@ -49,12 +49,10 @@ namespace Server {
     ~TUnixStreamServer() override = default;
 
     const std::string &GetPath() const noexcept {
-      assert(this);
       return Path;
     }
 
     const struct sockaddr_un &GetClientAddr() const noexcept {
-      assert(this);
       return ClientAddr;
     }
 
@@ -66,7 +64,6 @@ namespace Server {
        determined by the umask.  This is the default behavior if SetMode() has
        not been called. */
     void ClearMode() noexcept {
-      assert(this);
       Mode.Reset();
     }
 

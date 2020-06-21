@@ -87,7 +87,6 @@ namespace Base {
      library and built-in types appear at the end of this file. */
   template <typename TVal>
   inline size_t GetHashHelper(const TVal &val) {
-    assert(&val);
     return val.GetHash();
   }
 
@@ -165,7 +164,6 @@ namespace Base {
     /* Construct as a copy of a piece of compatible type. */
     template <typename TCompatVal>
     TPiece(const TPiece<TCompatVal> &that) {
-      assert(&that);
       Start = that.GetStart();
       Limit = that.GetLimit();
     }
@@ -194,8 +192,6 @@ namespace Base {
     /* Assign as a copy of a piece of compatible type. */
     template <typename TCompatVal>
     TPiece &operator=(const TPiece<TCompatVal> &that) {
-      assert(this);
-      assert(&that);
       Start = that.GetStart();
       Limit = that.GetLimit();
       return *this;
@@ -203,7 +199,6 @@ namespace Base {
 
     /* Assign so as to span a single value. */
     TPiece &operator=(TVal &that) {
-      assert(this);
       Start = &that;
       Limit = Start + 1;
       return *this;
@@ -211,13 +206,11 @@ namespace Base {
 
     /* Return true iff. the piece is non-empty. */
     operator bool() const {
-      assert(this);
       return (Start != Limit);
     }
 
     /* Return the given element of the piece. */
     TVal &operator[](const TPos &pos) const {
-      assert(this);
       size_t size = GetSize();
       ptrdiff_t offset = pos.GetAbsOffset(size);
       assert(offset >= 0 && static_cast<size_t>(offset) < size);
@@ -226,8 +219,6 @@ namespace Base {
 
     /* Return a slice of the piece. */
     TPiece operator[](const TSlice &slice) const {
-      assert(this);
-      assert(&slice);
       size_t start, limit;
       slice.GetAbsPair(GetSize(), start, limit);
       assert(start <= limit);
@@ -238,8 +229,6 @@ namespace Base {
        true iff. they are equal. */
     template <typename TCompatVal>
     bool operator==(const TPiece<TCompatVal> &that) const {
-      assert(this);
-      assert(&that);
       TVal *cursor = Start;
       TCompatVal *that_cursor = that.GetStart();
 
@@ -258,8 +247,6 @@ namespace Base {
        true iff. they are not equal. */
     template <typename TCompatVal>
     bool operator!=(const TPiece<TCompatVal> &that) const {
-      assert(this);
-      assert(&that);
       TVal *cursor = Start;
       TCompatVal *that_cursor = that.GetStart();
 
@@ -278,7 +265,6 @@ namespace Base {
        true iff. this one is less than that one. */
     template <typename TCompatVal>
     bool operator<(const TPiece<TCompatVal> &that) const {
-      assert(this);
       return (Compare(that) < 0);
     }
 
@@ -286,7 +272,6 @@ namespace Base {
        true iff. this one is less than or equal to that one. */
     template <typename TCompatVal>
     bool operator<=(const TPiece<TCompatVal> &that) const {
-      assert(this);
       return (Compare(that) <= 0);
     }
 
@@ -294,7 +279,6 @@ namespace Base {
        true iff. this one is greater than that one. */
     template <typename TCompatVal>
     bool operator>(const TPiece<TCompatVal> &that) const {
-      assert(this);
       return (Compare(that) > 0);
     }
 
@@ -302,14 +286,12 @@ namespace Base {
        true iff. this one is greater than or equal to that one. */
     template <typename TCompatVal>
     bool operator>=(const TPiece<TCompatVal> &that) const {
-      assert(this);
       return (Compare(that) >= 0);
     }
 
     /* Apply a delta to the limit of the piece.  The result must not place the
        limit before the start. */
     TPiece &AdjustLimit(ptrdiff_t delta) {
-      assert(this);
       Limit += delta;
       assert(Start <= Limit);
       return *this;
@@ -318,7 +300,6 @@ namespace Base {
     /* Adjust the limit of the piece such that the piece ends up with the given
        size.  The start remains unchanged. */
     TPiece &AdjustLimitToSize(size_t size) {
-      assert(this);
       Limit = Start + size;
       return *this;
     }
@@ -326,7 +307,6 @@ namespace Base {
     /* Apply a delta to the start of the piece.  The result must not place the
        limit before the start. */
     TPiece &AdjustStart(ptrdiff_t delta) {
-      assert(this);
       Start += delta;
       assert(Start <= Limit);
       return *this;
@@ -335,7 +315,6 @@ namespace Base {
     /* Adjust the start of the piece such that the piece ends up with the given
        size.  The limit remains unchanged. */
     TPiece &AdjustStartToSize(size_t size) {
-      assert(this);
       Start = Limit - size;
       return *this;
     }
@@ -345,7 +324,6 @@ namespace Base {
        can be equal.  One or both can be null. */
     template <typename TCompatVal>
     TPiece &Assign(TCompatVal *start, TCompatVal *limit) {
-      assert(this);
       assert(start <= limit);
       Start = start;
       Limit = limit;
@@ -356,7 +334,6 @@ namespace Base {
        size of zero is ok here, as is a null pointer. */
     template <typename TCompatVal>
     TPiece &Assign(TCompatVal *start, size_t size) {
-      assert(this);
       Start = start;
       Limit = start + size;
       return *this;
@@ -364,8 +341,6 @@ namespace Base {
 
     /* Returns true if the given slice can be made. */
     bool CanSlice(const TSlice &slice) const {
-      assert(this);
-      assert(&slice);
       return slice.CanGetAbsPair(GetSize());
     }
 
@@ -376,8 +351,6 @@ namespace Base {
        operator<. */
     template <typename TCompatVal>
     int Compare(const TPiece<TCompatVal> &that) const {
-      assert(this);
-      assert(&that);
       TVal *cursor = Start;
       TCompatVal *that_cursor = that.GetStart();
 
@@ -398,8 +371,6 @@ namespace Base {
 
     /* Redefines the piece to just the given slice. */
     TPiece &Constrain(const TSlice &slice) {
-      assert(this);
-      assert(&slice);
       size_t start, limit;
       slice.GetAbsPair(GetSize(), start, limit);
       Limit = Start + limit;
@@ -413,7 +384,6 @@ namespace Base {
        is not. */
     template <typename TCompatVal>
     bool Contains(TCompatVal *ptr) {
-      assert(this);
       return (ptr >= Start) && (ptr < Limit);
     }
 
@@ -421,49 +391,41 @@ namespace Base {
        one. */
     template <typename TCompatVal>
     bool Contains(const TPiece<TCompatVal> &that) {
-      assert(this);
-      assert(&that);
       return (Start <= that.Start) && (that.Limit <= Limit);
     }
 
     /* Return the first element in the piece.  The piece must not be empty.
        (Compare with GetRest().) */
     const TVal &GetHead() const {
-      assert(this);
       assert(*this);
       return *Start;
     }
 
     /* Return the limiting pointer of the piece.  This can be null. */
     TVal *GetLimit() const {
-      assert(this);
       return Limit;
     }
 
     /* Return a new piece which spans all but the first element of this piece.
        This piece must not be empty.  (Compare with GetHead().) */
     TPiece GetRest() const {
-      assert(this);
       assert(*this);
       return TPiece(Start + 1, Limit);
     }
 
     /* Return the number of elements in the piece.  This can be zero. */
     size_t GetSize() const {
-      assert(this);
       return Limit - Start;
     }
 
     /* Return the starting pointer of the piece. */
     TVal *GetStart() const {
-      assert(this);
       return Start;
     }
 
     /* Compute a hash of the contents of the piece.  (TVal must be hashable.)
      */
     size_t GetHash() const {
-      assert(this);
       size_t result = 0;
 
       for (TVal *csr = Start; csr < Limit; ++csr) {
@@ -474,14 +436,12 @@ namespace Base {
     }
 
     const TVal &GetTail() const {
-      assert(this);
       assert(*this);
       return *(Limit - 1);
     }
 
     /* Reset to the default-constructed (empty) state. */
     TPiece &Reset() {
-      assert(this);
       Start = 0;
       Limit = 0;
       return *this;
@@ -490,7 +450,6 @@ namespace Base {
     /* Set the limiting pointer of the piece.  The new limit must not be less
        than the existing start. */
     TPiece &SetLimit(TVal *limit) {
-      assert(this);
       assert(Start <= limit);
       Limit = limit;
       return *this;
@@ -499,7 +458,6 @@ namespace Base {
     /* Set the starting pointer of the piece.  The existing limit must not be
        less than the new start. */
     TPiece &SetStart(TVal *start) {
-      assert(this);
       assert(start <= Limit);
       Start = start;
       return *this;
@@ -508,8 +466,6 @@ namespace Base {
     /* Exchange the states of this piece with that one.  This is a guranteed
        no-throw. */
     TPiece &Swap(TPiece &that) {
-      assert(this);
-      assert(&that);
       std::swap(Start, that.Start);
       std::swap(Limit, that.Limit);
       return *this;
@@ -518,9 +474,6 @@ namespace Base {
     /* Return a pointer to the instance of val, if possible. */
     template <typename TCompatVal>
     TVal *Find(const TCompatVal &val) const {
-      assert(this);
-      assert(&val);
-
       for (auto cur = Start; cur < Limit; ++cur) {
         if (*cur == val) {
           return cur;
@@ -535,9 +488,6 @@ namespace Base {
      */
     template <typename TCompatVal>
     TVal *Find(const std::unordered_set<TCompatVal> &val_set) const {
-      assert(this);
-      assert(&val_set);
-
       for (auto cur = Start; cur < Limit; ++cur) {
         if (Base::Contains(val_set, *cur)) {
           return cur;
@@ -550,9 +500,6 @@ namespace Base {
 
     /* Return a slice of the piece (by out-param), if possible. */
     bool TrySlice(const TSlice &slice, TPiece &out) const {
-      assert(this);
-      assert(&slice);
-      assert(&out);
       size_t start, limit;
       bool success = slice.TryGetAbsPair(GetSize(), start, limit);
 
@@ -593,8 +540,6 @@ namespace Base {
   template <typename TDestVal, typename TSrcVal>
   const TPiece<TDestVal> &ShallowCopy(const TPiece<TDestVal> &dest,
       const TPiece<TSrcVal> &src, size_t size) {
-    assert(&dest);
-    assert(&src);
     assert(dest.GetSize() >= size);
     assert(src.GetSize() >= size);
     assert(sizeof(TDestVal) == sizeof(TSrcVal));
@@ -606,8 +551,6 @@ namespace Base {
   template <typename TDestVal, typename TSrcVal>
   const TPiece<TDestVal> &ShallowCopy(const TPiece<TDestVal> &dest,
       const TPiece<TSrcVal> &src) {
-    assert(&dest);
-    assert(&src);
     return ShallowCopy(dest, src, std::min(dest.GetSize(), src.GetSize()));
   }
 
@@ -622,8 +565,6 @@ namespace Base {
   template <typename TDestVal, typename TSrcVal>
   const TPiece<TDestVal> &Copy(const TPiece<TDestVal> &dest,
       const TPiece<TSrcVal> &src, size_t size) {
-    assert(&dest);
-    assert(&src);
     assert(dest.GetSize() >= size);
     assert(src.GetSize() >= size);
     TSrcVal *src_val = src.GetStart();
@@ -640,8 +581,6 @@ namespace Base {
   template <typename TDestVal, typename TSrcVal>
   const TPiece<TDestVal> &Copy(const TPiece<TDestVal> &dest,
       const TPiece<TSrcVal> &src) {
-    assert(&dest);
-    assert(&src);
     return Copy(dest, src, std::min(dest.GetSize(), src.GetSize()));
   }
 
@@ -771,14 +710,12 @@ namespace Base {
      same type. */
   template <typename TVal, typename TAlloc>
   TPiece<const TVal> AsPiece(const std::vector<TVal, TAlloc> &that) {
-    assert(&that);
     return TPiece<const TVal>(&that[0], that.size());
   }
 
   /* Constructs a TPiece<TVal> spanning a standard vector of the same type. */
   template <typename TVal, typename TAlloc>
   TPiece<TVal> AsPiece(std::vector<TVal, TAlloc> &that) {
-    assert(&that);
     return TPiece<TVal>(&that[0], that.size());
   }
 
@@ -787,7 +724,6 @@ namespace Base {
   template <typename TVal, typename TTraits, typename TAlloc>
   TPiece<const TVal> AsPiece(
       const std::basic_string<TVal, TTraits, TAlloc> &that) {
-    assert(&that);
     return TPiece<const TVal>(that.data(), that.size());
   }
 
@@ -795,7 +731,6 @@ namespace Base {
      type. */
   template <typename TVal, typename TTraits, typename TAlloc>
   TPiece<TVal> AsPiece(std::basic_string<TVal, TTraits, TAlloc> &that) {
-    assert(&that);
     return TPiece<TVal>(const_cast<TVal *>(that.data()), that.size());
   }
 

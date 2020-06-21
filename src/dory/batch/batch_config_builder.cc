@@ -29,8 +29,6 @@ using namespace Dory::Conf;
 
 bool TBatchConfigBuilder::AddTopic(const std::string &topic,
     const TBatchConfig *config) {
-  assert(this);
-
   if (PerTopicMap.find(topic) != PerTopicMap.end()) {
     return false;
   }
@@ -57,8 +55,6 @@ bool TBatchConfigBuilder::AddTopic(const std::string &topic,
 }
 
 bool TBatchConfigBuilder::SetDefaultTopic(const TBatchConfig *config) {
-  assert(this);
-
   if (DefaultTopicConfigSpecified) {
     return false;
   }
@@ -70,8 +66,6 @@ bool TBatchConfigBuilder::SetDefaultTopic(const TBatchConfig *config) {
 }
 
 bool TBatchConfigBuilder::SetBrokerConfig(const TBatchConfig *config) {
-  assert(this);
-
   if (BrokerBatchConfigSpecified) {
     return false;
   }
@@ -82,8 +76,6 @@ bool TBatchConfigBuilder::SetBrokerConfig(const TBatchConfig *config) {
 }
 
 bool TBatchConfigBuilder::SetProduceRequestDataLimit(size_t limit) {
-  assert(this);
-
   if (ProduceRequestDataLimitSpecified) {
     return false;
   }
@@ -94,8 +86,6 @@ bool TBatchConfigBuilder::SetProduceRequestDataLimit(size_t limit) {
 }
 
 bool TBatchConfigBuilder::SetMessageMaxBytes(size_t limit) {
-  assert(this);
-
   if (MessageMaxBytesSpecified) {
     return false;
   }
@@ -106,7 +96,6 @@ bool TBatchConfigBuilder::SetMessageMaxBytes(size_t limit) {
 }
 
 TGlobalBatchConfig TBatchConfigBuilder::Build() {
-  assert(this);
   auto per_topic_config = std::make_shared<TPerTopicBatcher::TConfig>(
       DefaultTopicConfig, std::move(PerTopicMap));
   std::unordered_set<std::string> topic_filter;
@@ -144,7 +133,6 @@ static TBatchConfig ToBatchConfig(const TBatchConf::TBatchValues &values) {
 }
 
 TGlobalBatchConfig TBatchConfigBuilder::BuildFromConf(const TBatchConf &conf) {
-  assert(this);
   SetProduceRequestDataLimit(conf.ProduceRequestDataLimit);
   SetMessageMaxBytes(conf.MessageMaxBytes);
   TBatchConfig config = ToBatchConfig(conf.CombinedTopicsConfig);
@@ -196,7 +184,6 @@ TGlobalBatchConfig TBatchConfigBuilder::BuildFromConf(const TBatchConf &conf) {
 }
 
 void TBatchConfigBuilder::Clear() {
-  assert(this);
   PerTopicMap.clear();
   DefaultTopicConfigSpecified = false;
   DefaultTopicConfig = TBatchConfig();

@@ -37,13 +37,11 @@ namespace Base {
     TExclusiveLock(const TAsset &asset)
         noexcept(noexcept(asset.AcquireExclusive()))
         : Asset(asset) {
-      assert(&asset);
       asset.AcquireExclusive();
     }
 
     /* Releases the lock. */
     ~TExclusiveLock() {
-      assert(this);
       Asset.ReleaseExclusive();
     }
 

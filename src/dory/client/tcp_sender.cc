@@ -35,7 +35,6 @@ using namespace Dory;
 using namespace Dory::Client;
 
 void TTcpSender::DoPrepareToSend() {
-  assert(this);
   Sock = IfLt0(socket(AF_INET, SOCK_STREAM, 0));
   struct sockaddr_in servaddr;
   std::memset(&servaddr, 0, sizeof(servaddr));
@@ -47,11 +46,9 @@ void TTcpSender::DoPrepareToSend() {
 }
 
 void TTcpSender::DoSend(const uint8_t *msg, size_t msg_size) {
-  assert(this);
   IfLt0(send(Sock, msg, msg_size, MSG_NOSIGNAL));
 }
 
 void TTcpSender::DoReset() {
-  assert(this);
   Sock.Reset();
 }

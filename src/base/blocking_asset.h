@@ -45,27 +45,22 @@ namespace Base {
        The target must not currently be locked by any thread.
        Destroying a locked target has undefined results. */
     ~TBlockingAsset() {
-      assert(this);
       Wr::pthread_rwlock_destroy(&RwLock);
     }
 
     void AcquireExclusive() const noexcept {
-      assert(this);
       Wr::pthread_rwlock_wrlock(&RwLock);
     }
 
     void AcquireShared() const noexcept {
-      assert(this);
       Wr::pthread_rwlock_rdlock(&RwLock);
     }
 
     void ReleaseExclusive() const noexcept {
-      assert(this);
       Wr::pthread_rwlock_unlock(&RwLock);
     }
 
     void ReleaseShared() const noexcept {
-      assert(this);
       Wr::pthread_rwlock_unlock(&RwLock);
     }
 

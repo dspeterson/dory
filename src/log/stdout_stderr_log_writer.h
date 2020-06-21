@@ -42,7 +42,6 @@ namespace Log {
     }
 
     bool IsEnabled() const noexcept {
-      assert(this);
       return Enabled;
     }
 

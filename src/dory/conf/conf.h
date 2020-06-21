@@ -133,7 +133,6 @@ namespace Dory {
       }
 
       void Reset() {
-        assert(this);
         *this = TBuilder(AllowInputBindEphemeral, EnableLz4);
       }
 

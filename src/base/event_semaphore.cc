@@ -48,7 +48,6 @@ TEventSemaphore::TEventSemaphore(int initial_count, bool nonblocking) noexcept
 }
 
 void TEventSemaphore::Reset(int initial_count) noexcept {
-  assert(this);
   int flags = Wr::fcntl(Fd, F_GETFL, 0);
   TFd new_fd = Wr::eventfd(initial_count, EFD_SEMAPHORE);
 
@@ -73,7 +72,6 @@ void TEventSemaphore::Reset(int initial_count) noexcept {
 }
 
 bool TEventSemaphore::Pop() noexcept {
-  assert(this);
   uint64_t dummy;
   ssize_t ret = Wr::read(Wr::TDisp::AddFatal, {EIO, EISDIR}, Fd, &dummy,
       sizeof(dummy));
@@ -109,7 +107,6 @@ bool TEventSemaphore::Pop() noexcept {
 }
 
 bool TEventSemaphore::PopIntr() {
-  assert(this);
   uint64_t dummy;
   ssize_t ret = Wr::read(Wr::TDisp::AddFatal, {EIO, EISDIR}, Fd, &dummy,
       sizeof(dummy));
@@ -129,6 +126,5 @@ bool TEventSemaphore::PopIntr() {
 }
 
 void TEventSemaphore::Push(int count) noexcept {
-  assert(this);
   Wr::eventfd_write(Fd, static_cast<eventfd_t>(count));
 }

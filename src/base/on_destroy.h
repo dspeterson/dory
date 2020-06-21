@@ -77,7 +77,6 @@ namespace Base {
     }
 
     void Cancel() noexcept {
-      assert(this);
       Active = false;
     }
 

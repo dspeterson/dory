@@ -27,7 +27,6 @@ using namespace Dory::Compress;
 
 int TCompressionCodecApi::CompressionLevelParam(
     const TOpt<int> &requested_level) const noexcept {
-  assert(this);
   auto real_level = GetRealCompressionLevel(requested_level);
   return (real_level.IsKnown()) ? *real_level : 0;
 }

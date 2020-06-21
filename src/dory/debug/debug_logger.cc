@@ -65,8 +65,6 @@ static const char *ToBlurb(TDebugSetup::TLogId log_id) {
 }
 
 void TDebugLogger::LogMsg(const TMsg &msg) {
-  assert(this);
-
   if (DebugSetup.MySettingsAreOld(CachedSettingsVersion)) {
     Settings = DebugSetup.GetSettings();
     assert(Settings);
@@ -152,8 +150,6 @@ void TDebugLogger::LogMsg(const TMsg &msg) {
 }
 
 void TDebugLogger::LogMsgList(const std::list<TMsg::TPtr> &msg_list) {
-  assert(this);
-
   for (const TMsg::TPtr &msg_ptr : msg_list) {
     LogMsg(*msg_ptr);
   }
@@ -166,13 +162,11 @@ unsigned long TDebugLogger::Now() noexcept {
 }
 
 void TDebugLogger::DisableLogging() noexcept {
-  assert(this);
   LogFd = -1;
   LoggingEnabled = false;
 }
 
 void TDebugLogger::EnableLogging() noexcept {
-  assert(this);
   LoggingEnabledAt = Now();
   MsgCount = 0;
   LogFd = Settings->GetLogFileDescriptor(LogId);

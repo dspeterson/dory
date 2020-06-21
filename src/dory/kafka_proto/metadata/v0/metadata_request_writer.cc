@@ -33,7 +33,6 @@ using namespace Dory::KafkaProto::Metadata::V0;
 void TMetadataRequestWriter::WriteSingleTopicRequest(struct iovec &header_iov,
     struct iovec &body_iov, void *header_buf, const char *topic_begin,
     const char *topic_end, int32_t correlation_id) {
-  assert(this);
   assert(header_buf);
   assert(topic_begin);
   assert(topic_end > topic_begin);
@@ -48,7 +47,6 @@ void TMetadataRequestWriter::WriteSingleTopicRequest(struct iovec &header_iov,
 void TMetadataRequestWriter::WriteSingleTopicRequest(
     std::vector<uint8_t> &result, const char *topic_begin,
     const char *topic_end, int32_t correlation_id) {
-  assert(this);
   assert(topic_begin);
   assert(topic_end > topic_begin);
   size_t topic_size = topic_end - topic_begin;
@@ -59,7 +57,6 @@ void TMetadataRequestWriter::WriteSingleTopicRequest(
 
 void TMetadataRequestWriter::WriteAllTopicsRequest(struct iovec &iov,
     void *header_buf, int32_t correlation_id) {
-  assert(this);
   assert(header_buf);
   iov.iov_base = header_buf;
   iov.iov_len = NUM_ALL_TOPICS_HEADER_BYTES;
@@ -68,14 +65,12 @@ void TMetadataRequestWriter::WriteAllTopicsRequest(struct iovec &iov,
 
 void TMetadataRequestWriter::WriteAllTopicsRequest(
     std::vector<uint8_t> &result, int32_t correlation_id) {
-  assert(this);
   result.resize(NUM_ALL_TOPICS_HEADER_BYTES);
   WriteHeader(&result[0], 0, correlation_id);
 }
 
 void TMetadataRequestWriter::WriteHeader(void *header_buf, size_t topic_size,
     int32_t correlation_id) {
-  assert(this);
   assert(header_buf);
   assert(topic_size <=
          static_cast<size_t>(std::numeric_limits<int16_t>::max()));

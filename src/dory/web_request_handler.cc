@@ -75,7 +75,6 @@ static time_t GetServerStartTime() {
 }
 
 void TWebRequestHandler::HandleGetServerInfoRequestPlain(std::ostream &os) {
-  assert(this);
   uint64_t now = GetEpochSeconds();
   char now_time_buf[TIME_BUF_SIZE];
   FillTimeBuf(now, now_time_buf);
@@ -89,7 +88,6 @@ void TWebRequestHandler::HandleGetServerInfoRequestPlain(std::ostream &os) {
 }
 
 void TWebRequestHandler::HandleGetServerInfoRequestJson(std::ostream &os) {
-  assert(this);
   uint64_t now = GetEpochSeconds();
   time_t start_time = GetServerStartTime();
   std::string indent_str;
@@ -108,7 +106,6 @@ void TWebRequestHandler::HandleGetServerInfoRequestJson(std::ostream &os) {
 }
 
 void TWebRequestHandler::HandleGetCountersRequestPlain(std::ostream &os) {
-  assert(this);
   TCounter::Sample();
   time_t sample_time = TCounter::GetSampleTime();
   time_t start_time = GetServerStartTime();
@@ -130,7 +127,6 @@ void TWebRequestHandler::HandleGetCountersRequestPlain(std::ostream &os) {
 }
 
 void TWebRequestHandler::HandleGetCountersRequestJson(std::ostream &os) {
-  assert(this);
   TCounter::Sample();
   time_t sample_time = TCounter::GetSampleTime();
   time_t start_time = GetServerStartTime();
@@ -177,7 +173,6 @@ void TWebRequestHandler::HandleGetCountersRequestJson(std::ostream &os) {
 
 void TWebRequestHandler::HandleGetDiscardsRequestPlain(std::ostream &os,
     const TAnomalyTracker &tracker) {
-  assert(this);
   uint64_t now = GetEpochSeconds();
   char now_time_buf[TIME_BUF_SIZE];
   FillTimeBuf(now, now_time_buf);
@@ -204,7 +199,6 @@ void TWebRequestHandler::HandleGetDiscardsRequestPlain(std::ostream &os,
 
 void TWebRequestHandler::HandleGetDiscardsRequestJson(std::ostream &os,
     const TAnomalyTracker &tracker) {
-  assert(this);
   uint64_t now = GetEpochSeconds();
   time_t start_time = GetServerStartTime();
   TAnomalyTracker::TInfo current_unfinished;
@@ -251,7 +245,6 @@ void TWebRequestHandler::HandleGetDiscardsRequestJson(std::ostream &os,
 
 void TWebRequestHandler::HandleMetadataFetchTimeRequestPlain(std::ostream &os,
     const TMetadataTimestamp &metadata_timestamp) {
-  assert(this);
   uint64_t last_update_time = 0, last_modified_time = 0;
   metadata_timestamp.GetTimes(last_update_time, last_modified_time);
   uint64_t now = GetEpochMilliseconds();
@@ -276,7 +269,6 @@ void TWebRequestHandler::HandleMetadataFetchTimeRequestPlain(std::ostream &os,
 
 void TWebRequestHandler::HandleMetadataFetchTimeRequestJson(std::ostream &os,
     const TMetadataTimestamp &metadata_timestamp) {
-  assert(this);
   uint64_t last_update_time = 0, last_modified_time = 0;
   metadata_timestamp.GetTimes(last_update_time, last_modified_time);
   uint64_t now = GetEpochMilliseconds();
@@ -301,7 +293,6 @@ void TWebRequestHandler::HandleMetadataFetchTimeRequestJson(std::ostream &os,
 
 void TWebRequestHandler::HandleQueueStatsRequestPlain(std::ostream &os,
     const TMsgStateTracker &tracker) {
-  assert(this);
   std::vector<TMsgStateTracker::TTopicStatsItem> topic_stats;
   long new_count = 0;
   tracker.GetStats(topic_stats, new_count);
@@ -345,7 +336,6 @@ void TWebRequestHandler::HandleQueueStatsRequestPlain(std::ostream &os,
 
 void TWebRequestHandler::HandleQueueStatsRequestJson(std::ostream &os,
     const TMsgStateTracker &tracker) {
-  assert(this);
   std::vector<TMsgStateTracker::TTopicStatsItem> topic_stats;
   long new_count = 0;
   tracker.GetStats(topic_stats, new_count);
@@ -401,7 +391,6 @@ void TWebRequestHandler::HandleQueueStatsRequestJson(std::ostream &os,
 
 void TWebRequestHandler::HandleGetDebugTopicsRequest(std::ostream &os,
     const Debug::TDebugSetup &debug_setup) {
-  assert(this);
   std::shared_ptr<TDebugSetup::TSettings> settings = debug_setup.GetSettings();
   assert(settings);
   const std::unordered_set<std::string> *topics = settings->GetDebugTopics();
@@ -419,29 +408,24 @@ void TWebRequestHandler::HandleGetDebugTopicsRequest(std::ostream &os,
 
 void TWebRequestHandler::HandleDebugAddAllTopicsRequest(std::ostream &os,
         Debug::TDebugSetup &debug_setup) {
-  assert(this);
   debug_setup.SetDebugTopics(nullptr);
   os << "All message debug topics enabled" << std::endl;
 }
 
 void TWebRequestHandler::HandleDebugDelAllTopicsRequest(std::ostream &os,
         Debug::TDebugSetup &debug_setup) {
-  assert(this);
   debug_setup.ClearDebugTopics();
   os << "All message debug topics disabled" << std::endl;
 }
 
 void TWebRequestHandler::HandleDebugTruncateFilesRequest(std::ostream &os,
         Debug::TDebugSetup &debug_setup) {
-  assert(this);
   debug_setup.TruncateDebugFiles();
   os << "Message debug files truncated" << std::endl;
 }
 
 void TWebRequestHandler::HandleDebugAddTopicRequest(std::ostream &os,
         Debug::TDebugSetup &debug_setup, const char *topic) {
-  assert(this);
-
   if (debug_setup.AddDebugTopic(topic)) {
     os << "Enabled debug topic [" << topic << "]" << std::endl;
   } else {
@@ -451,8 +435,6 @@ void TWebRequestHandler::HandleDebugAddTopicRequest(std::ostream &os,
 
 void TWebRequestHandler::HandleDebugDelTopicRequest(std::ostream &os,
         Debug::TDebugSetup &debug_setup, const char *topic) {
-  assert(this);
-
   if (debug_setup.DelDebugTopic(topic)) {
     os << "Disabled debug topic [" << topic << "]" << std::endl;
   } else {
@@ -462,7 +444,6 @@ void TWebRequestHandler::HandleDebugDelTopicRequest(std::ostream &os,
 
 void TWebRequestHandler::HandleMetadataUpdateRequest(std::ostream &os,
         Base::TEventSemaphore &update_request_sem) {
-  assert(this);
   update_request_sem.Push();
   uint64_t now = GetEpochSeconds();
   char time_buf[TIME_BUF_SIZE];
@@ -473,7 +454,6 @@ void TWebRequestHandler::HandleMetadataUpdateRequest(std::ostream &os,
 
 void TWebRequestHandler::WriteDiscardReportPlain(std::ostream &os,
     const TAnomalyTracker::TInfo &info) {
-  assert(this);
   char time_buf[TIME_BUF_SIZE];
   uint64_t start_time = info.GetStartTime();
   FillTimeBuf(start_time, time_buf);
@@ -627,7 +607,6 @@ void TWebRequestHandler::WriteDiscardReportPlain(std::ostream &os,
 
 void TWebRequestHandler::WriteDiscardReportJson(std::ostream &os,
     const TAnomalyTracker::TInfo &info, Base::TIndent &ind0) {
-  assert(this);
   uint64_t start_time = info.GetStartTime();
   os << ind0 << "\"id\": " << info.GetReportId() << "," << std::endl
       << ind0 << "\"start_time\": " << start_time << "," << std::endl

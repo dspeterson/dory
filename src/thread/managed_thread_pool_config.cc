@@ -54,7 +54,6 @@ TManagedThreadPoolConfig::TManagedThreadPoolConfig(size_t min_pool_size,
 
 bool TManagedThreadPoolConfig::operator==(
     const TManagedThreadPoolConfig &that) const noexcept {
-  assert(this);
   return (MinPoolSize == that.MinPoolSize) &&
       (PruneQuantumMs == that.PruneQuantumMs) &&
       (PruneQuantumCount == that.PruneQuantumCount) &&
@@ -64,8 +63,6 @@ bool TManagedThreadPoolConfig::operator==(
 
 void TManagedThreadPoolConfig::SetPruneQuantumMs(
     size_t prune_quantum_ms) noexcept {
-  assert(this);
-
   if (prune_quantum_ms == 0) {
     Die("PruneQuantumMs must be > 0");
   }
@@ -75,8 +72,6 @@ void TManagedThreadPoolConfig::SetPruneQuantumMs(
 
 void TManagedThreadPoolConfig::SetPruneQuantumCount(
     size_t prune_quantum_count) noexcept {
-  assert(this);
-
   if (prune_quantum_count == 0) {
     Die("PruneQuantumCount must be > 0");
   }
@@ -86,8 +81,6 @@ void TManagedThreadPoolConfig::SetPruneQuantumCount(
 
 void TManagedThreadPoolConfig::SetMaxPruneFraction(
     size_t max_prune_fraction) noexcept {
-  assert(this);
-
   if (max_prune_fraction > 1000) {
     Die("MaxPruneFraction must be <= 1000");
   }
@@ -97,8 +90,6 @@ void TManagedThreadPoolConfig::SetMaxPruneFraction(
 
 void TManagedThreadPoolConfig::SetMinIdleFraction(
     size_t min_idle_fraction) noexcept {
-  assert(this);
-
   if (min_idle_fraction > 1000) {
     Die("MinIdleFraction must be <= 1000");
   }

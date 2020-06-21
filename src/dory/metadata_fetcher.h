@@ -65,12 +65,10 @@ namespace Dory {
 
     /* Return true on success or false on failure. */
     bool Connect(const std::string &host_name, in_port_t port) {
-      assert(this);
       return Connect(host_name.c_str(), port);
     }
 
     void Disconnect() noexcept {
-      assert(this);
       Sock.Reset();
     }
 

@@ -59,17 +59,14 @@ namespace Dory {
       /* Return a file descriptor that becomes readable when the server has
        finished its initialization and is open for business. */
       const Base::TFd &GetInitWaitFd() const {
-        assert(this);
         return InitFinishedSem.GetFd();
       }
 
       bool ShutdownWasOk() const {
-        assert(this);
         return OkShutdown;
       }
 
       in_port_t GetCmdPort() const {
-        assert(this);
         return Server.GetCmdPort();
       }
 
@@ -78,7 +75,6 @@ namespace Dory {
          <dory/mock_kafka_server/port_map.h> for an explanation of what is
          going on here. */
       in_port_t VirtualPortToPhys(in_port_t v_port) const {
-        assert(this);
         return Server.VirtualPortToPhys(v_port);
       }
 
@@ -87,19 +83,16 @@ namespace Dory {
          <dory/mock_kafka_server/port_map.h> for an explanation of what is
          going on here. */
       in_port_t PhysicalPortToVirt(in_port_t p_port) const {
-        assert(this);
         return Server.PhysicalPortToVirt(p_port);
       }
 
       void GetHandledRequests(
           std::list<TReceivedRequestTracker::TRequestInfo> &result) {
-        assert(this);
         Server.GetHandledRequests(result);
       }
 
       void NonblockingGetHandledRequests(
           std::list<TReceivedRequestTracker::TRequestInfo> &result) {
-        assert(this);
         Server.NonblockingGetHandledRequests(result);
       }
 

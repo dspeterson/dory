@@ -89,27 +89,22 @@ DEFINE_COUNTER(AckOk);
 
 std::unique_ptr<TProduceRequestWriterApi>
 TProduceProto::CreateProduceRequestWriter() const {
-  assert(this);
   return std::unique_ptr<TProduceRequestWriterApi>(new TProduceRequestWriter);
 }
 
 std::unique_ptr<TMsgSetWriterApi>
 TProduceProto::CreateMsgSetWriter() const {
-  assert(this);
   return std::unique_ptr<TMsgSetWriterApi>(new TMsgSetWriter);
 }
 
 std::unique_ptr<TProduceResponseReaderApi>
 TProduceProto::CreateProduceResponseReader() const {
-  assert(this);
   return std::unique_ptr<TProduceResponseReaderApi>(
       new TProduceResponseReader);
 }
 
 TProduceProtocol::TAckResultAction
 TProduceProto::ProcessAck(int16_t ack_value) const {
-  assert(this);
-
   /* See https://kafka.apache.org/protocol for documentation on the error codes
      below. */
   switch (static_cast<TKafkaErrorCode>(ack_value)) {

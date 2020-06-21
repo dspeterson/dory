@@ -99,7 +99,6 @@ TRouterThread::~TRouterThread() {
 }
 
 void TRouterThread::Run() {
-  assert(this);
   int tid = static_cast<int>(Gettid());
   LOG(TPri::NOTICE) << "Router thread " << tid << " started";
 
@@ -147,8 +146,6 @@ size_t TRouterThread::ComputeRetryDelay(size_t mean_delay, size_t div) {
 }
 
 void TRouterThread::StartShutdown() {
-  assert(this);
-
   if (Destroying) {
     throw TShutdownOnDestroy();
   }
@@ -166,7 +163,6 @@ void TRouterThread::StartShutdown() {
 
 void TRouterThread::Discard(TMsg::TPtr &&msg,
     TAnomalyTracker::TDiscardReason reason) {
-  assert(this);
   assert(msg);
   TMsg::TPtr to_discard(std::move(msg));
   AnomalyTracker.TrackDiscard(to_discard, reason);
@@ -175,7 +171,6 @@ void TRouterThread::Discard(TMsg::TPtr &&msg,
 
 void TRouterThread::Discard(std::list<TMsg::TPtr> &&msg_list,
     TAnomalyTracker::TDiscardReason reason) {
-  assert(this);
   std::list<TMsg::TPtr> to_discard(std::move(msg_list));
 
   for (TMsg::TPtr &msg : to_discard) {
@@ -188,7 +183,6 @@ void TRouterThread::Discard(std::list<TMsg::TPtr> &&msg_list,
 
 void TRouterThread::Discard(std::list<std::list<TMsg::TPtr>> &&batch_list,
     TAnomalyTracker::TDiscardReason reason) {
-  assert(this);
   std::list<std::list<TMsg::TPtr>> to_discard(std::move(batch_list));
 
   for (std::list<TMsg::TPtr> &msg_list : to_discard) {
@@ -203,7 +197,6 @@ void TRouterThread::Discard(std::list<std::list<TMsg::TPtr>> &&batch_list,
 
 bool TRouterThread::UpdateMetadataAfterTopicAutocreate(
     const std::string &topic) {
-  assert(this);
   size_t sleep_ms = 3000;
   static const size_t NUM_ATTEMPTS = 3;
 
@@ -239,7 +232,6 @@ bool TRouterThread::UpdateMetadataAfterTopicAutocreate(
 }
 
 bool TRouterThread::AutocreateTopic(TMsg::TPtr &msg) {
-  assert(this);
   assert(!KnownBrokers.empty());
   assert(msg);
   const std::string &topic = msg->GetTopic();
@@ -312,7 +304,6 @@ bool TRouterThread::AutocreateTopic(TMsg::TPtr &msg) {
 }
 
 bool TRouterThread::ValidateNewMsg(TMsg::TPtr &msg) {
-  assert(this);
   assert(Metadata);
   const std::string &topic = msg->GetTopic();
   int topic_index = Metadata->FindTopicIndex(topic);
@@ -398,7 +389,6 @@ bool TRouterThread::ValidateNewMsg(TMsg::TPtr &msg) {
 }
 
 void TRouterThread::ValidateBeforeReroute(std::list<TMsg::TPtr> &msg_list) {
-  assert(this);
   assert(!msg_list.empty());
   const std::string &topic = msg_list.front()->GetTopic();
   int topic_index = Metadata->FindTopicIndex(topic);
@@ -441,7 +431,6 @@ void TRouterThread::ValidateBeforeReroute(std::list<TMsg::TPtr> &msg_list) {
 
 size_t TRouterThread::LookupValidTopicIndex(
     const std::string &topic) const noexcept {
-  assert(this);
   assert(Metadata);
   int topic_index = Metadata->FindTopicIndex(topic);
 
@@ -460,7 +449,6 @@ size_t TRouterThread::LookupValidTopicIndex(
 
 size_t TRouterThread::ChooseAnyPartitionBrokerIndex(
     const std::string &topic) noexcept {
-  assert(this);
   assert(Metadata);
 
   /* When we update our metadata, we delete from the batcher any topics that
@@ -494,7 +482,6 @@ size_t TRouterThread::ChooseAnyPartitionBrokerIndex(
 
 const TMetadata::TPartition &TRouterThread::ChoosePartitionByKey(
     const TMetadata::TTopic &topic_meta, int32_t partition_key) noexcept {
-  assert(this);
   assert(Metadata);
   const std::vector<TMetadata::TBroker> &broker_vec = Metadata->GetBrokers();
   assert(!broker_vec.empty());
@@ -523,7 +510,6 @@ const TMetadata::TPartition &TRouterThread::ChoosePartitionByKey(
 }
 
 size_t TRouterThread::AssignBroker(TMsg::TPtr &msg) noexcept {
-  assert(this);
   RouteSingleMsg.Increment();
   const std::string &topic = msg->GetTopic();
 
@@ -544,21 +530,17 @@ size_t TRouterThread::AssignBroker(TMsg::TPtr &msg) noexcept {
 }
 
 void TRouterThread::Route(TMsg::TPtr &&msg) {
-  assert(this);
   size_t broker_index = AssignBroker(msg);
   Dispatcher.Dispatch(std::move(msg), broker_index);
 }
 
 void TRouterThread::RouteNow(TMsg::TPtr &&msg) {
-  assert(this);
   size_t broker_index = AssignBroker(msg);
   Dispatcher.DispatchNow(std::move(msg), broker_index);
 }
 
 void TRouterThread::RouteAnyPartitionNow(
     std::list<std::list<TMsg::TPtr>> &&batch_list) {
-  assert(this);
-
   if (batch_list.empty()) {
     return;
   }
@@ -587,7 +569,6 @@ void TRouterThread::RouteAnyPartitionNow(
 
 void TRouterThread::RoutePartitionKeyNow(
     std::list<std::list<TMsg::TPtr>> &&batch_list) {
-  assert(this);
   assert(Metadata);
 
   if (batch_list.empty()) {
@@ -633,8 +614,6 @@ void TRouterThread::RoutePartitionKeyNow(
 }
 
 void TRouterThread::Reroute(std::list<std::list<TMsg::TPtr>> &&batch_list) {
-  assert(this);
-
   if (batch_list.empty()) {
     return;
   }
@@ -684,7 +663,6 @@ void TRouterThread::Reroute(std::list<std::list<TMsg::TPtr>> &&batch_list) {
 }
 
 void TRouterThread::RouteFinalMsgs() {
-  assert(this);
   assert(Metadata);
 
   if (PerTopicBatcher.IsEnabled()) {
@@ -724,7 +702,6 @@ void TRouterThread::RouteFinalMsgs() {
 }
 
 void TRouterThread::DiscardFinalMsgs() {
-  assert(this);
   std::list<TMsg::TPtr> msg_list;
 
   /* Get any remaining queued messages from the input thread. */
@@ -749,8 +726,6 @@ void TRouterThread::DiscardFinalMsgs() {
 }
 
 void TRouterThread::InitWireProtocol() {
-  assert(this);
-
   /* This code is just a placeholder, since Dory currently supports only
      version 0 of the metadata and produce wire protocols.  Eventually code
      will go here that handles cases where a specific metadata or produce
@@ -772,7 +747,6 @@ void TRouterThread::InitWireProtocol() {
 }
 
 bool TRouterThread::Init() {
-  assert(this);
   InitWireProtocol();
   std::shared_ptr<TMetadata> meta;
 
@@ -809,7 +783,6 @@ bool TRouterThread::Init() {
 }
 
 void TRouterThread::CheckDispatcherShutdown() {
-  assert(this);
   Dispatcher.JoinAll();
 
   if (Dispatcher.ShutdownWasOk()) {
@@ -821,7 +794,6 @@ void TRouterThread::CheckDispatcherShutdown() {
 
 bool TRouterThread::ReplaceMetadataOnRefresh(
     std::shared_ptr<TMetadata> &&meta) {
-  assert(this);
   std::shared_ptr<TMetadata> md = std::move(meta);
   LOG(TPri::NOTICE)
       << "Router thread starting fast dispatcher shutdown for metadata "
@@ -868,7 +840,6 @@ bool TRouterThread::ReplaceMetadataOnRefresh(
 /* Return true on success, or false if we got a shutdown signal and the
    shutdown delay expired while trying to refresh metadata. */
 bool TRouterThread::RefreshMetadata() {
-  assert(this);
   assert(ShutdownStartTime.IsUnknown());
   std::shared_ptr<TMetadata> meta;
 
@@ -900,7 +871,6 @@ bool TRouterThread::RefreshMetadata() {
 }
 
 std::list<std::list<TMsg::TPtr>> TRouterThread::EmptyDispatcher() {
-  assert(this);
   std::vector<std::list<std::list<TMsg::TPtr>>> broker_lists;
   size_t broker_count = Dispatcher.GetBrokerCount();
   broker_lists.reserve(broker_count);
@@ -963,7 +933,6 @@ std::list<std::list<TMsg::TPtr>> TRouterThread::EmptyDispatcher() {
 }
 
 bool TRouterThread::RespondToPause() {
-  assert(this);
   RouterThreadStartPause.Increment();
 
   if (!HandlePause()) {
@@ -997,8 +966,6 @@ bool TRouterThread::RespondToPause() {
 }
 
 void TRouterThread::DiscardOnShutdownDuringMetadataUpdate(TMsg::TPtr &&msg) {
-  assert(this);
-
   if (Conf.LoggingConf.LogDiscards) {
     LOG_R(TPri::ERR, std::chrono::seconds(30))
         << "Router thread discarding message with topic [" << msg->GetTopic()
@@ -1010,7 +977,6 @@ void TRouterThread::DiscardOnShutdownDuringMetadataUpdate(TMsg::TPtr &&msg) {
 
 void TRouterThread::DiscardOnShutdownDuringMetadataUpdate(
     std::list<TMsg::TPtr> &&msg_list) {
-  assert(this);
   std::list<TMsg::TPtr> to_discard(std::move(msg_list));
 
   for (TMsg::TPtr &msg : to_discard) {
@@ -1020,7 +986,6 @@ void TRouterThread::DiscardOnShutdownDuringMetadataUpdate(
 
 void TRouterThread::DiscardOnShutdownDuringMetadataUpdate(
     std::list<std::list<TMsg::TPtr>> &&batch_list) {
-  assert(this);
   std::list<std::list<TMsg::TPtr>> to_discard(std::move(batch_list));
 
   for (std::list<TMsg::TPtr> &batch : to_discard) {
@@ -1029,8 +994,6 @@ void TRouterThread::DiscardOnShutdownDuringMetadataUpdate(
 }
 
 bool TRouterThread::HandleMetadataUpdate() {
-  assert(this);
-
   if (MetadataUpdateRequestSem.GetFd().IsReadable()) {
     MetadataUpdateRequestSem.Pop();
     LOG(TPri::NOTICE)
@@ -1053,7 +1016,6 @@ bool TRouterThread::HandleMetadataUpdate() {
 }
 
 void TRouterThread::ContinueShutdown() {
-  assert(this);
   NeedToContinueShutdown = false;
 
   /* Start watching for slow shutdown finish notification.  Stop watching for
@@ -1076,8 +1038,6 @@ void TRouterThread::ContinueShutdown() {
 }
 
 int TRouterThread::ComputeMainLoopPollTimeout() {
-  assert(this);
-
   if (OptNextBatchExpiry.IsUnknown()) {
     return -1;  // infinite timeout
   }
@@ -1104,7 +1064,6 @@ int TRouterThread::ComputeMainLoopPollTimeout() {
 }
 
 void TRouterThread::InitMainLoopPollArray() {
-  assert(this);
   struct pollfd &pause_item = MainLoopPollArray[TMainLoopPollItem::Pause];
   struct pollfd &shutdown_request_item =
       MainLoopPollArray[TMainLoopPollItem::ShutdownRequest];
@@ -1141,7 +1100,6 @@ void TRouterThread::InitMainLoopPollArray() {
 }
 
 void TRouterThread::DoRun() {
-  assert(this);
   OkShutdown = false;
 
   if (!Init()) {
@@ -1204,8 +1162,6 @@ void TRouterThread::DoRun() {
 }
 
 void TRouterThread::HandleShutdownFinished() {
-  assert(this);
-
   if (ShutdownStartTime.IsKnown()) {
     LOG(TPri::NOTICE)
         << "Router thread got shutdown finished notification from dispatcher";
@@ -1233,7 +1189,6 @@ void TRouterThread::HandleShutdownFinished() {
 }
 
 void TRouterThread::HandleBatchExpiry(uint64_t now) {
-  assert(this);
   assert(PerTopicBatcher.IsEnabled());
   BatchExpiryDetected.Increment();
   RouteAnyPartitionNow(PerTopicBatcher.GetCompleteBatches(now));
@@ -1245,7 +1200,6 @@ void TRouterThread::HandleBatchExpiry(uint64_t now) {
 }
 
 void TRouterThread::HandleMsgAvailable(uint64_t now) {
-  assert(this);
   RouterThreadGetMsgList.Increment();
   std::list<std::list<TMsg::TPtr>> ready_batches;
   std::list<TMsg::TPtr> msg_list = MsgChannel.Get();
@@ -1322,8 +1276,6 @@ void TRouterThread::HandleMsgAvailable(uint64_t now) {
 }
 
 bool TRouterThread::HandlePause() {
-  assert(this);
-
   /* Impose a delay before handling a pause that occurs shortly after a
      previous pause.  If something goes seriously wrong, this prevents us from
      going into a tight pause loop. */
@@ -1380,7 +1332,6 @@ bool TRouterThread::HandlePause() {
 }
 
 void TRouterThread::UpdateKnownBrokers(const TMetadata &md) {
-  assert(this);
   std::vector<TKafkaBroker> broker_vec;
   const std::vector<TMetadata::TBroker> &new_brokers = md.GetBrokers();
 
@@ -1392,7 +1343,6 @@ void TRouterThread::UpdateKnownBrokers(const TMetadata &md) {
 }
 
 std::shared_ptr<TMetadata> TRouterThread::TryGetMetadata() {
-  assert(this);
   assert(!KnownBrokers.empty());
   TMetadataFetcher::TDisconnecter disconnecter(*MetadataFetcher);
   size_t chosen = std::rand() % KnownBrokers.size();
@@ -1452,13 +1402,11 @@ std::shared_ptr<TMetadata> TRouterThread::TryGetMetadata() {
 }
 
 void TRouterThread::InitMetadataRefreshTimer() {
-  assert(this);
   MetadataRefreshTimer.reset(new TTimerFd(ComputeRetryDelay(
       Conf.MsgDeliveryConf.MetadataRefreshInterval * 60 * 1000, 5)));
 }
 
 std::shared_ptr<TMetadata> TRouterThread::GetInitialMetadata() {
-  assert(this);
   std::shared_ptr<TMetadata> result;
   TDoryRateLimiter retry_rate_limiter(
       Conf.MsgDeliveryConf.PauseRateLimitInitial,
@@ -1490,7 +1438,6 @@ std::shared_ptr<TMetadata> TRouterThread::GetInitialMetadata() {
 }
 
 std::shared_ptr<TMetadata> TRouterThread::GetMetadataBeforeSlowShutdown() {
-  assert(this);
   std::shared_ptr<TMetadata> result;
   TDoryRateLimiter retry_rate_limiter(
       Conf.MsgDeliveryConf.PauseRateLimitInitial,
@@ -1527,7 +1474,6 @@ std::shared_ptr<TMetadata> TRouterThread::GetMetadataBeforeSlowShutdown() {
 }
 
 std::shared_ptr<TMetadata> TRouterThread::GetMetadataDuringSlowShutdown() {
-  assert(this);
   std::shared_ptr<TMetadata> result;
   const size_t shutdown_delay = Conf.MsgDeliveryConf.ShutdownMaxDelay;
   const uint64_t finish_time = *ShutdownStartTime + shutdown_delay;
@@ -1573,7 +1519,6 @@ std::shared_ptr<TMetadata> TRouterThread::GetMetadataDuringSlowShutdown() {
 }
 
 std::shared_ptr<TMetadata> TRouterThread::GetMetadata() {
-  assert(this);
   std::shared_ptr<TMetadata> result;
 
   if (ShutdownStartTime.IsUnknown()) {
@@ -1595,7 +1540,6 @@ std::shared_ptr<TMetadata> TRouterThread::GetMetadata() {
 
 void TRouterThread::UpdateBatchStateForNewMetadata(const TMetadata &old_md,
     const TMetadata &new_md) {
-  assert(this);
   std::list<TMsg::TPtr> deleted_topic_msgs, unavailable_topic_msgs;
   const std::vector<TMetadata::TTopic> &old_topic_vec = old_md.GetTopics();
   const std::vector<TMetadata::TTopic> &new_topic_vec = new_md.GetTopics();
@@ -1656,7 +1600,6 @@ void TRouterThread::UpdateBatchStateForNewMetadata(const TMetadata &old_md,
 
 void TRouterThread::SetMetadata(std::shared_ptr<TMetadata> &&meta,
         bool record_update) {
-  assert(this);
   assert(meta);
 
   /* TODO: make this a lambda */

@@ -53,27 +53,22 @@ namespace Dory {
       TBatcherCore &operator=(const TBatcherCore &) noexcept = default;
 
       bool BatchingIsEnabled() const noexcept {
-        assert(this);
         return Dory::Batch::BatchingIsEnabled(Config);
       }
 
       const TBatchConfig &GetConfig() const noexcept {
-        assert(this);
         return Config;
       }
 
       bool IsEmpty() const noexcept {
-        assert(this);
         return (MsgCount == 0);
       }
 
       size_t GetMsgCount() const noexcept {
-        assert(this);
         return MsgCount;
       }
 
       size_t GetByteCount() const noexcept {
-        assert(this);
         return ByteCount;
       }
 
@@ -96,7 +91,6 @@ namespace Dory {
       bool TestByteCountExceeded(size_t bytes_to_add) const noexcept;
 
       bool TestAllLimits(TMsg::TTimestamp now) const noexcept {
-        assert(this);
         return TestTimeLimit(now) || TestMsgCount() || TestByteCount();
       }
 

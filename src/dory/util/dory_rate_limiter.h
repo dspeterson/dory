@@ -41,12 +41,10 @@ namespace Dory {
       }
 
       size_t ComputeDelay() {
-        assert(this);
         return std::max(MinDelay, Limiter.ComputeDelay());
       }
 
       void OnAction() {
-        assert(this);
         return Limiter.OnAction();
       }
 

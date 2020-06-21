@@ -44,7 +44,6 @@ TProduceResponseReader::TProduceResponseReader() {
 }
 
 void TProduceResponseReader::Clear() noexcept {
-  assert(this);
   Begin = nullptr;
   End = nullptr;
   NumTopics = 0;
@@ -57,7 +56,6 @@ void TProduceResponseReader::Clear() noexcept {
 
 void TProduceResponseReader::SetResponse(const void *response,
     size_t response_size) {
-  assert(this);
   assert(response);
   Clear();
 
@@ -84,7 +82,6 @@ void TProduceResponseReader::SetResponse(const void *response,
 }
 
 int32_t TProduceResponseReader::GetCorrelationId() const {
-  assert(this);
   assert(Begin);
   assert(End);
   assert(NumTopics >= 0);
@@ -92,12 +89,10 @@ int32_t TProduceResponseReader::GetCorrelationId() const {
 }
 
 size_t TProduceResponseReader::GetNumTopics() const {
-  assert(this);
   return static_cast<size_t>(NumTopics);
 }
 
 bool TProduceResponseReader::FirstTopic() {
-  assert(this);
   assert(NumTopics >= 0);
 
   if (NumTopics < 1) {
@@ -112,7 +107,6 @@ bool TProduceResponseReader::FirstTopic() {
 }
 
 bool TProduceResponseReader::NextTopic() {
-  assert(this);
   assert(NumTopics >= 0);
 
   if (CurrentTopicIndex < 0) {
@@ -143,7 +137,6 @@ bool TProduceResponseReader::NextTopic() {
 }
 
 const char *TProduceResponseReader::GetCurrentTopicNameBegin() const {
-  assert(this);
   assert(NumTopics >= 0);
   assert(CurrentTopicBegin);
   assert(CurrentTopicNameEnd > CurrentTopicBegin);
@@ -152,7 +145,6 @@ const char *TProduceResponseReader::GetCurrentTopicNameBegin() const {
 }
 
 const char *TProduceResponseReader::GetCurrentTopicNameEnd() const {
-  assert(this);
   assert(NumTopics >= 0);
   assert(CurrentTopicBegin);
   assert(CurrentTopicNameEnd > CurrentTopicBegin);
@@ -160,7 +152,6 @@ const char *TProduceResponseReader::GetCurrentTopicNameEnd() const {
 }
 
 size_t TProduceResponseReader::GetNumPartitionsInCurrentTopic() const {
-  assert(this);
   assert(NumTopics >= 0);
   assert(CurrentTopicBegin);
   assert(CurrentTopicNameEnd > CurrentTopicBegin);
@@ -168,7 +159,6 @@ size_t TProduceResponseReader::GetNumPartitionsInCurrentTopic() const {
 }
 
 bool TProduceResponseReader::FirstPartitionInTopic() {
-  assert(this);
   assert(NumTopics >= 0);
   assert(CurrentTopicBegin);
   assert(CurrentTopicNameEnd);
@@ -184,7 +174,6 @@ bool TProduceResponseReader::FirstPartitionInTopic() {
 }
 
 bool TProduceResponseReader::NextPartitionInTopic() {
-  assert(this);
   assert(NumTopics >= 0);
   assert(CurrentTopicBegin);
   assert(CurrentTopicNameEnd);
@@ -208,7 +197,6 @@ bool TProduceResponseReader::NextPartitionInTopic() {
 }
 
 int32_t TProduceResponseReader::GetCurrentPartitionNumber() const {
-  assert(this);
   assert(NumTopics >= 0);
   assert(CurrentTopicBegin);
   assert(CurrentTopicNameEnd);
@@ -220,7 +208,6 @@ int32_t TProduceResponseReader::GetCurrentPartitionNumber() const {
 }
 
 int16_t TProduceResponseReader::GetCurrentPartitionErrorCode() const {
-  assert(this);
   assert(NumTopics >= 0);
   assert(CurrentTopicBegin);
   assert(CurrentTopicNameEnd);
@@ -232,7 +219,6 @@ int16_t TProduceResponseReader::GetCurrentPartitionErrorCode() const {
 }
 
 int64_t TProduceResponseReader::GetCurrentPartitionOffset() const {
-  assert(this);
   assert(NumTopics >= 0);
   assert(CurrentTopicBegin);
   assert(CurrentTopicNameEnd);
@@ -244,7 +230,6 @@ int64_t TProduceResponseReader::GetCurrentPartitionOffset() const {
 }
 
 const uint8_t *TProduceResponseReader::GetPartitionStart(int32_t index) const {
-  assert(this);
   assert(NumTopics >= 0);
   assert(CurrentTopicBegin);
   assert(CurrentTopicNameEnd);
@@ -256,8 +241,6 @@ const uint8_t *TProduceResponseReader::GetPartitionStart(int32_t index) const {
 }
 
 void TProduceResponseReader::InitCurrentTopic() {
-  assert(this);
-
   if ((CurrentTopicBegin + PRC::TOPIC_NAME_LEN_SIZE) > End) {
     ProduceResponseTruncated3.Increment();
     THROW_ERROR(TResponseTruncated);

@@ -36,13 +36,11 @@ TDemangle::TDemangle(const char *mangled) : Buf(nullptr) {
 }
 
 TDemangle::~TDemangle() {
-  assert(this);
   assert(Buf);
   free(Buf); //The gcc man pages use free, so we use free.
 }
 
 const char *TDemangle::Get() const {
-  assert(this);
   assert(Buf);
   return Buf;
 }

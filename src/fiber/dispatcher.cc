@@ -34,8 +34,6 @@ using namespace Base;
 using namespace Fiber;
 
 TDispatcher::THandler::~THandler() {
-  assert(this);
-
   /* If this fails, you probably forgot to call Unregister() in your
      destructor. */
   assert(!Dispatcher);
@@ -55,7 +53,6 @@ TDispatcher::THandler::THandler() noexcept {
 }
 
 void TDispatcher::THandler::ChangeEvent(int fd, short flags) {
-  assert(this);
   assert(fd >= 0);
   assert(flags);
   assert(Dispatcher);
@@ -66,13 +63,11 @@ void TDispatcher::THandler::ChangeEvent(int fd, short flags) {
 }
 
 void TDispatcher::THandler::ClearDeadline() {
-  assert(this);
   Deadline.Reset();
 }
 
 void TDispatcher::THandler::Register(TDispatcher *dispatcher, int fd,
     short flags) {
-  assert(this);
   assert(dispatcher);
   /* If we're only changing fd and/or flags, we can skip the linked-list stuff.
    */
@@ -99,13 +94,11 @@ void TDispatcher::THandler::Register(TDispatcher *dispatcher, int fd,
 }
 
 void TDispatcher::THandler::SetDeadline(const TTimeout &timeout) {
-  assert(this);
   Deadline.Reset();
   Deadline.MakeKnown(Now() + timeout);
 }
 
 void TDispatcher::THandler::Unregister() noexcept {
-  assert(this);
   /* If we're not registered with a dispatcher, then there's nothing to do;
      otherwise, perform the list-unlinking dance and reinitialize our pointers
      and related member variables to their default-constructed state. */
@@ -126,13 +119,11 @@ void TDispatcher::THandler::Init() noexcept {
 }
 
 TDispatcher::THandler *&TDispatcher::THandler::GetNextConj() const noexcept {
-  assert(this);
   assert(Dispatcher);
   return NextHandler ? NextHandler->PrevHandler : Dispatcher->LastHandler;
 }
 
 TDispatcher::THandler *&TDispatcher::THandler::GetPrevConj() const noexcept {
-  assert(this);
   assert(Dispatcher);
   return PrevHandler ? PrevHandler->NextHandler : Dispatcher->FirstHandler;
 }
@@ -152,14 +143,12 @@ TDispatcher::TDispatcher(size_t max_handler_count)
 }
 
 TDispatcher::~TDispatcher() {
-  assert(this);
   assert(!FirstHandler);
   delete [] Pollers;
   delete [] HandlerPtrs;
 }
 
 bool TDispatcher::ForEachHandler(const TCb &cb) {
-  assert(this);
   assert(cb);
   /* We cache each next-pointer as we go, just in case the handler is deleted.
    */
@@ -180,8 +169,6 @@ bool TDispatcher::ForEachHandler(const TCb &cb) {
 
 void TDispatcher::Run(const TTimeout &grace_period,
     const std::vector<int> &allow_signals, int shutdown_signal_number) {
-  assert(this);
-
   /* Install a do-nothing handler for the shutdown signal, so the shutdown
      won't abort the whole process.  We'll mask out all signals while we're
      running, then unmask the shutdown signal only while we're blocked in
@@ -235,7 +222,6 @@ void TDispatcher::Run(const TTimeout &grace_period,
 }
 
 void TDispatcher::Shutdown(std::thread &t, int signal_number) {
-  assert(this);
   ShuttingDown = true;
   pthread_kill(t.native_handle(), signal_number);
   t.join();
@@ -256,8 +242,6 @@ void TDispatcher::ShutdownSigHandler(int /*signum*/) noexcept {
 
 bool TDispatcher::Dispatch(const TOptTimeout &max_timeout,
     const sigset_t *mask_set) {
-  assert(this);
-
   /* Walk the list of regsitered handlers and initialze the poller and handler
      pointer arrays.  Also look for the nearest deadline, if any, among the
      handlers. */

@@ -28,8 +28,6 @@ using namespace Dory::Conf;
 
 bool TMsgRateLimiter::WouldExceedLimit(const std::string &topic,
     uint64_t timestamp) {
-  assert(this);
-
   if (!IsEnabled) {
     /* Fast path for case where rate limiting is completely disabled. */
     return false;
@@ -59,7 +57,6 @@ bool TMsgRateLimiter::RateLimitingIsEnabled(
 
 TMsgRateLimiter::TTopicState &
 TMsgRateLimiter::GetTopicState(const std::string &topic, uint64_t timestamp) {
-  assert(this);
   auto iter = TopicStateMap.find(topic);
 
   if (iter != TopicStateMap.end()) {

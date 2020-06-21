@@ -79,7 +79,6 @@ TMetadataFetcher::TMetadataFetcher(const TMetadataProtocol *metadata_protocol)
 }
 
 bool TMetadataFetcher::Connect(const char *host_name, in_port_t port) {
-  assert(this);
   Disconnect();
 
   try {
@@ -105,8 +104,6 @@ bool TMetadataFetcher::Connect(const char *host_name, in_port_t port) {
 }
 
 std::unique_ptr<TMetadata> TMetadataFetcher::Fetch(int timeout_ms) {
-  assert(this);
-
   if (!Sock.IsOpen()) {
     Die("Must connect to host before getting metadata");
   }
@@ -168,8 +165,6 @@ std::unique_ptr<TMetadata> TMetadataFetcher::Fetch(int timeout_ms) {
 
 TMetadataFetcher::TTopicAutocreateResult
 TMetadataFetcher::TopicAutocreate(const char *topic, int timeout_ms) {
-  assert(this);
-
   if (!Sock.IsOpen()) {
     Die("Must connect to host before getting metadata");
   }
@@ -211,7 +206,6 @@ TMetadataFetcher::TopicAutocreate(const char *topic, int timeout_ms) {
 
 bool TMetadataFetcher::SendRequest(const std::vector<uint8_t> &request,
     int timeout_ms) {
-  assert(this);
   StartSendMetadataRequest.Increment();
 
   try {
@@ -247,7 +241,6 @@ enum class TReadResponsePollItem {
 };  // TReadResponsePollItem
 
 bool TMetadataFetcher::ReadResponse(int timeout_ms) {
-  assert(this);
   TPollArray<TReadResponsePollItem, 1> poll_array;
   struct pollfd &sock_item = poll_array[TReadResponsePollItem::SockIo];
   sock_item.events = POLLIN;

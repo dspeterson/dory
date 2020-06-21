@@ -136,8 +136,6 @@ static const int MAX_LEVEL = Z_BEST_COMPRESSION;
 
 TOpt<int> TGzipCodec::GetRealCompressionLevel(
     const TOpt<int> &requested_level) const noexcept {
-  assert(this);
-
   if (requested_level.IsUnknown()) {
     return TOpt<int>(DEFAULT_LEVEL);
   }
@@ -210,7 +208,6 @@ static size_t DoUncompress(const void *compressed_data, size_t compressed_size,
 
 size_t TGzipCodec::ComputeUncompressedResultBufSpace(
     const void *compressed_data, size_t compressed_size) const {
-  assert(this);
   uint8_t discard_buf[512];
   return DoUncompress(compressed_data, compressed_size, discard_buf,
       sizeof(discard_buf), false);
@@ -218,7 +215,6 @@ size_t TGzipCodec::ComputeUncompressedResultBufSpace(
 
 size_t TGzipCodec::Uncompress(const void *input_buf, size_t input_buf_size,
     void *output_buf, size_t output_buf_size) const {
-  assert(this);
   return DoUncompress(input_buf, input_buf_size, output_buf, output_buf_size,
       true);
 }
@@ -241,7 +237,6 @@ namespace {
     }
 
     size_t ComputeCompressedResultBufSpace(size_t uncompressed_size) {
-      assert(this);
       uLong max_size = deflateBound(&Strm, uncompressed_size);
       auto result = static_cast<size_t>(max_size);
 
@@ -263,7 +258,6 @@ namespace {
 size_t TGzipCodec::DoComputeCompressedResultBufSpace(
     const void * /*uncompressed_data*/, size_t uncompressed_size,
     int compression_level) const {
-  assert(this);
   z_stream strm;
   return TDeflateInitializer(strm, compression_level)
       .ComputeCompressedResultBufSpace(uncompressed_size);
@@ -272,7 +266,6 @@ size_t TGzipCodec::DoComputeCompressedResultBufSpace(
 size_t TGzipCodec::DoCompress(const void *input_buf, size_t input_buf_size,
     void *output_buf, size_t output_buf_size,
     int compression_level) const {
-  assert(this);
   z_stream strm;
   TDeflateInitializer init(strm, compression_level);
   size_t min_result_size =

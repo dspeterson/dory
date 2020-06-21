@@ -40,7 +40,6 @@ using namespace Dory::MockKafkaServer::ProdReq;
 
 TProdReq TProdReqBuilder::BuildProdReq(const void *request,
     size_t request_size) {
-  assert(this);
   RequestReader.SetRequest(request, request_size);
   std::string client_id(RequestReader.GetClientIdBegin(),
                         RequestReader.GetClientIdEnd());
@@ -57,7 +56,6 @@ TProdReq TProdReqBuilder::BuildProdReq(const void *request,
 }
 
 TTopicGroup TProdReqBuilder::BuildTopicGroup() {
-  assert(this);
   std::string topic(RequestReader.GetCurrentTopicNameBegin(),
                     RequestReader.GetCurrentTopicNameEnd());
   TTopicGroup topic_group(std::move(topic));
@@ -71,8 +69,6 @@ TTopicGroup TProdReqBuilder::BuildTopicGroup() {
 
 void TProdReqBuilder::GetCompressedData(const std::vector<TMsg> &msg_vec,
     std::vector<uint8_t> &result) {
-  assert(this);
-
   if (!msg_vec.empty()) {
     throw TCompressedMsgSetNotAlone();
   }
@@ -93,7 +89,6 @@ void TProdReqBuilder::GetCompressedData(const std::vector<TMsg> &msg_vec,
 void TProdReqBuilder::GzipUncompressMsgSet(
     const std::vector<uint8_t> &compressed_data,
     std::vector<uint8_t> &uncompressed_data) {
-  assert(this);
   const TGzipCodec &codec = TGzipCodec::The();
 
   try {
@@ -110,7 +105,6 @@ void TProdReqBuilder::GzipUncompressMsgSet(
 void TProdReqBuilder::SnappyUncompressMsgSet(
     const std::vector<uint8_t> &compressed_data,
     std::vector<uint8_t> &uncompressed_data) {
-  assert(this);
   const TSnappyCodec &codec = TSnappyCodec::The();
 
   try {
@@ -127,7 +121,6 @@ void TProdReqBuilder::SnappyUncompressMsgSet(
 void TProdReqBuilder::Lz4UncompressMsgSet(
     const std::vector<uint8_t> &compressed_data,
     std::vector<uint8_t> &uncompressed_data) {
-  assert(this);
   const TLz4Codec &codec = TLz4Codec::The();
 
   try {
@@ -144,7 +137,6 @@ void TProdReqBuilder::Lz4UncompressMsgSet(
 TMsgSet TProdReqBuilder::BuildUncompressedMsgSet(int32_t partition,
     const std::vector<uint8_t> &msg_set_data,
     TCompressionType compression_type) {
-  assert(this);
   TMsgSet msg_set(partition);
   MsgSetReader.SetMsgSet(&msg_set_data[0], msg_set_data.size());
 
@@ -170,7 +162,6 @@ TMsgSet TProdReqBuilder::BuildUncompressedMsgSet(int32_t partition,
 }
 
 TMsgSet TProdReqBuilder::BuildMsgSet() {
-  assert(this);
   int32_t partition = RequestReader.GetPartitionOfCurrentMsgSet();
   TMsgSet msg_set(partition);
   const std::vector<TMsg> &msg_vec = msg_set.GetMsgVec();

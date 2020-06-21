@@ -45,7 +45,6 @@ TTimerFd::TTimerFd(size_t milliseconds) noexcept
 }
 
 uint64_t TTimerFd::Pop() {
-  assert(this);
   uint64_t count = 0;
   IfLt0(Wr::read(Wr::TDisp::Nonfatal, {EINTR}, Fd, &count, sizeof(count)));
   return count;

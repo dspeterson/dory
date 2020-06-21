@@ -44,8 +44,6 @@ TTcpIpv4Server::TTcpIpv4Server(int backlog, in_addr_t bind_addr,
 }
 
 in_port_t TTcpIpv4Server::GetBindPort() const noexcept {
-  assert(this);
-
   if (!IsBound()) {
     Die("Cannot get bind port for unbound listening socket");
   }
@@ -58,7 +56,6 @@ in_port_t TTcpIpv4Server::GetBindPort() const noexcept {
 }
 
 void TTcpIpv4Server::InitListeningSocket(TFd &sock) {
-  assert(this);
   TFd sock_fd(Wr::socket(Wr::TDisp::Nonfatal, {}, AF_INET, SOCK_STREAM, 0));
   int flag = true;
   Wr::setsockopt(sock_fd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));

@@ -57,7 +57,6 @@ TBackoffRateLimiter::TBackoffRateLimiter(
 }
 
 size_t TBackoffRateLimiter::ComputeDelay() {
-  assert(this);
   struct timespec now;
   GetCurrentTime(now);
 
@@ -79,8 +78,6 @@ size_t TBackoffRateLimiter::ComputeDelay() {
 
 bool
 TBackoffRateLimiter::InBackoffWindow(const struct timespec &now) noexcept {
-  assert(this);
-
   if (FirstTime) {
     FirstTime = false;
     return false;

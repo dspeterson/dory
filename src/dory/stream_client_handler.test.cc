@@ -113,7 +113,6 @@ namespace {
 
     std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>
         CreateStreamClientHandler() {
-      assert(this);
       return std::unique_ptr<TStreamServerBase::TConnectionHandlerApi>(
           new TStreamClientHandler(false, Conf, Pool, MsgStateTracker,
               AnomalyTracker, *OutputQueue, *StreamClientWorkerPool));

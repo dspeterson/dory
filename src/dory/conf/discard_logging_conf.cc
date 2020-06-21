@@ -27,8 +27,6 @@ using namespace Dory;
 using namespace Dory::Conf;
 
 void TDiscardLoggingConf::SetPath(const std::string &path) {
-  assert(this);
-
   if (!path.empty() && (path[0] != '/')) {
     throw TDiscardLoggingRelativePath();
   }

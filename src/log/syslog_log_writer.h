@@ -45,7 +45,6 @@ namespace Log {
     explicit TSyslogLogWriter(bool enabled) noexcept;
 
     bool IsEnabled() const noexcept {
-      assert(this);
       return Enabled;
     }
 

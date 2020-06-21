@@ -110,25 +110,21 @@ namespace {
   };  // TTestReader
 
   size_t TTestReader::GetNextReadSize() noexcept {
-    assert(this);
     TakeStateSnapshot(OnGetNextReadSize);
     return GetNextReadSizeReturnValue;
   }
 
   TStreamMsgReader::TGetMsgResult
   TTestReader::GetNextMsg() noexcept {
-    assert(this);
     TakeStateSnapshot(OnGetNextMsg);
     return *GetNextMsgReturnValue;
   }
 
   void TTestReader::HandleReset() noexcept {
-    assert(this);
     TakeStateSnapshot(OnHandleReset);
   }
 
   void TTestReader::BeforeConsumeReadyMsg() noexcept {
-    assert(this);
     TakeStateSnapshot(OnBeforeConsumeReadyMsg);
     size_t size = GetReadyMsgSize();
 
@@ -143,7 +139,6 @@ namespace {
   }
 
   void TTestReader::TakeStateSnapshot(TStateSnapshot &snapshot) noexcept {
-    assert(this);
     snapshot.State = GetState();
     size_t size = GetDataSize();
 
@@ -166,20 +161,17 @@ namespace {
 
   void TTestReader::SetMsgReady(size_t offset, size_t size,
       size_t trailing_data_size) {
-    assert(this);
     GetNextMsgReturnValue.Reset();
     GetNextMsgReturnValue.MakeKnown(TGetMsgResult::MsgReady(offset, size,
         trailing_data_size));
   }
 
   void TTestReader::SetNoMsgReady() {
-    assert(this);
     GetNextMsgReturnValue.Reset();
     GetNextMsgReturnValue.MakeKnown(TGetMsgResult::NoMsgReady());
   }
 
   void TTestReader::SetInvalid() {
-    assert(this);
     GetNextMsgReturnValue.Reset();
     GetNextMsgReturnValue.MakeKnown(TGetMsgResult::Invalid());
   }
@@ -195,8 +187,6 @@ namespace {
     }
 
     void CloseRead() {
-      assert(this);
-
       if (Read >= 0) {
         close(Read);
         Read = -1;
@@ -204,8 +194,6 @@ namespace {
     }
 
     void CloseWrite() {
-      assert(this);
-
       if (Write >= 0) {
         close(Write);
         Write = -1;

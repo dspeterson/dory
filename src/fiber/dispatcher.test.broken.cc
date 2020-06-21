@@ -20,7 +20,7 @@
  */
 
 #include <fiber/dispatcher.h>
- 
+
 #include <atomic>
 #include <chrono>
 #include <cstddef>
@@ -28,14 +28,14 @@
 #include <string>
 #include <thread>
 #include <utility>
-  
+
 #include <base/error_util.h>
 #include <base/fd.h>
 #include <base/wr/net_util.h>
 #include <socket/address.h>
-  
+
 #include <gtest/gtest.h>
-  
+
 using namespace Base;
 using namespace Fiber;
 using namespace Socket;
@@ -52,7 +52,7 @@ namespace {
     public:
     /* We shutdown on this signal. */
     static constexpr int SignalNumber = SIGUSR1;
-  
+
     /* Construct a server which will accept connections on a system-assigned
        port.  Return the port number via out-param. */
     TServer(in_port_t &port)
@@ -62,32 +62,28 @@ namespace {
          keep track of it. */
       port = (new TAcceptor(this))->GetPort();
     }
-  
+
     /* See TDispatcher::GetHandlerCount(). */
     size_t GetHandlerCount() const {
-      assert(this);
       return Dispatcher.GetHandlerCount();
     }
-  
+
     /* The number of times we have hung up on a client that was quiet for too
        long. */
     size_t GetTimeouts() const {
-      assert(this);
       return Timeouts;
     }
-  
+
     /* See TDispatcher::Run(). */
     void Run() {
-      assert(this);
       Dispatcher.Run(std::chrono::seconds(2), {}, SignalNumber);
     }
-  
+
     /* See TDispatcher::Shutdown(). */
     void Shutdown(std::thread &t) {
-      assert(this);
       Dispatcher.Shutdown(t, SignalNumber);
     }
-  
+
     private:
     /* A handler for I/O with a connected client. */
     class TWorker final
@@ -103,24 +99,21 @@ namespace {
         Register(&(server->Dispatcher), Fd, POLLIN);
         SetDeadline(Timeout);
       }
-  
+
       /* Unregister from the dispatcher before we go.  This is mandatory. */
       virtual ~TWorker() {
-        assert(this);
         Unregister();
       }
-  
+
       /* Called by the dispatcher when our client has been quiet for too long.
        */
       virtual void OnDeadline() override {
-        assert(this);
         ++(Server->Timeouts);
         delete this;
       }
-  
+
       /* Called by the dispatcher when our socket has a connection waiting. */
       virtual void OnEvent(int, short) override {
-        assert(this);
         if (Limit == Buffer) {
           /* Read data from the client.  If we get some, register to write it
              back. */
@@ -159,10 +152,9 @@ namespace {
           }
         }
       }
-  
+
       /* Called by the dispatcher when a shutdown begins. */
       virtual void OnShutdown() override {
-        assert(this);
         if (Limit > Buffer) {
           /* We are waiting to echo to the client, so don't die yet. */
           Shutdown = true;
@@ -171,35 +163,34 @@ namespace {
           delete this;
         }
       }
-  
+
       private:
       /* The server of which we are a part. */
       TServer *Server;
-  
+
       /* The socket that's connected to the client. */
       TFd Fd;
-  
+
       /* A workspace for reading and writing. */
       char Buffer[1000];
-  
+
       /* Points into Buffer, above, to indicate where the last read message
          ends. */
       char *Limit;
-  
+
       /* If true, then we should self-destruct after we reply to the client. */
       bool Shutdown;
-  
+
       /* The amount of time we'll wait for I/O with the client. */
       static const TTimeout Timeout;
-  
     };  // TServer::TWorker
-  
+
     /* We are constructed by the server when it itself constructs.
        We handle accept requests. */
     class TAcceptor final
         : public TDispatcher::THandler {
       public:
-  
+
       /* Construct and register. */
       TAcceptor(TServer *server)
           : Server(server) {
@@ -218,54 +209,50 @@ namespace {
         /* Register as a handler of connection events on our socket. */
         Register(&(server->Dispatcher), Fd, POLLIN);
       }
-  
+
       /* Unregister from the dispatcher before we go.  This is mandatory. */
       virtual ~TAcceptor() {
-        assert(this);
         Unregister();
       }
-  
+
       /* The port number on which we're listening. */
       in_port_t GetPort() const noexcept {
-        assert(this);
         return Port;
       }
-  
+
       private:
-  
+
       /* Called by the dispatcher when our socket has a connection waiting. */
       virtual void OnEvent(int, short) {
-        assert(this);
         new TWorker(Server, TFd(Wr::accept(Fd, nullptr, nullptr)));
       }
-  
+
       /* Called by the dispatcher when a shutdown begins. */
       virtual void OnShutdown() {
         delete this;
       }
-  
+
       /* The server of which we are a part. */
       TServer *Server;
-  
+
       /* The socket on which we're listening. */
       TFd Fd;
-  
+
       /* See accessor. */
       in_port_t Port;
-  
     };  // TServer::TAcceptor
-  
+
     /* See accessor. */
     size_t Timeouts;
-  
+
     /* The dispatcher managing all the server's I/O. */
     TDispatcher Dispatcher;
   };  // TServer
-  
+
   /* See declaration. */
   const TServer::TWorker::TTimeout TServer::TWorker::Timeout =
       std::chrono::milliseconds(500);
-  
+
   /* Client threads enter here. */
   void ClientMain(
       size_t idx,  // the unique id number of this client
@@ -356,7 +343,7 @@ namespace {
       ASSERT_EQ(rude_count, 0u);
     }
   }
-  
+
   TEST_F(TDispatcherTest, ShutdownBeforeClients) {
     const size_t
         repeat_count = 10,  // number of times to repeat the whole test
@@ -392,7 +379,7 @@ namespace {
       ASSERT_EQ(rude_count, client_count);
     }
   }
-  
+
   TEST_F(TDispatcherTest, UpAndDown) {
       /* Construct a server and launch it in a background thread. */
     in_port_t port;

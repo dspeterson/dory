@@ -100,8 +100,6 @@ namespace {
     }
 
     ~THolder() {
-      assert(this);
-
       if (DtorFlag) {
         *DtorFlag = true;
       }
@@ -110,7 +108,6 @@ namespace {
     THolder &operator=(const THolder &) = default;
 
     THolder &operator=(THolder &&other) noexcept {
-      assert(this);
       Value = std::move(other.Value);
 
       /* Explicitly clear other.Value to make it obvious that other.Value was
@@ -121,23 +118,19 @@ namespace {
     }
 
     void SetDtorFlag(bool &flag) noexcept {
-      assert(this);
       DtorFlag = &flag;
       *DtorFlag = false;
     }
 
     const std::string &GetValue() const noexcept {
-      assert(this);
       return Value;
     }
 
     std::string &GetValue() noexcept {
-      assert(this);
       return Value;
     }
 
     bool IsEmpty() const noexcept {
-      assert(this);
       return Value.empty();
     }
 

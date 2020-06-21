@@ -111,14 +111,12 @@ namespace Dory {
 
           /* Returns the correlation ID. */
           int32_t GetCorrelationId() const {
-            assert(this);
             return ReadInt32FromHeader(Begin + THdr::CORRELATION_ID_OFFSET);
           }
 
           /* Return true if this is an all topics request.  Else return false.
            */
           bool IsAllTopics() const {
-            assert(this);
             return AllTopics;
           }
 

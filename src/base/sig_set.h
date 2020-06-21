@@ -96,59 +96,50 @@ namespace Base {
 
     /* Assignment operator. */
     TSigSet &operator=(const TSigSet &that) noexcept {
-      assert(this);
       std::memcpy(&OsObj, &that.OsObj, sizeof(OsObj));
       return *this;
     }
 
     /* Assignment operator from sigset_t. */
     TSigSet &operator=(const sigset_t &sigset) noexcept {
-      assert(this);
       std::memcpy(&OsObj, &sigset, sizeof(OsObj));
       return *this;
     }
 
     /* Add the signal to the set. */
     TSigSet &operator+=(int sig) noexcept {
-      assert(this);
       Wr::sigaddset(&OsObj, sig);
       return *this;
     }
 
     /* Remove the signal from the set. */
     TSigSet &operator-=(int sig) noexcept {
-      assert(this);
       Wr::sigdelset(&OsObj, sig);
       return *this;
     }
 
     /* Construct a new set with the signal added. */
     TSigSet operator+(int sig) noexcept {
-      assert(this);
       return TSigSet(*this) += sig;
     }
 
     /* Construct a new set with the signal removed. */
     TSigSet operator-(int sig) noexcept {
-      assert(this);
       return TSigSet(*this) -= sig;
     }
 
     /* True iff. the signal is in the set. */
     bool operator[](int sig) const noexcept {
-      assert(this);
       return Wr::sigismember(&OsObj, sig);
     }
 
     /* Access the OS object. */
     const sigset_t &operator*() const noexcept {
-      assert(this);
       return OsObj;
     }
 
     /* Access the OS object. */
     const sigset_t *Get() const noexcept {
-      assert(this);
       return &OsObj;
     }
 

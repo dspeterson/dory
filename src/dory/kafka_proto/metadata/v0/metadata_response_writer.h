@@ -125,7 +125,6 @@ namespace Dory {
           };
 
           void GrowResult(size_t num_bytes) {
-            assert(this);
             assert(Result);
             Result->resize(Result->size() + num_bytes);
           }
@@ -134,14 +133,12 @@ namespace Dory {
              than &(*Result)[i]. */
           template <typename T>
           uint8_t *Loc(T i) {
-            assert(this);
             assert(Result);
             return &(*Result)[i];
           }
 
           /* More stuff to save typing. */
           size_t Size() const {
-            assert(this);
             assert(Result);
             return Result->size();
           }

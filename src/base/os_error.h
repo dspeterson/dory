@@ -43,7 +43,6 @@ namespace Base {
     }
 
     int GetErrorCode() const {
-      assert(this);
       return ErrorCode;
     }
 

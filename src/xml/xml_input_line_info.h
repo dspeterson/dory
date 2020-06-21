@@ -62,19 +62,16 @@ namespace Xml {
     }
 
     XMLFileLoc GetLineNum() const noexcept {
-      assert(this);
       return LineNum;
     }
 
     XMLFileLoc GetColumnNum() const noexcept {
-      assert(this);
       return ColumnNum;
     }
 
     /* Increment reference count on object.  Nodes in DOM tree hold references
        to these objects. */
     void AddRef() noexcept {
-      assert(this);
       assert(RefCount);
       ++RefCount;
     }
@@ -82,7 +79,6 @@ namespace Xml {
     /* Decrement reference count on object.  When returned new reference count
        reaches 0, caller must delete object. */
     size_t RemoveRef() noexcept {
-      assert(this);
       assert(RefCount);
       return --RefCount;
     }

@@ -51,8 +51,6 @@ namespace Capped {
 
     /* Return our blocks to the pool, if we have any. */
     ~TBlob() {
-      assert(this);
-
       if (Pool) {
         Pool->FreeList(FirstBlock);
       }
@@ -60,7 +58,6 @@ namespace Capped {
 
     /* Move the data from that blob into this one, leaving that blob empty. */
     TBlob &operator=(TBlob &&that) noexcept {
-      assert(this);
       TBlob temp(std::move(*this));
       return Swap(that);
     }
@@ -71,20 +68,17 @@ namespace Capped {
     /* Return the number of bytes in a (full) block.  All blocks except for
        possibly the last block are full. */
     size_t GetBlockSize() const noexcept {
-      assert(this);
       assert(Pool);
       return Pool->GetDataSize();
     }
 
     /* True iff. this blob is non-empty. */
     operator bool() const noexcept {
-      assert(this);
       return FirstBlock;
     }
 
     /* Return the total size in bytes of the data contained. */
     size_t Size() const noexcept {
-      assert(this);
       return NumBytes;
     }
 
@@ -92,7 +86,6 @@ namespace Capped {
        first block, or will be set to nullptr if blob is empty.  Returned value
        is size in bytes of first block, or 0 if blob is empty. */
     size_t GetDataInFirstBlock(const char *&data) const noexcept {
-      assert(this);
       char *block_data = nullptr;
       size_t ret = DoGetDataInFirstBlock(block_data);
       data = block_data;
@@ -103,7 +96,6 @@ namespace Capped {
        first block, or will be set to nullptr if blob is empty.  Returned value
        is size in bytes of first block, or 0 if blob is empty. */
     size_t GetDataInFirstBlock(char *&data) noexcept {
-      assert(this);
       return DoGetDataInFirstBlock(data);
     }
 
@@ -112,7 +104,6 @@ namespace Capped {
     template <typename TContext>
     bool ForEachBlock(bool (*cb)(const void *, size_t, TContext),
         TContext context) const {
-      assert(this);
       assert(cb);
 
       for (TBlock *block = FirstBlock; block; block = block->NextBlock) {
@@ -128,7 +119,6 @@ namespace Capped {
     /* Return this blob to the default-constructed state; that is, empty, but
        still connected to the buffer pool. */
     TBlob &Reset() noexcept {
-      assert(this);
       TBlob temp(std::move(*this));
       return *this;
     }
@@ -137,7 +127,6 @@ namespace Capped {
        one).  The two blobs can be connected to different pools; those
        connections are swapped, too. */
     TBlob &Swap(TBlob &that) noexcept {
-      assert(this);
       std::swap(Pool, that.Pool);
       std::swap(FirstBlock, that.FirstBlock);
       std::swap(LastBlockSize, that.LastBlockSize);

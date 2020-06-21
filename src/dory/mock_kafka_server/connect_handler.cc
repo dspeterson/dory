@@ -33,7 +33,6 @@ using namespace Dory::MockKafkaServer;
 using namespace Socket;
 
 void TConnectHandler::OnEvent(int fd, short /*flags*/) {
-  assert(this);
   TAddress client_address;
   TFd client_socket(IfLt0(Accept(fd, client_address)));
   RunThread(ClientHandlerFactory.CreateClientHandler(

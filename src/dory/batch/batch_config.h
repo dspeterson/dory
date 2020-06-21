@@ -43,7 +43,6 @@ namespace Dory {
       TBatchConfig& operator=(const TBatchConfig &) noexcept = default;
 
       void Clear() noexcept {
-        assert(this);
         *this = TBatchConfig();
       }
 

@@ -79,7 +79,6 @@ namespace Base {
        handling strategy. */
     template <typename TReadFn>
     TState Read(TReadFn read_fn) noexcept(noexcept(read_fn(0, nullptr, 0))) {
-      assert(this);
       const size_t read_size = PrepareForRead();
 
       /* In case we get a read size of 0, return here so we don't get a return
@@ -97,7 +96,6 @@ namespace Base {
 
     /* Returns current state of reader. */
     TState GetState() const noexcept {
-      assert(this);
       return Impl.State;
     }
 
@@ -111,7 +109,6 @@ namespace Base {
        message.  Must not be called from within any subclass-implemented method
        except BeforeConsumeReadyMsg(). */
     size_t GetReadyMsgSize() const noexcept {
-      assert(this);
       assert(Impl.State == TState::MsgReady);
       assert(!Impl.RestrictReadyMsgCalls);
       assert(Impl.Fd >= 0);
@@ -144,14 +141,12 @@ namespace Base {
        multiple messages along with extra data such as size fields or message
        terminators. */
     size_t GetDataSize() const noexcept {
-      assert(this);
       return Impl.Buf.DataSize();
     }
 
     /* Returns the file descriptor that the reader is reading from, or -1 if it
        currently has no associated file descriptor. */
     int GetFd() const noexcept {
-      assert(this);
       return Impl.Fd;
     }
 
@@ -165,7 +160,6 @@ namespace Base {
        constructor.  Specifically, no file descriptor is associated with the
        reader. */
     void Reset() noexcept {
-      assert(this);
       Reset(-1);
     }
 
@@ -245,7 +239,6 @@ namespace Base {
     /* GetNextMsg() may call this to determine whether the end of input has
        been reached. */
     bool AtEndOfInput() const noexcept {
-      assert(this);
       return Impl.EndOfInput;
     }
 
@@ -254,7 +247,6 @@ namespace Base {
        (GetReadyMsg() - GetData()).  Must not be called from within any
        subclass-implemented method except BeforeConsumeReadyMsg(). */
     size_t GetReadyMsgOffset() const noexcept {
-      assert(this);
       assert(Impl.State == TState::MsgReady);
       assert(!Impl.RestrictReadyMsgCalls);
       assert(Impl.Fd >= 0);

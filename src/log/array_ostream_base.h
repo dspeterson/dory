@@ -54,14 +54,12 @@ namespace Log {
        Buf[PrefixSpace], and when (BufSize - PrefixSpace - SuffixSpace) bytes
        have been written, additional written bytes are discarded. */
     size_t Size() const noexcept {
-      assert(this);
       assert(GetPos() >= GetBuf());
       return GetPos() - GetBuf();
     }
 
     /* Return true if no bytes have been written to stream. */
     bool IsEmpty() const noexcept {
-      assert(this);
       return (Size() == 0);
     }
 
@@ -74,28 +72,24 @@ namespace Log {
     /* Return pointer to start of internal array.  Stream output begins at
        Buf[PrefixSpace]. */
     const char *GetBuf() const noexcept {
-      assert(this);
       return this->Buf;
     }
 
     /* Return pointer to start of internal array.  Stream output begins at
        Buf[PrefixSpace]. */
     char *GetBuf() noexcept {
-      assert(this);
       return this->Buf;
     }
 
     /* Return pointer to array position one byte past last byte of stream
        output. */
     const char *GetPos() const noexcept {
-      assert(this);
       return this->pptr();
     }
 
     /* Return pointer to array position one byte past last byte of stream
        output. */
     char *GetPos() noexcept {
-      assert(this);
       return this->pptr();
     }
   };

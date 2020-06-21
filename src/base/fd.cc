@@ -49,7 +49,6 @@ static void PreparePoll(int fd, int timeout, timespec *&tsp,
 }
 
 bool TFd::IsReadable(int timeout) const noexcept {
-  assert(this);
   timespec ts;
   timespec *tsp = &ts;
   pollfd p;
@@ -63,7 +62,6 @@ bool TFd::IsReadable(int timeout) const noexcept {
 }
 
 bool TFd::IsReadableIntr(int timeout) const {
-  assert(this);
   timespec ts;
   timespec *tsp = &ts;
   pollfd p;

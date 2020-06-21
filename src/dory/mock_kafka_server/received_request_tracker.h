@@ -116,19 +116,16 @@ namespace Dory {
       TReceivedRequestTracker() = default;
 
       void PutRequestInfo(TRequestInfo &&info) {
-        assert(this);
         Queue.Put(std::move(info));
       }
 
       /* Append items to 'result'. */
       void GetRequestInfo(std::list<TRequestInfo> &result) {
-        assert(this);
         result.splice(result.end(), Queue.Get());
       }
 
       /* Append items to 'result', but don't block if nothing is available. */
       void NonblockingGetRequestInfo(std::list<TRequestInfo> &result) {
-        assert(this);
         result.splice(result.end(), Queue.NonblockingGet());
       }
 

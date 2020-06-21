@@ -33,18 +33,15 @@ TWriter::TWriter(TPool *pool) noexcept
 }
 
 TWriter::~TWriter() {
-  assert(this);
   CancelBlob();
 }
 
 void TWriter::CancelBlob() noexcept {
-  assert(this);
   Pool->FreeList(FirstBlock);
   Init();
 }
 
 TBlob TWriter::DraftBlob() noexcept {
-  assert(this);
   TBlob result;
 
   if (FirstBlock) {
@@ -56,7 +53,6 @@ TBlob TWriter::DraftBlob() noexcept {
 }
 
 TWriter &TWriter::Write(const void *data, size_t size) {
-  assert(this);
   assert(data || !size);
   /* Determine if we need to allocate more blocks and, if so, where we'll link
      them on to our list. */
@@ -115,7 +111,6 @@ TWriter &TWriter::Write(const void *data, size_t size) {
 }
 
 void TWriter::Init() noexcept {
-  assert(this);
   FirstBlock = nullptr;
   LastBlock = nullptr;
   Cursor = nullptr;

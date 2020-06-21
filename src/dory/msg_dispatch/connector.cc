@@ -109,14 +109,12 @@ TConnector::~TConnector() {
 }
 
 void TConnector::SetMetadata(const std::shared_ptr<TMetadata> &md) {
-  assert(this);
   assert(md);
   Metadata = md;
   RequestFactory.Init(Ds.Conf.CompressionConf, md);
 }
 
 void TConnector::StartSlowShutdown(uint64_t start_time) {
-  assert(this);
   assert(IsStarted());
   assert(!OptShutdownCmd.IsKnown());
   ConnectorStartSlowShutdown.Increment();
@@ -128,7 +126,6 @@ void TConnector::StartSlowShutdown(uint64_t start_time) {
 }
 
 void TConnector::StartFastShutdown() {
-  assert(this);
   assert(IsStarted());
   assert(!OptShutdownCmd.IsKnown());
   ConnectorStartFastShutdown.Increment();
@@ -140,7 +137,6 @@ void TConnector::StartFastShutdown() {
 }
 
 void TConnector::WaitForShutdownAck() {
-  assert(this);
   ConnectorStartWaitShutdownAck.Increment();
   long broker_id = MyBrokerId();
   LOG(TPri::NOTICE)
@@ -173,7 +169,6 @@ void TConnector::WaitForShutdownAck() {
 }
 
 void TConnector::CleanupAfterJoin() {
-  assert(this);
   assert(SendWaitAfterShutdown.empty());
   assert(NoAckAfterShutdown.empty());
   assert(!Destroying);
@@ -206,7 +201,6 @@ void TConnector::CleanupAfterJoin() {
 }
 
 void TConnector::Run() {
-  assert(this);
   assert(Metadata);
   ConnectorStartRun.Increment();
   long broker_id = ~0;
@@ -278,7 +272,6 @@ bool TConnector::DoConnect() {
 }
 
 bool TConnector::ConnectToBroker() {
-  assert(this);
   ConnectorStartConnect.Increment();
   bool success = DoConnect();
 
@@ -310,7 +303,6 @@ static int AdjustTimeoutByDeadline(int initial_timeout, uint64_t now,
 }
 
 void TConnector::SetFastShutdownState() {
-  assert(this);
   uint64_t deadline = GetEpochMilliseconds() +
       Ds.Conf.MsgDeliveryConf.DispatcherRestartMaxDelay;
 
@@ -324,8 +316,6 @@ void TConnector::SetFastShutdownState() {
 }
 
 void TConnector::HandleShutdownRequest() {
-  assert(this);
-
   if (Destroying) {
     throw TShutdownOnDestroy();
   }
@@ -361,13 +351,11 @@ void TConnector::HandleShutdownRequest() {
 }
 
 void TConnector::SetPauseInProgress() {
-  assert(this);
   PauseInProgress = true;
   SetFastShutdownState();
 }
 
 void TConnector::HandlePauseDetected() {
-  assert(this);
   LOG(TPri::NOTICE) << "Connector thread " << Gettid() << " (index "
       << MyBrokerIndex << " broker " << MyBrokerId() <<
       ") detected pause: starting fast shutdown";
@@ -375,7 +363,6 @@ void TConnector::HandlePauseDetected() {
 }
 
 void TConnector::CheckInputQueue(uint64_t now, bool pop_sem) {
-  assert(this);
   ConnectorCheckInputQueue.Increment();
   std::list<std::list<TMsg::TPtr>> ready_msgs;
   TMsg::TTimestamp expiry = 0;
@@ -392,7 +379,6 @@ void TConnector::CheckInputQueue(uint64_t now, bool pop_sem) {
 }
 
 bool TConnector::TrySendProduceRequest() {
-  assert(this);
   ssize_t ret = Wr::send(Wr::TDisp::Nonfatal, LostTcpConnectionErrorCodes,
       Sock, SendBuf.Data(), SendBuf.DataSize(), MSG_NOSIGNAL);
 
@@ -415,7 +401,6 @@ bool TConnector::TrySendProduceRequest() {
 }
 
 bool TConnector::HandleSockWriteReady() {
-  assert(this);
   assert(CurrentRequest.IsKnown() == SendInProgress());
 
   /* See whether we are starting a new produce request, or continuing a
@@ -481,7 +466,6 @@ bool TConnector::HandleSockWriteReady() {
 }
 
 bool TConnector::ProcessSingleProduceResponse() {
-  assert(this);
   assert(!AckWaitQueue.empty());
   assert(StreamReader.GetState() == TStreamMsgReader::TState::MsgReady);
   bool keep_running = true;
@@ -570,7 +554,6 @@ bool TConnector::ProcessSingleProduceResponse() {
            produce response.  Then return true to indicate no error.  The main
            loop will call us again when appropriate. */
 bool TConnector::HandleSockReadReady() {
-  assert(this);
   assert(!AckWaitQueue.empty());
   TStreamMsgReader::TState reader_state = TStreamMsgReader::TState::AtEnd;
 
@@ -642,7 +625,6 @@ bool TConnector::HandleSockReadReady() {
 }
 
 bool TConnector::PrepareForPoll(uint64_t now, int &poll_timeout) {
-  assert(this);
   poll_timeout = -1;
   bool need_sock_write = false;
   bool need_sock_read = !AckWaitQueue.empty();
@@ -742,7 +724,6 @@ bool TConnector::PrepareForPoll(uint64_t now, int &poll_timeout) {
 }
 
 void TConnector::DoRun() {
-  assert(this);
   OkShutdown = false;
   long broker_id = MyBrokerId();
 

@@ -55,29 +55,24 @@ namespace Dory {
       TGlobalBatchConfig &operator=(TGlobalBatchConfig &&) = default;
 
       void Clear() {
-        assert(this);
         *this = TGlobalBatchConfig();
       }
 
       const std::shared_ptr<TPerTopicBatcher::TConfig> &
       GetPerTopicConfig() const noexcept {
-        assert(this);
         return PerTopicConfig;
       }
 
       const TCombinedTopicsBatcher::TConfig &
       GetCombinedTopicsConfig() const noexcept {
-        assert(this);
         return CombinedTopicsConfig;
       }
 
       size_t GetProduceRequestDataLimit() const noexcept {
-        assert(this);
         return ProduceRequestDataLimit;
       }
 
       size_t GetMessageMaxBytes() const noexcept {
-        assert(this);
         return MessageMaxBytes;
       }
 

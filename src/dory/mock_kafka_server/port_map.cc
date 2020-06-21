@@ -30,7 +30,6 @@ using namespace Dory;
 using namespace Dory::MockKafkaServer;
 
 void TPortMap::AddMapping(in_port_t virtual_port, in_port_t physical_port) {
-  assert(this);
   auto result1 = VToPMap.insert(std::make_pair(virtual_port, physical_port));
 
   if (!result1.second) {
@@ -45,13 +44,11 @@ void TPortMap::AddMapping(in_port_t virtual_port, in_port_t physical_port) {
 }
 
 in_port_t TPortMap::VirtualPortToPhys(in_port_t v_port) const {
-  assert(this);
   auto iter = VToPMap.find(v_port);
   return (iter == VToPMap.end()) ? 0 : iter->second;
 }
 
 in_port_t TPortMap::PhysicalPortToVirt(in_port_t p_port) const {
-  assert(this);
   auto iter = PToVMap.find(p_port);
   return (iter == PToVMap.end()) ? 0 : iter->second;
 }

@@ -56,7 +56,6 @@ TDomParserWithLineInfo::~TDomParserWithLineInfo() {
 }
 
 void TDomParserWithLineInfo::startDocument() {
-  assert(this);
   XercesDOMParser::startDocument();
   SetUserData();
 }
@@ -65,7 +64,6 @@ void TDomParserWithLineInfo::startElement(const XMLElementDecl &elemDecl,
     const unsigned int urlId, const XMLCh *const elemPrefix,
     const RefVectorOf<XMLAttr> &attrList, const XMLSize_t attrCount,
     const bool isEmpty, const bool isRoot) {
-  assert(this);
   XercesDOMParser::startElement(elemDecl, urlId, elemPrefix, attrList,
       attrCount, isEmpty, isRoot);
   SetUserData();
@@ -73,20 +71,17 @@ void TDomParserWithLineInfo::startElement(const XMLElementDecl &elemDecl,
 
 void TDomParserWithLineInfo::docCharacters(const XMLCh *const chars,
     const XMLSize_t length, const bool cdataSection) {
-  assert(this);
   XercesDOMParser::docCharacters(chars, length, cdataSection);
   SetUserData();
 }
 
 void TDomParserWithLineInfo::docComment(const XMLCh *const comment) {
-  assert(this);
   XercesDOMParser::docComment(comment);
   SetUserData();
 }
 
 void TDomParserWithLineInfo::docPI(const XMLCh *const target,
     const XMLCh *const data) {
-  assert(this);
   XercesDOMParser::docPI(target, data);
   SetUserData();
 }

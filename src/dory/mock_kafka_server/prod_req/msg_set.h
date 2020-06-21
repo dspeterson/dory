@@ -50,40 +50,33 @@ namespace Dory {
         TMsgSet &operator=(TMsgSet &&) = default;
 
         void AddMsg(const TMsg &msg) {
-          assert(this);
           MsgVec.push_back(msg);
           MsgCrcsOk = MsgCrcsOk && msg.GetCrcOk();
         }
 
         void AddMsg(TMsg &&msg) {
-          assert(this);
           bool crc_ok = msg.GetCrcOk();
           MsgVec.push_back(std::move(msg));
           MsgCrcsOk = MsgCrcsOk && crc_ok;
         }
 
         int32_t GetPartition() const {
-          assert(this);
           return Partition;
         }
 
         void SetCompressionType(Compress::TCompressionType compression_type) {
-          assert(this);
           CompressionType = compression_type;
         }
 
         Compress::TCompressionType GetCompressionType() const {
-          assert(this);
           return CompressionType;
         }
 
         bool GetMsgCrcsOk() const {
-          assert(this);
           return MsgCrcsOk;
         }
 
         const std::vector<TMsg> &GetMsgVec() const {
-          assert(this);
           return MsgVec;
         }
 

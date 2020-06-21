@@ -74,8 +74,6 @@ namespace Base {
 
     /* Move assignment operator leaves 'that' empty. */
     TBuf &operator=(TBuf &&that) noexcept {
-      assert(this);
-
       if (&that != this) {
         Storage = std::move(that.Storage);
         ItemOffset = that.ItemOffset;
@@ -90,7 +88,6 @@ namespace Base {
     /* Move-assign 'items' into buffer, making 'items' its new contents.  May
        be used in combination with TakeStorage() to refill buffer. */
     TBuf &operator=(TStorage &&items) {
-      assert(this);
       Storage = std::move(items);
       ItemOffset = 0;
       ItemCount = Storage.size();
@@ -99,9 +96,6 @@ namespace Base {
 
     /* Swap contents with contents of 'that'. */
     void Swap(TBuf &that) noexcept {
-      assert(this);
-      assert(&that);
-
       if (&that != this) {
         Storage.swap(that.Storage);
         std::swap(ItemOffset, that.ItemOffset);
@@ -111,7 +105,6 @@ namespace Base {
 
     /* Mark all data as consumed, leaving nothing but empty space. */
     void Clear() noexcept {
-      assert(this);
       MarkDataConsumed(ItemCount);
     }
 
@@ -122,7 +115,6 @@ namespace Base {
        by routines that take as input a vector to fill with data.  It allows
        underlying memory allocated for storage to be reused. */
     TStorage TakeStorage() noexcept {
-      assert(this);
       ItemOffset = 0;
       ItemCount = 0;
       return std::move(Storage);
@@ -131,7 +123,6 @@ namespace Base {
     /* Return pointer to start location where additional items are expected to
        be deposited.  Do not call unless SpaceSize() returns a value > 0. */
     T *Space() noexcept {
-      assert(this);
       assert(ItemOffset < Storage.size());
       assert(ItemCount < (Storage.size() - ItemOffset));
       assert(SpaceSize() > 0);
@@ -140,7 +131,6 @@ namespace Base {
 
     /* Return number of items the region returned by Space() can hold. */
     size_t SpaceSize() const noexcept {
-      assert(this);
       assert(Storage.empty() || (ItemOffset < Storage.size()));
       assert(ItemCount <= (Storage.size() - ItemOffset));
       return Storage.size() - ItemOffset - ItemCount;
@@ -149,7 +139,6 @@ namespace Base {
     /* Return true if buffer currently has no space where additional items can
        be deposited, or false otherwise. */
     bool SpaceIsEmpty() const noexcept {
-      assert(this);
       assert(Storage.empty() || (ItemOffset < Storage.size()));
       assert(ItemCount <= (Storage.size() - ItemOffset));
       return (SpaceSize() == 0);
@@ -158,7 +147,6 @@ namespace Base {
     /* Return pointer to start location of received items that are ready to be
        consumed.  Do not call unless DataSize() returns a value > 0. */
     T *Data() noexcept {
-      assert(this);
       assert(ItemOffset < Storage.size());
       assert(ItemCount <= (Storage.size() - ItemOffset));
       assert(DataSize() > 0);
@@ -168,7 +156,6 @@ namespace Base {
     /* Return const pointer to start location of received items that are ready
        to be consumed.  Do not call unless DataSize() returns a value > 0. */
     const T *Data() const noexcept {
-      assert(this);
       assert(ItemOffset < Storage.size());
       assert(ItemCount <= (Storage.size() - ItemOffset));
       assert(DataSize() > 0);
@@ -177,7 +164,6 @@ namespace Base {
 
     /* Return number of items the region returned by Data() holds. */
     size_t DataSize() const noexcept {
-      assert(this);
       assert(Storage.empty() || (ItemOffset < Storage.size()));
       assert(ItemCount <= (Storage.size() - ItemOffset));
       return ItemCount;
@@ -186,7 +172,6 @@ namespace Base {
     /* Return true if buffer currently has no received items that are ready to
        be consumed, or false otherwise. */
     bool DataIsEmpty() const noexcept {
-      assert(this);
       assert(Storage.empty() || (ItemOffset < Storage.size()));
       assert(ItemCount <= (Storage.size() - ItemOffset));
       return (DataSize() == 0);
@@ -196,7 +181,6 @@ namespace Base {
        without allocating memory.  This method is a no-op if the buffer is
        empty or its items are already at the front. */
     void MoveDataToFront() noexcept {
-      assert(this);
       assert(Storage.empty() || (ItemOffset < Storage.size()));
       assert(ItemCount <= (Storage.size() - ItemOffset));
 
@@ -215,7 +199,6 @@ namespace Base {
        'min_to_add' items.  Note that moving the items to the front may make
        more than 'min_to_add' extra space available. */
     void AddSpace(size_t min_to_add) {
-      assert(this);
       assert(Storage.empty() || (ItemOffset < Storage.size()));
       assert(ItemCount <= (Storage.size() - ItemOffset));
 
@@ -228,7 +211,6 @@ namespace Base {
        necessary, move items to front of buffer and possibly allocate
        additional storage. */
     void EnsureSpace(size_t min_size) {
-      assert(this);
       assert(Storage.empty() || (ItemOffset < Storage.size()));
       assert(ItemCount <= (Storage.size() - ItemOffset));
       size_t actual = SpaceSize();
@@ -242,7 +224,6 @@ namespace Base {
        items the buffer can hold is at least 'min_size'.  If necessary, move
        items to front of buffer and possibly allocate additional storage. */
     void EnsureDataPlusSpace(size_t min_size) {
-      assert(this);
       assert(Storage.empty() || (ItemOffset < Storage.size()));
       assert(ItemCount <= (Storage.size() - ItemOffset));
       size_t actual = Storage.size() - ItemOffset;
@@ -257,7 +238,6 @@ namespace Base {
        consumed.  This increases the value returned by DataSize() and decreases
        the value returned by SpaceSize(). */
     void MarkSpaceConsumed(size_t size) noexcept {
-      assert(this);
       assert(Storage.empty() || (ItemOffset < Storage.size()));
       assert(ItemCount <= (Storage.size() - ItemOffset));
       assert(size <= SpaceSize());
@@ -270,7 +250,6 @@ namespace Base {
        available space indicated by SpaceSize() follows the unconsumed items,
        and consuming items makes space available at the front. */
     void MarkDataConsumed(size_t size) noexcept {
-      assert(this);
       assert(Storage.empty() || (ItemOffset < Storage.size()));
       assert(ItemCount <= (Storage.size() - ItemOffset));
       assert(size <= DataSize());
@@ -284,7 +263,6 @@ namespace Base {
 
     private:
     void DoAddSpace(size_t min_to_add) {
-      assert(this);
       assert(min_to_add);
       assert(Storage.empty() || (ItemOffset < Storage.size()));
       assert(ItemCount <= (Storage.size() - ItemOffset));

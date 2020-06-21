@@ -43,7 +43,6 @@ using namespace Dory::MockKafkaServer::ProdReq;
 using namespace Log;
 
 void TSingleClientHandlerBase::Run() {
-  assert(this);
   GetSocketPeer();
   LOG(TPri::DEBUG) << "got connection from " << PeerAddressString;
 
@@ -62,7 +61,6 @@ void TSingleClientHandlerBase::Run() {
 void TSingleClientHandlerBase::PrintMdReq(size_t req_count,
     const TMetadataRequest &req, TAction action,
     const std::string &error_topic, int16_t topic_error_value, size_t wait) {
-  assert(this);
   Out << "md_n=" << req_count << " corr=" << req.CorrelationId << " act="
       << ActionToString(action) << " ack=" << topic_error_value << " wait="
       << wait << " inj_err=" << error_topic.size() << "[" << error_topic
@@ -105,7 +103,6 @@ const char *TSingleClientHandlerBase::ActionToString(TAction action) {
 }
 
 void TSingleClientHandlerBase::GetSocketPeer() {
-  assert(this);
   Socket::TAddress address = Socket::GetPeerName(ClientSocket);
   char name_buf[128];
   address.GetName(name_buf, sizeof(name_buf), nullptr, 0, NI_NUMERICHOST);
@@ -113,7 +110,6 @@ void TSingleClientHandlerBase::GetSocketPeer() {
 }
 
 bool TSingleClientHandlerBase::OpenOutputFile() {
-  assert(this);
   std::string path(CmdLineArgs.OutputDir);
   std::ios_base::openmode flags = std::ios_base::out;
 
@@ -144,8 +140,6 @@ bool TSingleClientHandlerBase::OpenOutputFile() {
 
 TSingleClientHandlerBase::TGetRequestResult
 TSingleClientHandlerBase::GetRequest() {
-  assert(this);
-
   /* The first 6 bytes of a request contain the size and API key fields. */
   InputBuf.resize(6);
 
@@ -219,7 +213,6 @@ TSingleClientHandlerBase::GetRequest() {
 
 TSingleClientHandlerBase::TRequestType
 TSingleClientHandlerBase::GetRequestType() {
-  assert(this);
   assert(InputBuf.size() >= 6);
   int16_t api_key = ReadInt16FromHeader(&InputBuf[4]);
 
@@ -243,7 +236,6 @@ TSingleClientHandlerBase::GetRequestType() {
 bool TSingleClientHandlerBase::CheckProduceRequestErrorInjectionCmd(
     size_t &cmd_seq, std::string &msg_body_match, bool &match_any_msg_body,
     int16_t &ack_error, bool &disconnect, size_t &delay) {
-  assert(this);
   cmd_seq = 0;
   msg_body_match.clear();
   match_any_msg_body = false;
@@ -322,7 +314,6 @@ bool TSingleClientHandlerBase::CheckProduceRequestErrorInjectionCmd(
 bool TSingleClientHandlerBase::CheckMetadataRequestErrorInjectionCmd(
     size_t &cmd_seq, bool &all_topics, std::string &topic, int16_t &error,
     bool &disconnect, size_t &delay) {
-  assert(this);
   cmd_seq = 0;
   all_topics = false;
   topic.clear();
@@ -387,7 +378,6 @@ TSingleClientHandlerBase::TAction
 TSingleClientHandlerBase::ChooseMsgSetAction(const TMsgSet &msg_set,
     const std::string &topic, int32_t partition, size_t &delay,
     int16_t &ack_error) {
-  assert(this);
   delay = 0;
   ack_error = 0;
   std::string msg_body_match;
@@ -445,7 +435,6 @@ TSingleClientHandlerBase::ChooseMsgSetAction(const TMsgSet &msg_set,
 
 void TSingleClientHandlerBase::PrintCurrentMsgSet(const TMsgSet &msg_set,
     int32_t partition, TAction action, int16_t ack_error) {
-  assert(this);
   const char *s =
       (msg_set.GetCompressionType() == TCompressionType::None) ? "" : "C ";
   Out << "    " << s << "partition: " << partition << " action: "
@@ -471,7 +460,6 @@ void TSingleClientHandlerBase::PrintCurrentMsgSet(const TMsgSet &msg_set,
 
 bool TSingleClientHandlerBase::PrepareProduceResponse(const TProdReq &prod_req,
     std::vector<TReceivedRequestTracker::TRequestInfo> &done_requests) {
-  assert(this);
   done_requests.clear();
   TProduceResponseWriterApi &writer = GetProduceResponseWriter();
   int32_t corr_id = prod_req.GetCorrelationId();
@@ -562,8 +550,6 @@ bool TSingleClientHandlerBase::PrepareProduceResponse(const TProdReq &prod_req,
 }
 
 bool TSingleClientHandlerBase::HandleProduceRequest() {
-  assert(this);
-
   struct reader_t final {
     explicit reader_t(TProduceRequestReaderApi &reader) : Reader(reader) { }
 
@@ -624,7 +610,6 @@ bool TSingleClientHandlerBase::HandleProduceRequest() {
 }
 
 bool TSingleClientHandlerBase::HandleMetadataRequest() {
-  assert(this);
   size_t cmd_seq = 0;
   bool all_topics = false;
   std::string error_topic;
@@ -710,7 +695,6 @@ bool TSingleClientHandlerBase::HandleMetadataRequest() {
 
 const TSetup::TPartition *TSingleClientHandlerBase::FindPartition(
     const std::string &topic, int32_t partition) const {
-  assert(this);
   auto iter = Setup.Topics.find(topic);
 
   if (iter == Setup.Topics.end()) {
@@ -734,7 +718,6 @@ const TSetup::TPartition *TSingleClientHandlerBase::FindPartition(
 }
 
 void TSingleClientHandlerBase::DoRun() {
-  assert(this);
   const TSetup::TPort &port = Setup.Ports[PortOffset];
   ProduceRequestCount = 0;
   MetadataRequestCount = 0;

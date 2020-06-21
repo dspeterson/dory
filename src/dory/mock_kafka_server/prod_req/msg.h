@@ -52,17 +52,14 @@ namespace Dory {
         TMsg &operator=(TMsg &&) = default;
 
         bool GetCrcOk() const {
-          assert(this);
           return CrcOk;
         }
 
         const std::string &GetKey() const {
-          assert(this);
           return Key;
         }
 
         const std::string &GetValue() const {
-          assert(this);
           return Value;
         }
 

@@ -70,7 +70,6 @@ namespace Base {
     /* Assign to 'dst' the entire contents of the file. */
     template <typename T>
     void ReadIntoBuf(std::vector<T> &dst) {
-      assert(this);
       static_assert(
           std::is_integral<T>::value && (sizeof(T) == sizeof(uint8_t)),
           "Destination vector type parameter must be single-byte integral");
@@ -88,7 +87,6 @@ namespace Base {
     /* Return entire file contents. */
     template <typename T>
     std::vector<T> ReadIntoBuf() {
-      assert(this);
       std::vector<T> result;
       ReadIntoBuf(result);
       return result;

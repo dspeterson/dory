@@ -46,22 +46,18 @@ namespace Dory {
     class TBroker final {
       public:
       int32_t GetId() const noexcept {
-        assert(this);
         return Id;
       }
 
       const std::string &GetHostname() const noexcept {
-        assert(this);
         return Hostname;
       }
 
       uint16_t GetPort() const noexcept {
-        assert(this);
         return Port;
       }
 
       bool IsInService() const noexcept {
-        assert(this);
         return InService;
       }
 
@@ -76,7 +72,6 @@ namespace Dory {
       bool operator==(const TBroker &that) const noexcept;
 
       bool operator!=(const TBroker &that) const noexcept {
-        assert(this);
         return !(*this == that);
       }
 
@@ -88,7 +83,6 @@ namespace Dory {
       }
 
       void MarkInService() noexcept {
-        assert(this);
         InService = true;
       }
 
@@ -111,17 +105,14 @@ namespace Dory {
     class TPartition final {
       public:
       int32_t GetId() const noexcept {
-        assert(this);
         return Id;
       }
 
       size_t GetBrokerIndex() const noexcept {
-        assert(this);
         return BrokerIndex;
       }
 
       int16_t GetErrorCode() const noexcept {
-        assert(this);
         return ErrorCode;
       }
 
@@ -152,12 +143,10 @@ namespace Dory {
     class TPartitionChoices final {
       public:
       size_t GetTopicBrokerVecIndex() const noexcept {
-        assert(this);
         return TopicBrokerVecIndex;
       }
 
       size_t GetTopicBrokerVecNumItems() const noexcept {
-        assert(this);
         return TopicBrokerVecNumItems;
       }
 
@@ -186,18 +175,15 @@ namespace Dory {
     class TTopic final {
       public:
       const std::vector<TPartition> &GetOkPartitions() const noexcept {
-        assert(this);
         return OkPartitions;
       }
 
       const std::vector<TPartition> &
       GetOutOfServicePartitions() const noexcept {
-        assert(this);
         return OutOfServicePartitions;
       }
 
       const std::vector<TPartition> &GetAllPartitions() const noexcept {
-        assert(this);
         return AllPartitions;
       }
 
@@ -258,7 +244,6 @@ namespace Dory {
       std::unique_ptr<TMetadata> Build();
 
       void Reset() {
-        assert(this);
         *this = TBuilder();
       }
 
@@ -305,28 +290,23 @@ namespace Dory {
     bool operator==(const TMetadata &that) const;
 
     bool operator!=(const TMetadata &that) const {
-      assert(this);
       return !(*this == that);
     }
 
     const std::vector<TBroker> &GetBrokers() const noexcept {
-      assert(this);
       return Brokers;
     }
 
     size_t NumInServiceBrokers() const noexcept {
-      assert(this);
       return InServiceBrokerCount;
     }
 
     const std::vector<TTopic> &GetTopics() const noexcept {
-      assert(this);
       return Topics;
     }
 
     const std::unordered_map<std::string, size_t> &
     GetTopicNameMap() const noexcept {
-      assert(this);
       return TopicNameToIndex;
     }
 

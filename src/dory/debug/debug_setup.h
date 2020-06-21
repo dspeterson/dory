@@ -69,28 +69,22 @@ namespace Dory {
            pointer to the set of enabled topics. */
         const std::unordered_set<std::string> *
         GetDebugTopics() const noexcept {
-          assert(this);
           return DebugTopics.IsKnown() ? &*DebugTopics : nullptr;
         }
 
         size_t GetVersion() const noexcept {
-          assert(this);
           return Version;
         }
 
         bool LoggingIsEnabled() const noexcept {
-          assert(this);
           return LoggingEnabled;
         }
 
         int GetLogFileDescriptor(TLogId log_id) const noexcept {
-          assert(this);
           return LogFds[ToIndex(log_id)];
         }
 
         bool RequestLogBytes(size_t num_bytes) noexcept {
-          assert(this);
-
           std::lock_guard<std::mutex> lock(Mutex);
 
           if (BytesRemaining < num_bytes) {
@@ -117,7 +111,6 @@ namespace Dory {
         }
 
         Base::TFd &GetLogFd(TLogId log_id) noexcept {
-          assert(this);
           return LogFds[ToIndex(log_id)];
         }
 
@@ -166,7 +159,6 @@ namespace Dory {
       }
 
       const std::string &GetLogPath(TLogId log_id) const noexcept {
-        assert(this);
         return LogPaths[ToIndex(log_id)];
       }
 
@@ -175,14 +167,11 @@ namespace Dory {
       }
 
       bool MySettingsAreOld(size_t my_version) const noexcept {
-        assert(this);
-
         /* We can get away without grabbing 'Mutex' here. */
         return SettingsVersion != my_version;
       }
 
       std::shared_ptr<TSettings> GetSettings() const noexcept {
-        assert(this);
         std::lock_guard<std::mutex> lock(Mutex);
         assert(Settings);
         return Settings;
@@ -198,7 +187,6 @@ namespace Dory {
       void SetDebugTopics(std::unordered_set<std::string> *debug_topics);
 
       void ClearDebugTopics() {
-        assert(this);
         std::unordered_set<std::string> no_topics;
         SetDebugTopics(&no_topics);
       }
@@ -207,7 +195,6 @@ namespace Dory {
 
       private:
       std::string &GetLogPath(TLogId log_id) noexcept {
-        assert(this);
         return LogPaths[ToIndex(log_id)];
       }
 

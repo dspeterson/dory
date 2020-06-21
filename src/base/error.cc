@@ -38,8 +38,6 @@ TError::TError() : WhatPtr("PostCtor() was not called") {}
 
 void TError::PostCtor(const TCodeLocation &code_location,
     const char *details) {
-  assert(this);
-
   try {
     CodeLocation = code_location;
     std::stringstream out_strm;
@@ -66,8 +64,6 @@ void TError::PostCtor(const TCodeLocation &code_location,
 
 void TError::PostCtor(const TCodeLocation &code_location,
     const char *details_start, const char* details_end) {
-  assert(this);
-
   try {
     CodeLocation = code_location;
     std::stringstream out_strm;

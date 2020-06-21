@@ -66,8 +66,6 @@ TSyslogLogWriter::TSyslogLogWriter(bool enabled) noexcept
 
 void TSyslogLogWriter::WriteEntry(TLogEntryAccessApi &entry,
     bool /* no_stdout_stderr */) const noexcept {
-  assert(this);
-
   if (Enabled) {
     /* Pass log entry via "%s" rather than directly, since it may contain
        formatting characters.  This avoids injection vulnerabilities. */
@@ -80,8 +78,6 @@ void TSyslogLogWriter::WriteEntry(TLogEntryAccessApi &entry,
 
 void TSyslogLogWriter::WriteStackTrace(TPri pri, void *const *buffer,
     size_t size, bool /* no_stdout_stderr */) const noexcept {
-  assert(this);
-
   if (Enabled) {
     TBacktraceSymbols symbols(buffer, size);
 

@@ -91,12 +91,10 @@ namespace Dory {
       explicit TCombinedTopicsBatcher(const TConfig &config);
 
       TConfig GetConfig() const noexcept {
-        assert(this);
         return TConfig(CoreState.GetConfig(), TopicFilter, ExcludeTopicFilter);
       }
 
       bool IsEmpty() const noexcept {
-        assert(this);
         assert(CoreState.IsEmpty() == TopicMap.IsEmpty());
         return CoreState.IsEmpty();
       }
@@ -112,7 +110,6 @@ namespace Dory {
       AddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now);
 
       Base::TOpt<TMsg::TTimestamp> GetNextCompleteTime() const noexcept {
-        assert(this);
         return CoreState.GetNextCompleteTime();
       }
 
