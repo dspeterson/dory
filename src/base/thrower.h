@@ -21,7 +21,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <sstream>
 #include <stdexcept>
 #include <utility>

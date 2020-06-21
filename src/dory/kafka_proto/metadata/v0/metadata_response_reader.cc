@@ -21,6 +21,7 @@
 
 #include <dory/kafka_proto/metadata/v0/metadata_response_reader.h>
 
+#include <cassert>
 #include <limits>
 
 #include <base/counter.h>

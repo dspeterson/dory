@@ -21,8 +21,6 @@
 
 #include <dory/conf/http_interface_conf.h>
 
-#include <cassert>
-
 using namespace Dory;
 using namespace Dory::Conf;
 

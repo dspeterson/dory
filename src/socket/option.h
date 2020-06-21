@@ -46,7 +46,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <cstddef>
 #include <chrono>
 #include <ostream>

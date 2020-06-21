@@ -21,6 +21,7 @@
 
 #include <dory/conf/batch_conf.h>
 
+#include <cassert>
 #include <cstring>
 #include <utility>
 

@@ -21,6 +21,8 @@
 
 #include <dory/msg_dispatch/dispatcher_shared_state.h>
 
+#include <cassert>
+
 #include <base/counter.h>
 #include <dory/batch/batch_config_builder.h>
 #include <dory/msg_state_tracker.h>

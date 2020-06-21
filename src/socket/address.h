@@ -22,7 +22,6 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 #include <cerrno>
 #include <cstring>
 #include <istream>

@@ -23,6 +23,7 @@
 #include <base/tmp_file.h>
 
 #include <algorithm>
+#include <cassert>
 #include <cstdlib>
 #include <cstring>
 #include <utility>

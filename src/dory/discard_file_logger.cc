@@ -23,6 +23,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cctype>
 #include <cerrno>
 #include <cstdlib>

@@ -21,8 +21,6 @@
 
 #pragma once
 
-#include <cassert>
-
 #include <base/no_copy_semantics.h>
 
 namespace Base {

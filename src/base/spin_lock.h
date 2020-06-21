@@ -21,7 +21,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <atomic>
 
 #include <sched.h>

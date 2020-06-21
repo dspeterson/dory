@@ -21,6 +21,7 @@
 
 #include <dory/conf/compression_conf.h>
 
+#include <cassert>
 #include <utility>
 
 #include <strings.h>

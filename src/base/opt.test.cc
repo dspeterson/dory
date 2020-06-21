@@ -22,7 +22,6 @@
   
 #include <base/opt.h>
 
-#include <cassert>
 #include <string>
 #include <utility>
 

@@ -21,7 +21,7 @@
 
 #include <dory/util/topic_map.h>
 
-#include <algorithm>
+#include <cassert>
 #include <utility>
 
 using namespace Dory;

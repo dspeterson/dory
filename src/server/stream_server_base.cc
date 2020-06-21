@@ -22,6 +22,7 @@
 #include <server/stream_server_base.h>
 
 #include <array>
+#include <cassert>
 #include <cerrno>
 #include <cstring>
 #include <utility>

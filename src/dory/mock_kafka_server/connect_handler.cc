@@ -21,8 +21,6 @@
 
 #include <dory/mock_kafka_server/connect_handler.h>
 
-#include <cassert>
-
 #include <base/error_util.h>
 #include <base/fd.h>
 #include <socket/address.h>

@@ -22,7 +22,6 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
 
 #include <unistd.h>
 #include <sys/socket.h>

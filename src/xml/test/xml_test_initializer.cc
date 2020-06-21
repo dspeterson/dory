@@ -21,7 +21,6 @@
 
 #include <xml/test/xml_test_initializer.h>
 
-#include <cassert>
 #include <cstdlib>
 #include <iostream>
 

@@ -21,6 +21,8 @@
 
 #include <base/random_exp_backoff.h>
 
+#include <cassert>
+
 using namespace Base;
 
 size_t

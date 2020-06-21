@@ -21,8 +21,6 @@
 
 #include <dory/conf/logging_conf.h>
 
-#include <cassert>
-
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Conf;

@@ -21,6 +21,7 @@
 
 #include <dory/debug/debug_logger.h>
 
+#include <cassert>
 #include <cerrno>
 #include <cstring>
 

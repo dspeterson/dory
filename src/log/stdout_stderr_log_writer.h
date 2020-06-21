@@ -21,7 +21,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <cstddef>
 
 #include <log/error_handler.h>

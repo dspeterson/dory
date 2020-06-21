@@ -21,8 +21,8 @@
 
 #include <dory/util/misc_util.h>
 
-#include <algorithm>
 #include <atomic>
+#include <cassert>
 #include <cerrno>
 #include <cstdint>
 #include <exception>

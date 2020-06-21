@@ -21,7 +21,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <cstddef>
 
 #include <log/log_entry_access_api.h>

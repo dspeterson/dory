@@ -21,9 +21,6 @@
 
 #include <base/timer_fd.h>
 
-#include <algorithm>
-#include <cstddef>
-
 #include <base/error_util.h>
 #include <base/wr/fd_util.h>
 #include <base/zero.h>

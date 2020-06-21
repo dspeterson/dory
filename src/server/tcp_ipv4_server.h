@@ -21,7 +21,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <memory>
 
 #include <netinet/in.h>

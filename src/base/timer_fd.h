@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <cassert>
+#include <cstddef>
 #include <cstdint>
 
 #include <sys/timerfd.h>

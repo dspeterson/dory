@@ -22,7 +22,6 @@
 
 #include <dory/kafka_proto/metadata/v0/metadata_proto.h>
 
-#include <cassert>
 #include <cstring>
 #include <string>
 

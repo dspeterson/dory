@@ -21,6 +21,7 @@
 
 #include <base/backoff_rate_limiter.h>
 
+#include <cassert>
 #include <limits>
 
 using namespace Base;

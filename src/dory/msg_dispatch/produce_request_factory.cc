@@ -21,7 +21,7 @@
 
 #include <dory/msg_dispatch/produce_request_factory.h>
 
-#include <utility>
+#include <cassert>
 
 #include <base/counter.h>
 #include <base/no_default_case.h>

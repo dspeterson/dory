@@ -26,8 +26,6 @@
 
 #pragma once
 
-#include <cassert>
-
 #include <dirent.h>
 
 #include <base/error_util.h>

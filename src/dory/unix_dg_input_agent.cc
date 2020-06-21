@@ -22,6 +22,7 @@
 #include <dory/unix_dg_input_agent.h>
 
 #include <array>
+#include <cassert>
 #include <system_error>
 
 #include <poll.h>

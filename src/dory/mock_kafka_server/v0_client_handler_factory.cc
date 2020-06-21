@@ -21,8 +21,7 @@
 
 #include <dory/mock_kafka_server/v0_client_handler_factory.h>
 
-#include <algorithm>
-#include <cassert>
+#include <utility>
 
 #include <dory/mock_kafka_server/v0_client_handler.h>
 

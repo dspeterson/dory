@@ -21,6 +21,7 @@
 
 #include <thread/managed_thread_pool_base.h>
 
+#include <algorithm>
 #include <array>
 
 #include <base/time_util.h>

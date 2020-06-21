@@ -21,12 +21,8 @@
 
 #include <base/stream_msg_reader.h>
 
-#include <cassert>
 #include <cstddef>
-#include <cstdint>
-#include <stdexcept>
 #include <string>
-#include <system_error>
 #include <vector>
 
 #include <fcntl.h>

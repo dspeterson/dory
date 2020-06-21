@@ -24,14 +24,12 @@
 #include <thread/managed_thread_pool_stats.h>
 
 #include <atomic>
-#include <cassert>
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
 #include <exception>
 #include <iostream>
 #include <stdexcept>
-#include <string>
 #include <system_error>
 
 #include <unistd.h>

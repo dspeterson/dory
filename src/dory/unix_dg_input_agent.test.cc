@@ -21,7 +21,7 @@
 
 #include <dory/unix_dg_input_agent.h>
 
-#include <atomic>
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <limits>

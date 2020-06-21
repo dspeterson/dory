@@ -21,7 +21,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <mutex>
 
 #include <base/no_copy_semantics.h>

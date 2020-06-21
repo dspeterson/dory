@@ -22,6 +22,7 @@
 #include <dory/batch/batcher_core.h>
 
 #include <algorithm>
+#include <cassert>
 
 using namespace Base;
 using namespace Dory;

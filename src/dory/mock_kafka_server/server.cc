@@ -21,6 +21,7 @@
 
 #include <dory/mock_kafka_server/server.h>
 
+#include <cassert>
 #include <cstdlib>
 #include <exception>
 #include <iostream>

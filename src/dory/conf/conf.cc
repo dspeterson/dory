@@ -21,6 +21,8 @@
 
 #include <dory/conf/conf.h>
 
+#include <algorithm>
+#include <cassert>
 #include <limits>
 #include <stdexcept>
 

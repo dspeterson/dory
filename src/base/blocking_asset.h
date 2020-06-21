@@ -22,7 +22,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <pthread.h>
 
 #include <base/no_copy_semantics.h>

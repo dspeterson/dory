@@ -21,8 +21,8 @@
 
 #include <base/stream_msg_with_size_reader.h>
 
+#include <cassert>
 #include <limits>
-#include <stdexcept>
 
 #include <base/error_util.h>
 #include <base/field_access.h>

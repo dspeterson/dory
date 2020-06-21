@@ -21,8 +21,6 @@
 
 #include <dory/mock_kafka_server/cmd_bucket.h>
 
-#include <cassert>
-
 #include <log/log.h>
 
 using namespace Dory;

@@ -22,7 +22,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <functional>
 #include <memory>
 

@@ -21,13 +21,11 @@
 
 #include <dory/compress/gzip/gzip_codec.h>
 
-#include <cassert>
 #include <cstdint>
 #include <cstring>
 #include <memory>
 #include <mutex>
 #include <new>
-#include <stdexcept>
 #include <string>
 
 #include <zlib.h>

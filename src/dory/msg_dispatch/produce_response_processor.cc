@@ -22,6 +22,8 @@
 
 #include <dory/msg_dispatch/produce_response_processor.h>
 
+#include <cassert>
+
 #include <base/counter.h>
 #include <base/gettid.h>
 #include <base/no_default_case.h>

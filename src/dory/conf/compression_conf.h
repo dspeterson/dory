@@ -22,8 +22,6 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cassert>
 #include <cstddef>
 #include <stdexcept>
 #include <string>

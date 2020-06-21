@@ -21,7 +21,6 @@
 
 #include <dory/mock_kafka_server/cmd_handler.h>
 
-#include <cassert>
 #include <memory>
 
 #include <dory/mock_kafka_server/cmd_worker.h>

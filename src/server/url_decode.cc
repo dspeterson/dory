@@ -21,6 +21,7 @@
 
 #include <server/url_decode.h>
 
+#include <cassert>
 #include <cstring>
 #include <cctype>
 

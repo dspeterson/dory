@@ -22,7 +22,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <cstddef>
 #include <list>
 #include <mutex>

@@ -21,8 +21,6 @@
 
 #pragma once
 
-#include <cassert>
-
 #include <signal.h>
 
 #include <base/error_util.h>

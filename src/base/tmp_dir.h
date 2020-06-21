@@ -22,7 +22,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <string>
 
 #include <base/no_copy_semantics.h>

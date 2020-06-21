@@ -21,6 +21,7 @@
 
 #include <server/daemonize.h>
 
+#include <cassert>
 #include <initializer_list>
 
 #include <fcntl.h>
@@ -28,7 +29,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <base/error_util.h>
 #include <base/wr/fd_util.h>
 #include <base/wr/file_util.h>
 #include <base/wr/process_util.h>

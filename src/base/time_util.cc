@@ -22,6 +22,7 @@
 #include <base/time_util.h>
 
 #include <cerrno>
+#include <ctime>
 
 #include <base/wr/time_util.h>
 

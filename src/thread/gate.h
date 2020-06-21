@@ -21,8 +21,6 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cassert>
 #include <mutex>
 
 #include <base/event_semaphore.h>

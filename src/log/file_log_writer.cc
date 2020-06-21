@@ -21,8 +21,6 @@
 
 #include <log/file_log_writer.h>
 
-#include <cassert>
-
 #include <execinfo.h>
 #include <fcntl.h>
 #include <sys/stat.h>

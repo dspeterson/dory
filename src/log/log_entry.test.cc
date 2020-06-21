@@ -21,7 +21,6 @@
 
 #include <log/log_entry.h>
 
-#include <cassert>
 #include <cstddef>
 #include <memory>
 #include <string>

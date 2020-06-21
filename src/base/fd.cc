@@ -21,6 +21,7 @@
 
 #include <base/fd.h>
 
+#include <cassert>
 #include <ctime>
 
 #include <poll.h>

@@ -21,6 +21,7 @@
 
 #include <dory/anomaly_tracker.h>
 
+#include <cassert>
 #include <cstring>
 #include <utility>
 #include <vector>

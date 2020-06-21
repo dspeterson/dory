@@ -21,7 +21,6 @@
 
 #include <log/log_writer.h>
 
-#include <cassert>
 #include <mutex>
 
 #include <log/combined_log_writer.h>

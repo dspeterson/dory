@@ -21,7 +21,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <list>
 #include <string>
 #include <unordered_map>

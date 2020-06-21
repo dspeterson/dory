@@ -21,7 +21,6 @@
 
 #include <log/array_ostream_base.h>
 
-#include <cassert>
 #include <cstddef>
 #include <string>
 

@@ -22,8 +22,6 @@
 
 #include <dory/kafka_proto/produce/v0/produce_proto.h>
 
-#include <cassert>
-
 #include <base/counter.h>
 #include <base/no_default_case.h>
 #include <dory/kafka_proto/kafka_error_code.h>

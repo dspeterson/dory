@@ -21,8 +21,6 @@
 
 #include <dory/mock_kafka_server/prod_req/prod_req_builder.h>
 
-#include <algorithm>
-#include <cassert>
 #include <string>
 
 #include <dory/compress/gzip/gzip_codec.h>

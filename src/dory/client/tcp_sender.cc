@@ -21,7 +21,6 @@
 
 #include <dory/client/tcp_sender.h>
 
-#include <cassert>
 #include <cstring>
 
 #include <arpa/inet.h>

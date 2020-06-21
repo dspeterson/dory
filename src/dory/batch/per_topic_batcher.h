@@ -21,8 +21,6 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cassert>
 #include <list>
 #include <memory>
 #include <set>

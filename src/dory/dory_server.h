@@ -22,7 +22,6 @@
 #pragma once
 
 #include <atomic>
-#include <cassert>
 #include <exception>
 #include <list>
 #include <memory>

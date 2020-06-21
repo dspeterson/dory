@@ -23,8 +23,6 @@
 
 #pragma once
 
-#include <cassert>
-
 #include <xercesc/util/XMLException.hpp>
 
 #include <base/no_copy_semantics.h>

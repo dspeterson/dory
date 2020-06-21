@@ -19,8 +19,6 @@
    Implements <dory/msg_rate_limiter.h>.
  */
 
-#include <cassert>
-
 #include <dory/msg_rate_limiter.h>
 
 using namespace Dory;

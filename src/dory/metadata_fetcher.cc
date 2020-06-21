@@ -21,7 +21,7 @@
 
 #include <dory/metadata_fetcher.h>
 
-#include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <system_error>
 

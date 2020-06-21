@@ -21,8 +21,6 @@
 
 #include <dory/mock_kafka_server/port_map.h>
 
-#include <cassert>
-
 #include <base/error_util.h>
 
 using namespace Base;

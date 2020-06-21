@@ -24,7 +24,6 @@
 
 #include <algorithm>
 #include <atomic>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <ctime>

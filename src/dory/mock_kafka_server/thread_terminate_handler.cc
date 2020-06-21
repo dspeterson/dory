@@ -21,8 +21,6 @@
 
 #include <dory/mock_kafka_server/thread_terminate_handler.h>
 
-#include <cassert>
-#include <memory>
 #include <utility>
 
 using namespace Base;

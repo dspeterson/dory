@@ -21,6 +21,8 @@
 
 #include <base/counter.h>
 
+#include <cassert>
+
 #include <base/exclusive_lock.h>
 
 using namespace Base;

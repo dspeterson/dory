@@ -21,6 +21,8 @@
 
 #include <dory/msg_state_tracker.h>
 
+#include <cassert>
+
 #include <base/no_default_case.h>
 #include <log/log.h>
 

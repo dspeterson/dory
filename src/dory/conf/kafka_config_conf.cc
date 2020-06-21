@@ -21,7 +21,6 @@
 
 #include <dory/conf/kafka_config_conf.h>
 
-#include <cassert>
 #include <limits>
 
 using namespace Dory;

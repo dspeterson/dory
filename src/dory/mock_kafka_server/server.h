@@ -21,7 +21,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <map>
 #include <memory>
 #include <unordered_map>

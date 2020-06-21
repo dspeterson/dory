@@ -21,7 +21,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <cstring>
 
 #include <signal.h>

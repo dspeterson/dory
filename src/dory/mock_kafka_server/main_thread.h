@@ -21,7 +21,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <list>
 
 #include <netinet/in.h>

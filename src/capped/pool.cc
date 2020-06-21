@@ -21,6 +21,8 @@
 
 #include <capped/pool.h>
 
+#include <algorithm>
+#include <cassert>
 #include <new>
 
 #include <base/error_util.h>

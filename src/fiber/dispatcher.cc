@@ -21,6 +21,8 @@
 
 #include <fiber/dispatcher.h>
 
+#include <cassert>
+
 #include <sys/resource.h>
 
 #include <base/error_util.h>

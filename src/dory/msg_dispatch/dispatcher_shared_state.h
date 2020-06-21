@@ -22,12 +22,9 @@
 #pragma once
 
 #include <atomic>
-#include <cassert>
 #include <cstddef>
 #include <list>
 #include <memory>
-#include <string>
-#include <unordered_set>
 
 #include <base/event_semaphore.h>
 #include <base/no_copy_semantics.h>

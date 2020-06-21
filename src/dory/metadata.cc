@@ -21,6 +21,8 @@
 
 #include <dory/metadata.h>
 
+#include <algorithm>
+#include <cassert>
 #include <functional>
 #include <memory>
 #include <utility>

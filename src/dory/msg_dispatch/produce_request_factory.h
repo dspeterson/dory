@@ -22,14 +22,13 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <list>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <base/no_copy_semantics.h>

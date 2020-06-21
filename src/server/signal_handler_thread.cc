@@ -21,6 +21,7 @@
 
 #include <server/signal_handler_thread.h>
 
+#include <cassert>
 #include <cerrno>
 
 #include <poll.h>

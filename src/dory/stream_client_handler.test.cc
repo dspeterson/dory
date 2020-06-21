@@ -21,7 +21,7 @@
 
 #include <dory/stream_client_handler.h>
 
-#include <atomic>
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <exception>

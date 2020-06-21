@@ -22,6 +22,7 @@
 #include <fiber/dispatcher.h>
 
 #include <atomic>
+#include <cassert>
 #include <chrono>
 #include <cstddef>
 #include <sstream>

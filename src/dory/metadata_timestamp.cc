@@ -21,8 +21,6 @@
 
 #include <dory/metadata_timestamp.h>
 
-#include <cassert>
-
 #include <base/time_util.h>
 
 using namespace Base;

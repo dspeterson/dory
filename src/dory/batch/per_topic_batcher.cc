@@ -21,6 +21,7 @@
 
 #include <dory/batch/per_topic_batcher.h>
 
+#include <cassert>
 #include <ios>
 #include <utility>
 

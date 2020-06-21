@@ -21,10 +21,9 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cassert>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace Dory {
 

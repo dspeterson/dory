@@ -23,7 +23,7 @@
 #pragma once
 
 #include <algorithm>
-#include <cassert>
+#include <functional>
 
 #include <base/backoff_rate_limiter.h>
 

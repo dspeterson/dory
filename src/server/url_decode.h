@@ -19,7 +19,6 @@
    Decodes an encoded url.
  */
 
-#include <cassert>
 #include <stdexcept>
 #include <string>
 

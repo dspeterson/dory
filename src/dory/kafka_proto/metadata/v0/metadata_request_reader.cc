@@ -21,6 +21,8 @@
 
 #include <dory/kafka_proto/metadata/v0/metadata_request_reader.h>
 
+#include <cassert>
+
 using namespace Dory;
 using namespace Dory::KafkaProto::Metadata::V0;
 

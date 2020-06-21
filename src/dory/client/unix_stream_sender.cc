@@ -21,7 +21,6 @@
 
 #include <dory/client/unix_stream_sender.h>
 
-#include <cassert>
 #include <cstring>
 
 #include <sys/socket.h>

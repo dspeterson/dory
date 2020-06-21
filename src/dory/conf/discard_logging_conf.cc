@@ -21,8 +21,6 @@
 
 #include <dory/conf/discard_logging_conf.h>
 
-#include <cassert>
-
 using namespace Dory;
 using namespace Dory::Conf;
 

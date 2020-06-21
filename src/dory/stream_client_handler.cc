@@ -21,7 +21,6 @@
 
 #include <dory/stream_client_handler.h>
 
-#include <cassert>
 #include <utility>
 
 #include <log/log.h>

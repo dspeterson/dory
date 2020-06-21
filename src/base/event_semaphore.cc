@@ -21,7 +21,9 @@
 
 #include <base/event_semaphore.h>
 
+#include <cassert>
 #include <cerrno>
+#include <cstdint>
 
 #include <fcntl.h>
 #include <sys/eventfd.h>

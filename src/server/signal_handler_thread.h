@@ -24,7 +24,6 @@
 #include <thread/fd_managed_thread.h>
 
 #include <atomic>
-#include <cassert>
 #include <cstring>
 #include <initializer_list>
 #include <type_traits>

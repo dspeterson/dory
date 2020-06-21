@@ -23,7 +23,6 @@
 
 #pragma once
 
-#include <cassert>
 #include <cstddef>
 #include <ctime>
 #include <functional>
