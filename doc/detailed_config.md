@@ -474,7 +474,7 @@ in the above-mentioned design section.
         <syslog enable="false" />
 
         <!-- A true value for 'enable' enables logging to a file.  If file
-             element is omitted, then file logging is enabled.
+             element is omitted, then file logging is disabled.
           -->
         <file enable="true">
             <!-- Logfile path must be absolute (i.e. it must start with '/') or
