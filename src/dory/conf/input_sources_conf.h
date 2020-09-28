@@ -34,34 +34,6 @@ namespace Dory {
 
   namespace Conf {
 
-    class TInputSourcesRelativeUnixDgPath final : public TConfError {
-      public:
-      TInputSourcesRelativeUnixDgPath()
-          : TConfError("UNIX datagram socket path must be absolute") {
-      }
-    };  // TInputSourcesRelativeUnixDgPath
-
-    class TInputSourcesInvalidUnixDgFileMode final : public TConfError {
-      public:
-      TInputSourcesInvalidUnixDgFileMode()
-          : TConfError("Invalid UNIX datagram socket mode") {
-      }
-    };  // TInputSourcesInvalidUnixDgFileMode
-
-    class TInputSourcesRelativeUnixStreamPath final : public TConfError {
-      public:
-      TInputSourcesRelativeUnixStreamPath()
-          : TConfError("UNIX stream socket path must be absolute") {
-      }
-    };  // TInputSourcesRelativeUnixStreamPath
-
-    class TInputSourcesInvalidUnixStreamFileMode final : public TConfError {
-      public:
-      TInputSourcesInvalidUnixStreamFileMode()
-          : TConfError("Invalid UNIX stream socket mode") {
-      }
-    };  // TInputSourcesInvalidUnixStreamFileMode
-
     class TInvalidTcpInputPort final : public TConfError {
       public:
       TInvalidTcpInputPort()

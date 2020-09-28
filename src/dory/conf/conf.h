@@ -164,11 +164,6 @@ namespace Dory {
 
       void ProcessTopicRateElem(const xercesc::DOMElement &topic_rate_elem);
 
-      std::pair<std::string, Base::TOpt<mode_t>>
-      ProcessFileSectionElem(const xercesc::DOMElement &elem,
-          std::unordered_map<std::string, const xercesc::DOMElement *>
-              &subsection_map);
-
       void ProcessInputSourcesElem(
           const xercesc::DOMElement &input_sources_elem);
 

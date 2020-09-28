@@ -1,7 +1,7 @@
-/* <dory/conf/logging_conf.h>
+/* <dory/conf/process_file_section.h>
 
    ----------------------------------------------------------------------------
-   Copyright 2019 Dave Peterson <dave@dspeterson.com>
+   Copyright 2020 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,22 +16,30 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Class representing logging configuration obtained from Dory's config file.
+   Utility function for processing a config file element that specifies a file.
  */
 
 #pragma once
 
-#include <dory/conf/common_logging_conf.h>
+#include <string>
+#include <utility>
+
+#include <sys/types.h>
+#include <xercesc/dom/DOMElement.hpp>
+
+#include <base/opt.h>
 
 namespace Dory {
 
   namespace Conf {
 
-    struct TLoggingConf final {
-      TCommonLoggingConf Common;
-
-      bool LogDiscards = true;
-    };  // TLoggingConf
+    /* Process a config file element that specifies a file.  The first item of
+       the returned pair will be the filename (including path if given) if a
+       file was specified, or otherwise the empty string.  The second item of
+       the returned pair privides the file mode if specified. */
+    std::pair<std::string, Base::TOpt<mode_t>>
+    ProcessFileSection(const xercesc::DOMElement &file_section,
+        bool allow_relative_path = false);
 
   }  // Conf
 

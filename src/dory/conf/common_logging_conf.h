@@ -1,7 +1,7 @@
-/* <dory/conf/logging_conf.h>
+/* <dory/conf/common_logging_conf.h>
 
    ----------------------------------------------------------------------------
-   Copyright 2019 Dave Peterson <dave@dspeterson.com>
+   Copyright 2020 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,22 +16,38 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Class representing logging configuration obtained from Dory's config file.
+   Logging configuration to be shared between Dory and mock Kafka server.
  */
 
 #pragma once
 
-#include <dory/conf/common_logging_conf.h>
+#include <string>
+
+#include <sys/types.h>
+
+#include <base/opt.h>
+#include <log/pri.h>
 
 namespace Dory {
 
   namespace Conf {
 
-    struct TLoggingConf final {
-      TCommonLoggingConf Common;
+    struct TCommonLoggingConf final {
+      Log::TPri Pri = Log::TPri::NOTICE;
 
-      bool LogDiscards = true;
-    };  // TLoggingConf
+      bool EnableStdoutStderr = false;
+
+      bool EnableSyslog = true;
+
+      /* Must be empty string or absolute pathname.  Empty string indicates
+         that file logging is disabled. */
+      std::string FilePath;
+
+      Base::TOpt<mode_t> FileMode;
+
+      void SetFileConf(const std::string &path,
+          const Base::TOpt<mode_t> &mode);
+    };  // TCommonLoggingConf
 
   }  // Conf
 

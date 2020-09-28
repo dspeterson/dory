@@ -1,7 +1,7 @@
-/* <dory/conf/logging_conf.cc>
+/* <dory/conf/common_logging_conf.cc>
 
    ----------------------------------------------------------------------------
-   Copyright 2019 Dave Peterson <dave@dspeterson.com>
+   Copyright 2020 Dave Peterson <dave@dspeterson.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -16,23 +16,25 @@
    limitations under the License.
    ----------------------------------------------------------------------------
 
-   Implements <dory/conf/logging_conf.h>.
+   Implements <dory/conf/coommon_logging_conf.h>.
  */
 
-#include <dory/conf/logging_conf.h>
+#include <dory/conf/common_logging_conf.h>
+
+#include <stdexcept>
 
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Conf;
 
-void TLoggingConf::SetFileConf(const std::string &path,
+void TCommonLoggingConf::SetFileConf(const std::string &path,
     const TOpt<mode_t> &mode) {
   if (!path.empty() && (path[0] != '/')) {
-    throw TLoggingRelativePath();
+    throw std::logic_error("Path must be absolute");
   }
 
   if (mode.IsKnown() && (*mode > 0777)) {
-    throw TLoggingInvalidFileMode();
+    throw std::logic_error("Invalid file mode");
   }
 
   FilePath = path;

@@ -21,6 +21,8 @@
 
 #include <dory/conf/input_sources_conf.h>
 
+#include <stdexcept>
+
 using namespace Base;
 using namespace Dory;
 using namespace Dory::Conf;
@@ -28,11 +30,11 @@ using namespace Dory::Conf;
 void TInputSourcesConf::SetUnixDgConf(const std::string &path,
     const TOpt<mode_t> &mode) {
   if (!path.empty() && (path[0] != '/')) {
-    throw TInputSourcesRelativeUnixDgPath();
+    throw std::logic_error("UNIX datagram path must be absolute");
   }
 
   if (mode.IsKnown() && (*mode > 0777)) {
-    throw TInputSourcesInvalidUnixDgFileMode();
+    throw std::logic_error("Invalid UNIX datagram file mode");
   }
 
   UnixDgPath = path;
@@ -42,11 +44,11 @@ void TInputSourcesConf::SetUnixDgConf(const std::string &path,
 void TInputSourcesConf::SetUnixStreamConf(const std::string &path,
     const TOpt<mode_t> &mode) {
   if (!path.empty() && (path[0] != '/')) {
-    throw TInputSourcesRelativeUnixStreamPath();
+    throw std::logic_error("UNIX stream path must be absolute");
   }
 
   if (mode.IsKnown() && (*mode > 0777)) {
-    throw TInputSourcesInvalidUnixStreamFileMode();
+    throw std::logic_error("Invalid UNIX stream file mode");
   }
 
   UnixStreamPath = path;

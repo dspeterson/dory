@@ -33,7 +33,6 @@
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/util/XercesDefs.hpp>
 
-#include <base/no_default_case.h>
 #include <xml/dom_document_util.h>
 #include <xml/dom_parser_with_line_info.h>
 

@@ -394,12 +394,12 @@ namespace {
     ASSERT_EQ(conf.MsgDebugConf.TimeLimit, 45U);
     ASSERT_EQ(conf.MsgDebugConf.ByteLimit, 512U * 1024U * 1024U);
 
-    ASSERT_EQ(conf.LoggingConf.Pri, TPri::INFO);
-    ASSERT_TRUE(conf.LoggingConf.EnableStdoutStderr);
-    ASSERT_FALSE(conf.LoggingConf.EnableSyslog);
-    ASSERT_EQ(conf.LoggingConf.FilePath, "/log/file/path");
-    ASSERT_TRUE(conf.LoggingConf.FileMode.IsKnown());
-    ASSERT_EQ(*conf.LoggingConf.FileMode, 0664U);
+    ASSERT_EQ(conf.LoggingConf.Common.Pri, TPri::INFO);
+    ASSERT_TRUE(conf.LoggingConf.Common.EnableStdoutStderr);
+    ASSERT_FALSE(conf.LoggingConf.Common.EnableSyslog);
+    ASSERT_EQ(conf.LoggingConf.Common.FilePath, "/log/file/path");
+    ASSERT_TRUE(conf.LoggingConf.Common.FileMode.IsKnown());
+    ASSERT_EQ(*conf.LoggingConf.Common.FileMode, 0664U);
 
     ASSERT_EQ(conf.InitialBrokers.size(), 2U);
     ASSERT_EQ(conf.InitialBrokers[0].Host, "host1");
@@ -548,11 +548,11 @@ namespace {
     ASSERT_FALSE(conf.InputSourcesConf.UnixStreamMode.IsKnown());
     ASSERT_TRUE(conf.InputSourcesConf.LocalTcpPort.IsKnown());
     ASSERT_EQ(*conf.InputSourcesConf.LocalTcpPort, 54321U);
-    ASSERT_EQ(conf.LoggingConf.Pri, TPri::INFO);
-    ASSERT_TRUE(conf.LoggingConf.EnableStdoutStderr);
-    ASSERT_FALSE(conf.LoggingConf.EnableSyslog);
-    ASSERT_EQ(conf.LoggingConf.FilePath, "/var/log/dory/dory.log");
-    ASSERT_FALSE(conf.LoggingConf.FileMode.IsKnown());
+    ASSERT_EQ(conf.LoggingConf.Common.Pri, TPri::INFO);
+    ASSERT_TRUE(conf.LoggingConf.Common.EnableStdoutStderr);
+    ASSERT_FALSE(conf.LoggingConf.Common.EnableSyslog);
+    ASSERT_EQ(conf.LoggingConf.Common.FilePath, "/var/log/dory/dory.log");
+    ASSERT_FALSE(conf.LoggingConf.Common.FileMode.IsKnown());
   }
 
   TEST_F(TConfTest, NoTcpTest) {
@@ -694,11 +694,11 @@ namespace {
     ASSERT_EQ(conf.InputSourcesConf.UnixStreamPath, "/var/run/dory/input_s");
     ASSERT_FALSE(conf.InputSourcesConf.UnixStreamMode.IsKnown());
     ASSERT_FALSE(conf.InputSourcesConf.LocalTcpPort.IsKnown());
-    ASSERT_EQ(conf.LoggingConf.Pri, TPri::INFO);
-    ASSERT_TRUE(conf.LoggingConf.EnableStdoutStderr);
-    ASSERT_FALSE(conf.LoggingConf.EnableSyslog);
-    ASSERT_EQ(conf.LoggingConf.FilePath, "/var/log/dory/dory.log");
-    ASSERT_FALSE(conf.LoggingConf.FileMode.IsKnown());
+    ASSERT_EQ(conf.LoggingConf.Common.Pri, TPri::INFO);
+    ASSERT_TRUE(conf.LoggingConf.Common.EnableStdoutStderr);
+    ASSERT_FALSE(conf.LoggingConf.Common.EnableSyslog);
+    ASSERT_EQ(conf.LoggingConf.Common.FilePath, "/var/log/dory/dory.log");
+    ASSERT_FALSE(conf.LoggingConf.Common.FileMode.IsKnown());
   }
 
   TEST_F(TConfTest, LoggingTestInvalidLevel) {

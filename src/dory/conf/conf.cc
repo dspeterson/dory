@@ -32,6 +32,8 @@
 #include <base/no_default_case.h>
 #include <base/to_integer.h>
 #include <dory/compress/compression_type.h>
+#include <dory/conf/process_common_logging.h>
+#include <dory/conf/process_file_section.h>
 #include <log/pri.h>
 #include <xml/config/config_errors.h>
 #include <xml/config/config_util.h>
@@ -513,34 +515,6 @@ void TConf::TBuilder::ProcessTopicRateElem(const DOMElement &topic_rate_elem) {
   }
 }
 
-std::pair<std::string, TOpt<mode_t>>
-TConf::TBuilder::ProcessFileSectionElem(const DOMElement &elem,
-    std::unordered_map<std::string, const DOMElement *> &subsection_map) {
-  const bool enable = TAttrReader::GetBool(elem, "enable");
-  RequireAllChildElementLeaves(elem);
-  subsection_map = GetSubsectionElements(elem,
-      {{"path", true}, {"mode", false}}, false);
-  const DOMElement &path_elem = *subsection_map.at("path");
-
-  /* Make sure path element has a value attribute, even if enable is false. */
-  std::string path = TAttrReader::GetString(path_elem, "value");
-
-  if (!enable) {
-    path.clear();
-  }
-
-  TOpt<mode_t> mode;
-
-  if (subsection_map.count("mode")) {
-    const DOMElement &mode_elem = *subsection_map.at("mode");
-    mode = TAttrReader::GetOptUnsigned<mode_t>(mode_elem, "value",
-        "unspecified", 0 | TBase::BIN | TBase::OCT,
-        TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE);
-  }
-
-  return std::make_pair(std::move(path), mode);
-}
-
 void TConf::TBuilder::ProcessInputSourcesElem(
     const DOMElement &input_sources_elem) {
   const auto subsection_map = GetSubsectionElements(input_sources_elem,
@@ -551,53 +525,27 @@ void TConf::TBuilder::ProcessInputSourcesElem(
   bool source_specified = false;
 
   if (subsection_map.count("unixDatagram")) {
-    const DOMElement &elem = *subsection_map.at("unixDatagram");
-    std::unordered_map<std::string, const DOMElement *> subm;
-    const auto unix_dg_conf = ProcessFileSectionElem(elem, subm);
+    const auto unix_dg_conf = ProcessFileSection(
+        *subsection_map.at("unixDatagram"));
 
     if (!unix_dg_conf.first.empty()) {
       source_specified = true;
     }
 
-    try {
-      BuildResult.InputSourcesConf.SetUnixDgConf(unix_dg_conf.first,
-          unix_dg_conf.second);
-    } catch (const TInputSourcesRelativeUnixDgPath &) {
-      const DOMElement &path_elem = *subm.at("path");
-      throw TInvalidAttr(path_elem, "value",
-          TAttrReader::GetString(path_elem, "value").c_str(),
-          "UNIX datagram socket path must be absolute");
-    } catch (const TInputSourcesInvalidUnixDgFileMode &) {
-      const DOMElement &mode_elem = *subm.at("mode");
-      throw TInvalidAttr(mode_elem, "value",
-          TAttrReader::GetString(mode_elem, "value").c_str(),
-          "UNIX datagram socket mode must be <= 0777");
-    }
+    BuildResult.InputSourcesConf.SetUnixDgConf(unix_dg_conf.first,
+        unix_dg_conf.second);
   }
 
   if (subsection_map.count("unixStream")) {
-    const DOMElement &elem = *subsection_map.at("unixStream");
-    std::unordered_map<std::string, const DOMElement *> subm;
-    const auto unix_stream_conf = ProcessFileSectionElem(elem, subm);
+    const auto unix_stream_conf = ProcessFileSection(
+        *subsection_map.at("unixStream"));
 
     if (!unix_stream_conf.first.empty()) {
       source_specified = true;
     }
 
-    try {
-      BuildResult.InputSourcesConf.SetUnixStreamConf(unix_stream_conf.first,
-          unix_stream_conf.second);
-    } catch (const TInputSourcesRelativeUnixStreamPath &) {
-      const DOMElement &path_elem = *subm.at("path");
-      throw TInvalidAttr(path_elem, "value",
-          TAttrReader::GetString(path_elem, "value").c_str(),
-          "UNIX stream socket path must be absolute");
-    } catch (const TInputSourcesInvalidUnixStreamFileMode &) {
-      const DOMElement &mode_elem = *subm.at("mode");
-      throw TInvalidAttr(mode_elem, "value",
-          TAttrReader::GetString(mode_elem, "value").c_str(),
-          "UNIX stream socket mode must be <= 0777");
-    }
+    BuildResult.InputSourcesConf.SetUnixStreamConf(unix_stream_conf.first,
+        unix_stream_conf.second);
   }
 
   if (subsection_map.count("tcp")) {
@@ -924,62 +872,11 @@ void TConf::TBuilder::ProcessMsgDebugElem(const DOMElement &msg_debug_elem) {
 }
 
 void TConf::TBuilder::ProcessLoggingElem(const DOMElement &logging_elem) {
-  const auto subsection_map = GetSubsectionElements(logging_elem,
-      {
-          {"level", false}, {"stdoutStderr", false}, {"syslog", false},
-          {"file", false}, {"logDiscards", false}
-      }, false);
+  const auto extra_subsections = ProcessCommonLogging(logging_elem,
+      BuildResult.LoggingConf.Common, {{"logDiscards", false}}, false);
 
-  if (subsection_map.count("level")) {
-    const DOMElement &elem = *subsection_map.at("level");
-    RequireLeaf(elem);
-    const std::string level = TAttrReader::GetString(elem, "value");
-
-    try {
-      BuildResult.LoggingConf.Pri = ToPri(level);
-    } catch (const std::range_error &) {
-      throw TInvalidAttr(elem, "value", level.c_str(),
-          "Logging level must be one of {EMERG, ALERT, CRIT, ERR, WARNING, "
-          "NOTICE, INFO, DEBUG}");
-    }
-  }
-
-  if (subsection_map.count("stdoutStderr")) {
-    const DOMElement &elem = *subsection_map.at("stdoutStderr");
-    RequireLeaf(elem);
-    BuildResult.LoggingConf.EnableStdoutStderr = TAttrReader::GetBool(
-        elem, "enable");
-  }
-
-  if (subsection_map.count("syslog")) {
-    const DOMElement &elem = *subsection_map.at("syslog");
-    RequireLeaf(elem);
-    BuildResult.LoggingConf.EnableSyslog =
-        TAttrReader::GetBool(elem, "enable");
-  }
-
-  if (subsection_map.count("file")) {
-    const DOMElement &elem = *subsection_map.at("file");
-    std::unordered_map<std::string, const DOMElement *> subm;
-    const auto file_conf = ProcessFileSectionElem(elem, subm);
-
-    try {
-      BuildResult.LoggingConf.SetFileConf(file_conf.first, file_conf.second);
-    } catch (const TLoggingRelativePath &) {
-      const DOMElement &path_elem = *subm.at("path");
-      throw TInvalidAttr(path_elem, "value",
-          TAttrReader::GetString(path_elem, "value").c_str(),
-          "Logfile path must be absolute");
-    } catch (const TLoggingInvalidFileMode &) {
-      const DOMElement &mode_elem = *subm.at("mode");
-      throw TInvalidAttr(mode_elem, "value",
-          TAttrReader::GetString(mode_elem, "value").c_str(),
-          "Logfile mode must be <= 0777");
-    }
-  }
-
-  if (subsection_map.count("logDiscards")) {
-    const DOMElement &elem = *subsection_map.at("logDiscards");
+  if (extra_subsections.count("logDiscards")) {
+    const DOMElement &elem = *extra_subsections.at("logDiscards");
     RequireLeaf(elem);
     BuildResult.LoggingConf.LogDiscards = TAttrReader::GetBool(elem, "enable");
   }

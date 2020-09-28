@@ -80,10 +80,10 @@ static int DoryMain(int argc, char *const argv[]) {
     TDoryServer::PrepareForInit(conf);
 
     try {
-      InitLogging(argv[0], conf.LoggingConf.Pri,
-          conf.LoggingConf.EnableStdoutStderr && !args.Daemon,
-          conf.LoggingConf.EnableSyslog, conf.LoggingConf.FilePath,
-          conf.LoggingConf.FileMode);
+      InitLogging(argv[0], conf.LoggingConf.Common.Pri,
+          conf.LoggingConf.Common.EnableStdoutStderr && !args.Daemon,
+          conf.LoggingConf.Common.EnableSyslog,
+          conf.LoggingConf.Common.FilePath, conf.LoggingConf.Common.FileMode);
     } catch (const std::exception &x) {
       std::cerr << "Failed to initialize logging: " << x.what()
                 << std::endl;
