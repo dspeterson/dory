@@ -41,9 +41,8 @@ bool TDoryXmlInit::HandleInitError(const XMLException &x) {
 
 void TDoryXmlInit::HandleCleanupError(const XMLException &x) noexcept {
   try {
-    std::string msg("Xerces XML library cleanup error: ");
-    msg += TranscodeToString(x.getMessage());
-    LOG(TPri::ERR) << "Xerces XML library cleanup error: " << msg;
+    LOG(TPri::ERR) << "Xerces XML library cleanup error: "
+        << TranscodeToString(x.getMessage());
   } catch (...) {
     LOG(TPri::ERR) << "Xerces XML library cleanup error";
   }

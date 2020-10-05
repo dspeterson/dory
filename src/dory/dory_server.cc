@@ -122,9 +122,11 @@ static void LoadCompressionLibraries(const TCompressionConf &conf) {
 }
 
 void TDoryServer::PrepareForInit(const Conf::TConf &conf) {
+  /* Put code here that should be called only once, even in the case where
+     multiple TDoryServer objects are created. */
+
   /* Load any compression libraries we need, according to the compression info
-     from our config file.  This will throw if a library fails to load.  We
-     want to fail early if there is a problem loading a library. */
+     from our config file.  This will throw if a library fails to load. */
   LoadCompressionLibraries(conf.CompressionConf);
 
   /* The TDoryServer constructor will use the random number generator, so
