@@ -113,14 +113,17 @@ static int DoryMain(int argc, char *const argv[]) {
     }
   }
 
-  /* After this point, all signals will be blocked, and should remain blocked
-     for all threads except the signal handler thread for the lifetime of the
-     application.  Do this after we daemonize, since becoming a daemon involves
-     calling fork().  If a multithreaded process calls fork(), only the calling
-     thread exists in the child.  Therefore if we tried to start the signal
-     handler thread before becoming a daemon, that thread would no longer exist
-     after daemonization.  In general, one must exercise great care when
-     calling fork() from a multithreaded process (see
+  /* At this point, we are still single threaded.  Constructor creates
+     dedicated signal handler thread and returns with all signals blocked.
+     This thread and all subsequently created threads should keep all signals
+     blocked for the lifetime of the application.
+
+     Do this after we daemonize, since becoming a daemon involves calling
+     fork().  If a multithreaded process calls fork(), only the calling thread
+     exists in the child.  If we tried to start the signal handler thread
+     before becoming a daemon, that thread would no longer exist after
+     daemonization.  In general, one must exercise great care when calling
+     fork() from a multithreaded process (see
      https://pubs.opengroup.org/onlinepubs/9699919799/functions/fork.html ). */
   TSignalHandlerThreadStarter signal_handler_starter;
 
