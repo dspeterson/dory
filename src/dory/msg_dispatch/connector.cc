@@ -116,23 +116,23 @@ void TConnector::SetMetadata(const std::shared_ptr<TMetadata> &md) {
 
 void TConnector::StartSlowShutdown(uint64_t start_time) {
   assert(IsStarted());
-  assert(!OptShutdownCmd.IsKnown());
+  assert(!OptShutdownCmd.has_value());
   ConnectorStartSlowShutdown.Increment();
   LOG(TPri::NOTICE)
       << "Sending slow shutdown request to connector thread (index "
       << MyBrokerIndex << " broker " << MyBrokerId() << ")";
-  OptShutdownCmd.MakeKnown(start_time);
+  OptShutdownCmd.emplace(start_time);
   RequestShutdown();
 }
 
 void TConnector::StartFastShutdown() {
   assert(IsStarted());
-  assert(!OptShutdownCmd.IsKnown());
+  assert(!OptShutdownCmd.has_value());
   ConnectorStartFastShutdown.Increment();
   LOG(TPri::NOTICE)
       << "Sending fast shutdown request to connector thread (index "
       << MyBrokerIndex << " broker " << MyBrokerId() << ")";
-  OptShutdownCmd.MakeKnown();
+  OptShutdownCmd.emplace();
   RequestShutdown();
 }
 
@@ -165,7 +165,7 @@ void TConnector::WaitForShutdownAck() {
   LOG(TPri::NOTICE) << "Got " << blurb << " from connector thread (index "
       << MyBrokerIndex << " broker " << broker_id << ")";
   ConnectorFinishWaitShutdownAck.Increment();
-  OptShutdownCmd.Reset();
+  OptShutdownCmd.reset();
 }
 
 void TConnector::CleanupAfterJoin() {
@@ -178,7 +178,7 @@ void TConnector::CleanupAfterJoin() {
   /* The order of the remaining steps matters because we want to avoid getting
      messages unnecessarily out of order. */
 
-  if (CurrentRequest.IsKnown()) {
+  if (CurrentRequest) {
     EmptyAllTopics(CurrentRequest->second, SendWaitAfterShutdown);
   }
 
@@ -306,12 +306,12 @@ void TConnector::SetFastShutdownState() {
   uint64_t deadline = GetEpochMilliseconds() +
       Ds.Conf.MsgDeliveryConf.DispatcherRestartMaxDelay;
 
-  if (OptInProgressShutdown.IsKnown()) {
+  if (OptInProgressShutdown) {
     TInProgressShutdown &shutdown_state = *OptInProgressShutdown;
     shutdown_state.Deadline = std::min(shutdown_state.Deadline, deadline);
     shutdown_state.FastShutdown = true;
   } else {
-    OptInProgressShutdown.MakeKnown(deadline, true);
+    OptInProgressShutdown.emplace(deadline, true);
   }
 }
 
@@ -320,9 +320,9 @@ void TConnector::HandleShutdownRequest() {
     throw TShutdownOnDestroy();
   }
 
-  assert(OptShutdownCmd.IsKnown());
+  assert(OptShutdownCmd);
   const TShutdownCmd &cmd = *OptShutdownCmd;
-  bool is_fast = cmd.OptSlowShutdownStartTime.IsUnknown();
+  bool is_fast = !cmd.OptSlowShutdownStartTime;
 
   if (is_fast) {
     SetFastShutdownState();
@@ -335,11 +335,11 @@ void TConnector::HandleShutdownRequest() {
     uint64_t deadline = *cmd.OptSlowShutdownStartTime +
         Ds.Conf.MsgDeliveryConf.ShutdownMaxDelay;
 
-    if (OptInProgressShutdown.IsKnown()) {
+    if (OptInProgressShutdown) {
       TInProgressShutdown &shutdown_state = *OptInProgressShutdown;
       shutdown_state.Deadline = std::min(shutdown_state.Deadline, deadline);
     } else {
-      OptInProgressShutdown.MakeKnown(deadline, false);
+      OptInProgressShutdown.emplace(deadline, false);
     }
   }
 
@@ -369,10 +369,10 @@ void TConnector::CheckInputQueue(uint64_t now, bool pop_sem) {
   bool has_expiry = pop_sem ?
       InputQueue.Get(now, expiry, ready_msgs) :
       InputQueue.NonblockingGet(now, expiry, ready_msgs);
-  OptNextBatchExpiry.Reset();
+  OptNextBatchExpiry.reset();
 
   if (has_expiry) {
-    OptNextBatchExpiry.MakeKnown(expiry);
+    OptNextBatchExpiry.emplace(expiry);
   }
 
   RequestFactory.Put(std::move(ready_msgs));
@@ -401,7 +401,7 @@ bool TConnector::TrySendProduceRequest() {
 }
 
 bool TConnector::HandleSockWriteReady() {
-  assert(CurrentRequest.IsKnown() == SendInProgress());
+  assert(CurrentRequest.has_value() == SendInProgress());
 
   /* See whether we are starting a new produce request, or continuing a
      partially sent one. */
@@ -410,18 +410,17 @@ bool TConnector::HandleSockWriteReady() {
 
     // Assigning directly to CurrentRequest would be simpler, but causes a
     // build error on Ubuntu 15, Ubuntu 16, and Debian 8.
-    TOpt<TProduceRequest> r = RequestFactory.BuildRequest(buf);
+    auto r = RequestFactory.BuildRequest(buf);
 
-    if (r.IsUnknown()) {
+    if (!r.has_value()) {
       assert(false);
       LOG(TPri::ERR) << "Bug!!! Produce request is empty";
       BugProduceRequestEmpty.Increment();
-      CurrentRequest.Reset();
+      CurrentRequest.reset();
       return true;
     }
 
-    CurrentRequest.Reset();
-    CurrentRequest.MakeKnown(std::move(*r));
+    CurrentRequest.emplace(std::move(*r));
     SendBuf = std::move(buf);
     assert(!SendBuf.DataIsEmpty());
   }
@@ -459,7 +458,7 @@ bool TConnector::HandleSockWriteReady() {
       AckWaitQueue.emplace_back(std::move(*CurrentRequest));
     }
 
-    CurrentRequest.Reset();
+    CurrentRequest.reset();
   }
 
   return true;
@@ -635,8 +634,7 @@ bool TConnector::PrepareForPoll(uint64_t now, int &poll_timeout) {
      the logic below prevents us from starting a new send or monitoring for
      batch expiry once we have detected a pause event. */
   assert(!PauseInProgress ||
-      (OptInProgressShutdown.IsKnown() &&
-          OptInProgressShutdown->FastShutdown));
+      (OptInProgressShutdown && OptInProgressShutdown->FastShutdown));
 
   if (SendInProgress()) {
     need_sock_write = true;
@@ -645,7 +643,7 @@ bool TConnector::PrepareForPoll(uint64_t now, int &poll_timeout) {
        the request even if the shutdown timeout is exceeded.  Until the send is
        finished, we don't need to monitor for batch expiry since batched
        messages can't be sent until the current send finishes. */
-  } else if (OptInProgressShutdown.IsKnown()) {
+  } else if (OptInProgressShutdown) {
     /* A fast or slow shutdown is in progress.  In the case of a fast shutdown,
        stop sending immediately since no partially sent request needs
        finishing.  In the case of a slow shutdown, keep sending until there is
@@ -663,11 +661,11 @@ bool TConnector::PrepareForPoll(uint64_t now, int &poll_timeout) {
 
     /* If a fast shutdown is in progress, we are done sending so we no longer
        need to monitor for batch expiry. */
-    need_batch_timeout = OptNextBatchExpiry.IsKnown() &&
+    need_batch_timeout = OptNextBatchExpiry &&
         !OptInProgressShutdown->FastShutdown;
   } else {
     need_sock_write = !RequestFactory.IsEmpty();
-    need_batch_timeout = OptNextBatchExpiry.IsKnown();
+    need_batch_timeout = OptNextBatchExpiry.has_value();
   }
 
   if (need_sock_write || need_sock_read) {
@@ -715,7 +713,7 @@ bool TConnector::PrepareForPoll(uint64_t now, int &poll_timeout) {
      progress.  In the case of a slow shutdown, we have already emptied it
      and know that no more requests  will be queued.  Note that
      'PauseInProgress' implies fast shutdown. */
-  input_item.fd = OptInProgressShutdown.IsKnown() ?
+  input_item.fd = OptInProgressShutdown ?
       -1 : int(InputQueue.GetSenderNotifyFd());
 
   input_item.events = POLLIN;
@@ -763,7 +761,7 @@ void TConnector::DoRun() {
         break;
       }
 
-      if (OptInProgressShutdown.IsKnown() &&
+      if (OptInProgressShutdown &&
           (finish_time >= OptInProgressShutdown->Deadline)) {
         OkShutdown = true;
         LOG(TPri::NOTICE) << "Connector thread " << Gettid() << " (index "

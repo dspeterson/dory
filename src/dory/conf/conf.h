@@ -32,7 +32,6 @@
 #include <xercesc/dom/DOMDocument.hpp>
 #include <xercesc/dom/DOMElement.hpp>
 
-#include <base/opt.h>
 #include <dory/conf/batch_conf.h>
 #include <dory/conf/compression_conf.h>
 #include <dory/conf/conf_error.h>

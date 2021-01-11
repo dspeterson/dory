@@ -28,6 +28,7 @@
 #include <cstdint>
 #include <list>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -35,7 +36,6 @@
 #include <base/event_semaphore.h>
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 #include <base/stream_msg_with_size_reader.h>
 #include <dory/debug/debug_logger.h>
 #include <dory/kafka_proto/produce/produce_response_reader_api.h>
@@ -181,7 +181,7 @@ namespace Dory {
          During a slow shutdown, we attempt to send all outstanding requests,
          and receive and process all outstanding responses, until the slow
          shutdown time limit expires. */
-      Base::TOpt<TInProgressShutdown> OptInProgressShutdown;
+      std::optional<TInProgressShutdown> OptInProgressShutdown;
 
       enum class TMainLoopPollItem {
         SockIo = 0,
@@ -201,7 +201,7 @@ namespace Dory {
          from 'InputQueue' and add them to our 'RequestFactory' member, where
          they are immediately available to be bundled into a produce request.
        */
-      Base::TOpt<TMsg::TTimestamp> OptNextBatchExpiry;
+      std::optional<TMsg::TTimestamp> OptNextBatchExpiry;
 
       /* Messages are deposited here by the router thread, where they wait to
          be claimed by this connector thread for sending.  Some may be
@@ -253,7 +253,7 @@ namespace Dory {
          which the connector thread has not yet received.  When the connector
          receives the command, it sets 'OptInProgressShutdown' accordingly and
          returns this value to the unknown state. */
-      Base::TOpt<TShutdownCmd> OptShutdownCmd;
+      std::optional<TShutdownCmd> OptShutdownCmd;
 
       /* Connector thread pushes this to acknowledge receipt of shutdown
          request (but continues executing until shutdown finished). */
@@ -262,7 +262,7 @@ namespace Dory {
       /* This becomes known when we are about to start writing a produce
          request into our send buffer.  It becomes unknown when we have
          finished sending the request and are waiting for the response. */
-      Base::TOpt<TProduceRequest> CurrentRequest;
+      std::optional<TProduceRequest> CurrentRequest;
 
       /* This handles the details of parsing and processing produce responses.
        */

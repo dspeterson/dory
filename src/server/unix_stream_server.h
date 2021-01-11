@@ -23,6 +23,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -32,7 +33,6 @@
 #include <sys/un.h>
 
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 #include <server/stream_server_base.h>
 
 namespace Server {
@@ -63,7 +63,7 @@ namespace Server {
        determined by the umask.  This is the default behavior if SetMode() has
        not been called. */
     void ClearMode() noexcept {
-      Mode.Reset();
+      Mode.reset();
     }
 
     protected:
@@ -76,7 +76,7 @@ namespace Server {
 
     const std::string Path;
 
-    Base::TOpt<mode_t> Mode;
+    std::optional<mode_t> Mode;
 
     struct sockaddr_un ClientAddr;
   };  // TUnixStreamServer

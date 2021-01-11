@@ -40,22 +40,22 @@ DEFINE_COUNTER(NoBatchAnyPartition);
 DEFINE_COUNTER(NoBatchPartitionKey);
 DEFINE_COUNTER(PerTopicBatchPartitionKey);
 
-static TOpt<TMsg::TTimestamp>
-min_opt_ts(const TOpt<TMsg::TTimestamp> &t1,
-    const TOpt<TMsg::TTimestamp> &t2) {
-  if (t1.IsKnown() && t2.IsKnown()) {
-    return TOpt<TMsg::TTimestamp>(std::min(*t1, *t2));
+static std::optional<TMsg::TTimestamp>
+min_opt_ts(const std::optional<TMsg::TTimestamp> &t1,
+    const std::optional<TMsg::TTimestamp> &t2) {
+  if (t1 && t2) {
+    return std::min(*t1, *t2);
   }
 
-  if (t1.IsKnown()) {
+  if (t1) {
     return t1;
   }
 
-  if (t2.IsKnown()) {
+  if (t2) {
     return t2;
   }
 
-  return TOpt<TMsg::TTimestamp>();
+  return std::nullopt;
 }
 
 TBrokerMsgQueue::TBrokerMsgQueue(const TGlobalBatchConfig &batch_config,
@@ -114,16 +114,13 @@ void TBrokerMsgQueue::Put(TMsg::TTimestamp now, TMsg::TPtr &&msg) {
   bool notify = (ready_list_empty_initial && !ready_list_empty_final);
 
   if (!notify) {
-    TOpt<TMsg::TTimestamp> min_initial_expiry =
-        min_opt_ts(per_topic_status.OptInitialExpiry,
-                   combined_topics_status.OptInitialExpiry);
-    TOpt<TMsg::TTimestamp> min_final_expiry =
-        min_opt_ts(per_topic_status.OptFinalExpiry,
-                   combined_topics_status.OptFinalExpiry);
+    auto min_initial_expiry = min_opt_ts(per_topic_status.OptInitialExpiry,
+        combined_topics_status.OptInitialExpiry);
+    auto min_final_expiry = min_opt_ts(per_topic_status.OptFinalExpiry,
+        combined_topics_status.OptFinalExpiry);
 
-    if (min_final_expiry.IsKnown() &&
-        (!min_initial_expiry.IsKnown() ||
-         (*min_final_expiry < *min_initial_expiry))) {
+    if (min_final_expiry &&
+        (!min_initial_expiry || (*min_final_expiry < *min_initial_expiry))) {
       notify = true;
     }
   }
@@ -205,11 +202,10 @@ bool TBrokerMsgQueue::NonblockingGet(TMsg::TTimestamp now,
     ready_msgs.splice(ready_msgs.end(), std::move(ReadyList));
   }
 
-  TOpt<TMsg::TTimestamp> opt_next_expiry =
-      min_opt_ts(per_topic_status.OptFinalExpiry,
-                 combined_topics_status.OptFinalExpiry);
+  auto opt_next_expiry = min_opt_ts(per_topic_status.OptFinalExpiry,
+      combined_topics_status.OptFinalExpiry);
 
-  if (opt_next_expiry.IsKnown()) {
+  if (opt_next_expiry) {
     next_batch_complete_time = *opt_next_expiry;
     return true;
   }
@@ -285,7 +281,7 @@ TBrokerMsgQueue::CheckPerTopicBatcher(TMsg::TTimestamp now,
   std::list<std::list<TMsg::TPtr>> ready_batches;
   expiry_status.OptInitialExpiry = PerTopicBatcher.GetNextCompleteTime();
 
-  if (expiry_status.OptInitialExpiry.IsKnown()) {
+  if (expiry_status.OptInitialExpiry) {
     if (*expiry_status.OptInitialExpiry <= now) {
       ready_batches.splice(ready_batches.end(),
                            PerTopicBatcher.GetCompleteBatches(now));
@@ -306,7 +302,7 @@ TBrokerMsgQueue::CheckCombinedTopicsBatcher(TMsg::TTimestamp now,
   std::list<std::list<TMsg::TPtr>> ready_batches;
   expiry_status.OptInitialExpiry = CombinedTopicsBatcher.GetNextCompleteTime();
 
-  if (expiry_status.OptInitialExpiry.IsKnown()) {
+  if (expiry_status.OptInitialExpiry) {
     if (*expiry_status.OptInitialExpiry <= now) {
       assert(!CombinedTopicsBatcher.IsEmpty());
       ready_batches.splice(ready_batches.end(),
@@ -328,8 +324,8 @@ void TBrokerMsgQueue::CheckBothBatchers(TMsg::TTimestamp now,
   std::list<std::list<TMsg::TPtr>> combined_topics_batches =
       CheckCombinedTopicsBatcher(now, combined_topics_status);
 
-  if (per_topic_status.OptInitialExpiry.IsKnown() &&
-      combined_topics_status.OptInitialExpiry.IsKnown()) {
+  if (per_topic_status.OptInitialExpiry &&
+      combined_topics_status.OptInitialExpiry) {
     /* Queue the list with the earliest initial expiry first.  Note: either or
        both lists may be empty. */
     if (*per_topic_status.OptInitialExpiry <
@@ -350,10 +346,8 @@ void TBrokerMsgQueue::CheckBothBatchers(TMsg::TTimestamp now,
 
 std::list<std::list<TMsg::TPtr>>
 TBrokerMsgQueue::GetAllMsgs() {
-  TOpt<TMsg::TTimestamp> per_topic_expiry =
-      PerTopicBatcher.GetNextCompleteTime();
-  TOpt<TMsg::TTimestamp> combined_topics_expiry =
-      CombinedTopicsBatcher.GetNextCompleteTime();
+  auto per_topic_expiry = PerTopicBatcher.GetNextCompleteTime();
+  auto combined_topics_expiry = CombinedTopicsBatcher.GetNextCompleteTime();
   std::list<std::list<TMsg::TPtr>> per_topic = PerTopicBatcher.GetAllBatches();
   std::list<std::list<TMsg::TPtr>> combined_topics =
       CombinedTopicsBatcher.TakeBatch();
@@ -362,7 +356,7 @@ TBrokerMsgQueue::GetAllMsgs() {
 
   /* If expiry is defined for both batchers, queue the contents of the batcher
      with the earliest expiry first.  Otherwise choose arbitrarily. */
-  if (per_topic_expiry.IsKnown() && combined_topics_expiry.IsKnown() &&
+  if (per_topic_expiry && combined_topics_expiry &&
       (*combined_topics_expiry < *per_topic_expiry)) {
     ReadyList.splice(ReadyList.end(), std::move(combined_topics));
     ReadyList.splice(ReadyList.end(), std::move(per_topic));

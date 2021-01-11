@@ -21,9 +21,9 @@
 
 #include <dory/batch/single_topic_batcher.h>
 
+#include <optional>
 #include <string>
 
-#include <base/opt.h>
 #include <base/tmp_file.h>
 #include <dory/msg.h>
 #include <dory/msg_creator.h>
@@ -64,8 +64,8 @@ namespace {
     ASSERT_EQ(cfg.ByteCount, config.ByteCount);
     ASSERT_FALSE(batcher.BatchingIsEnabled());
     ASSERT_TRUE(batcher.IsEmpty());
-    TOpt<TMsg::TTimestamp> opt_ts = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_ts.IsKnown());
+    auto opt_ts = batcher.GetNextCompleteTime();
+    ASSERT_FALSE(opt_ts.has_value());
     TMsg::TPtr msg = mc.NewMsg("Bugs Bunny", "Elmer Fudd", 100);
     ASSERT_TRUE(!!msg);
     std::list<TMsg::TPtr> msg_list =
@@ -74,7 +74,7 @@ namespace {
     SetProcessed(msg);
     ASSERT_TRUE(msg_list.empty());
     opt_ts = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_ts.IsKnown());
+    ASSERT_FALSE(opt_ts.has_value());
     msg_list = batcher.TakeBatch();
     ASSERT_TRUE(msg_list.empty());
   }
@@ -91,8 +91,8 @@ namespace {
     ASSERT_FALSE(!!msg);
     ASSERT_TRUE(msg_list.empty());
     ASSERT_FALSE(batcher.IsEmpty());
-    TOpt<TMsg::TTimestamp> opt_ts = batcher.GetNextCompleteTime();
-    ASSERT_TRUE(opt_ts.IsKnown());
+    auto opt_ts = batcher.GetNextCompleteTime();
+    ASSERT_TRUE(opt_ts.has_value());
     ASSERT_EQ(*opt_ts, 100);
     msg = mc.NewMsg("Bugs Bunny", "wabbits", *opt_ts);
     msg_list = SetProcessed(batcher.AddMsg(std::move(msg), 99));
@@ -100,14 +100,14 @@ namespace {
     ASSERT_TRUE(msg_list.empty());
     ASSERT_FALSE(batcher.IsEmpty());
     opt_ts = batcher.GetNextCompleteTime();
-    ASSERT_TRUE(opt_ts.IsKnown());
+    ASSERT_TRUE(opt_ts.has_value());
     ASSERT_EQ(*opt_ts, 100);
     msg = mc.NewMsg("Bugs Bunny", "wabbits", *opt_ts);
     msg_list = SetProcessed(batcher.AddMsg(std::move(msg), 100));
     ASSERT_FALSE(!!msg);
     ASSERT_EQ(msg_list.size(), 3U);
     opt_ts = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_ts.IsKnown());
+    ASSERT_FALSE(opt_ts.has_value());
     ASSERT_TRUE(batcher.IsEmpty());
   }
 
@@ -123,34 +123,34 @@ namespace {
     ASSERT_FALSE(!!msg);
     ASSERT_TRUE(msg_list.empty());
     ASSERT_FALSE(batcher.IsEmpty());
-    TOpt<TMsg::TTimestamp> opt_ts = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_ts.IsKnown());
+    auto opt_ts = batcher.GetNextCompleteTime();
+    ASSERT_FALSE(opt_ts.has_value());
     msg = mc.NewMsg("Bugs Bunny", "wabbits", 0);
     msg_list = SetProcessed(batcher.AddMsg(std::move(msg), 5));
     ASSERT_FALSE(!!msg);
     ASSERT_TRUE(msg_list.empty());
     ASSERT_FALSE(batcher.IsEmpty());
     opt_ts = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_ts.IsKnown());
+    ASSERT_FALSE(opt_ts.has_value());
     msg = mc.NewMsg("Bugs Bunny", "wabbits", 0);
     msg_list = SetProcessed(batcher.AddMsg(std::move(msg), 5));
     ASSERT_FALSE(!!msg);
     ASSERT_EQ(msg_list.size(), 3U);
     ASSERT_TRUE(batcher.IsEmpty());
     opt_ts = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_ts.IsKnown());
+    ASSERT_FALSE(opt_ts.has_value());
     msg = mc.NewMsg("Bugs Bunny", "wabbits", 0);
     msg_list = SetProcessed(batcher.AddMsg(std::move(msg), 5));
     ASSERT_FALSE(!!msg);
     ASSERT_TRUE(msg_list.empty());
     ASSERT_FALSE(batcher.IsEmpty());
     opt_ts = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_ts.IsKnown());
+    ASSERT_FALSE(opt_ts.has_value());
     msg_list = SetProcessed(batcher.TakeBatch());
     ASSERT_EQ(msg_list.size(), 1U);
     ASSERT_TRUE(batcher.IsEmpty());
     opt_ts = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_ts.IsKnown());
+    ASSERT_FALSE(opt_ts.has_value());
   }
 
   TEST_F(TSingleTopicBatcherTest, Test4) {
@@ -166,34 +166,34 @@ namespace {
     ASSERT_FALSE(!!msg);
     ASSERT_TRUE(msg_list.empty());
     ASSERT_FALSE(batcher.IsEmpty());
-    TOpt<TMsg::TTimestamp> opt_ts = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_ts.IsKnown());
+    auto opt_ts = batcher.GetNextCompleteTime();
+    ASSERT_FALSE(opt_ts.has_value());
     msg = mc.NewMsg("Bugs Bunny", "wabbits", 0);
     msg_list = SetProcessed(batcher.AddMsg(std::move(msg), 5));
     ASSERT_FALSE(!!msg);
     ASSERT_TRUE(msg_list.empty());
     ASSERT_FALSE(batcher.IsEmpty());
     opt_ts = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_ts.IsKnown());
+    ASSERT_FALSE(opt_ts.has_value());
     msg = mc.NewMsg("Bugs Bunny", "wabbits", 0);
     msg_list = SetProcessed(batcher.AddMsg(std::move(msg), 5));
     ASSERT_FALSE(!!msg);
     ASSERT_EQ(msg_list.size(), 3U);
     ASSERT_TRUE(batcher.IsEmpty());
     opt_ts = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_ts.IsKnown());
+    ASSERT_FALSE(opt_ts.has_value());
     msg = mc.NewMsg("Bugs Bunny", "wabbits", 0);
     msg_list = SetProcessed(batcher.AddMsg(std::move(msg), 5));
     ASSERT_FALSE(!!msg);
     ASSERT_TRUE(msg_list.empty());
     ASSERT_FALSE(batcher.IsEmpty());
     opt_ts = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_ts.IsKnown());
+    ASSERT_FALSE(opt_ts.has_value());
     msg_list = SetProcessed(batcher.TakeBatch());
     ASSERT_EQ(msg_list.size(), 1U);
     ASSERT_TRUE(batcher.IsEmpty());
     opt_ts = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_ts.IsKnown());
+    ASSERT_FALSE(opt_ts.has_value());
   }
 
   TEST_F(TSingleTopicBatcherTest, Test5) {

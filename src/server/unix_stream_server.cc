@@ -45,11 +45,7 @@ TUnixStreamServer::TUnixStreamServer(int backlog, const char *path,
 }
 
 void TUnixStreamServer::SetMode(mode_t mode) noexcept {
-  if (Mode.IsKnown()) {
-    *Mode = mode;
-  } else {
-    Mode.MakeKnown(mode);
-  }
+  Mode.emplace(mode);
 }
 
 void TUnixStreamServer::InitListeningSocket(TFd &sock) {
@@ -69,7 +65,7 @@ void TUnixStreamServer::InitListeningSocket(TFd &sock) {
 
   /* Set the permission bits on the socket file if they have been specified.
      If unspecified, the umask determines the permission bits. */
-  if (Mode.IsKnown()) {
+  if (Mode) {
     IfLt0(Wr::chmod(Path.c_str(), *Mode));
   }
 }

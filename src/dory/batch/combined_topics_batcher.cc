@@ -63,9 +63,9 @@ TCombinedTopicsBatcher::AddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
   const std::string &topic = msg->GetTopic();
 
   if (!BatchingIsEnabled(topic)) {
-    TOpt<TMsg::TTimestamp> opt_nct = GetNextCompleteTime();
+    auto opt_nct = GetNextCompleteTime();
 
-    if (opt_nct.IsKnown() && (now >= *opt_nct)) {
+    if (opt_nct && (now >= *opt_nct)) {
       return TakeBatch();
     }
 

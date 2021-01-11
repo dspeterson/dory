@@ -246,19 +246,19 @@ namespace {
     ASSERT_EQ(conf.BatchConf.MessageMaxBytes, 200U);
     ASSERT_TRUE(conf.BatchConf.CombinedTopicsBatchingEnabled);
     TBatchConf::TBatchValues values = conf.BatchConf.CombinedTopicsConfig;
-    ASSERT_TRUE(values.OptTimeLimit.IsKnown());
+    ASSERT_TRUE(values.OptTimeLimit.has_value());
     ASSERT_EQ(*values.OptTimeLimit, 50U);
-    ASSERT_TRUE(values.OptMsgCount.IsKnown());
+    ASSERT_TRUE(values.OptMsgCount.has_value());
     ASSERT_EQ(*values.OptMsgCount, 100U);
-    ASSERT_TRUE(values.OptByteCount.IsKnown());
+    ASSERT_TRUE(values.OptByteCount.has_value());
     ASSERT_EQ(*values.OptByteCount, 200U);
     ASSERT_TRUE(conf.BatchConf.DefaultTopicAction ==
         TBatchConf::TTopicAction::PerTopic);
     values = conf.BatchConf.DefaultTopicConfig;
-    ASSERT_TRUE(values.OptTimeLimit.IsKnown());
+    ASSERT_TRUE(values.OptTimeLimit.has_value());
     ASSERT_EQ(*values.OptTimeLimit, 5U);
-    ASSERT_FALSE(values.OptMsgCount.IsKnown());
-    ASSERT_TRUE(values.OptByteCount.IsKnown());
+    ASSERT_FALSE(values.OptMsgCount.has_value());
+    ASSERT_TRUE(values.OptByteCount.has_value());
     ASSERT_EQ(*values.OptByteCount, 20U * 1024U);
 
     ASSERT_EQ(conf.BatchConf.TopicConfigs.size(), 2U);
@@ -268,11 +268,11 @@ namespace {
     TBatchConf::TTopicConf topic_conf = iter->second;
     ASSERT_TRUE(topic_conf.Action == TBatchConf::TTopicAction::PerTopic);
     values = topic_conf.BatchValues;
-    ASSERT_TRUE(values.OptTimeLimit.IsKnown());
+    ASSERT_TRUE(values.OptTimeLimit.has_value());
     ASSERT_EQ(*values.OptTimeLimit, 50U);
-    ASSERT_TRUE(values.OptMsgCount.IsKnown());
+    ASSERT_TRUE(values.OptMsgCount.has_value());
     ASSERT_EQ(*values.OptMsgCount, 100U);
-    ASSERT_TRUE(values.OptByteCount.IsKnown());
+    ASSERT_TRUE(values.OptByteCount.has_value());
     ASSERT_EQ(*values.OptByteCount, 200U);
 
     iter = conf.BatchConf.TopicConfigs.find("topic2");
@@ -280,17 +280,17 @@ namespace {
     topic_conf = iter->second;
     ASSERT_TRUE(topic_conf.Action == TBatchConf::TTopicAction::PerTopic);
     values = topic_conf.BatchValues;
-    ASSERT_TRUE(values.OptTimeLimit.IsKnown());
+    ASSERT_TRUE(values.OptTimeLimit.has_value());
     ASSERT_EQ(*values.OptTimeLimit, 5U);
-    ASSERT_FALSE(values.OptMsgCount.IsKnown());
-    ASSERT_TRUE(values.OptByteCount.IsKnown());
+    ASSERT_FALSE(values.OptMsgCount.has_value());
+    ASSERT_TRUE(values.OptByteCount.has_value());
     ASSERT_EQ(*values.OptByteCount, 20U * 1024U);
 
     ASSERT_EQ(conf.CompressionConf.SizeThresholdPercent, 75U);
     ASSERT_TRUE(conf.CompressionConf.DefaultTopicConfig.Type ==
                 TCompressionType::Snappy);
     ASSERT_EQ(conf.CompressionConf.DefaultTopicConfig.MinSize, 1024U);
-    ASSERT_TRUE(conf.CompressionConf.DefaultTopicConfig.Level.IsUnknown());
+    ASSERT_FALSE(conf.CompressionConf.DefaultTopicConfig.Level.has_value());
     ASSERT_EQ(conf.CompressionConf.TopicConfigs.size(), 6U);
 
     TCompressionConf::TTopicMap::const_iterator comp_topic_iter =
@@ -298,67 +298,67 @@ namespace {
     ASSERT_TRUE(comp_topic_iter != conf.CompressionConf.TopicConfigs.end());
     ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::None);
     ASSERT_TRUE(comp_topic_iter->second.MinSize == 0U);
-    ASSERT_TRUE(comp_topic_iter->second.Level.IsUnknown());
+    ASSERT_FALSE(comp_topic_iter->second.Level.has_value());
 
     comp_topic_iter = conf.CompressionConf.TopicConfigs.find("topic2");
     ASSERT_TRUE(comp_topic_iter != conf.CompressionConf.TopicConfigs.end());
     ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::Snappy);
     ASSERT_TRUE(comp_topic_iter->second.MinSize == 2048U);
-    ASSERT_TRUE(comp_topic_iter->second.Level.IsUnknown());
+    ASSERT_FALSE(comp_topic_iter->second.Level.has_value());
 
     comp_topic_iter = conf.CompressionConf.TopicConfigs.find("topic3");
     ASSERT_TRUE(comp_topic_iter != conf.CompressionConf.TopicConfigs.end());
     ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::Gzip);
     ASSERT_TRUE(comp_topic_iter->second.MinSize == 4096U);
-    ASSERT_TRUE(comp_topic_iter->second.Level.IsUnknown());
+    ASSERT_FALSE(comp_topic_iter->second.Level.has_value());
 
     comp_topic_iter = conf.CompressionConf.TopicConfigs.find("topic4");
     ASSERT_TRUE(comp_topic_iter != conf.CompressionConf.TopicConfigs.end());
     ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::Gzip);
     ASSERT_TRUE(comp_topic_iter->second.MinSize == 8192U);
-    ASSERT_TRUE(comp_topic_iter->second.Level.IsKnown());
+    ASSERT_TRUE(comp_topic_iter->second.Level.has_value());
     ASSERT_EQ(*comp_topic_iter->second.Level, 3);
 
     comp_topic_iter = conf.CompressionConf.TopicConfigs.find("topic5");
     ASSERT_TRUE(comp_topic_iter != conf.CompressionConf.TopicConfigs.end());
     ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::Lz4);
     ASSERT_TRUE(comp_topic_iter->second.MinSize == 16384U);
-    ASSERT_TRUE(comp_topic_iter->second.Level.IsUnknown());
+    ASSERT_FALSE(comp_topic_iter->second.Level.has_value());
 
     comp_topic_iter = conf.CompressionConf.TopicConfigs.find("topic6");
     ASSERT_TRUE(comp_topic_iter != conf.CompressionConf.TopicConfigs.end());
     ASSERT_TRUE(comp_topic_iter->second.Type == TCompressionType::Lz4);
     ASSERT_TRUE(comp_topic_iter->second.MinSize == 32768U);
-    ASSERT_TRUE(comp_topic_iter->second.Level.IsKnown());
+    ASSERT_TRUE(comp_topic_iter->second.Level.has_value());
     ASSERT_EQ(*comp_topic_iter->second.Level, 5);
 
     ASSERT_EQ(conf.TopicRateConf.DefaultTopicConfig.Interval, 10000U);
-    ASSERT_TRUE(conf.TopicRateConf.DefaultTopicConfig.MaxCount.IsKnown());
+    ASSERT_TRUE(conf.TopicRateConf.DefaultTopicConfig.MaxCount.has_value());
     ASSERT_EQ(*conf.TopicRateConf.DefaultTopicConfig.MaxCount, 500U);
     ASSERT_EQ(conf.TopicRateConf.TopicConfigs.size(), 3U);
     TTopicRateConf::TTopicMap::const_iterator rate_topic_iter =
         conf.TopicRateConf.TopicConfigs.find("topic1");
     ASSERT_TRUE(rate_topic_iter != conf.TopicRateConf.TopicConfigs.end());
     ASSERT_EQ(rate_topic_iter->second.Interval, 1U);
-    ASSERT_TRUE(rate_topic_iter->second.MaxCount.IsKnown());
+    ASSERT_TRUE(rate_topic_iter->second.MaxCount.has_value());
     ASSERT_EQ(*rate_topic_iter->second.MaxCount, 0U);
     rate_topic_iter = conf.TopicRateConf.TopicConfigs.find("topic2");
     ASSERT_TRUE(rate_topic_iter != conf.TopicRateConf.TopicConfigs.end());
     ASSERT_EQ(rate_topic_iter->second.Interval, 1U);
-    ASSERT_TRUE(rate_topic_iter->second.MaxCount.IsUnknown());
+    ASSERT_FALSE(rate_topic_iter->second.MaxCount.has_value());
     rate_topic_iter = conf.TopicRateConf.TopicConfigs.find("topic3");
     ASSERT_TRUE(rate_topic_iter != conf.TopicRateConf.TopicConfigs.end());
     ASSERT_EQ(rate_topic_iter->second.Interval, 20000U);
-    ASSERT_TRUE(rate_topic_iter->second.MaxCount.IsKnown());
+    ASSERT_TRUE(rate_topic_iter->second.MaxCount.has_value());
     ASSERT_EQ(*rate_topic_iter->second.MaxCount, 4096U);
 
     ASSERT_EQ(conf.InputSourcesConf.UnixDgPath, "/var/run/dory/input_d");
-    ASSERT_TRUE(conf.InputSourcesConf.UnixDgMode.IsKnown());
+    ASSERT_TRUE(conf.InputSourcesConf.UnixDgMode.has_value());
     ASSERT_EQ(*conf.InputSourcesConf.UnixDgMode, 0200U);
     ASSERT_EQ(conf.InputSourcesConf.UnixStreamPath, "/var/run/dory/input_s");
-    ASSERT_TRUE(conf.InputSourcesConf.UnixStreamMode.IsKnown());
+    ASSERT_TRUE(conf.InputSourcesConf.UnixStreamMode.has_value());
     ASSERT_EQ(*conf.InputSourcesConf.UnixStreamMode, 0020U);
-    ASSERT_TRUE(conf.InputSourcesConf.LocalTcpPort.IsKnown());
+    ASSERT_TRUE(conf.InputSourcesConf.LocalTcpPort.has_value());
     ASSERT_EQ(*conf.InputSourcesConf.LocalTcpPort, 54321U);
 
     ASSERT_EQ(conf.InputConfigConf.MaxBuffer, 16U * 1024U);
@@ -398,7 +398,7 @@ namespace {
     ASSERT_TRUE(conf.LoggingConf.Common.EnableStdoutStderr);
     ASSERT_FALSE(conf.LoggingConf.Common.EnableSyslog);
     ASSERT_EQ(conf.LoggingConf.Common.FilePath, "/log/file/path");
-    ASSERT_TRUE(conf.LoggingConf.Common.FileMode.IsKnown());
+    ASSERT_TRUE(conf.LoggingConf.Common.FileMode.has_value());
     ASSERT_EQ(*conf.LoggingConf.Common.FileMode, 0664U);
 
     ASSERT_EQ(conf.InitialBrokers.size(), 2U);
@@ -543,16 +543,16 @@ namespace {
     }
 
     ASSERT_EQ(conf.InputSourcesConf.UnixDgPath, "/var/run/dory/input_d");
-    ASSERT_FALSE(conf.InputSourcesConf.UnixDgMode.IsKnown());
+    ASSERT_FALSE(conf.InputSourcesConf.UnixDgMode.has_value());
     ASSERT_EQ(conf.InputSourcesConf.UnixStreamPath, "/var/run/dory/input_s");
-    ASSERT_FALSE(conf.InputSourcesConf.UnixStreamMode.IsKnown());
-    ASSERT_TRUE(conf.InputSourcesConf.LocalTcpPort.IsKnown());
+    ASSERT_FALSE(conf.InputSourcesConf.UnixStreamMode.has_value());
+    ASSERT_TRUE(conf.InputSourcesConf.LocalTcpPort.has_value());
     ASSERT_EQ(*conf.InputSourcesConf.LocalTcpPort, 54321U);
     ASSERT_EQ(conf.LoggingConf.Common.Pri, TPri::INFO);
     ASSERT_TRUE(conf.LoggingConf.Common.EnableStdoutStderr);
     ASSERT_FALSE(conf.LoggingConf.Common.EnableSyslog);
     ASSERT_EQ(conf.LoggingConf.Common.FilePath, "/var/log/dory/dory.log");
-    ASSERT_FALSE(conf.LoggingConf.Common.FileMode.IsKnown());
+    ASSERT_FALSE(conf.LoggingConf.Common.FileMode.has_value());
   }
 
   TEST_F(TConfTest, NoTcpTest) {
@@ -689,16 +689,16 @@ namespace {
     }
 
     ASSERT_EQ(conf.InputSourcesConf.UnixDgPath, "/var/run/dory/input_d");
-    ASSERT_TRUE(conf.InputSourcesConf.UnixDgMode.IsKnown());
+    ASSERT_TRUE(conf.InputSourcesConf.UnixDgMode.has_value());
     ASSERT_EQ(*conf.InputSourcesConf.UnixDgMode, 0222U);
     ASSERT_EQ(conf.InputSourcesConf.UnixStreamPath, "/var/run/dory/input_s");
-    ASSERT_FALSE(conf.InputSourcesConf.UnixStreamMode.IsKnown());
-    ASSERT_FALSE(conf.InputSourcesConf.LocalTcpPort.IsKnown());
+    ASSERT_FALSE(conf.InputSourcesConf.UnixStreamMode.has_value());
+    ASSERT_FALSE(conf.InputSourcesConf.LocalTcpPort.has_value());
     ASSERT_EQ(conf.LoggingConf.Common.Pri, TPri::INFO);
     ASSERT_TRUE(conf.LoggingConf.Common.EnableStdoutStderr);
     ASSERT_FALSE(conf.LoggingConf.Common.EnableSyslog);
     ASSERT_EQ(conf.LoggingConf.Common.FilePath, "/var/log/dory/dory.log");
-    ASSERT_FALSE(conf.LoggingConf.Common.FileMode.IsKnown());
+    ASSERT_FALSE(conf.LoggingConf.Common.FileMode.has_value());
   }
 
   TEST_F(TConfTest, LoggingTestInvalidLevel) {

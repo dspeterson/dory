@@ -23,7 +23,6 @@
 
 #include <utility>
 
-using namespace Base;
 using namespace Dory;
 using namespace Dory::MockKafkaServer;
 

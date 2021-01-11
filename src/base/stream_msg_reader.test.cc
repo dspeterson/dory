@@ -22,6 +22,7 @@
 #include <base/stream_msg_reader.h>
 
 #include <cstddef>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -29,7 +30,6 @@
 #include <unistd.h>
 
 #include <base/error_util.h>
-#include <base/opt.h>
 #include <base/wr/fd_util.h>
 
 #include <gtest/gtest.h>
@@ -63,9 +63,7 @@ namespace {
 
     explicit TTestReader(int fd)
         : TStreamMsgReader(fd),
-          GetNextMsgReturnValue(
-              TOpt<TGetMsgResult>(
-                  TStreamMsgReader::TGetMsgResult::Invalid())) {
+          GetNextMsgReturnValue(TStreamMsgReader::TGetMsgResult::Invalid()) {
     }
 
     TTestReader()
@@ -102,7 +100,7 @@ namespace {
 
     size_t GetNextReadSizeReturnValue = 0;
 
-    TOpt<TGetMsgResult> GetNextMsgReturnValue;
+    std::optional<TGetMsgResult> GetNextMsgReturnValue;
   };  // TTestReader
 
   size_t TTestReader::GetNextReadSize() noexcept {
@@ -157,19 +155,19 @@ namespace {
 
   void TTestReader::SetMsgReady(size_t offset, size_t size,
       size_t trailing_data_size) {
-    GetNextMsgReturnValue.Reset();
-    GetNextMsgReturnValue.MakeKnown(TGetMsgResult::MsgReady(offset, size,
+    GetNextMsgReturnValue.reset();
+    GetNextMsgReturnValue.emplace(TGetMsgResult::MsgReady(offset, size,
         trailing_data_size));
   }
 
   void TTestReader::SetNoMsgReady() {
-    GetNextMsgReturnValue.Reset();
-    GetNextMsgReturnValue.MakeKnown(TGetMsgResult::NoMsgReady());
+    GetNextMsgReturnValue.reset();
+    GetNextMsgReturnValue.emplace(TGetMsgResult::NoMsgReady());
   }
 
   void TTestReader::SetInvalid() {
-    GetNextMsgReturnValue.Reset();
-    GetNextMsgReturnValue.MakeKnown(TGetMsgResult::Invalid());
+    GetNextMsgReturnValue.reset();
+    GetNextMsgReturnValue.emplace(TGetMsgResult::Invalid());
   }
 
   struct TPipe {

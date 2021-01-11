@@ -21,6 +21,7 @@
 
 #include <dory/compress/lz4/lz4_codec.h>
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -53,16 +54,16 @@ namespace {
 
   TEST_F(TLz4CodecTest, BasicTest) {
     const TLz4Codec &codec = TLz4Codec::The();
-    TOpt<int> default_level = codec.GetRealCompressionLevel(TOpt<int>());
-    ASSERT_TRUE(default_level.IsKnown());
-    TOpt<int> level = codec.GetRealCompressionLevel(TOpt<int>(5));
-    ASSERT_TRUE(level.IsKnown());
+    auto default_level = codec.GetRealCompressionLevel(std::nullopt);
+    ASSERT_TRUE(default_level.has_value());
+    auto level = codec.GetRealCompressionLevel(5);
+    ASSERT_TRUE(level.has_value());
     ASSERT_EQ(*level, 5);
-    level = codec.GetRealCompressionLevel(TOpt<int>(6));
-    ASSERT_TRUE(level.IsKnown());
+    level = codec.GetRealCompressionLevel(6);
+    ASSERT_TRUE(level.has_value());
     ASSERT_EQ(*level, 6);
-    level = codec.GetRealCompressionLevel(TOpt<int>(1000000));
-    ASSERT_TRUE(level.IsKnown());
+    level = codec.GetRealCompressionLevel(1000000);
+    ASSERT_TRUE(level.has_value());
     ASSERT_EQ(*level, *default_level);
 
     std::string to_compress;
@@ -71,7 +72,7 @@ namespace {
       to_compress += "a bunch of junk to compress";
     }
 
-    level = TOpt<int>();
+    level.reset();
     std::vector<char> compressed_output(
         codec.ComputeCompressedResultBufSpace(to_compress.data(),
             to_compress.size(), level));
@@ -94,7 +95,7 @@ namespace {
         uncompressed_output.end());
     ASSERT_EQ(final_result, to_compress);
 
-    level = TOpt<int>(8);
+    level.emplace(8);
     compressed_output.resize(
         codec.ComputeCompressedResultBufSpace(to_compress.data(),
             to_compress.size(), level));
@@ -117,7 +118,7 @@ namespace {
         uncompressed_output.end());
     ASSERT_EQ(final_result, to_compress);
 
-    level = TOpt<int>(16);
+    level.emplace(16);
     compressed_output.resize(
         codec.ComputeCompressedResultBufSpace(to_compress.data(),
             to_compress.size(), level));

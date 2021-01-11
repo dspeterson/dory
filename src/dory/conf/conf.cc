@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cassert>
 #include <limits>
+#include <optional>
 #include <stdexcept>
 
 #include <netinet/in.h>
@@ -88,14 +89,14 @@ void TConf::TBuilder::ProcessSingleBatchingNamedConfig(
 
   if (subsection_map.count("time")) {
     values.OptTimeLimit = TAttrReader::GetOptUnsigned<decltype(
-        values.OptTimeLimit)::TValueType>(
+        values.OptTimeLimit)::value_type>(
             *subsection_map.at("time"), "value", "disable", 0 | TBase::DEC,
             TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE);
   }
 
   if (subsection_map.count("messages")) {
     values.OptMsgCount = TAttrReader::GetOptUnsigned<decltype(
-        values.OptMsgCount)::TValueType>(
+        values.OptMsgCount)::value_type>(
             *subsection_map.at("messages"), "value", "disable", 0 | TBase::DEC,
             TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE |
             TOpts::ALLOW_K);
@@ -103,14 +104,14 @@ void TConf::TBuilder::ProcessSingleBatchingNamedConfig(
 
   if (subsection_map.count("bytes")) {
     values.OptByteCount = TAttrReader::GetOptUnsigned<decltype(
-        values.OptByteCount)::TValueType>(
+        values.OptByteCount)::value_type>(
             *subsection_map.at("bytes"), "value", "disable", 0 | TBase::DEC,
             TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE |
             TOpts::ALLOW_K);
   }
 
-  if (values.OptTimeLimit.IsUnknown() && values.OptMsgCount.IsUnknown() &&
-      values.OptByteCount.IsUnknown()) {
+  if (!values.OptTimeLimit.has_value() && !values.OptMsgCount.has_value() &&
+      !values.OptByteCount.has_value()) {
     std::string msg("Named batching config [");
     msg += name;
     msg += "] must specify at least one of {time, messages, bytes}";
@@ -135,23 +136,23 @@ void TConf::TBuilder::ProcessTopicBatchConfig(const DOMElement &topic_elem,
     throw TInvalidAttr(topic_elem, "action", action_str.c_str());
   }
 
-  TOpt<std::string> opt_name = TAttrReader::GetOptString(topic_elem, "config",
-      0 | TOpts::TRIM_WHITESPACE);
+  std::optional<std::string> opt_name = TAttrReader::GetOptString(topic_elem,
+      "config", 0 | TOpts::TRIM_WHITESPACE);
 
-  if (opt_name.IsKnown() && opt_name->empty()) {
-    opt_name.Reset();
+  if (opt_name && opt_name->empty()) {
+    opt_name.reset();
   }
 
   switch (action) {
     case TBatchConf::TTopicAction::PerTopic: {
-      if (opt_name.IsUnknown()) {
+      if (!opt_name.has_value()) {
         throw TMissingAttrValue(topic_elem, "config");
       }
 
       break;
     }
     case TBatchConf::TTopicAction::CombinedTopics: {
-      if (opt_name.IsKnown()) {
+      if (opt_name) {
         throw TInvalidAttr(topic_elem, "config", opt_name->c_str(),
             "Attribute value should be missing or empty");
       }
@@ -164,11 +165,7 @@ void TConf::TBuilder::ProcessTopicBatchConfig(const DOMElement &topic_elem,
     NO_DEFAULT_CASE;
   }
 
-  config.clear();
-
-  if (opt_name.IsKnown()) {
-    config = *opt_name;
-  }
+  config = opt_name.value_or("");
 }
 
 void TConf::TBuilder::ProcessBatchingTopicConfigsElem(
@@ -459,12 +456,11 @@ void TConf::TBuilder::ProcessTopicRateElem(const DOMElement &topic_rate_elem) {
       const DOMElement &elem = *item;
       const std::string name = TAttrReader::GetString(elem, "name",
           TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
-      const TOpt<size_t> opt_max_count = TAttrReader::GetOptUnsigned<size_t>(
-          elem, "maxCount", "unlimited", 0 | TBase::DEC,
-          TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE |
-              TOpts::ALLOW_K);
+      const auto opt_max_count = TAttrReader::GetOptUnsigned<size_t>(elem,
+          "maxCount", "unlimited", 0 | TBase::DEC, TOpts::REQUIRE_PRESENCE |
+              TOpts::STRICT_EMPTY_VALUE | TOpts::ALLOW_K);
 
-      if (opt_max_count.IsKnown()) {
+      if (opt_max_count) {
         const auto interval = TAttrReader::GetUnsigned<size_t>(elem,
             "interval", 0 | TBase::DEC);
 
@@ -555,14 +551,14 @@ void TConf::TBuilder::ProcessInputSourcesElem(
     const auto tcp_subsection_map = GetSubsectionElements(tcp_elem,
         {{"port", true}}, false);
     const DOMElement &port_elem = *tcp_subsection_map.at("port");
-    TOpt<in_port_t> port = TAttrReader::GetOptUnsigned<in_port_t>(port_elem,
-        "value", nullptr, 0 | TBase::DEC);
+    auto port = TAttrReader::GetOptUnsigned<in_port_t>(port_elem, "value",
+        nullptr, 0 | TBase::DEC);
 
     if (!enable) {
-      port.Reset();
+      port.reset();
     }
 
-    if (port.IsKnown()) {
+    if (port) {
       source_specified = true;
     }
 
@@ -784,14 +780,13 @@ void TConf::TBuilder::ProcessDiscardLoggingElem(
   if (subsection_map.count("maxMsgPrefixSize")) {
     using t_max_prefix_type =
         decltype(BuildResult.DiscardLoggingConf.MaxMsgPrefixSize);
-    const TOpt<size_t> opt_max_size =
+    const auto opt_max_size =
         TAttrReader::GetOptUnsigned<t_max_prefix_type>(
             *subsection_map.at("maxMsgPrefixSize"), "value", "unlimited",
             0 | TBase::DEC, TOpts::REQUIRE_PRESENCE |
                 TOpts::STRICT_EMPTY_VALUE | TOpts::ALLOW_K);
-    BuildResult.DiscardLoggingConf.MaxMsgPrefixSize =
-        opt_max_size.IsKnown() ?
-            *opt_max_size : std::numeric_limits<t_max_prefix_type>::max();
+    BuildResult.DiscardLoggingConf.MaxMsgPrefixSize = opt_max_size.value_or(
+        std::numeric_limits<t_max_prefix_type>::max());
   }
 
   if (!enable) {
@@ -893,9 +888,9 @@ void TConf::TBuilder::ProcessInitialBrokersElem(
     const DOMElement &elem = *item;
     std::string host = TAttrReader::GetString(elem, "host",
         TOpts::TRIM_WHITESPACE | TOpts::THROW_IF_EMPTY);
-    const TOpt<in_port_t> opt_port = TAttrReader::GetOptUnsigned<in_port_t>(
+    const auto opt_port = TAttrReader::GetOptUnsigned<in_port_t>(
         elem, "port", nullptr, 0 | TBase::DEC);
-    const in_port_t port = opt_port.IsKnown() ? *opt_port : in_port_t(9092);
+    const in_port_t port = opt_port.value_or(in_port_t(9002));
     broker_vec.emplace_back(std::move(host), port);
   }
 

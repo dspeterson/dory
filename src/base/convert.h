@@ -21,7 +21,8 @@
 
 #pragma once
 
-#include <base/opt.h>
+#include <optional>
+
 #include <base/piece.h>
 #include <base/syntax_error.h>
 
@@ -35,11 +36,11 @@ namespace Base {
 
     /* Reads a sign (+/-) From the input stream. If + is read, then it returns
        true, if - is read, then it returns false. If some other character is
-       the next character at the head of the input stream, it returns
-       TOpt::Unknown. */
-    TOpt<bool> TryReadSign() {
+       the next character at the head of the input stream, it returns an empty
+       value. */
+    std::optional<bool> TryReadSign() {
       if(!(*this)) {
-        return  *TOpt<bool>::Unknown;
+        return  std::nullopt;
       }
 
       bool ret;
@@ -49,7 +50,7 @@ namespace Base {
       } else if (*(*this) == '-') {
         ret = false;
       } else {
-        return *TOpt<bool>::Unknown;
+        return std::nullopt;
       }
 
       ++(*this);
@@ -58,7 +59,7 @@ namespace Base {
 
     /* TryReadSign wrapper that asserts that a sign is read or throws. */
     bool ReadSign() {
-      TOpt<bool> ret = TryReadSign();
+      auto ret = TryReadSign();
 
       if (ret) {
         return *ret;
@@ -184,7 +185,7 @@ namespace Base {
       /* TODO: Format strings support. */
 
       // if signed, first character may be +/- sign
-      TOpt<bool> positive_opt = TryReadSign();
+      auto positive_opt = TryReadSign();
 
       if (positive_opt) {
         if (!TryReadUnsignedInt(output, *positive_opt)) {

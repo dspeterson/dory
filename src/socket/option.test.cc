@@ -96,11 +96,11 @@ namespace {
     Conv<TLinger>::SetSockOpt(sock, SO_LINGER, TLinger());
     TLinger val;
     Conv<TLinger>::GetSockOpt(sock, SO_LINGER, val);
-    ASSERT_FALSE(val.IsKnown());
+    ASSERT_FALSE(val.has_value());
     Conv<TLinger>::SetSockOpt(sock, SO_LINGER,
         TLinger(std::chrono::seconds(30)));
     Conv<TLinger>::GetSockOpt(sock, SO_LINGER, val);
-    ASSERT_TRUE(val.IsKnown());
+    ASSERT_TRUE(val.has_value());
     ASSERT_EQ(val->count(), 30);
   }
 

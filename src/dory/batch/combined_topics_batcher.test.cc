@@ -21,9 +21,9 @@
 
 #include <dory/batch/combined_topics_batcher.h>
 
+#include <optional>
 #include <string>
 
-#include <base/opt.h>
 #include <base/tmp_file.h>
 #include <dory/batch/batch_config.h>
 #include <dory/msg.h>
@@ -78,13 +78,13 @@ namespace {
     TCombinedTopicsBatcher batcher(config);
     ASSERT_TRUE(batcher.BatchingIsEnabled());
     ASSERT_TRUE(batcher.IsEmpty());
-    TOpt<TMsg::TTimestamp> opt_nct = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_nct.IsKnown());
+    auto opt_nct = batcher.GetNextCompleteTime();
+    ASSERT_FALSE(opt_nct.has_value());
     TMsg::TPtr msg = mc.NewMsg("t1", "t1 msg 1", 5);
     std::list<std::list<TMsg::TPtr>> complete_batches =
         SetProcessed(batcher.AddMsg(std::move(msg), 5));
     opt_nct = batcher.GetNextCompleteTime();
-    ASSERT_TRUE(opt_nct.IsKnown());
+    ASSERT_TRUE(opt_nct.has_value());
     ASSERT_EQ(*opt_nct, 25);
     ASSERT_FALSE(!!msg);
     ASSERT_TRUE(complete_batches.empty());
@@ -92,7 +92,7 @@ namespace {
     msg = mc.NewMsg("t1", "t1 msg 2", 6);
     complete_batches = SetProcessed(batcher.AddMsg(std::move(msg), 7));
     opt_nct = batcher.GetNextCompleteTime();
-    ASSERT_TRUE(opt_nct.IsKnown());
+    ASSERT_TRUE(opt_nct.has_value());
     ASSERT_EQ(*opt_nct, 25);
     ASSERT_FALSE(!!msg);
     ASSERT_TRUE(complete_batches.empty());
@@ -100,7 +100,7 @@ namespace {
     msg = mc.NewMsg("t2", "t2 msg 1", 8);
     complete_batches = SetProcessed(batcher.AddMsg(std::move(msg), 8));
     opt_nct = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_nct.IsKnown());
+    ASSERT_FALSE(opt_nct.has_value());
     ASSERT_FALSE(!!msg);
     ASSERT_EQ(complete_batches.size(), 2U);
     ASSERT_TRUE(batcher.IsEmpty());
@@ -131,7 +131,7 @@ namespace {
     msg = mc.NewMsg("t1", "123456789012345678901234", 10);
     complete_batches = SetProcessed(batcher.AddMsg(std::move(msg), 29));
     opt_nct = batcher.GetNextCompleteTime();
-    ASSERT_TRUE(opt_nct.IsKnown());
+    ASSERT_TRUE(opt_nct.has_value());
     ASSERT_EQ(*opt_nct, 30);
     ASSERT_FALSE(!!msg);
     ASSERT_TRUE(complete_batches.empty());
@@ -139,7 +139,7 @@ namespace {
     msg = mc.NewMsg("t1", "x", 29);
     complete_batches = SetProcessed(batcher.AddMsg(std::move(msg), 29));
     opt_nct = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_nct.IsKnown());
+    ASSERT_FALSE(opt_nct.has_value());
     ASSERT_FALSE(!!msg);
     ASSERT_TRUE(batcher.IsEmpty());
     ASSERT_EQ(complete_batches.size(), 1U);
@@ -153,7 +153,7 @@ namespace {
     msg = mc.NewMsg("t1", "t1 msg 3", 40);
     complete_batches = SetProcessed(batcher.AddMsg(std::move(msg), 45));
     opt_nct = batcher.GetNextCompleteTime();
-    ASSERT_TRUE(opt_nct.IsKnown());
+    ASSERT_TRUE(opt_nct.has_value());
     ASSERT_EQ(*opt_nct, 60);
     ASSERT_FALSE(!!msg);
     ASSERT_TRUE(complete_batches.empty());
@@ -161,7 +161,7 @@ namespace {
     msg = mc.NewMsg("t1", "t1 msg 4", 50);
     complete_batches = SetProcessed(batcher.AddMsg(std::move(msg), 60));
     opt_nct = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_nct.IsKnown());
+    ASSERT_FALSE(opt_nct.has_value());
     ASSERT_FALSE(!!msg);
     ASSERT_EQ(complete_batches.size(), 1U);
     ASSERT_TRUE(batcher.IsEmpty());
@@ -174,7 +174,7 @@ namespace {
     msg = mc.NewMsg("t1", "t1 msg 5", 70);
     complete_batches = SetProcessed(batcher.AddMsg(std::move(msg), 70));
     opt_nct = batcher.GetNextCompleteTime();
-    ASSERT_TRUE(opt_nct.IsKnown());
+    ASSERT_TRUE(opt_nct.has_value());
     ASSERT_EQ(*opt_nct, 90);
     ASSERT_FALSE(!!msg);
     ASSERT_TRUE(complete_batches.empty());
@@ -182,7 +182,7 @@ namespace {
     msg = mc.NewMsg("t2", "t2 msg 2", 75);
     complete_batches = SetProcessed(batcher.AddMsg(std::move(msg), 75));
     opt_nct = batcher.GetNextCompleteTime();
-    ASSERT_TRUE(opt_nct.IsKnown());
+    ASSERT_TRUE(opt_nct.has_value());
     ASSERT_EQ(*opt_nct, 90);
     ASSERT_FALSE(!!msg);
     ASSERT_TRUE(complete_batches.empty());
@@ -190,7 +190,7 @@ namespace {
     std::list<std::list<TMsg::TPtr>> batch_list =
         SetProcessed(batcher.TakeBatch());
     opt_nct = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_nct.IsKnown());
+    ASSERT_FALSE(opt_nct.has_value());
     ASSERT_EQ(batch_list.size(), 2U);
     ASSERT_TRUE(batcher.IsEmpty());
     ASSERT_TRUE(batcher.BatchingIsEnabled());
@@ -213,7 +213,7 @@ namespace {
     msg = mc.NewMsg("t1", "t1 msg 6", 70);
     complete_batches = SetProcessed(batcher.AddMsg(std::move(msg), 70));
     opt_nct = batcher.GetNextCompleteTime();
-    ASSERT_TRUE(opt_nct.IsKnown());
+    ASSERT_TRUE(opt_nct.has_value());
     ASSERT_EQ(*opt_nct, 90);
     ASSERT_FALSE(!!msg);
     ASSERT_TRUE(complete_batches.empty());
@@ -221,14 +221,14 @@ namespace {
     msg = mc.NewMsg("t2", "t2 msg 3", 75);
     complete_batches = SetProcessed(batcher.AddMsg(std::move(msg), 75));
     opt_nct = batcher.GetNextCompleteTime();
-    ASSERT_TRUE(opt_nct.IsKnown());
+    ASSERT_TRUE(opt_nct.has_value());
     ASSERT_EQ(*opt_nct, 90);
     ASSERT_FALSE(!!msg);
     ASSERT_TRUE(complete_batches.empty());
     ASSERT_FALSE(batcher.IsEmpty());
     batch_list = SetProcessed(batcher.TakeBatch());
     opt_nct = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_nct.IsKnown());
+    ASSERT_FALSE(opt_nct.has_value());
     ASSERT_EQ(batch_list.size(), 2U);
     ASSERT_TRUE(batcher.IsEmpty());
     ASSERT_TRUE(batcher.BatchingIsEnabled());
@@ -251,7 +251,7 @@ namespace {
     msg = mc.NewMsg("t2", "t2 msg 4", 75);
     complete_batches = SetProcessed(batcher.AddMsg(std::move(msg), 95));
     opt_nct = batcher.GetNextCompleteTime();
-    ASSERT_FALSE(opt_nct.IsKnown());
+    ASSERT_FALSE(opt_nct.has_value());
     ASSERT_FALSE(!!msg);
     ASSERT_EQ(complete_batches.size(), 1U);
     ASSERT_TRUE(batcher.IsEmpty());

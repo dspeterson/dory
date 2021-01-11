@@ -23,8 +23,7 @@
 
 #include <functional>
 #include <mutex>
-
-#include <base/opt.h>
+#include <optional>
 
 namespace Base {
 
@@ -71,8 +70,8 @@ namespace Base {
     bool Test() noexcept {
       TTimePoint now = ClockFn();
 
-      if (LastEventTime.IsUnknown()) {
-        LastEventTime.MakeKnown(now);
+      if (!LastEventTime) {
+        LastEventTime.emplace(now);
         return true;
       }
 
@@ -90,7 +89,7 @@ namespace Base {
 
     /* Keeps track of the time at which Test() most recently returned true.
        Before the very first call to Test(), this is unknown. */
-    typename Base::TOpt<TTimePoint> LastEventTime;
+    typename std::optional<TTimePoint> LastEventTime;
 
     /* This is the minimum interval to enforce. */
     TDuration MinInterval;

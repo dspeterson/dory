@@ -24,16 +24,15 @@
 #include <algorithm>
 #include <cassert>
 
-using namespace Base;
 using namespace Dory;
 using namespace Dory::Batch;
 
-TOpt<TMsg::TTimestamp> TBatcherCore::GetNextCompleteTime() const noexcept {
+std::optional<TMsg::TTimestamp> TBatcherCore::GetNextCompleteTime() const noexcept {
   if (IsEmpty() || !TimeLimitIsEnabled(Config)) {
-    return TOpt<TMsg::TTimestamp>();
+    return std::nullopt;
   }
 
-  return TOpt<TMsg::TTimestamp>(MinTimestamp + Config.TimeLimit);
+  return MinTimestamp + Config.TimeLimit;
 }
 
 TBatcherCore::TAction

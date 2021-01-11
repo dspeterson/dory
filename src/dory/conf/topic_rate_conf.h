@@ -24,11 +24,11 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 
-#include <base/opt.h>
 #include <dory/conf/conf_error.h>
 
 namespace Dory {
@@ -116,9 +116,9 @@ namespace Dory {
 
         /* Optional maximum # of allowed messages for a given topic within
            'Interval' above.  Messages that would cause the maximum to be
-           exceeded are discarded.  If the optional value is in the unknown
-           state then this indicates no maximum (i.e. infinite limit). */
-        Base::TOpt<size_t> MaxCount;
+           exceeded are discarded.  If the optional value is absent then this
+           indicates no maximum (i.e. infinite limit). */
+        std::optional<size_t> MaxCount;
 
         /* Default constructor specifies no limit. */
         TConf() noexcept = default;

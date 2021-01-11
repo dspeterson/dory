@@ -22,9 +22,9 @@
 #pragma once
 
 #include <cstddef>
+#include <optional>
 
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 #include <dory/compress/compression_codec_api.h>
 
 namespace Dory {
@@ -41,8 +41,8 @@ namespace Dory {
 
         ~TGzipCodec() override = default;
 
-        Base::TOpt<int> GetRealCompressionLevel(
-            const Base::TOpt<int> &requested_level) const noexcept override;
+        std::optional<int> GetRealCompressionLevel(
+            std::optional<int> requested_level) const noexcept override;
 
         size_t ComputeUncompressedResultBufSpace(const void *compressed_data,
             size_t compressed_size) const override;

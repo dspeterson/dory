@@ -22,6 +22,7 @@
 #include <xml/config/config_util.h>
 
 #include <cstdint>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -30,7 +31,6 @@
 #include <xercesc/dom/DOMElement.hpp>
 #include <xercesc/dom/DOMNode.hpp>
 
-#include <base/opt.h>
 #include <base/tmp_file.h>
 #include <test_util/test_logging.h>
 #include <xml/dom_document_util.h>
@@ -118,9 +118,9 @@ namespace {
       doc.reset(ParseXmlConfig(xml.data(), xml.size(), "US-ASCII"));
     } catch (const TSaxParseError &x) {
       caught = true;
-      const TOpt<TFileLocation> &loc = x.GetLocation();
-      ASSERT_TRUE(loc.IsKnown());
-      ASSERT_TRUE(loc->Column.IsKnown());
+      const auto &loc = x.GetLocation();
+      ASSERT_TRUE(loc.has_value());
+      ASSERT_TRUE(loc->Column.has_value());
       ASSERT_EQ(loc->Line, 4U);
       ASSERT_EQ(*loc->Column, 3U);
     }
@@ -219,10 +219,10 @@ namespace {
       RequireLeaf(*elem);
     } catch (const TExpectedLeaf &x) {
       caught = true;
-      const TOpt<TFileLocation> &loc = x.GetLocation();
+      const auto &loc = x.GetLocation();
       ASSERT_EQ(x.GetElementName(), "testElement3");
-      ASSERT_TRUE(loc.IsKnown());
-      ASSERT_TRUE(loc->Column.IsKnown());
+      ASSERT_TRUE(loc.has_value());
+      ASSERT_TRUE(loc->Column.has_value());
       ASSERT_EQ(loc->Line, 5U);
       ASSERT_EQ(*loc->Column, 17U);
     }
@@ -235,9 +235,9 @@ namespace {
     } catch (const TUnknownElement &x) {
       caught = true;
       ASSERT_EQ(x.GetElementName(), "testElement3a");
-      const TOpt<TFileLocation> &loc = x.GetLocation();
-      ASSERT_TRUE(loc.IsKnown());
-      ASSERT_TRUE(loc->Column.IsKnown());
+      const auto &loc = x.GetLocation();
+      ASSERT_TRUE(loc.has_value());
+      ASSERT_TRUE(loc->Column.has_value());
       ASSERT_EQ(loc->Line, 5U);
       ASSERT_EQ(*loc->Column, 34U);
     }
@@ -287,9 +287,9 @@ namespace {
     } catch (const TUnknownElement &x) {
       caught = true;
       ASSERT_EQ(x.GetElementName(), "testElement4aa");
-      const TOpt<TFileLocation> &loc = x.GetLocation();
-      ASSERT_TRUE(loc.IsKnown());
-      ASSERT_TRUE(loc->Column.IsKnown());
+      const auto &loc = x.GetLocation();
+      ASSERT_TRUE(loc.has_value());
+      ASSERT_TRUE(loc->Column.has_value());
       ASSERT_EQ(loc->Line, 6U);
       ASSERT_EQ(*loc->Column, 50U);
     }
@@ -361,9 +361,9 @@ namespace {
     } catch (const TExpectedLeaf &x) {
       caught = true;
       ASSERT_EQ(x.GetElementName(), "elem2b");
-      const TOpt<TFileLocation> &loc = x.GetLocation();
-      ASSERT_TRUE(loc.IsKnown());
-      ASSERT_TRUE(loc->Column.IsKnown());
+      const auto &loc = x.GetLocation();
+      ASSERT_TRUE(loc.has_value());
+      ASSERT_TRUE(loc->Column.has_value());
       ASSERT_EQ(loc->Line, 4U);
       ASSERT_EQ(*loc->Column, 28U);
     }
@@ -492,9 +492,9 @@ namespace {
     } catch (const TDuplicateElement &x) {
       caught = true;
       ASSERT_EQ(x.GetElementName(), "sub2");
-      const TOpt<TFileLocation> &loc = x.GetLocation();
-      ASSERT_TRUE(loc.IsKnown());
-      ASSERT_TRUE(loc->Column.IsKnown());
+      const auto &loc = x.GetLocation();
+      ASSERT_TRUE(loc.has_value());
+      ASSERT_TRUE(loc->Column.has_value());
       ASSERT_EQ(loc->Line, 11U);
       ASSERT_EQ(*loc->Column, 13U);
     }
@@ -519,9 +519,9 @@ namespace {
           {{"sub1", true}, {"sub2", true}}, false);
     } catch (const TUnexpectedText &x) {
       caught = true;
-      const TOpt<TFileLocation> &loc = x.GetLocation();
-      ASSERT_TRUE(loc.IsKnown());
-      ASSERT_TRUE(loc->Column.IsKnown());
+      const auto &loc = x.GetLocation();
+      ASSERT_TRUE(loc.has_value());
+      ASSERT_TRUE(loc->Column.has_value());
       ASSERT_EQ(loc->Line, 13U);
       ASSERT_EQ(*loc->Column, 17U);
     }
@@ -629,9 +629,9 @@ namespace {
       caught = true;
       ASSERT_EQ(x.GetElementName(), "crap");
       ASSERT_EQ(x.GetExpectedElementName(), "item");
-      const TOpt<TFileLocation> &loc = x.GetLocation();
-      ASSERT_TRUE(loc.IsKnown());
-      ASSERT_TRUE(loc->Column.IsKnown());
+      const auto &loc = x.GetLocation();
+      ASSERT_TRUE(loc.has_value());
+      ASSERT_TRUE(loc->Column.has_value());
       ASSERT_EQ(loc->Line, 12U);
       ASSERT_EQ(*loc->Column, 13U);
     }
@@ -654,9 +654,9 @@ namespace {
       item_list = GetItemListElements(*elem, "item");
     } catch (const TUnexpectedText &x) {
       caught = true;
-      const TOpt<TFileLocation> &loc = x.GetLocation();
-      ASSERT_TRUE(loc.IsKnown());
-      ASSERT_TRUE(loc->Column.IsKnown());
+      const auto &loc = x.GetLocation();
+      ASSERT_TRUE(loc.has_value());
+      ASSERT_TRUE(loc->Column.has_value());
       ASSERT_EQ(loc->Line, 15U);
       ASSERT_EQ(*loc->Column, 17U);
     }
@@ -694,28 +694,28 @@ namespace {
     ASSERT_EQ(TranscodeToString(child->getNodeName()), "elem");
     const DOMElement *elem = static_cast<const DOMElement *>(child);
 
-    ASSERT_TRUE(TAttrReader::GetOptString(*elem, "wrong_attr").IsUnknown());
+    ASSERT_FALSE(TAttrReader::GetOptString(*elem, "wrong_attr").has_value());
 
-    TOpt<std::string> opt_str(TAttrReader::GetOptString(*elem, "attr1"));
-    ASSERT_TRUE(opt_str.IsKnown());
+    auto opt_str = TAttrReader::GetOptString(*elem, "attr1");
+    ASSERT_TRUE(opt_str.has_value());
     ASSERT_TRUE(opt_str->empty());
 
     opt_str = TAttrReader::GetOptString(*elem, "attr2");
-    ASSERT_TRUE(opt_str.IsKnown());
+    ASSERT_TRUE(opt_str.has_value());
     ASSERT_EQ(*opt_str, "   ");
 
     opt_str = TAttrReader::GetOptString(*elem, "attr2",
         0 | TOpts::TRIM_WHITESPACE);
-    ASSERT_TRUE(opt_str.IsKnown());
+    ASSERT_TRUE(opt_str.has_value());
     ASSERT_EQ(*opt_str, "");
 
     opt_str = TAttrReader::GetOptString(*elem, "attr3");
-    ASSERT_TRUE(opt_str.IsKnown());
+    ASSERT_TRUE(opt_str.has_value());
     ASSERT_EQ(*opt_str, "   blah ");
 
     opt_str = TAttrReader::GetOptString(*elem, "attr3",
         0 | TOpts::TRIM_WHITESPACE);
-    ASSERT_TRUE(opt_str.IsKnown());
+    ASSERT_TRUE(opt_str.has_value());
     ASSERT_EQ(*opt_str, "blah");
 
     ASSERT_EQ(TAttrReader::GetString(*elem, "attr3"), "   blah ");
@@ -730,9 +730,9 @@ namespace {
       caught = true;
       ASSERT_EQ(x.GetAttrName(), "wrong_attr");
       ASSERT_EQ(x.GetElementName(), "elem");
-      const TOpt<TFileLocation> &loc = x.GetLocation();
-      ASSERT_TRUE(loc.IsKnown());
-      ASSERT_TRUE(loc->Column.IsKnown());
+      const auto &loc = x.GetLocation();
+      ASSERT_TRUE(loc.has_value());
+      ASSERT_TRUE(loc->Column.has_value());
       ASSERT_EQ(loc->Line, 5U);
       ASSERT_EQ(*loc->Column, 26U);
     }
@@ -746,9 +746,9 @@ namespace {
       caught = true;
       ASSERT_EQ(x.GetAttrName(), "attr1");
       ASSERT_EQ(x.GetElementName(), "elem");
-      const TOpt<TFileLocation> &loc = x.GetLocation();
-      ASSERT_TRUE(loc.IsKnown());
-      ASSERT_TRUE(loc->Column.IsKnown());
+      const auto &loc = x.GetLocation();
+      ASSERT_TRUE(loc.has_value());
+      ASSERT_TRUE(loc->Column.has_value());
       ASSERT_EQ(loc->Line, 5U);
       ASSERT_EQ(*loc->Column, 26U);
     }
@@ -812,25 +812,25 @@ namespace {
     ASSERT_EQ(TranscodeToString(child->getNodeName()), "elem");
     const DOMElement *elem = static_cast<const DOMElement *>(child);
 
-    TOpt<bool> opt_bool = TAttrReader::GetOptBool(*elem, "attr1");
-    ASSERT_TRUE(opt_bool.IsUnknown());
+    auto opt_bool = TAttrReader::GetOptBool(*elem, "attr1");
+    ASSERT_FALSE(opt_bool.has_value());
     opt_bool = TAttrReader::GetOptBool(*elem, "wrong_attr");
-    ASSERT_TRUE(opt_bool.IsUnknown());
+    ASSERT_FALSE(opt_bool.has_value());
     opt_bool = TAttrReader::GetOptBool(*elem, "attr2");
-    ASSERT_TRUE(opt_bool.IsKnown());
+    ASSERT_TRUE(opt_bool.has_value());
     ASSERT_TRUE(*opt_bool);
     opt_bool = TAttrReader::GetOptBool(*elem, "attr3");
-    ASSERT_TRUE(opt_bool.IsKnown());
+    ASSERT_TRUE(opt_bool.has_value());
     ASSERT_FALSE(*opt_bool);
     opt_bool = TAttrReader::GetOptBool(*elem, "attr5");
-    ASSERT_TRUE(opt_bool.IsKnown());
+    ASSERT_TRUE(opt_bool.has_value());
     ASSERT_TRUE(*opt_bool);
     opt_bool = TAttrReader::GetOptBool(*elem, "attr6");
-    ASSERT_TRUE(opt_bool.IsKnown());
+    ASSERT_TRUE(opt_bool.has_value());
     ASSERT_FALSE(*opt_bool);
     opt_bool = TAttrReader::GetOptBool(*elem, "attr1",
         0 | TOpts::REQUIRE_PRESENCE);
-    ASSERT_TRUE(opt_bool.IsUnknown());
+    ASSERT_FALSE(opt_bool.has_value());
     bool caught = false;
 
     try {
@@ -840,9 +840,9 @@ namespace {
       caught = true;
       ASSERT_EQ(x.GetAttrName(), "wrong_attr");
       ASSERT_EQ(x.GetElementName(), "elem");
-      const TOpt<TFileLocation> &loc = x.GetLocation();
-      ASSERT_TRUE(loc.IsKnown());
-      ASSERT_TRUE(loc->Column.IsKnown());
+      const auto &loc = x.GetLocation();
+      ASSERT_TRUE(loc.has_value());
+      ASSERT_TRUE(loc->Column.has_value());
       ASSERT_EQ(loc->Line, 10U);
       ASSERT_EQ(*loc->Column, 25U);
     }
@@ -850,7 +850,7 @@ namespace {
     ASSERT_TRUE(caught);
     opt_bool = TAttrReader::GetOptBool(*elem, "attr3",
         0 | TOpts::REQUIRE_PRESENCE);
-    ASSERT_TRUE(opt_bool.IsKnown());
+    ASSERT_TRUE(opt_bool.has_value());
     ASSERT_FALSE(*opt_bool);
     caught = false;
 
@@ -900,10 +900,10 @@ namespace {
 
     ASSERT_TRUE(caught);
     opt_bool = TAttrReader::GetOptNamedBool(*elem, "attr7", "yes", "no");
-    ASSERT_TRUE(opt_bool.IsKnown());
+    ASSERT_TRUE(opt_bool.has_value());
     ASSERT_TRUE(*opt_bool);
     opt_bool = TAttrReader::GetOptNamedBool(*elem, "attr8", "yes", "no");
-    ASSERT_TRUE(opt_bool.IsKnown());
+    ASSERT_TRUE(opt_bool.has_value());
     ASSERT_FALSE(*opt_bool);
     caught = false;
 
@@ -972,21 +972,20 @@ namespace {
     ASSERT_EQ(TranscodeToString(child->getNodeName()), "elem");
     const DOMElement *elem = static_cast<const DOMElement *>(child);
 
-    TOpt<int> opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr1",
-        nullptr);
-    ASSERT_TRUE(opt_int.IsUnknown());
+    auto opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr1", nullptr);
+    ASSERT_FALSE(opt_int.has_value());
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "wrong_attr", nullptr);
-    ASSERT_TRUE(opt_int.IsUnknown());
+    ASSERT_FALSE(opt_int.has_value());
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr2", nullptr);
-    ASSERT_TRUE(opt_int.IsKnown());
+    ASSERT_TRUE(opt_int.has_value());
     ASSERT_EQ(*opt_int, 5);
 
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr1", nullptr,
         0 | TOpts::REQUIRE_PRESENCE);
-    ASSERT_TRUE(opt_int.IsUnknown());
+    ASSERT_FALSE(opt_int.has_value());
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr5", nullptr,
         0 | TOpts::REQUIRE_PRESENCE);
-    ASSERT_TRUE(opt_int.IsKnown());
+    ASSERT_TRUE(opt_int.has_value());
     ASSERT_EQ(*opt_int, -2);
     bool caught = false;
 
@@ -997,28 +996,28 @@ namespace {
       caught = true;
       ASSERT_EQ(x.GetAttrName(), "wrong_attr");
       ASSERT_EQ(x.GetElementName(), "elem");
-      const TOpt<TFileLocation> &loc = x.GetLocation();
-      ASSERT_TRUE(loc.IsKnown());
-      ASSERT_TRUE(loc->Column.IsKnown());
+      const auto &loc = x.GetLocation();
+      ASSERT_TRUE(loc.has_value());
+      ASSERT_TRUE(loc->Column.has_value());
       ASSERT_EQ(loc->Line, 8U);
       ASSERT_EQ(*loc->Column, 33U);
     }
 
     ASSERT_TRUE(caught);
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr1", "unlimited");
-    ASSERT_TRUE(opt_int.IsUnknown());
+    ASSERT_FALSE(opt_int.has_value());
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "wrong_attr", "unlimited");
-    ASSERT_TRUE(opt_int.IsUnknown());
+    ASSERT_FALSE(opt_int.has_value());
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr2", "unlimited");
-    ASSERT_TRUE(opt_int.IsKnown());
+    ASSERT_TRUE(opt_int.has_value());
     ASSERT_EQ(*opt_int, 5);
 
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr1", "unlimited",
         0 | TOpts::REQUIRE_PRESENCE);
-    ASSERT_TRUE(opt_int.IsUnknown());
+    ASSERT_FALSE(opt_int.has_value());
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr5", "unlimited",
         0 | TOpts::REQUIRE_PRESENCE);
-    ASSERT_TRUE(opt_int.IsKnown());
+    ASSERT_TRUE(opt_int.has_value());
     ASSERT_EQ(*opt_int, -2);
     caught = false;
 
@@ -1033,17 +1032,17 @@ namespace {
 
     ASSERT_TRUE(caught);
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr6", "unlimited");
-    ASSERT_TRUE(opt_int.IsUnknown());
+    ASSERT_FALSE(opt_int.has_value());
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr6", "unlimited",
         0 | TOpts::STRICT_EMPTY_VALUE);
-    ASSERT_TRUE(opt_int.IsUnknown());
+    ASSERT_FALSE(opt_int.has_value());
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr6", "unlimited",
         0 | TOpts::REQUIRE_PRESENCE | TOpts::STRICT_EMPTY_VALUE);
-    ASSERT_TRUE(opt_int.IsUnknown());
+    ASSERT_FALSE(opt_int.has_value());
 
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "wrong_attr", "unlimited",
         0 | TOpts::STRICT_EMPTY_VALUE);
-    ASSERT_TRUE(opt_int.IsUnknown());
+    ASSERT_FALSE(opt_int.has_value());
     caught = false;
 
     try {
@@ -1069,23 +1068,23 @@ namespace {
 
     ASSERT_TRUE(caught);
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr6", "unlimited");
-    ASSERT_TRUE(opt_int.IsUnknown());
+    ASSERT_FALSE(opt_int.has_value());
 
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr3", nullptr,
         0 | TOpts::ALLOW_K);
-    ASSERT_TRUE(opt_int.IsKnown());
+    ASSERT_TRUE(opt_int.has_value());
     ASSERT_EQ(*opt_int, 20 * 1024);
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr4", nullptr,
         0 | TOpts::ALLOW_M);
-    ASSERT_TRUE(opt_int.IsKnown());
+    ASSERT_TRUE(opt_int.has_value());
     ASSERT_EQ(*opt_int, -5 * 1024 * 1024);
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr3", nullptr,
         TOpts::ALLOW_K | TOpts::ALLOW_M);
-    ASSERT_TRUE(opt_int.IsKnown());
+    ASSERT_TRUE(opt_int.has_value());
     ASSERT_EQ(*opt_int, 20 * 1024);
     opt_int = TAttrReader::GetOptSigned<int>(*elem, "attr4", nullptr,
         TOpts::ALLOW_K | TOpts::ALLOW_M);
-    ASSERT_TRUE(opt_int.IsKnown());
+    ASSERT_TRUE(opt_int.has_value());
     ASSERT_EQ(*opt_int, -5 * 1024 * 1024);
     caught = false;
 
@@ -1171,9 +1170,9 @@ namespace {
       caught = true;
       ASSERT_EQ(x.GetAttrName(), "wrong_attr");
       ASSERT_EQ(x.GetElementName(), "elem");
-      const TOpt<TFileLocation> &loc = x.GetLocation();
-      ASSERT_TRUE(loc.IsKnown());
-      ASSERT_TRUE(loc->Column.IsKnown());
+      const auto &loc = x.GetLocation();
+      ASSERT_TRUE(loc.has_value());
+      ASSERT_TRUE(loc->Column.has_value());
       ASSERT_EQ(loc->Line, 25U);
       ASSERT_EQ(*loc->Column, 29U);
     }

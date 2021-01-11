@@ -22,11 +22,11 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include <sys/stat.h>
 
-#include <base/opt.h>
 #include <log/file_log_writer.h>
 #include <log/log_writer_base.h>
 
@@ -41,7 +41,7 @@ namespace Log {
      std::system_error will be thrown and the call will otherwise have no
      effect (i.e. any previous log writer will be preserved). */
   void SetLogWriter(bool enable_stdout_stderr, bool enable_syslog,
-      const std::string &file_path, const Base::TOpt<mode_t> &file_mode);
+      const std::string &file_path, std::optional<mode_t> file_mode);
 
   /* This is intended to be called only by unit tests.  It destroys any
      existing log writer. */

@@ -26,12 +26,12 @@
 #include <limits>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <unordered_set>
 
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 
 namespace Dory {
 
@@ -69,7 +69,7 @@ namespace Dory {
            pointer to the set of enabled topics. */
         const std::unordered_set<std::string> *
         GetDebugTopics() const noexcept {
-          return DebugTopics.IsKnown() ? &*DebugTopics : nullptr;
+          return DebugTopics.has_value() ? &*DebugTopics : nullptr;
         }
 
         size_t GetVersion() const noexcept {
@@ -128,7 +128,7 @@ namespace Dory {
 
         /* The absence of a set of strings means "all topics".  The presence of
            an empty set of strings means "no topics". */
-        Base::TOpt<const std::unordered_set<std::string>> DebugTopics;
+        std::optional<const std::unordered_set<std::string>> DebugTopics;
 
         /* Protects 'BytesRemaining'. */
         std::mutex Mutex;

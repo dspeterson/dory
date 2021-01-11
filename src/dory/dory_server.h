@@ -25,6 +25,7 @@
 #include <exception>
 #include <list>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <utility>
 
@@ -33,7 +34,6 @@
 #include <base/event_semaphore.h>
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 #include <base/sig_handler_installer.h>
 #include <base/sig_set.h>
 #include <base/timer_fd.h>
@@ -98,7 +98,7 @@ namespace Dory {
        Do not call until server has been started.  This is intended for test
        code to use for finding the ephemeral port chosen by the kernel. */
     in_port_t GetInputPort() const noexcept {
-      return TcpInputAgent.IsKnown() ? TcpInputAgent->GetBindPort() : 0;
+      return TcpInputAgent ? TcpInputAgent->GetBindPort() : 0;
     }
 
     /* Return a file descriptor that becomes readable when the server has
@@ -177,22 +177,22 @@ namespace Dory {
 
     /* Thread pool for handling local TCP and UNIX domain stream client
        connections. */
-    Base::TOpt<TWorkerPool> StreamClientWorkerPool;
+    std::optional<TWorkerPool> StreamClientWorkerPool;
 
     /* Server for handling UNIX domain datagram client messages.  This is the
        preferred way for clients to send messages to dory. */
-    Base::TOpt<TUnixDgInputAgent> UnixDgInputAgent;
+    std::optional<TUnixDgInputAgent> UnixDgInputAgent;
 
     /* Server for handling UNIX domain stream client connections.  This may be
        useful for clients who want to send messages too large for UNIX domain
        datagrams, or who can deal with UNIX domain stream, but not datagram,
        sockets. */
-    Base::TOpt<Server::TUnixStreamServer> UnixStreamInputAgent;
+    std::optional<Server::TUnixStreamServer> UnixStreamInputAgent;
 
     /* Server for handling local TCP client connections.  This should only be
        used by clients who are not easily able to use UNIX domain datagram or
        stream sockets. */
-    Base::TOpt<Server::TTcpIpv4Server> TcpInputAgent;
+    std::optional<Server::TTcpIpv4Server> TcpInputAgent;
 
     const TMetadataTimestamp &MetadataTimestamp;
 

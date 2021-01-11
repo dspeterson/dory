@@ -21,6 +21,7 @@
 
 #include <dory/compress/snappy/snappy_codec.h>
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -53,10 +54,10 @@ namespace {
 
   TEST_F(TSnappyCodecTest, BasicTest) {
     const TSnappyCodec &codec = TSnappyCodec::The();
-    TOpt<int> level = codec.GetRealCompressionLevel(TOpt<int>());
-    ASSERT_TRUE(level.IsUnknown());
-    level = codec.GetRealCompressionLevel(TOpt<int>(5));
-    ASSERT_TRUE(level.IsUnknown());
+    auto level = codec.GetRealCompressionLevel(std::nullopt);
+    ASSERT_FALSE(level.has_value());
+    level = codec.GetRealCompressionLevel(5);
+    ASSERT_FALSE(level.has_value());
     std::string to_compress;
 
     for (size_t i = 0; i < 1024; ++i) {
@@ -65,9 +66,9 @@ namespace {
 
     std::vector<char> compressed_output(
         codec.ComputeCompressedResultBufSpace(to_compress.data(),
-            to_compress.size(), TOpt<int>()));
+            to_compress.size(), std::nullopt));
     size_t result_size = codec.Compress(to_compress.data(), to_compress.size(),
-        &compressed_output[0], compressed_output.size(), TOpt<int>());
+        &compressed_output[0], compressed_output.size(), std::nullopt);
     ASSERT_LE(result_size, compressed_output.size());
     ASSERT_LT(result_size, to_compress.size());
     compressed_output.resize(result_size);

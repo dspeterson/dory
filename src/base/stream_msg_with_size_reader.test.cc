@@ -384,7 +384,7 @@ namespace {
 
     state = r.Read();
     ASSERT_EQ(state, TStreamMsgReader::TState::DataInvalid);
-    ASSERT_TRUE(r.GetDataInvalidReason().IsKnown());
+    ASSERT_TRUE(r.GetDataInvalidReason().has_value());
     ASSERT_EQ(*r.GetDataInvalidReason(),
         TStreamMsgWithSizeReaderBase::TDataInvalidReason::MsgBodyTooLarge);
   }
@@ -424,7 +424,7 @@ namespace {
 
     state = r.Read();
     ASSERT_EQ(state, TStreamMsgReader::TState::DataInvalid);
-    ASSERT_TRUE(r.GetDataInvalidReason().IsKnown());
+    ASSERT_TRUE(r.GetDataInvalidReason().has_value());
     ASSERT_EQ(*r.GetDataInvalidReason(),
         TStreamMsgWithSizeReaderBase::TDataInvalidReason::MsgBodyTooLarge);
   }
@@ -470,7 +470,7 @@ namespace {
 
     state = r.Read();
     ASSERT_EQ(state, TStreamMsgReader::TState::DataInvalid);
-    ASSERT_TRUE(r.GetDataInvalidReason().IsKnown());
+    ASSERT_TRUE(r.GetDataInvalidReason().has_value());
     ASSERT_EQ(*r.GetDataInvalidReason(),
         TStreamMsgWithSizeReaderBase::TDataInvalidReason::MsgBodyTooLarge);
   }
@@ -517,7 +517,7 @@ namespace {
 
     state = r.Read();
     ASSERT_EQ(state, TStreamMsgReader::TState::DataInvalid);
-    ASSERT_TRUE(r.GetDataInvalidReason().IsKnown());
+    ASSERT_TRUE(r.GetDataInvalidReason().has_value());
     ASSERT_EQ(*r.GetDataInvalidReason(),
         TStreamMsgWithSizeReaderBase::TDataInvalidReason::MsgBodyTooLarge);
   }
@@ -537,7 +537,7 @@ namespace {
 
     /* data should be invalid due to negative size field */
     ASSERT_EQ(state, TStreamMsgReader::TState::DataInvalid);
-    ASSERT_TRUE(r.GetDataInvalidReason().IsKnown());
+    ASSERT_TRUE(r.GetDataInvalidReason().has_value());
     ASSERT_EQ(*r.GetDataInvalidReason(),
         TStreamMsgWithSizeReaderBase::TDataInvalidReason::InvalidSizeField);
   }
@@ -585,7 +585,7 @@ namespace {
 
     state = r.Read();
     ASSERT_EQ(state, TStreamMsgReader::TState::DataInvalid);
-    ASSERT_TRUE(r.GetDataInvalidReason().IsKnown());
+    ASSERT_TRUE(r.GetDataInvalidReason().has_value());
     ASSERT_EQ(*r.GetDataInvalidReason(),
         TStreamMsgWithSizeReaderBase::TDataInvalidReason::InvalidSizeField);
   }

@@ -25,6 +25,7 @@
 #include <cstdint>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -35,7 +36,6 @@
 #include <base/field_access.h>
 #include <base/file_reader.h>
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 #include <base/time_util.h>
 #include <base/tmp_file.h>
 #include <dory/anomaly_tracker.h>
@@ -95,7 +95,7 @@ namespace {
 
     TDoryTestServer(in_port_t broker_port, size_t msg_buffer_max,
         size_t compression_min_size, const char *compression_type,
-        TOpt<int> compression_level)
+        std::optional<int> compression_level)
         : BrokerPort(broker_port),
           MsgBufferMax(msg_buffer_max),
           EnableBatching(true),
@@ -174,7 +174,7 @@ namespace {
 
     std::string CompressionType;
 
-    TOpt<int> CompressionLevel;
+    std::optional<int> CompressionLevel;
 
     int DoryReturnValue = EXIT_FAILURE;
 
@@ -194,7 +194,7 @@ namespace {
         EnableCompression ? "config1" : "noComp");
     std::string level_blurb;
 
-    if (CompressionLevel.IsKnown()) {
+    if (CompressionLevel) {
       level_blurb = " level=\"";
       level_blurb += std::to_string(*CompressionLevel);
       level_blurb += "\"";
@@ -445,9 +445,9 @@ namespace {
       mock_kafka.NonblockingGetHandledRequests(received);
 
       for (auto &item : received) {
-        if (item.MetadataRequestInfo.IsKnown()) {
+        if (item.MetadataRequestInfo) {
           ASSERT_EQ(item.MetadataRequestInfo->ReturnedErrorCode, 0);
-        } else if (item.ProduceRequestInfo.IsKnown()) {
+        } else if (item.ProduceRequestInfo) {
           ASSERT_FALSE(got_msg_set);
           const TTracker::TProduceRequestInfo &info = *item.ProduceRequestInfo;
           ASSERT_EQ(info.Topic, topic);
@@ -549,9 +549,9 @@ namespace {
       mock_kafka.NonblockingGetHandledRequests(received);
 
       for (auto &item : received) {
-        if (item.MetadataRequestInfo.IsKnown()) {
+        if (item.MetadataRequestInfo) {
           ASSERT_EQ(item.MetadataRequestInfo->ReturnedErrorCode, 0);
-        } else if (item.ProduceRequestInfo.IsKnown()) {
+        } else if (item.ProduceRequestInfo) {
           const TTracker::TProduceRequestInfo &info = *item.ProduceRequestInfo;
           ASSERT_EQ(info.Topic, topic);
           ASSERT_EQ(info.ReturnedErrorCode, 0);
@@ -742,13 +742,13 @@ namespace {
 
     /* initial metadata request from daemon startup */
     TTracker::TRequestInfo *req_info = &received.front();
-    ASSERT_TRUE(req_info->MetadataRequestInfo.IsKnown());
+    ASSERT_TRUE(req_info->MetadataRequestInfo.has_value());
     ASSERT_EQ(req_info->MetadataRequestInfo->ReturnedErrorCode, 0);
     received.pop_front();
 
     /* injected error ACK */
     req_info = &received.front();
-    ASSERT_TRUE(req_info->ProduceRequestInfo.IsKnown());
+    ASSERT_TRUE(req_info->ProduceRequestInfo.has_value());
     TTracker::TProduceRequestInfo *prod_req_info =
         &*req_info->ProduceRequestInfo;
     ASSERT_EQ(prod_req_info->Topic, topic);
@@ -758,19 +758,19 @@ namespace {
 
     /* failed metadata request due to injected disconnect */
     req_info = &received.front();
-    ASSERT_TRUE(req_info->MetadataRequestInfo.IsKnown());
+    ASSERT_TRUE(req_info->MetadataRequestInfo.has_value());
     ASSERT_EQ(req_info->MetadataRequestInfo->ReturnedErrorCode, 0);
     received.pop_front();
 
     /* successful metadata request retry after injected disconnect */
     req_info = &received.front();
-    ASSERT_TRUE(req_info->MetadataRequestInfo.IsKnown());
+    ASSERT_TRUE(req_info->MetadataRequestInfo.has_value());
     ASSERT_EQ(req_info->MetadataRequestInfo->ReturnedErrorCode, 0);
     received.pop_front();
 
     /* successful redelivery ACK */
     req_info = &received.front();
-    ASSERT_TRUE(req_info->ProduceRequestInfo.IsKnown());
+    ASSERT_TRUE(req_info->ProduceRequestInfo.has_value());
     prod_req_info = &*req_info->ProduceRequestInfo;
     ASSERT_EQ(prod_req_info->Topic, topic);
     ASSERT_EQ(prod_req_info->FirstMsgValue, msg_body);
@@ -802,7 +802,7 @@ namespace {
 
     /* successful delivery ACK */
     req_info = &received.front();
-    ASSERT_TRUE(req_info->ProduceRequestInfo.IsKnown());
+    ASSERT_TRUE(req_info->ProduceRequestInfo.has_value());
     prod_req_info = &*req_info->ProduceRequestInfo;
     ASSERT_EQ(prod_req_info->Topic, topic);
     ASSERT_EQ(prod_req_info->FirstMsgValue, msg_body);
@@ -885,19 +885,19 @@ namespace {
 
     /* initial metadata request from daemon startup */
     TTracker::TRequestInfo *req_info = &received.front();
-    ASSERT_TRUE(req_info->MetadataRequestInfo.IsKnown());
+    ASSERT_TRUE(req_info->MetadataRequestInfo.has_value());
     ASSERT_EQ(req_info->MetadataRequestInfo->ReturnedErrorCode, 0);
     received.pop_front();
 
     /* metadata request due to pause */
     req_info = &received.front();
-    ASSERT_TRUE(req_info->MetadataRequestInfo.IsKnown());
+    ASSERT_TRUE(req_info->MetadataRequestInfo.has_value());
     ASSERT_EQ(req_info->MetadataRequestInfo->ReturnedErrorCode, 0);
     received.pop_front();
 
     /* successful redelivery ACK */
     req_info = &received.front();
-    ASSERT_TRUE(req_info->ProduceRequestInfo.IsKnown());
+    ASSERT_TRUE(req_info->ProduceRequestInfo.has_value());
     TTracker::TProduceRequestInfo *prod_req_info =
         &*req_info->ProduceRequestInfo;
     ASSERT_EQ(prod_req_info->Topic, topic);
@@ -930,7 +930,7 @@ namespace {
 
     /* successful delivery ACK */
     req_info = &received.front();
-    ASSERT_TRUE(req_info->ProduceRequestInfo.IsKnown());
+    ASSERT_TRUE(req_info->ProduceRequestInfo.has_value());
     prod_req_info = &*req_info->ProduceRequestInfo;
     ASSERT_EQ(prod_req_info->Topic, topic);
     ASSERT_EQ(prod_req_info->FirstMsgValue, msg_body);
@@ -1133,9 +1133,9 @@ namespace {
       mock_kafka.NonblockingGetHandledRequests(received);
 
       for (auto &item : received) {
-        if (item.MetadataRequestInfo.IsKnown()) {
+        if (item.MetadataRequestInfo) {
           ASSERT_EQ(item.MetadataRequestInfo->ReturnedErrorCode, 0);
-        } else if (item.ProduceRequestInfo.IsKnown()) {
+        } else if (item.ProduceRequestInfo) {
           const TTracker::TProduceRequestInfo &info = *item.ProduceRequestInfo;
           ASSERT_EQ(info.Topic, topic);
           ASSERT_EQ(info.ReturnedErrorCode, 0);
@@ -1244,7 +1244,7 @@ namespace {
     size_t data_size = msg_body_1.size() +
         produce_protocol->GetSingleMsgOverhead();
     TDoryTestServer server(port, 1024 * 1024, 1 + (10 * data_size), "gzip",
-        TOpt<int>());
+        std::nullopt);
     server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
@@ -1317,8 +1317,7 @@ namespace {
     std::string msg_body_1("123456789");
     size_t data_size = msg_body_1.size() +
         produce_protocol->GetSingleMsgOverhead();
-    TDoryTestServer server(port, 1024 * 1024, 1 + (10 * data_size), "gzip",
-        TOpt<int>(4));
+    TDoryTestServer server(port, 1024 * 1024, 1 + (10 * data_size), "gzip", 4);
     server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
@@ -1392,7 +1391,7 @@ namespace {
     size_t data_size = msg_body_1.size() +
         produce_protocol->GetSingleMsgOverhead();
     TDoryTestServer server(port, 1024 * 1024, 1 + (10 * data_size), "lz4",
-        TOpt<int>());
+        std::nullopt);
     server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
@@ -1465,8 +1464,7 @@ namespace {
     std::string msg_body_1("123456789");
     size_t data_size = msg_body_1.size() +
         produce_protocol->GetSingleMsgOverhead();
-    TDoryTestServer server(port, 1024 * 1024, 1 + (10 * data_size), "lz4",
-        TOpt<int>(3));
+    TDoryTestServer server(port, 1024 * 1024, 1 + (10 * data_size), "lz4", 3);
     server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
@@ -1540,7 +1538,7 @@ namespace {
     size_t data_size = msg_body_1.size() +
         produce_protocol->GetSingleMsgOverhead();
     TDoryTestServer server(port, 1024 * 1024, 1 + (10 * data_size), "snappy",
-        TOpt<int>());
+        std::nullopt);
     server.UseUnixDgSocket();
     bool started = server.SyncStart();
     ASSERT_TRUE(started);
@@ -1745,9 +1743,9 @@ namespace {
       mock_kafka.NonblockingGetHandledRequests(received);
 
       for (auto &item : received) {
-        if (item.MetadataRequestInfo.IsKnown()) {
+        if (item.MetadataRequestInfo) {
           ASSERT_EQ(item.MetadataRequestInfo->ReturnedErrorCode, 0);
-        } else if (item.ProduceRequestInfo.IsKnown()) {
+        } else if (item.ProduceRequestInfo) {
           const TTracker::TProduceRequestInfo &info = *item.ProduceRequestInfo;
           ASSERT_EQ(info.ReturnedErrorCode, 0);
           received_msgs.push_back(

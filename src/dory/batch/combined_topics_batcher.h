@@ -26,13 +26,13 @@
 #include <cassert>
 #include <list>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 #include <dory/batch/batcher_core.h>
 #include <dory/msg.h>
 #include <dory/util/topic_map.h>
@@ -109,7 +109,7 @@ namespace Dory {
       std::list<std::list<TMsg::TPtr>>
       AddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now);
 
-      Base::TOpt<TMsg::TTimestamp> GetNextCompleteTime() const noexcept {
+      std::optional<TMsg::TTimestamp> GetNextCompleteTime() const noexcept {
         return CoreState.GetNextCompleteTime();
       }
 

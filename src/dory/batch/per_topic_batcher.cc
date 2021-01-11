@@ -27,7 +27,6 @@
 
 #include <log/log.h>
 
-using namespace Base;
 using namespace Dory;
 using namespace Dory::Batch;
 using namespace Log;
@@ -59,12 +58,12 @@ TPerTopicBatcher::AddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
   TSingleTopicBatcher &batcher = entry.Batcher;
 
   if (batcher.BatchingIsEnabled()) {
-    TOpt<TMsg::TTimestamp> opt_nct_initial = batcher.GetNextCompleteTime();
+    auto opt_nct_initial = batcher.GetNextCompleteTime();
 
-    if (opt_nct_initial.IsKnown() !=
+    if (opt_nct_initial.has_value() !=
         (entry.ExpiryRef != ExpiryTracker.end())) {
       LOG(TPri::ERR) << "Bug!!!  Topic batcher state out of sync with ExpiryRef: "
-          << std::boolalpha << opt_nct_initial.IsKnown();
+          << std::boolalpha << opt_nct_initial.has_value();
       assert(false);
     }
 
@@ -73,24 +72,23 @@ TPerTopicBatcher::AddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
     if (entry.ExpiryRef != ExpiryTracker.end()) {
       expiry = entry.ExpiryRef->GetExpiry();
 
-      if (opt_nct_initial.IsUnknown() || (*opt_nct_initial != expiry)) {
-        TMsg::TTimestamp nct_initial =
-            (opt_nct_initial.IsKnown()) ? *opt_nct_initial : 0;
+      if (!opt_nct_initial || (*opt_nct_initial != expiry)) {
+        TMsg::TTimestamp nct_initial = opt_nct_initial.value_or(0);
         LOG(TPri::ERR) << "Bug!!!  Topic batcher time limit does not match "
             << "expiry tracker time limit: " << std::boolalpha
-            << opt_nct_initial.IsKnown() << " " << nct_initial << " "
+            << opt_nct_initial.has_value() << " " << nct_initial << " "
             << expiry;
         assert(false);
       }
     }
 
     std::list<TMsg::TPtr> complete_batch = batcher.AddMsg(std::move(msg), now);
-    TOpt<TMsg::TTimestamp> opt_nct_final = batcher.GetNextCompleteTime();
+    auto opt_nct_final = batcher.GetNextCompleteTime();
     bool remove_old_expiry = false;
     bool add_new_expiry = false;
 
     if (entry.ExpiryRef != ExpiryTracker.end()) {
-      if (opt_nct_final.IsKnown()) {
+      if (opt_nct_final) {
         if (*opt_nct_final != expiry) {
           remove_old_expiry = true;
           add_new_expiry = true;
@@ -98,7 +96,7 @@ TPerTopicBatcher::AddMsg(TMsg::TPtr &&msg, TMsg::TTimestamp now) {
       } else {
         remove_old_expiry = true;
       }
-    } else if (opt_nct_final.IsKnown()) {
+    } else if (opt_nct_final) {
       add_new_expiry = true;
     }
 
@@ -166,12 +164,12 @@ TPerTopicBatcher::GetCompleteBatches(TMsg::TTimestamp now) {
   return result;
 }
 
-TOpt<TMsg::TTimestamp> TPerTopicBatcher::GetNextCompleteTime() const noexcept {
+std::optional<TMsg::TTimestamp> TPerTopicBatcher::GetNextCompleteTime() const noexcept {
   if (ExpiryTracker.empty()) {
-    return TOpt<TMsg::TTimestamp>();
+    return std::nullopt;
   }
 
-  return TOpt<TMsg::TTimestamp>(ExpiryTracker.begin()->GetExpiry());
+  return ExpiryTracker.begin()->GetExpiry();
 }
 
 std::list<std::list<TMsg::TPtr>> TPerTopicBatcher::GetAllBatches() {
@@ -226,10 +224,9 @@ bool TPerTopicBatcher::SanityCheck() const {
       }
     }
 
-    TOpt<TMsg::TTimestamp> opt_time_limit =
-        entry.Batcher.GetNextCompleteTime();
+    auto opt_time_limit = entry.Batcher.GetNextCompleteTime();
 
-    if (opt_time_limit.IsKnown()) {
+    if (opt_time_limit.has_value()) {
       if ((expiry_iter == ExpiryTracker.end()) ||
           (entry.ExpiryRef != expiry_iter)) {
         return false;

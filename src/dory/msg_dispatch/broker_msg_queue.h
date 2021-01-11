@@ -25,13 +25,13 @@
 #include <cstddef>
 #include <list>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <unordered_set>
 
 #include <base/event_semaphore.h>
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 #include <dory/batch/combined_topics_batcher.h>
 #include <dory/batch/global_batch_config.h>
 #include <dory/batch/per_topic_batcher.h>
@@ -120,13 +120,13 @@ namespace Dory {
 
       private:
       struct TExpiryStatus {
-        Base::TOpt<TMsg::TTimestamp> OptInitialExpiry;
+        std::optional<TMsg::TTimestamp> OptInitialExpiry;
 
-        Base::TOpt<TMsg::TTimestamp> OptFinalExpiry;
+        std::optional<TMsg::TTimestamp> OptFinalExpiry;
 
         void Clear() {
-          OptInitialExpiry.Reset();
-          OptFinalExpiry.Reset();
+          OptInitialExpiry.reset();
+          OptFinalExpiry.reset();
         }
       };  // TExpiryStatus
 
@@ -146,8 +146,6 @@ namespace Dory {
       void CheckBothBatchers(TMsg::TTimestamp now,
           TExpiryStatus &per_topic_status,
           TExpiryStatus &combined_topics_status);
-
-      Base::TOpt<TMsg::TTimestamp> CheckBothBatchers(TMsg::TTimestamp now);
 
       std::list<std::list<TMsg::TPtr>> GetAllMsgs();
 

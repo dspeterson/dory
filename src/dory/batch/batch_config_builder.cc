@@ -126,9 +126,9 @@ TGlobalBatchConfig TBatchConfigBuilder::Build() {
 }
 
 static TBatchConfig ToBatchConfig(const TBatchConf::TBatchValues &values) {
-  size_t time_limit = values.OptTimeLimit.IsKnown() ? *values.OptTimeLimit : 0;
-  size_t msg_count = values.OptMsgCount.IsKnown() ? *values.OptMsgCount : 0;
-  size_t byte_count = values.OptByteCount.IsKnown() ? *values.OptByteCount : 0;
+  size_t time_limit = values.OptTimeLimit.value_or(0);
+  size_t msg_count = values.OptMsgCount.value_or(0);
+  size_t byte_count = values.OptByteCount.value_or(0);
   return TBatchConfig(time_limit, msg_count, byte_count);
 }
 

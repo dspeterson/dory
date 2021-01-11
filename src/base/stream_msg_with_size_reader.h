@@ -24,10 +24,10 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <type_traits>
 
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 #include <base/stream_msg_reader.h>
 
 namespace Base {
@@ -107,7 +107,7 @@ namespace Base {
       PreferredReadSize = size;
     }
 
-    TOpt<TDataInvalidReason> GetDataInvalidReason() const noexcept {
+    std::optional<TDataInvalidReason> GetDataInvalidReason() const noexcept {
       return OptDataInvalidReason;
     }
 
@@ -125,10 +125,11 @@ namespace Base {
     private:
     /* Pointer to function with the following signature:
 
-           TOpt<uint64_t> fn(const uint8_t *field_loc) noexcept;
+           std::optional<uint64_t> fn(const uint8_t *field_loc) noexcept;
      */
-    using TSizeFieldReadFn = std::remove_reference<decltype(std::declval<
-        TOpt<uint64_t> (*)(const uint8_t *field_loc) noexcept>())>::type;
+    using TSizeFieldReadFn = std::remove_reference<decltype(
+        std::declval<std::optional<uint64_t> (*)(
+            const uint8_t *field_loc) noexcept>())>::type;
 
     static TSizeFieldReadFn ChooseSizeFieldReadFn(size_t size_field_size,
         bool size_field_is_signed) noexcept;
@@ -160,10 +161,10 @@ namespace Base {
 
     /* Size of message body in bytes, when value has been obtained from size
        field. */
-    TOpt<size_t> OptMsgBodySize;
+    std::optional<size_t> OptMsgBodySize;
 
     /* Indicates reason why data is invalid, if invalid data is encountered. */
-    TOpt<TDataInvalidReason> OptDataInvalidReason;
+    std::optional<TDataInvalidReason> OptDataInvalidReason;
   };  // TStreamMsgWithSizeReaderBase
 
   /* Reads a stream of messages from a socket or pipe.  Each message is

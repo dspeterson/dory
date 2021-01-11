@@ -23,8 +23,8 @@
 
 #include <cstddef>
 #include <limits>
+#include <optional>
 
-#include <base/opt.h>
 #include <dory/batch/batch_config.h>
 #include <dory/msg.h>
 
@@ -71,7 +71,7 @@ namespace Dory {
         return ByteCount;
       }
 
-      Base::TOpt<TMsg::TTimestamp> GetNextCompleteTime() const noexcept;
+      std::optional<TMsg::TTimestamp> GetNextCompleteTime() const noexcept;
 
       TAction ProcessNewMsg(TMsg::TTimestamp now,
           const TMsg::TPtr &msg) noexcept;

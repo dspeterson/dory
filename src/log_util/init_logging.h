@@ -21,12 +21,12 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
 
 #include <sys/types.h>
 
 #include <base/error_util.h>
-#include <base/opt.h>
 #include <log/pri.h>
 
 namespace LogUtil {
@@ -38,6 +38,6 @@ namespace LogUtil {
    */
   void InitLogging(const char *prog_name, Log::TPri max_level,
       bool enable_stdout_stderr, bool enable_syslog,
-      const std::string &file_path, const Base::TOpt<mode_t> &file_mode);
+      const std::string &file_path, std::optional<mode_t> file_mode);
 
 }  // LogUtil

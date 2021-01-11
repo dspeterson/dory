@@ -78,16 +78,15 @@ static const int DEFAULT_LEVEL = 0;
 static const int MIN_LEVEL = 0;
 static const int MAX_LEVEL = 16;
 
-TOpt<int> TLz4Codec::GetRealCompressionLevel(
-    const TOpt<int> &requested_level) const noexcept {
-  if (requested_level.IsUnknown()) {
-    return TOpt<int>(DEFAULT_LEVEL);
+std::optional<int> TLz4Codec::GetRealCompressionLevel(
+    std::optional<int> requested_level) const noexcept {
+  if (!requested_level.has_value()) {
+    return DEFAULT_LEVEL;
   }
 
   int requested = *requested_level;
-  return TOpt<int>(
-      ((requested >= MIN_LEVEL) && (requested <= MAX_LEVEL)) ?
-      requested : DEFAULT_LEVEL);
+  return ((requested >= MIN_LEVEL) && (requested <= MAX_LEVEL)) ?
+      requested : DEFAULT_LEVEL;
 }
 
 size_t TLz4Codec::ComputeUncompressedResultBufSpace(

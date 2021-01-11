@@ -21,12 +21,10 @@
 
 #include <dory/compress/compression_codec_api.h>
 
-using namespace Base;
 using namespace Dory;
 using namespace Dory::Compress;
 
 int TCompressionCodecApi::CompressionLevelParam(
-    const TOpt<int> &requested_level) const noexcept {
-  auto real_level = GetRealCompressionLevel(requested_level);
-  return (real_level.IsKnown()) ? *real_level : 0;
+    std::optional<int> requested_level) const noexcept {
+  return GetRealCompressionLevel(requested_level).value_or(0);
 }

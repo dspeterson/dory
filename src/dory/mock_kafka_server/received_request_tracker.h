@@ -23,10 +23,10 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <string>
 
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 #include <dory/compress/compression_type.h>
 #include <thread/gate.h>
 
@@ -95,9 +95,9 @@ namespace Dory {
       /* Exactly one of { ProduceRequestInfo, MetadataRequestInfo } will be
          known. */
       struct TRequestInfo {
-        Base::TOpt<TProduceRequestInfo> ProduceRequestInfo;
+        std::optional<TProduceRequestInfo> ProduceRequestInfo;
 
-        Base::TOpt<TMetadataRequestInfo> MetadataRequestInfo;
+        std::optional<TMetadataRequestInfo> MetadataRequestInfo;
 
         TRequestInfo() = default;
 

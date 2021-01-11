@@ -24,6 +24,7 @@
 #include <cassert>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 
@@ -31,7 +32,6 @@
 #include <sys/types.h>
 
 #include <base/fd.h>
-#include <base/opt.h>
 #include <log/error_handler.h>
 #include <log/log_entry_access_api.h>
 #include <log/log_writer_base.h>
@@ -81,8 +81,7 @@ namespace Log {
     /* Throws std::system_error on error opening file.  An empty path disables
        the writer.  If nonempty, the path must be absolute (i.e. it must start
        with '/'). */
-    TFileLogWriter(const std::string &path,
-        const Base::TOpt<mode_t> &open_mode);
+    TFileLogWriter(const std::string &path, std::optional<mode_t> open_mode);
 
     TFileLogWriter(const TFileLogWriter &) = default;
 
@@ -98,7 +97,7 @@ namespace Log {
       return Path;
     }
 
-    Base::TOpt<mode_t> GetOpenMode() const noexcept {
+    std::optional<mode_t> GetOpenMode() const noexcept {
       return OpenMode;
     }
 
@@ -118,7 +117,7 @@ namespace Log {
 
     const std::string Path;
 
-    const Base::TOpt<mode_t> OpenMode;
+    const std::optional<mode_t> OpenMode;
 
     /* Holding the file descriptor by shared_ptr facilitates copy construction.
      */

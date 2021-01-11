@@ -26,11 +26,11 @@
 #include <cstdint>
 #include <list>
 #include <map>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
 
-#include <base/opt.h>
 #include <dory/msg.h>
 
 namespace Dory {
@@ -86,13 +86,13 @@ namespace Dory {
     struct TShutdownCmd {
       /* If SlowShutdownStartTime.IsKnown() then this is a slow shutdown
          command.  Otherwise it is a fast shutdown command. */
-      Base::TOpt<uint64_t> OptSlowShutdownStartTime;
+      std::optional<uint64_t> OptSlowShutdownStartTime;
 
       TShutdownCmd() = default;
 
       explicit TShutdownCmd(uint64_t slow_start_shutdown_time)
           : OptSlowShutdownStartTime(slow_start_shutdown_time) {
-        assert(OptSlowShutdownStartTime.IsKnown());
+        assert(OptSlowShutdownStartTime.has_value());
       }
     };  // TShutdownCmd
 

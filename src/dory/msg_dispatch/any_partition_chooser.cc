@@ -29,5 +29,5 @@ void TAnyPartitionChooser::Choose(size_t broker_index, const TMetadata &md,
   size_t num_choices = 0;
   const int32_t *choice_vec =
       md.FindPartitionChoices(topic, broker_index, num_choices);
-  Choice.MakeKnown(choice_vec[Count % num_choices]);
+  Choice.emplace(choice_vec[Count % num_choices]);
 }

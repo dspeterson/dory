@@ -29,52 +29,52 @@
 
 using namespace Base;
 
-static TOpt<uint64_t> ReadUnsigned8BitSizeField(
+static std::optional<uint64_t> ReadUnsigned8BitSizeField(
     const uint8_t *field_loc) noexcept {
-  return TOpt<uint64_t>(*field_loc);
+  return *field_loc;
 }
 
-static TOpt<uint64_t> ReadUnsigned16BitSizeField(
+static std::optional<uint64_t> ReadUnsigned16BitSizeField(
     const uint8_t *field_loc) noexcept {
-  return TOpt<uint64_t>(ReadUint16FromHeader(field_loc));
+  return ReadUint16FromHeader(field_loc);
 }
 
-static TOpt<uint64_t> ReadUnsigned32BitSizeField(
+static std::optional<uint64_t> ReadUnsigned32BitSizeField(
     const uint8_t *field_loc) noexcept {
-  return TOpt<uint64_t>(ReadUint32FromHeader(field_loc));
+  return ReadUint32FromHeader(field_loc);
 }
 
-static TOpt<uint64_t> ReadUnsigned64BitSizeField(
+static std::optional<uint64_t> ReadUnsigned64BitSizeField(
     const uint8_t *field_loc) noexcept {
-  return TOpt<uint64_t>(ReadUint64FromHeader(field_loc));
+  return ReadUint64FromHeader(field_loc);
 }
 
-static TOpt<uint64_t> ReadSigned8BitSizeField(
+static std::optional<uint64_t> ReadSigned8BitSizeField(
     const uint8_t *field_loc) noexcept {
   auto size = static_cast<int8_t>(*field_loc);
   return (size < 0) ?
-      TOpt<uint64_t>() : TOpt<uint64_t>(static_cast<uint64_t>(size));
+      std::nullopt : std::optional<uint64_t>(static_cast<uint64_t>(size));
 }
 
-static TOpt<uint64_t> ReadSigned16BitSizeField(
+static std::optional<uint64_t> ReadSigned16BitSizeField(
     const uint8_t *field_loc) noexcept {
   int16_t size = ReadInt16FromHeader(field_loc);
   return (size < 0) ?
-      TOpt<uint64_t>() : TOpt<uint64_t>(static_cast<uint64_t>(size));
+      std::nullopt : std::optional<uint64_t>(static_cast<uint64_t>(size));
 }
 
-static TOpt<uint64_t> ReadSigned32BitSizeField(
+static std::optional<uint64_t> ReadSigned32BitSizeField(
     const uint8_t *field_loc) noexcept {
   int32_t size = ReadInt32FromHeader(field_loc);
   return (size < 0) ?
-      TOpt<uint64_t>() : TOpt<uint64_t>(static_cast<uint64_t>(size));
+      std::nullopt : std::optional<uint64_t>(static_cast<uint64_t>(size));
 }
 
-static TOpt<uint64_t> ReadSigned64BitSizeField(
+static std::optional<uint64_t> ReadSigned64BitSizeField(
     const uint8_t *field_loc) noexcept {
   int64_t size = ReadInt64FromHeader(field_loc);
   return (size < 0) ?
-      TOpt<uint64_t>() : TOpt<uint64_t>(static_cast<uint64_t>(size));
+      std::nullopt : std::optional<uint64_t>(static_cast<uint64_t>(size));
 }
 
 TStreamMsgWithSizeReaderBase::TStreamMsgWithSizeReaderBase(
@@ -107,35 +107,35 @@ TStreamMsgWithSizeReaderBase::GetNextMsg() noexcept {
   size_t data_size = GetDataSize();
 
   if (data_size < SizeFieldSize) {
-    assert(OptMsgBodySize.IsUnknown());
+    assert(!OptMsgBodySize);
     return TGetMsgResult::NoMsgReady();
   }
 
-  if (OptMsgBodySize.IsUnknown()) {
+  if (!OptMsgBodySize) {
     auto opt_size = SizeFieldReadFn(GetData());
 
-    if (opt_size.IsUnknown()) {
+    if (!opt_size) {
       /* Signed size field value was found to be negative. */
-      OptDataInvalidReason.MakeKnown(TDataInvalidReason::InvalidSizeField);
+      OptDataInvalidReason = TDataInvalidReason::InvalidSizeField;
       return TGetMsgResult::Invalid();
     }
 
     uint64_t size = *opt_size;
 
     if (SizeIncludesSizeField && (size < SizeFieldSize)) {
-      OptDataInvalidReason.MakeKnown(TDataInvalidReason::InvalidSizeField);
+      OptDataInvalidReason = TDataInvalidReason::InvalidSizeField;
       return TGetMsgResult::Invalid();
     }
 
     if ((size > MaxMsgBodySize) &&
         (!SizeIncludesSizeField ||
             ((size - MaxMsgBodySize) > SizeFieldSize))) {
-      OptDataInvalidReason.MakeKnown(TDataInvalidReason::MsgBodyTooLarge);
+      OptDataInvalidReason = TDataInvalidReason::MsgBodyTooLarge;
       return TGetMsgResult::Invalid();
     }
 
-    OptMsgBodySize.MakeKnown(static_cast<size_t>(
-        SizeIncludesSizeField ? (size - SizeFieldSize) : size));
+    OptMsgBodySize = static_cast<size_t>(
+        SizeIncludesSizeField ? (size - SizeFieldSize) : size);
   }
 
   size_t body_size = *OptMsgBodySize;
@@ -157,12 +157,12 @@ TStreamMsgWithSizeReaderBase::GetNextMsg() noexcept {
 }
 
 void TStreamMsgWithSizeReaderBase::HandleReset() noexcept {
-  OptMsgBodySize.Reset();
-  OptDataInvalidReason.Reset();
+  OptMsgBodySize.reset();
+  OptDataInvalidReason.reset();
 }
 
 void TStreamMsgWithSizeReaderBase::BeforeConsumeReadyMsg() noexcept {
-  OptMsgBodySize.Reset();
+  OptMsgBodySize.reset();
 }
 
 TStreamMsgWithSizeReaderBase::TSizeFieldReadFn

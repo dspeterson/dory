@@ -23,11 +23,11 @@
 #pragma once
 
 #include <cstddef>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 
-#include <base/opt.h>
 #include <dory/compress/compression_type.h>
 #include <dory/conf/conf_error.h>
 
@@ -124,12 +124,12 @@ namespace Dory {
         size_t MinSize = 0;
 
         /* Compression level, if specified. */
-        Base::TOpt<int> Level;
+        std::optional<int> Level;
 
         TConf() noexcept = default;
 
         TConf(Compress::TCompressionType type, size_t min_size,
-            const Base::TOpt<int> &level) noexcept
+            std::optional<int> level) noexcept
             : Type(type),
               MinSize(min_size),
               Level(level) {
@@ -171,7 +171,7 @@ namespace Dory {
 
       void AddNamedConfig(const std::string &name,
           Compress::TCompressionType type, size_t min_size,
-          const Base::TOpt<int> &level);
+          std::optional<int> level);
 
       void SetSizeThresholdPercent(size_t size_threshold_percent);
 

@@ -162,7 +162,7 @@ void TStreamClientWorkFn::HandleClientClosed() const {
 }
 
 void TStreamClientWorkFn::HandleDataInvalid() {
-  assert(StreamReader.GetDataInvalidReason().IsKnown());
+  assert(StreamReader.GetDataInvalidReason());
 
   switch (*StreamReader.GetDataInvalidReason()) {
     case TStreamMsgWithSizeReaderBase::TDataInvalidReason::InvalidSizeField: {

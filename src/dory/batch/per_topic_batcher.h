@@ -23,12 +23,12 @@
 
 #include <list>
 #include <memory>
+#include <optional>
 #include <set>
 #include <string>
 #include <unordered_map>
 
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 #include <dory/batch/batch_config.h>
 #include <dory/batch/single_topic_batcher.h>
 #include <dory/msg.h>
@@ -89,7 +89,7 @@ namespace Dory {
       std::list<std::list<TMsg::TPtr>>
       GetCompleteBatches(TMsg::TTimestamp now);
 
-      Base::TOpt<TMsg::TTimestamp> GetNextCompleteTime() const noexcept;
+      std::optional<TMsg::TTimestamp> GetNextCompleteTime() const noexcept;
 
       /* Get all batches, even incomplete ones.  On return, the batcher will
          have no messages.  This is used when dory is shutting down. */

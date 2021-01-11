@@ -24,7 +24,6 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include <base/opt.h>
 #include <dory/conf/process_file_section.h>
 #include <log/pri.h>
 #include <xml/config/config_errors.h>

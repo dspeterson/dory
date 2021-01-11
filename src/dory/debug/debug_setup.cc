@@ -63,7 +63,7 @@ TDebugSetup::TSettings::TSettings(size_t version,
       LoggingEnabled(EnableIsSpecified(debug_topics)),
       BytesRemaining(byte_limit) {
   if (debug_topics) {
-    DebugTopics.MakeKnown(std::move(*debug_topics));
+    DebugTopics.emplace(std::move(*debug_topics));
   }
 
   if (LoggingEnabled) {

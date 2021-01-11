@@ -29,6 +29,7 @@
 #include <exception>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -43,7 +44,6 @@
 #include <base/field_access.h>
 #include <base/no_copy_semantics.h>
 #include <base/no_default_case.h>
-#include <base/opt.h>
 #include <base/time.h>
 #include <base/time_util.h>
 #include <dory/build_id.h>
@@ -73,7 +73,7 @@ struct TCmdLineArgs {
   std::string StreamSocketPath;
 
   /* For local TCP input to Dory. */
-  TOpt<in_port_t> Port;
+  std::optional<in_port_t> Port;
 
   std::string Topic;
 
@@ -172,7 +172,7 @@ static void ParseArgs(int argc, const char *const argv[],
         throw TInvalidArgError("Invalid port");
       }
 
-      args.Port.MakeKnown(port);
+      args.Port.emplace(port);
       ++input_type_count;
     }
 
@@ -326,7 +326,7 @@ static std::unique_ptr<TClientSenderBase> CreateSender(
         new TUnixStreamSender(cfg.StreamSocketPath.c_str()));
   }
 
-  assert(cfg.Port.IsKnown());
+  assert(cfg.Port.has_value());
   return std::unique_ptr<TClientSenderBase>(new TTcpSender(*cfg.Port));
 }
 

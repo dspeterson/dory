@@ -23,17 +23,16 @@
 
 #include <stdexcept>
 
-using namespace Base;
 using namespace Dory;
 using namespace Dory::Conf;
 
 void TInputSourcesConf::SetUnixDgConf(const std::string &path,
-    const TOpt<mode_t> &mode) {
+    std::optional<mode_t> mode) {
   if (!path.empty() && (path[0] != '/')) {
     throw std::logic_error("UNIX datagram path must be absolute");
   }
 
-  if (mode.IsKnown() && (*mode > 0777)) {
+  if (mode && (*mode > 0777)) {
     throw std::logic_error("Invalid UNIX datagram file mode");
   }
 
@@ -42,12 +41,12 @@ void TInputSourcesConf::SetUnixDgConf(const std::string &path,
 }
 
 void TInputSourcesConf::SetUnixStreamConf(const std::string &path,
-    const TOpt<mode_t> &mode) {
+    std::optional<mode_t> mode) {
   if (!path.empty() && (path[0] != '/')) {
     throw std::logic_error("UNIX stream path must be absolute");
   }
 
-  if (mode.IsKnown() && (*mode > 0777)) {
+  if (mode && (*mode > 0777)) {
     throw std::logic_error("Invalid UNIX stream file mode");
   }
 
@@ -55,9 +54,9 @@ void TInputSourcesConf::SetUnixStreamConf(const std::string &path,
   UnixStreamMode = mode;
 }
 
-void TInputSourcesConf::SetTcpConf(const TOpt<in_port_t> &port,
+void TInputSourcesConf::SetTcpConf(std::optional<in_port_t> port,
     bool allow_input_bind_ephemeral) {
-  if (!allow_input_bind_ephemeral && port.IsKnown() && (*port == 0)) {
+  if (!allow_input_bind_ephemeral && port && (*port == 0)) {
     throw TInvalidTcpInputPort();
   }
 

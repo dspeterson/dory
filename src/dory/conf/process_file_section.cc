@@ -38,7 +38,7 @@ using namespace Xml::Config;
 
 using TOpts = TAttrReader::TOpts;
 
-std::pair<std::string, TOpt<mode_t>>
+std::pair<std::string, std::optional<mode_t>>
 Dory::Conf::ProcessFileSection(const DOMElement &file_section,
     bool allow_relative_path) {
   const bool enable = TAttrReader::GetBool(file_section, "enable");
@@ -55,7 +55,7 @@ Dory::Conf::ProcessFileSection(const DOMElement &file_section,
     path.clear();
   }
 
-  TOpt<mode_t> mode;
+  std::optional<mode_t> mode;
   const DOMElement *mode_elem = nullptr;
 
   if (subsection_map.count("mode")) {
@@ -70,7 +70,7 @@ Dory::Conf::ProcessFileSection(const DOMElement &file_section,
           "Path must be absolute");
   }
 
-  if (mode.IsKnown() && (*mode > 0777)) {
+  if (mode && (*mode > 0777)) {
       assert(mode_elem);
       throw TInvalidAttr(*mode_elem, "value",
           TAttrReader::GetString(*mode_elem, "value").c_str(),

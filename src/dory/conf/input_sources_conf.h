@@ -22,12 +22,12 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
 
 #include <netinet/in.h>
 #include <sys/types.h>
 
-#include <base/opt.h>
 #include <dory/conf/conf_error.h>
 
 namespace Dory {
@@ -46,24 +46,23 @@ namespace Dory {
       std::string UnixDgPath;
 
       /* File creation mode for UNIX datagram socket. */
-      Base::TOpt<mode_t> UnixDgMode;
+      std::optional<mode_t> UnixDgMode;
 
       /* Absolute path for UNIX stream socket.  Empty means disable. */
       std::string UnixStreamPath;
 
       /* File creation mode for UNIX stream socket. */
-      Base::TOpt<mode_t> UnixStreamMode;
+      std::optional<mode_t> UnixStreamMode;
 
       /* Optional port for local TCP input. */
-      Base::TOpt<in_port_t> LocalTcpPort;
+      std::optional<in_port_t> LocalTcpPort;
 
-      void SetUnixDgConf(const std::string &path,
-          const Base::TOpt<mode_t> &mode);
+      void SetUnixDgConf(const std::string &path, std::optional<mode_t> mode);
 
       void SetUnixStreamConf(const std::string &path,
-          const Base::TOpt<mode_t> &mode);
+          std::optional<mode_t> mode);
 
-      void SetTcpConf(const Base::TOpt<in_port_t> &port,
+      void SetTcpConf(std::optional<in_port_t> port,
           bool allow_input_bind_ephemeral);
     };  // TInputSourcesConf
 

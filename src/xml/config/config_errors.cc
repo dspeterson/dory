@@ -39,15 +39,15 @@ std::pair<TFileLocation, std::string> TXmlError::BuildInfo(
       std::string(GetTranscoded(x.getMessage()).get()));
 }
 
-std::string TXmlError::BuildMsg(const TOpt<TFileLocation> &location,
+std::string TXmlError::BuildMsg(const std::optional<TFileLocation> &location,
     const char *msg) {
   std::string result;
 
-  if (location.IsKnown()) {
+  if (location) {
     result = "(line ";
     result += std::to_string(location->Line);
 
-    if (location->Column.IsKnown()) {
+    if (location->Column) {
       result += ", column ";
       result += std::to_string(*location->Column);
     }
@@ -83,12 +83,13 @@ std::string TWrongEncoding::BuildMsg(const char *encoding,
   return result;
 }
 
-TOpt<TFileLocation> TContentError::BuildLocation(const DOMNode &node) {
-  TOpt<TFileLocation> result;
+std::optional<TFileLocation>
+TContentError::BuildLocation(const DOMNode &node) {
+  std::optional<TFileLocation> result;
   const TXmlInputLineInfo *info = TXmlInputLineInfo::Get(node);
 
   if (info) {
-    result.MakeKnown(info->GetLineNum(), info->GetColumnNum());
+    result.emplace(info->GetLineNum(), info->GetColumnNum());
   }
 
   return result;

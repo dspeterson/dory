@@ -21,12 +21,12 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
 
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <base/opt.h>
 #include <log/file_log_writer.h>
 #include <log/log_writer_base.h>
 #include <log/pri.h>
@@ -44,14 +44,14 @@ namespace Log {
 
     /* Create a new log writer from scratch, based on config. */
     TCombinedLogWriter(bool enable_stdout_stderr, bool enable_syslog,
-        const std::string &file_path, const Base::TOpt<mode_t> &file_mode);
+        const std::string &file_path, std::optional<mode_t> file_mode);
 
     /* Create a new log writer, attempting to reuse any open file descriptor
        for logfile from 'old_writer'.  This avoids unnecessarily closing and
        reopening the logfile. */
     TCombinedLogWriter(const TCombinedLogWriter &old_writer,
         bool enable_stdout_stderr, bool enable_syslog,
-        const std::string &file_path, const Base::TOpt<mode_t> &file_mode);
+        const std::string &file_path, std::optional<mode_t> file_mode);
 
     bool StdoutStderrLoggingIsEnabled() const noexcept {
       return StdoutStderrLogWriter.IsEnabled();
@@ -70,7 +70,7 @@ namespace Log {
       return FileLogWriter.GetPath();
     }
 
-    Base::TOpt<mode_t> GetFileOpenMode() const noexcept {
+    std::optional<mode_t> GetFileOpenMode() const noexcept {
       return FileLogWriter.GetOpenMode();
     }
 

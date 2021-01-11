@@ -28,6 +28,7 @@
 #include <list>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -39,7 +40,6 @@
 #include <base/event_semaphore.h>
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 #include <base/timer_fd.h>
 #include <dory/anomaly_tracker.h>
 #include <dory/batch/batch_config_builder.h>
@@ -361,7 +361,7 @@ namespace Dory {
 
     /* This becomes known whwnever the batcher has an expiration time.  It
        indicates the earliest expiration time of any topic batch. */
-    Base::TOpt<TMsg::TTimestamp> OptNextBatchExpiry;
+    std::optional<TMsg::TTimestamp> OptNextBatchExpiry;
 
     /* The dispatcher handles the details of sending messages and receiving
        ACKs.  Once we decide which broker a message goes to, the dispatcher
@@ -381,7 +381,7 @@ namespace Dory {
 
     /* This becomes known when a slow shutdown starts.  The units are
        milliseconds since the epoch. */
-    Base::TOpt<uint64_t> ShutdownStartTime;
+    std::optional<uint64_t> ShutdownStartTime;
 
     /* When this FD befcomes readable, we refresh our metadata. */
     std::unique_ptr<Base::TTimerFd> MetadataRefreshTimer;

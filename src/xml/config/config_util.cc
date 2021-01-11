@@ -242,11 +242,11 @@ void Xml::Config::RequireAllChildElementLeaves(const DOMElement &elem) {
   }
 }
 
-TOpt<std::string> TAttrReader::GetOptString(const DOMElement &elem,
+std::optional<std::string> TAttrReader::GetOptString(const DOMElement &elem,
     const char *attr_name, unsigned int opts) {
   assert(attr_name);
   assert(opts == (opts & TOpts::TRIM_WHITESPACE));
-  TOpt<std::string> result;
+  std::optional<std::string> result;
   const DOMAttr *attr = elem.getAttributeNode(GetTranscoded(attr_name).get());
 
   if (attr) {
@@ -256,7 +256,7 @@ TOpt<std::string> TAttrReader::GetOptString(const DOMElement &elem,
       boost::algorithm::trim(value);
     }
 
-    result.MakeKnown(std::move(value));
+    result.emplace(std::move(value));
   }
 
   return result;
@@ -302,23 +302,22 @@ static bool StringToBool(const std::string &s, const char *true_value,
   return is_true;
 }
 
-TOpt<bool> TAttrReader::GetOptNamedBool(const DOMElement &elem,
+std::optional<bool> TAttrReader::GetOptNamedBool(const DOMElement &elem,
     const char *attr_name, const char *true_value, const char *false_value,
     unsigned int opts) {
   assert(attr_name);
   assert(true_value);
   assert(false_value);
   assert(opts == (opts & (TOpts::REQUIRE_PRESENCE | TOpts::CASE_SENSITIVE)));
-  TOpt<bool> result;
-  TOpt<std::string> opt_s = GetOptString(elem, attr_name,
-      0 | TOpts::TRIM_WHITESPACE);
+  std::optional<bool> result;
+  auto opt_s = GetOptString(elem, attr_name, 0 | TOpts::TRIM_WHITESPACE);
 
-  if (opt_s.IsUnknown()) {
+  if (!opt_s) {
     if (opts & TOpts::REQUIRE_PRESENCE) {
       throw TMissingAttrValue(elem, attr_name);
     }
   } else if (!(*opt_s).empty()) {
-    result.MakeKnown(StringToBool(*opt_s, true_value, false_value,
+    result.emplace(StringToBool(*opt_s, true_value, false_value,
         (opts & TOpts::CASE_SENSITIVE) != 0, elem, attr_name));
   }
 
@@ -457,14 +456,14 @@ uintmax_t TAttrReader::GetIntHelper<uintmax_t>(const DOMElement &elem,
   return GetUintMaxAttr(elem, attr_name, allowed_bases, opts);
 }
 
-static TOpt<std::string> GetOptInAttrHelper(const DOMElement &elem,
+static std::optional<std::string> GetOptInAttrHelper(const DOMElement &elem,
     const char *attr_name, const char *empty_value_name, unsigned int opts) {
   assert(attr_name);
   using TOpts = TAttrReader::TOpts;
-  TOpt<std::string> opt_s = TAttrReader::GetOptString(elem, attr_name,
+  auto opt_s = TAttrReader::GetOptString(elem, attr_name,
       0 | TOpts::TRIM_WHITESPACE);
 
-  if (opt_s.IsUnknown()) {
+  if (!opt_s) {
     if (opts & TOpts::REQUIRE_PRESENCE) {
       throw TMissingAttrValue(elem, attr_name);
     }
@@ -477,51 +476,53 @@ static TOpt<std::string> GetOptInAttrHelper(const DOMElement &elem,
       return opt_s;
     }
 
-    opt_s.Reset();
+    opt_s.reset();
   }
 
   return opt_s;
 }
 
-static TOpt<intmax_t> GetOptIntMaxAttr(const DOMElement &elem,
+static std::optional<intmax_t> GetOptIntMaxAttr(const DOMElement &elem,
     const char *attr_name, const char *empty_value_name, unsigned int opts) {
-  TOpt<intmax_t> result;
-  TOpt<std::string> opt_attr_str = GetOptInAttrHelper(elem, attr_name,
-      empty_value_name, opts);
+  std::optional<intmax_t> result;
+  auto opt_attr_str = GetOptInAttrHelper(elem, attr_name, empty_value_name,
+      opts);
 
-  if (opt_attr_str.IsKnown()) {
-    result.MakeKnown(AttrToIntMax(*opt_attr_str, elem, attr_name, opts));
+  if (opt_attr_str) {
+    result.emplace(AttrToIntMax(*opt_attr_str, elem, attr_name, opts));
   }
 
   return result;
 }
 
-static TOpt<uintmax_t> GetOptUintMaxAttr(const DOMElement &elem,
+static std::optional<uintmax_t> GetOptUintMaxAttr(const DOMElement &elem,
     const char *attr_name, const char *empty_value_name,
     unsigned int allowed_bases, unsigned int opts) {
-  TOpt<uintmax_t> result;
-  TOpt<std::string> opt_attr_str = GetOptInAttrHelper(elem, attr_name,
-      empty_value_name, opts);
+  std::optional<uintmax_t> result;
+  auto opt_attr_str = GetOptInAttrHelper(elem, attr_name, empty_value_name,
+      opts);
 
-  if (opt_attr_str.IsKnown()) {
-    result.MakeKnown(AttrToUintMax(*opt_attr_str, elem, attr_name,
-        allowed_bases, opts));
+  if (opt_attr_str) {
+    result.emplace(AttrToUintMax(*opt_attr_str, elem, attr_name, allowed_bases,
+        opts));
   }
 
   return result;
 }
 
 template <>
-TOpt<intmax_t> TAttrReader::GetOptIntHelper<intmax_t>(const DOMElement &elem,
-    const char *attr_name, const char *empty_value_name,
-    unsigned int /* allowed_bases */, unsigned int opts) {
+std::optional<intmax_t> TAttrReader::GetOptIntHelper<intmax_t>(
+    const DOMElement &elem, const char *attr_name,
+    const char *empty_value_name, unsigned int /* allowed_bases */,
+    unsigned int opts) {
   return GetOptIntMaxAttr(elem, attr_name, empty_value_name, opts);
 }
 
 template <>
-TOpt<uintmax_t> TAttrReader::GetOptIntHelper<uintmax_t>(const DOMElement &elem,
-    const char *attr_name, const char *empty_value_name,
-    unsigned int allowed_bases, unsigned int opts) {
+std::optional<uintmax_t> TAttrReader::GetOptIntHelper<uintmax_t>(
+    const DOMElement &elem, const char *attr_name,
+    const char *empty_value_name, unsigned int allowed_bases,
+    unsigned int opts) {
   return GetOptUintMaxAttr(elem, attr_name, empty_value_name, allowed_bases,
       opts);
 }

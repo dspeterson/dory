@@ -28,7 +28,6 @@
 #include <utility>
 
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 #include <dory/mock_kafka_server/cmd.h>
 
 namespace Dory {

@@ -25,10 +25,10 @@
 
 #include <algorithm>
 #include <cstring>
+#include <optional>
 #include <string>
 #include <vector>
 
-#include <base/opt.h>
 #include <base/tmp_file.h>
 #include <test_util/test_logging.h>
 
@@ -82,11 +82,11 @@ namespace {
     std::vector<uint8_t> merged_buf;
     MergeIovecs(iov[0], iov[1], merged_buf);
 
-    TOpt<TMetadataRequestReader> reader;
+    std::optional<TMetadataRequestReader> reader;
     bool threw = false;
 
     try {
-      reader.MakeKnown(&merged_buf[0], merged_buf.size());
+      reader.emplace(&merged_buf[0], merged_buf.size());
     } catch (const std::runtime_error &) {
       threw = true;
     }
@@ -112,11 +112,11 @@ namespace {
     std::fill(&header_buf[0], &header_buf[0] + header_buf.size(), 'x');
     TMetadataRequestWriter().WriteAllTopicsRequest(iov, &header_buf[0], 12345);
     ASSERT_EQ(header_buf[header_buf.size() - 1], 'x');
-    TOpt<TMetadataRequestReader> reader;
+    std::optional<TMetadataRequestReader> reader;
     bool threw = false;
 
     try {
-      reader.MakeKnown(iov.iov_base, iov.iov_len);
+      reader.emplace(iov.iov_base, iov.iov_len);
     } catch (const std::runtime_error &) {
       threw = true;
     }

@@ -150,8 +150,8 @@ void TRouterThread::StartShutdown() {
     throw TShutdownOnDestroy();
   }
 
-  assert(ShutdownStartTime.IsUnknown());
-  ShutdownStartTime.MakeKnown(GetEpochMilliseconds());
+  assert(!ShutdownStartTime.has_value());
+  ShutdownStartTime.emplace(GetEpochMilliseconds());
   NeedToContinueShutdown = true;
 
   /* Future attempts to monitor this FD will not find it readable.  However, if
@@ -840,7 +840,7 @@ bool TRouterThread::ReplaceMetadataOnRefresh(
 /* Return true on success, or false if we got a shutdown signal and the
    shutdown delay expired while trying to refresh metadata. */
 bool TRouterThread::RefreshMetadata() {
-  assert(ShutdownStartTime.IsUnknown());
+  assert(!ShutdownStartTime.has_value());
   std::shared_ptr<TMetadata> meta;
 
   if (Conf.MsgDeliveryConf.CompareMetadataOnRefresh) {
@@ -1038,7 +1038,7 @@ void TRouterThread::ContinueShutdown() {
 }
 
 int TRouterThread::ComputeMainLoopPollTimeout() {
-  if (OptNextBatchExpiry.IsUnknown()) {
+  if (!OptNextBatchExpiry) {
     return -1;  // infinite timeout
   }
 
@@ -1055,8 +1055,8 @@ int TRouterThread::ComputeMainLoopPollTimeout() {
     LOG(TPri::WARNING)
         << "Likely bug: batch timeout is ridiculously large: expiry " << expiry
         << " now " << now;
-    OptNextBatchExpiry.Reset();
-    OptNextBatchExpiry.MakeKnown(now);
+    OptNextBatchExpiry.reset();
+    OptNextBatchExpiry.emplace(now);
     return 0;
   }
 
@@ -1075,7 +1075,7 @@ void TRouterThread::InitMainLoopPollArray() {
       MainLoopPollArray[TMainLoopPollItem::MdRefresh];
   struct pollfd &shutdown_finished_item =
       MainLoopPollArray[TMainLoopPollItem::ShutdownFinished];
-  bool shutdown_started = ShutdownStartTime.IsKnown();
+  bool shutdown_started = ShutdownStartTime.has_value();
   pause_item.fd = Dispatcher.GetPauseFd();
   pause_item.events = POLLIN;
   pause_item.revents = 0;
@@ -1146,7 +1146,7 @@ void TRouterThread::DoRun() {
 
     uint64_t now = GetEpochMilliseconds();
 
-    if (OptNextBatchExpiry.IsKnown() &&
+    if (OptNextBatchExpiry &&
         (now >= static_cast<uint64_t>(*OptNextBatchExpiry))) {
       HandleBatchExpiry(now);
     }
@@ -1162,7 +1162,7 @@ void TRouterThread::DoRun() {
 }
 
 void TRouterThread::HandleShutdownFinished() {
-  if (ShutdownStartTime.IsKnown()) {
+  if (ShutdownStartTime) {
     LOG(TPri::NOTICE)
         << "Router thread got shutdown finished notification from dispatcher";
   } else {
@@ -1194,7 +1194,7 @@ void TRouterThread::HandleBatchExpiry(uint64_t now) {
   RouteAnyPartitionNow(PerTopicBatcher.GetCompleteBatches(now));
   OptNextBatchExpiry = PerTopicBatcher.GetNextCompleteTime();
 
-  if (OptNextBatchExpiry.IsKnown()) {
+  if (OptNextBatchExpiry) {
     SetBatchExpiry.Increment();
   }
 }
@@ -1243,7 +1243,7 @@ void TRouterThread::HandleMsgAvailable(uint64_t now) {
 
       OptNextBatchExpiry = PerTopicBatcher.GetNextCompleteTime();
 
-      if (OptNextBatchExpiry.IsKnown()) {
+      if (OptNextBatchExpiry) {
         SetBatchExpiry.Increment();
       }
     }
@@ -1289,7 +1289,7 @@ bool TRouterThread::HandlePause() {
   Dispatcher.StartFastShutdown();
   LOG(TPri::NOTICE) << "Router thread waiting for dispatcher shutdown";
   CheckDispatcherShutdown();
-  bool shutdown_previously_started = ShutdownStartTime.IsKnown();
+  bool shutdown_previously_started = ShutdownStartTime.has_value();
   LOG(TPri::NOTICE) << "Router thread getting metadata in response to pause";
   std::shared_ptr<TMetadata> meta = GetMetadata();
 
@@ -1307,7 +1307,7 @@ bool TRouterThread::HandlePause() {
   LOG(TPri::NOTICE) << "Router thread started new dispatcher";
   Reroute(std::move(to_reroute));
 
-  if (ShutdownStartTime.IsKnown()) {
+  if (ShutdownStartTime) {
     if (!shutdown_previously_started) {
       /* We received the shutdown request while fetching metadata.  Get any
          remaining queued messages from the input thread and forward them to
@@ -1521,7 +1521,7 @@ std::shared_ptr<TMetadata> TRouterThread::GetMetadataDuringSlowShutdown() {
 std::shared_ptr<TMetadata> TRouterThread::GetMetadata() {
   std::shared_ptr<TMetadata> result;
 
-  if (ShutdownStartTime.IsUnknown()) {
+  if (!ShutdownStartTime) {
     result = std::move(GetMetadataBeforeSlowShutdown());
 
     if (result) {

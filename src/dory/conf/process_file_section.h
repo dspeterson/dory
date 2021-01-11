@@ -21,13 +21,12 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
 #include <utility>
 
 #include <sys/types.h>
 #include <xercesc/dom/DOMElement.hpp>
-
-#include <base/opt.h>
 
 namespace Dory {
 
@@ -37,7 +36,7 @@ namespace Dory {
        the returned pair will be the filename (including path if given) if a
        file was specified, or otherwise the empty string.  The second item of
        the returned pair privides the file mode if specified. */
-    std::pair<std::string, Base::TOpt<mode_t>>
+    std::pair<std::string, std::optional<mode_t>>
     ProcessFileSection(const xercesc::DOMElement &file_section,
         bool allow_relative_path = false);
 

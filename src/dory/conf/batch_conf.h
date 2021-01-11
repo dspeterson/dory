@@ -22,11 +22,11 @@
 #pragma once
 
 #include <cstddef>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 
-#include <base/opt.h>
 #include <dory/conf/conf_error.h>
 
 namespace Dory {
@@ -167,11 +167,11 @@ namespace Dory {
       /* For each member 'm' below, m.IsUnknown() indicates that "disable" was
          specified in the config file. */
       struct TBatchValues final {
-        Base::TOpt<size_t> OptTimeLimit;
+        std::optional<size_t> OptTimeLimit;
 
-        Base::TOpt<size_t> OptMsgCount;
+        std::optional<size_t> OptMsgCount;
 
-        Base::TOpt<size_t> OptByteCount;
+        std::optional<size_t> OptByteCount;
       };  // TBatchValues
 
       struct TTopicConf final {

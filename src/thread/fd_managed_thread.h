@@ -41,7 +41,6 @@
 #include <base/event_semaphore.h>
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 #include <base/thrower.h>
 
 namespace Thread {

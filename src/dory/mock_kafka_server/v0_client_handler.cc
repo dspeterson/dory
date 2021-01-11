@@ -65,7 +65,7 @@ TProduceResponseWriterApi &TV0ClientHandler::GetProduceResponseWriter() {
 
 bool TV0ClientHandler::ValidateMetadataRequestHeader() {
   try {
-    OptMetadataRequestReader.MakeKnown(&InputBuf[0], InputBuf.size());
+    OptMetadataRequestReader.emplace(&InputBuf[0], InputBuf.size());
   } catch (const std::runtime_error &x) {
     Out << x.what() << std::endl;
     return false;
@@ -76,7 +76,7 @@ bool TV0ClientHandler::ValidateMetadataRequestHeader() {
 
 bool TV0ClientHandler::ValidateMetadataRequest(
           TMetadataRequest &request) {
-  assert(OptMetadataRequestReader.IsKnown());
+  assert(OptMetadataRequestReader.has_value());
   request.CorrelationId = OptMetadataRequestReader->GetCorrelationId();
 
   if (OptMetadataRequestReader->IsAllTopics()) {
@@ -175,7 +175,7 @@ TV0ClientHandler::SendMetadataResponse(const TMetadataRequest &request,
   writer.CloseResponse();
   PrintMdReq(GetMetadataRequestCount(), request, action, topic_for_code, code,
              delay);
-  OptMetadataRequestReader.Reset();
+  OptMetadataRequestReader.reset();
 
   switch (TryWriteExactlyOrShutdown(ClientSocket, &MdResponseBuf[0],
                                     MdResponseBuf.size())) {

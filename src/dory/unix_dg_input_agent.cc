@@ -129,7 +129,7 @@ void TUnixDgInputAgent::OpenUnixSocket() {
 
   /* Set the permission bits on the socket file if they were specified.  If
      unspecified, the umask determines the permission bits. */
-  if (Conf.InputSourcesConf.UnixDgMode.IsKnown()) {
+  if (Conf.InputSourcesConf.UnixDgMode) {
     try {
       IfLt0(Wr::chmod(Conf.InputSourcesConf.UnixDgPath.c_str(),
           *Conf.InputSourcesConf.UnixDgMode));

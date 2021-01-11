@@ -25,7 +25,6 @@
 #include <mutex>
 
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 #include <capped/memory_cap_reached.h>
 
 namespace Capped {

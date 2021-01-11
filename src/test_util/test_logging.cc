@@ -23,10 +23,10 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <optional>
 #include <string>
 
 #include <base/basename.h>
-#include <base/opt.h>
 #include <log/log.h>
 #include <log_util/init_logging.h>
 
@@ -76,7 +76,7 @@ Base::TTmpFile TestUtil::InitTestLogging(const char *prog_name) {
      logfile, which will be a temporary file.  Fatal error output goes to both
      stderr and the logfile. */
   InitLogging(prog_name, TPri::DEBUG, false /* enable_stdout_stderr */,
-      false /* enable_syslog */, tmp_logfile.GetName(), TOpt<mode_t>());
+      false /* enable_syslog */, tmp_logfile.GetName(), std::nullopt);
 
   testing::UnitTest::GetInstance()->listeners().Append(
       new TestFailureEventListener);

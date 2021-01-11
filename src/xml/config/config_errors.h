@@ -24,6 +24,7 @@
 #pragma once
 
 #include <cstddef>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -34,7 +35,6 @@
 #include <xercesc/sax/SAXParseException.hpp>
 #include <xercesc/util/XMLException.hpp>
 
-#include <base/opt.h>
 #include <base/to_integer.h>
 
 namespace Xml {
@@ -53,12 +53,12 @@ namespace Xml {
 
       size_t Line;
 
-      Base::TOpt<size_t> Column;
+      std::optional<size_t> Column;
     };  // TFileLocation
 
     class TXmlError : public std::runtime_error {
       public:
-      TXmlError(const Base::TOpt<TFileLocation> &location,
+      TXmlError(const std::optional<TFileLocation> &location,
           const char *msg)
           : std::runtime_error(BuildMsg(location, msg)),
             Location(location) {
@@ -68,7 +68,7 @@ namespace Xml {
           : TXmlError(BuildInfo(x)) {
       }
 
-      const Base::TOpt<TFileLocation> &GetLocation() const noexcept {
+      const std::optional<TFileLocation> &GetLocation() const noexcept {
         return Location;
       }
 
@@ -76,14 +76,14 @@ namespace Xml {
       static std::pair<TFileLocation, std::string>
       BuildInfo(const xercesc::XMLException &x);
 
-      static std::string BuildMsg(const Base::TOpt<TFileLocation> &location,
+      static std::string BuildMsg(const std::optional<TFileLocation> &location,
           const char *msg);
 
       explicit TXmlError(const std::pair<TFileLocation, std::string> &info)
           : TXmlError(info.first, info.second.c_str()) {
       }
 
-      Base::TOpt<TFileLocation> Location;
+      std::optional<TFileLocation> Location;
     };  // TXmlError
 
     class TSaxParseError : public TXmlError {
@@ -105,7 +105,7 @@ namespace Xml {
     class TDomError : public TXmlError {
       public:
       explicit TDomError(const xercesc::DOMException &x)
-          : TXmlError(Base::TOpt<TFileLocation>(), BuildMsg(x).c_str()) {
+          : TXmlError(std::nullopt, BuildMsg(x).c_str()) {
       }
 
       private:
@@ -115,7 +115,7 @@ namespace Xml {
     class TDocumentEncodingError : public TXmlError {
       protected:
       explicit TDocumentEncodingError(const char *msg)
-          : TXmlError(Base::TOpt<TFileLocation>(), msg) {
+          : TXmlError(std::nullopt, msg) {
       }
     };  // TDocumentEncodingError
 
@@ -163,7 +163,7 @@ namespace Xml {
       }
 
       private:
-      static Base::TOpt<TFileLocation> BuildLocation(
+      static std::optional<TFileLocation> BuildLocation(
           const xercesc::DOMNode &node);
     };  // TContentError
 

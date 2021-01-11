@@ -25,12 +25,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include <base/fd.h>
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 #include <dory/kafka_proto/metadata/v0/metadata_request_reader.h>
 #include <dory/kafka_proto/metadata/v0/metadata_response_writer.h>
 #include <dory/kafka_proto/produce/v0/msg_set_reader.h>
@@ -91,7 +91,7 @@ namespace Dory {
       Dory::KafkaProto::Produce::V0::TProduceResponseWriter
           ProduceResponseWriter;
 
-      Base::TOpt<KafkaProto::Metadata::V0::TMetadataRequestReader>
+      std::optional<KafkaProto::Metadata::V0::TMetadataRequestReader>
           OptMetadataRequestReader;
 
       std::vector<uint8_t> MdResponseBuf;

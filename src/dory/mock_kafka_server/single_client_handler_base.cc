@@ -23,11 +23,11 @@
 
 #include <iostream>
 #include <limits>
+#include <optional>
 
 #include <base/field_access.h>
 #include <base/gettid.h>
 #include <base/no_default_case.h>
-#include <base/opt.h>
 #include <dory/compress/compression_type.h>
 #include <dory/kafka_proto/produce/msg_set_reader_api.h>
 #include <dory/mock_kafka_server/cmd.h>
@@ -506,7 +506,8 @@ bool TSingleClientHandlerBase::PrepareProduceResponse(const TProdReq &prod_req,
 
       total_delay += delay;
       writer.AddPartition(partition, ack_error, 0);
-      req_info.ProduceRequestInfo.MakeKnown();
+      req_info.ProduceRequestInfo.emplace(
+          TReceivedRequestTracker::TProduceRequestInfo());
       TReceivedRequestTracker::TProduceRequestInfo &produce_info =
           *req_info.ProduceRequestInfo;
       produce_info.Topic = topic;
@@ -559,10 +560,10 @@ bool TSingleClientHandlerBase::HandleProduceRequest() {
   } r(GetProduceRequestReader());
 
   std::vector<TReceivedRequestTracker::TRequestInfo> done_requests;
-  TOpt<TProdReq> opt_prod_req;
+  std::optional<TProdReq> opt_prod_req;
 
   try {
-    opt_prod_req.MakeKnown(
+    opt_prod_req.emplace(
         TProdReqBuilder(r.Reader, GetMsgSetReader())
             .BuildProdReq(&InputBuf[0], InputBuf.size()));
 
@@ -645,7 +646,8 @@ bool TSingleClientHandlerBase::HandleMetadataRequest() {
 
     if (Ss.TrackReceivedRequests) {
       TReceivedRequestTracker::TRequestInfo info;
-      info.MetadataRequestInfo.MakeKnown();
+      info.MetadataRequestInfo.emplace(
+          TReceivedRequestTracker::TMetadataRequestInfo());
       TReceivedRequestTracker::TMetadataRequestInfo &md_info =
           *info.MetadataRequestInfo;
       md_info.Topic = MetadataRequest.Topic;
@@ -674,7 +676,8 @@ bool TSingleClientHandlerBase::HandleMetadataRequest() {
     case TSendMetadataResult::SentMetadata: {
       if (Ss.TrackReceivedRequests) {
         TReceivedRequestTracker::TRequestInfo info;
-        info.MetadataRequestInfo.MakeKnown();
+        info.MetadataRequestInfo.emplace(
+            TReceivedRequestTracker::TMetadataRequestInfo());
         TReceivedRequestTracker::TMetadataRequestInfo &md_info =
             *info.MetadataRequestInfo;
         md_info.Topic = MetadataRequest.Topic;

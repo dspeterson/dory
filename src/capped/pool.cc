@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cassert>
 #include <new>
+#include <optional>
 
 #include <base/error_util.h>
 
@@ -49,10 +50,10 @@ TPool::~TPool() {
 }
 
 void *TPool::Alloc() {
-  TOpt<std::lock_guard<std::mutex>> opt_lock;
+  std::optional<std::lock_guard<std::mutex>> opt_lock;
 
   if (Guarded) {
-    opt_lock.MakeKnown(Mutex);
+    opt_lock.emplace(Mutex);
   }
 
   auto *result = FirstFreeBlock;
@@ -68,10 +69,10 @@ TPool::TBlock *TPool::AllocList(size_t block_count) {
   TBlock *first_block = nullptr;
 
   if (block_count) {
-    TOpt<std::lock_guard<std::mutex>> opt_lock;
+    std::optional<std::lock_guard<std::mutex>> opt_lock;
 
     if (Guarded) {
-      opt_lock.MakeKnown(Mutex);
+      opt_lock.emplace(Mutex);
     }
 
     for (; block_count; --block_count) {
@@ -92,10 +93,10 @@ TPool::TBlock *TPool::AllocList(size_t block_count) {
 
 void TPool::Free(void *ptr) noexcept {
   if (ptr) {
-    TOpt<std::lock_guard<std::mutex>> opt_lock;
+    std::optional<std::lock_guard<std::mutex>> opt_lock;
 
     if (Guarded) {
-      opt_lock.MakeKnown(Mutex);
+      opt_lock.emplace(Mutex);
     }
 
     DoFree(ptr);
@@ -107,10 +108,10 @@ void TPool::FreeList(TBlock *first_block) noexcept {
     return;
   }
 
-  TOpt<std::lock_guard<std::mutex>> opt_lock;
+  std::optional<std::lock_guard<std::mutex>> opt_lock;
 
   if (Guarded) {
-    opt_lock.MakeKnown(Mutex);
+    opt_lock.emplace(Mutex);
   }
 
   DoFreeList(first_block);

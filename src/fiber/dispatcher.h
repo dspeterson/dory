@@ -26,6 +26,7 @@
 #include <chrono>
 #include <cstddef>
 #include <functional>
+#include <optional>
 #include <thread>
 #include <vector>
 
@@ -33,7 +34,6 @@
 #include <signal.h>
 
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 
 namespace Fiber {
 
@@ -47,13 +47,13 @@ namespace Fiber {
     using TDeadline = std::chrono::steady_clock::time_point;
 
     /* Deadlines are optional, so we use this type a lot. */
-    using TOptDeadline = Base::TOpt<TDeadline>;
+    using TOptDeadline = std::optional<TDeadline>;
 
     /* The type we use when talking about timeouts and grace periods. */
     using TTimeout = std::chrono::milliseconds;
 
     /* Timeouts are optional, so we use this type a lot, too. */
-    using TOptTimeout = Base::TOpt<TTimeout>;
+    using TOptTimeout = std::optional<TTimeout>;
 
     /* An I/O handler.  Inherit from this class and implement OnEvent() (and
        optionally OnShutdown()).  In your most-derived classs, have the

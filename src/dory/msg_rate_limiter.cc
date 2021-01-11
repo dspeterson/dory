@@ -38,14 +38,14 @@ bool TMsgRateLimiter::WouldExceedLimit(const std::string &topic,
 
 bool TMsgRateLimiter::RateLimitingIsEnabled(
     const Conf::TTopicRateConf &conf) noexcept {
-  if (conf.DefaultTopicConfig.MaxCount.IsKnown()) {
+  if (conf.DefaultTopicConfig.MaxCount) {
     return true;
   }
 
   const TTopicRateConf::TTopicMap &m = conf.TopicConfigs;
 
   for (const auto &elem : m) {
-    if (elem.second.MaxCount.IsKnown()) {
+    if (elem.second.MaxCount) {
       return true;
     }
   }
@@ -75,7 +75,7 @@ TMsgRateLimiter::GetTopicState(const std::string &topic, uint64_t timestamp) {
   const TTopicRateConf::TConf &conf = (map_iter == m.end()) ?
       Conf.DefaultTopicConfig : map_iter->second;
   TTopicState &state = TopicStateMap[topic];
-  state.Enable = conf.MaxCount.IsKnown();
+  state.Enable = conf.MaxCount.has_value();
 
   if (state.Enable) {
     state.Interval = conf.Interval;

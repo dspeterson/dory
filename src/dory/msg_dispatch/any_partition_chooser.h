@@ -23,9 +23,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 
-#include <base/opt.h>
 #include <dory/metadata.h>
 
 namespace Dory {
@@ -38,7 +38,7 @@ namespace Dory {
 
       int32_t GetChoice(size_t broker_index, const TMetadata &md,
           const std::string &topic) {
-        if (Choice.IsUnknown()) {
+        if (!Choice) {
           Choose(broker_index, md, topic);
         }
 
@@ -50,7 +50,7 @@ namespace Dory {
       }
 
       void ClearChoice() {
-        Choice.Reset();
+        Choice.reset();
 
         if (ChoiceUsed) {
           ++Count;
@@ -64,7 +64,7 @@ namespace Dory {
 
       size_t Count = 0;
 
-      Base::TOpt<int32_t> Choice;
+      std::optional<int32_t> Choice;
 
       bool ChoiceUsed = false;
     };  // TAnyPartitionChooser

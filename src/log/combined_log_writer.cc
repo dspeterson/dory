@@ -26,7 +26,7 @@ using namespace Log;
 
 TCombinedLogWriter::TCombinedLogWriter(bool enable_stdout_stderr,
     bool enable_syslog, const std::string &file_path,
-    const TOpt<mode_t> &file_mode)
+    std::optional<mode_t> file_mode)
     : TLogWriterBase(),
       StdoutStderrLogWriter(enable_stdout_stderr),
       FileLogWriter(file_path, file_mode),
@@ -35,7 +35,7 @@ TCombinedLogWriter::TCombinedLogWriter(bool enable_stdout_stderr,
 
 TCombinedLogWriter::TCombinedLogWriter(const TCombinedLogWriter &old_writer,
     bool enable_stdout_stderr, bool enable_syslog,
-    const std::string &file_path, const TOpt<mode_t> &file_mode)
+    const std::string &file_path, std::optional<mode_t> file_mode)
     : TLogWriterBase(),
       StdoutStderrLogWriter(enable_stdout_stderr),
       FileLogWriter((file_path == old_writer.FileLogWriter.GetPath()) ?

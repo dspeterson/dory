@@ -24,6 +24,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
@@ -35,7 +36,6 @@
 #include <xercesc/dom/DOMText.hpp>
 
 #include <base/narrow_cast.h>
-#include <base/opt.h>
 #include <base/to_integer.h>
 #include <xml/config/config_errors.h>
 #include <xml/xml_string_util.h>
@@ -177,10 +177,10 @@ namespace Xml {
         return !static_cast<unsigned int>(a);
       }
 
-      /* See if 'elem' has an attribute named 'attr_name'.  If not, return the
-         unknown value.  Otherwise, return the attribute value.
+      /* See if 'elem' has an attribute named 'attr_name'.  If not, return
+         std::nullopt.  Otherwise, return the attribute value.
          allowed opts: TRIM_WHITESPACE */
-      static Base::TOpt<std::string> GetOptString(
+      static std::optional<std::string> GetOptString(
           const xercesc::DOMElement &elem, const char *attr_name,
           unsigned int opts = 0);
 
@@ -195,16 +195,16 @@ namespace Xml {
          "no" for 'false_value'.  Throw TInvalidBoolAttr if the attribute is
          not a valid boolean value.
          allowed opts: REQUIRE_PRESENCE, CASE_SENSITIVE */
-      static Base::TOpt<bool> GetOptNamedBool(const xercesc::DOMElement &elem,
-          const char *attr_name, const char *true_value,
-          const char *false_value,
+      static std::optional<bool> GetOptNamedBool(
+          const xercesc::DOMElement &elem, const char *attr_name,
+          const char *true_value, const char *false_value,
           unsigned int opts = 0);
 
       /* Get an optional boolean value, using "true" and "false" as the
          expected string literals.  Throw TInvalidBoolAttr if the attribute is
          not a valid boolean value.
          allowed opts: REQUIRE_PRESENCE, CASE_SENSITIVE */
-      static inline Base::TOpt<bool> GetOptBool(
+      static inline std::optional<bool> GetOptBool(
           const xercesc::DOMElement &elem, const char *attr_name,
           unsigned int opts = 0) {
         return GetOptNamedBool(elem, attr_name, "true", "false", opts);
@@ -238,7 +238,7 @@ namespace Xml {
          allowed opts: REQUIRE_PRESENCE, STRICT_EMPTY_VALUE, ALLOW_K, ALLOW_M
        */
       template <typename T>
-      static typename Base::TOpt<T> GetOptSigned(
+      static typename std::optional<T> GetOptSigned(
           const xercesc::DOMElement &elem, const char *attr_name,
           const char *empty_value_name, unsigned int opts = 0) {
         static_assert(std::is_signed<T>::value,
@@ -261,7 +261,7 @@ namespace Xml {
          allowed opts: REQUIRE_PRESENCE, STRICT_EMPTY_VALUE, ALLOW_K, ALLOW_M
        */
       template <typename T>
-      static typename Base::TOpt<T> GetOptUnsigned(
+      static std::optional<T> GetOptUnsigned(
           const xercesc::DOMElement &elem, const char *attr_name,
           const char *empty_value_name, unsigned int allowed_bases,
           unsigned int opts = 0) {
@@ -350,20 +350,20 @@ namespace Xml {
       /* Base template handles integral types other than intmax_t and
          uintmax_t. */
       template <typename T>
-      static typename Base::TOpt<T> GetOptIntHelper(
+      static typename std::optional<T> GetOptIntHelper(
           const xercesc::DOMElement &elem, const char *attr_name,
           const char *empty_value_name, unsigned int allowed_bases,
           unsigned int opts = 0) {
         using TWidest = typename TIntegerTraits<T>::TWidest;
 
         /* This calls a specialization.  It does not recurse. */
-        Base::TOpt<TWidest> opt_value = GetOptIntHelper<TWidest>(elem,
+        std::optional<TWidest> opt_value = GetOptIntHelper<TWidest>(elem,
             attr_name, empty_value_name, allowed_bases, opts);
 
-        typename Base::TOpt<T> result;
+        typename std::optional<T> result;
 
-        if (opt_value.IsKnown()) {
-          result.MakeKnown(narrow<T>(*opt_value, elem, attr_name));
+        if (opt_value) {
+          result.emplace(narrow<T>(*opt_value, elem, attr_name));
         }
 
         return result;
@@ -381,13 +381,13 @@ namespace Xml {
         unsigned int allowed_bases, unsigned int opts);
 
     template <>
-    Base::TOpt<intmax_t> TAttrReader::GetOptIntHelper<intmax_t>(
+    std::optional<intmax_t> TAttrReader::GetOptIntHelper<intmax_t>(
         const xercesc::DOMElement &elem, const char *attr_name,
         const char *empty_value_name, unsigned int allowed_bases,
         unsigned int opts);
 
     template <>
-    Base::TOpt<uintmax_t> TAttrReader::GetOptIntHelper<uintmax_t>(
+    std::optional<uintmax_t> TAttrReader::GetOptIntHelper<uintmax_t>(
         const xercesc::DOMElement &elem, const char *attr_name,
         const char *empty_value_name, unsigned int allowed_bases,
         unsigned int opts);

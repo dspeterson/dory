@@ -132,16 +132,15 @@ static const int DEFAULT_LEVEL = Z_DEFAULT_COMPRESSION;
 static const int MIN_LEVEL = Z_NO_COMPRESSION;
 static const int MAX_LEVEL = Z_BEST_COMPRESSION;
 
-TOpt<int> TGzipCodec::GetRealCompressionLevel(
-    const TOpt<int> &requested_level) const noexcept {
-  if (requested_level.IsUnknown()) {
-    return TOpt<int>(DEFAULT_LEVEL);
+std::optional<int> TGzipCodec::GetRealCompressionLevel(
+    std::optional<int> requested_level) const noexcept {
+  if (!requested_level.has_value()) {
+    return DEFAULT_LEVEL;
   }
 
   int requested = *requested_level;
-  return TOpt<int>(
-      ((requested >= MIN_LEVEL) && (requested <= MAX_LEVEL)) ?
-      requested : DEFAULT_LEVEL);
+  return ((requested >= MIN_LEVEL) && (requested <= MAX_LEVEL)) ?
+      requested : DEFAULT_LEVEL;
 }
 
 static size_t DoUncompress(const void *compressed_data, size_t compressed_size,

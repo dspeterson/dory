@@ -21,11 +21,11 @@
 
 #pragma once
 
+#include <optional>
 #include <string>
 
 #include <sys/types.h>
 
-#include <base/opt.h>
 #include <log/pri.h>
 
 namespace Dory {
@@ -43,10 +43,9 @@ namespace Dory {
          that file logging is disabled. */
       std::string FilePath;
 
-      Base::TOpt<mode_t> FileMode;
+      std::optional<mode_t> FileMode;
 
-      void SetFileConf(const std::string &path,
-          const Base::TOpt<mode_t> &mode);
+      void SetFileConf(const std::string &path, std::optional<mode_t> mode);
     };  // TCommonLoggingConf
 
   }  // Conf

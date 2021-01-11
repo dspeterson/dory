@@ -24,10 +24,10 @@
 #include <algorithm>
 #include <cassert>
 #include <list>
+#include <optional>
 #include <string>
 
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 #include <dory/batch/batcher_core.h>
 #include <dory/msg.h>
 
@@ -68,7 +68,7 @@ namespace Dory {
         return result;
       }
 
-      Base::TOpt<TMsg::TTimestamp> GetNextCompleteTime() const noexcept {
+      std::optional<TMsg::TTimestamp> GetNextCompleteTime() const noexcept {
         return CoreState.GetNextCompleteTime();
       }
 

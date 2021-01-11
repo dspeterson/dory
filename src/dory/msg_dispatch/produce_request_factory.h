@@ -26,13 +26,13 @@
 #include <cstdint>
 #include <list>
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 #include <dory/batch/global_batch_config.h>
 #include <dory/compress/compression_codec_api.h>
 #include <dory/compress/compression_type.h>
@@ -127,7 +127,7 @@ namespace Dory {
          partition.  Then each message set has a unique topic/partition
          combination.  A single message set may contain a mixture of
          AnyPartition and PartitionKey messages. */
-      Base::TOpt<TProduceRequest> BuildRequest(std::vector<uint8_t> &dst);
+      std::optional<TProduceRequest> BuildRequest(std::vector<uint8_t> &dst);
 
       private:
       struct TCompressionInfo {
@@ -140,7 +140,7 @@ namespace Dory {
 
         Compress::TCompressionType CompressionType;
 
-        Base::TOpt<int> CompressionLevel;
+        std::optional<int> CompressionLevel;
 
         explicit TCompressionInfo(const Conf::TCompressionConf::TConf &conf);
       };  // TCompressionInfo

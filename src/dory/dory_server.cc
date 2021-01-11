@@ -162,29 +162,29 @@ TDoryServer::TDoryServer(TCmdLineArgs &&args, TConf &&conf,
           DebugSetup, Dispatcher),
       MetadataTimestamp(RouterThread.GetMetadataTimestamp()) {
   if (!Conf.InputSourcesConf.UnixStreamPath.empty() ||
-      Conf.InputSourcesConf.LocalTcpPort.IsKnown()) {
+      Conf.InputSourcesConf.LocalTcpPort) {
     /* Create thread pool if UNIX stream or TCP input is enabled. */
-    StreamClientWorkerPool.MakeKnown();
+    StreamClientWorkerPool.emplace();
   }
 
   if (!Conf.InputSourcesConf.UnixDgPath.empty()) {
-    UnixDgInputAgent.MakeKnown(Conf, Pool, MsgStateTracker, AnomalyTracker,
+    UnixDgInputAgent.emplace(Conf, Pool, MsgStateTracker, AnomalyTracker,
         RouterThread.GetMsgChannel());
   }
 
   if (!Conf.InputSourcesConf.UnixStreamPath.empty()) {
-    assert(StreamClientWorkerPool.IsKnown());
-    UnixStreamInputAgent.MakeKnown(STREAM_BACKLOG,
+    assert(StreamClientWorkerPool.has_value());
+    UnixStreamInputAgent.emplace(STREAM_BACKLOG,
         Conf.InputSourcesConf.UnixStreamPath.c_str(),
         CreateStreamClientHandler(false));
 
-    if (Conf.InputSourcesConf.UnixStreamMode.IsKnown()) {
+    if (Conf.InputSourcesConf.UnixStreamMode) {
       UnixStreamInputAgent->SetMode(*Conf.InputSourcesConf.UnixStreamMode);
     }
   }
 
-  if (Conf.InputSourcesConf.LocalTcpPort.IsKnown()) {
-    TcpInputAgent.MakeKnown(STREAM_BACKLOG, htonl(INADDR_LOOPBACK),
+  if (Conf.InputSourcesConf.LocalTcpPort) {
+    TcpInputAgent.emplace(STREAM_BACKLOG, htonl(INADDR_LOOPBACK),
         *Conf.InputSourcesConf.LocalTcpPort, CreateStreamClientHandler(true));
   }
 }
@@ -277,11 +277,11 @@ bool TDoryServer::StartMsgHandlingThreads() {
         Conf.DiscardLoggingConf.MaxMsgPrefixSize);
   }
 
-  if (StreamClientWorkerPool.IsKnown()) {
+  if (StreamClientWorkerPool) {
     StreamClientWorkerPool->Start();
   }
 
-  if (UnixDgInputAgent.IsKnown()) {
+  if (UnixDgInputAgent) {
     LOG(TPri::NOTICE) << "Starting UNIX datagram input agent";
 
     if (!UnixDgInputAgent->SyncStart()) {
@@ -292,8 +292,8 @@ bool TDoryServer::StartMsgHandlingThreads() {
     }
   }
 
-  if (UnixStreamInputAgent.IsKnown()) {
-    assert(StreamClientWorkerPool.IsKnown());
+  if (UnixStreamInputAgent) {
+    assert(StreamClientWorkerPool.has_value());
     LOG(TPri::NOTICE) << "Starting UNIX stream input agent";
 
     if (!UnixStreamInputAgent->SyncStart()) {
@@ -304,8 +304,8 @@ bool TDoryServer::StartMsgHandlingThreads() {
     }
   }
 
-  if (TcpInputAgent.IsKnown()) {
-    assert(StreamClientWorkerPool.IsKnown());
+  if (TcpInputAgent) {
+    assert(StreamClientWorkerPool.has_value());
     LOG(TPri::NOTICE) << "Starting TCP input agent";
 
     if (!TcpInputAgent->SyncStart()) {
@@ -366,13 +366,13 @@ bool TDoryServer::HandleEvents() {
   struct pollfd &worker_pool_fatal_error = events[7];
   discard_query_check.fd = discard_query_check_timer.GetFd();
   discard_query_check.events = POLLIN;
-  unix_dg_input_agent_error.fd = UnixDgInputAgent.IsKnown() ?
+  unix_dg_input_agent_error.fd = UnixDgInputAgent ?
       int(UnixDgInputAgent->GetShutdownWaitFd()) : -1;
   unix_dg_input_agent_error.events = POLLIN;
-  unix_stream_input_agent_error.fd = UnixStreamInputAgent.IsKnown() ?
+  unix_stream_input_agent_error.fd = UnixStreamInputAgent ?
       int(UnixStreamInputAgent->GetShutdownWaitFd()) : -1;
   unix_stream_input_agent_error.events = POLLIN;
-  tcp_input_agent_error.fd = TcpInputAgent.IsKnown() ?
+  tcp_input_agent_error.fd = TcpInputAgent ?
       int(TcpInputAgent->GetShutdownWaitFd()) : -1;
   tcp_input_agent_error.events = POLLIN;
   router_thread_error.fd = RouterThread.GetShutdownWaitFd();
@@ -380,7 +380,7 @@ bool TDoryServer::HandleEvents() {
   shutdown_request.fd = ShutdownFd;
   shutdown_request.events = POLLIN;
 
-  if (StreamClientWorkerPool.IsKnown()) {
+  if (StreamClientWorkerPool) {
     worker_pool_worker_error.fd = StreamClientWorkerPool->GetErrorPendingFd();
     worker_pool_fatal_error.fd = StreamClientWorkerPool->GetShutdownWaitFd();
   } else {
@@ -403,7 +403,7 @@ bool TDoryServer::HandleEvents() {
     assert(ret > 0);
 
     if (unix_dg_input_agent_error.revents) {
-      assert(UnixDgInputAgent.IsKnown());
+      assert(UnixDgInputAgent.has_value());
       LOG(TPri::ERR)
           << "Main thread detected UNIX datagram input agent termination on "
           << "fatal error";
@@ -411,7 +411,7 @@ bool TDoryServer::HandleEvents() {
     }
 
     if (unix_stream_input_agent_error.revents) {
-      assert(UnixStreamInputAgent.IsKnown());
+      assert(UnixStreamInputAgent.has_value());
       LOG(TPri::ERR)
           << "Main thread detected UNIX stream input agent termination on "
           << "fatal error";
@@ -419,7 +419,7 @@ bool TDoryServer::HandleEvents() {
     }
 
     if (tcp_input_agent_error.revents) {
-      assert(TcpInputAgent.IsKnown());
+      assert(TcpInputAgent.has_value());
       LOG(TPri::ERR)
           << "Main thread detected TCP input agent termination on fatal error";
       fatal_error = true;
@@ -432,13 +432,13 @@ bool TDoryServer::HandleEvents() {
     }
 
     if (worker_pool_fatal_error.revents) {
-      assert(StreamClientWorkerPool.IsKnown());
+      assert(StreamClientWorkerPool.has_value());
       LOG(TPri::ERR) << "Main thread detected stream worker pool fatal error";
       fatal_error = true;
     }
 
     if (worker_pool_worker_error.revents) {
-      assert(StreamClientWorkerPool.IsKnown());
+      assert(StreamClientWorkerPool.has_value());
       ReportStreamClientWorkerErrors(
           StreamClientWorkerPool->GetAllPendingErrors());
     }
@@ -517,19 +517,19 @@ bool TDoryServer::Shutdown() {
      However, the agents should be very quick to respond so it's not really
      worth the effort. */
 
-  if (TcpInputAgent.IsKnown()) {
+  if (TcpInputAgent) {
     ShutDownInputAgent(*TcpInputAgent, "TCP", shutdown_ok);
   }
 
-  if (UnixStreamInputAgent.IsKnown()) {
+  if (UnixStreamInputAgent) {
     ShutDownInputAgent(*UnixStreamInputAgent, "UNIX stream", shutdown_ok);
   }
 
-  if (UnixDgInputAgent.IsKnown()) {
+  if (UnixDgInputAgent) {
     ShutDownInputAgent(*UnixDgInputAgent, "UNIX datagram", shutdown_ok);
   }
 
-  if (StreamClientWorkerPool.IsKnown()) {
+  if (StreamClientWorkerPool) {
     StreamClientWorkerPool->RequestShutdown();
     StreamClientWorkerPool->WaitForShutdown();
     ReportStreamClientWorkerErrors(

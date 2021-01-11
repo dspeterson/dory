@@ -26,7 +26,6 @@
 
 #include <strings.h>
 
-using namespace Base;
 using namespace Dory;
 using namespace Dory::Compress;
 using namespace Dory::Conf;
@@ -95,7 +94,7 @@ std::string TCompressionUnknownTopicConfig::CreateMsg(const std::string &topic,
 }
 
 void TCompressionConf::TBuilder::AddNamedConfig(const std::string &name,
-    TCompressionType type, size_t min_size, const TOpt<int> &level) {
+    TCompressionType type, size_t min_size, std::optional<int> level) {
   if (type == TCompressionType::None) {
     min_size = 0;
   }

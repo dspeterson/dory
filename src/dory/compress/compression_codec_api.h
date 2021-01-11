@@ -22,10 +22,10 @@
 #pragma once
 
 #include <cstddef>
+#include <optional>
 #include <stdexcept>
 
 #include <base/no_copy_semantics.h>
-#include <base/opt.h>
 
 namespace Dory {
 
@@ -66,13 +66,13 @@ namespace Dory {
              - If the algorithm views the input value as invalid, it returns
                the default compression level.
        */
-      virtual Base::TOpt<int> GetRealCompressionLevel(
-          const Base::TOpt<int> &requested_level) const noexcept = 0;
+      virtual std::optional<int> GetRealCompressionLevel(
+          std::optional<int> requested_level) const noexcept = 0;
 
       /* Return true if the algorithm supports compression levels, or false
          otherwise. */
       bool SupportsCompressionLevels() const noexcept {
-        return GetRealCompressionLevel(Base::TOpt<int>()).IsKnown();
+        return GetRealCompressionLevel(std::nullopt).has_value();
       }
 
       /* Return the maximum compressed size in bytes of 'uncompressed_size'
@@ -81,7 +81,7 @@ namespace Dory {
          level. */
       size_t ComputeCompressedResultBufSpace(const void *uncompressed_data,
           size_t uncompressed_size,
-          const Base::TOpt<int> &compression_level) const {
+          std::optional<int> compression_level) const {
         return DoComputeCompressedResultBufSpace(uncompressed_data,
             uncompressed_size, CompressionLevelParam(compression_level));
       }
@@ -95,7 +95,7 @@ namespace Dory {
          optional requested compression level. */
       virtual size_t Compress(const void *input_buf, size_t input_buf_size,
           void *output_buf, size_t output_buf_size,
-          const Base::TOpt<int> &compression_level) const {
+          std::optional<int> compression_level) const {
         return DoCompress(input_buf, input_buf_size, output_buf,
             output_buf_size, CompressionLevelParam(compression_level));
       }
@@ -137,7 +137,7 @@ namespace Dory {
 
       private:
       int CompressionLevelParam(
-          const Base::TOpt<int> &requested_level) const noexcept;
+          std::optional<int> requested_level) const noexcept;
     };  // TCompressionCodecApi
 
   }  // Compress

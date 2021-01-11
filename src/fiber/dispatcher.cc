@@ -65,7 +65,7 @@ void TDispatcher::THandler::ChangeEvent(int fd, short flags) {
 }
 
 void TDispatcher::THandler::ClearDeadline() {
-  Deadline.Reset();
+  Deadline.reset();
 }
 
 void TDispatcher::THandler::Register(TDispatcher *dispatcher, int fd,
@@ -96,8 +96,7 @@ void TDispatcher::THandler::Register(TDispatcher *dispatcher, int fd,
 }
 
 void TDispatcher::THandler::SetDeadline(const TTimeout &timeout) {
-  Deadline.Reset();
-  Deadline.MakeKnown(Now() + timeout);
+  Deadline.emplace(Now() + timeout);
 }
 
 void TDispatcher::THandler::Unregister() noexcept {
@@ -216,7 +215,7 @@ void TDispatcher::Run(const TTimeout &grace_period,
      deadline is reached.  Check for the deadline every at least every 100
      milliseconds.  Note that we are no longer interruptable. */
   auto deadline = Now() + grace_period;
-  max_timeout = std::chrono::milliseconds(100);
+  max_timeout.emplace(std::chrono::milliseconds(100));
 
   while (HandlerCount && Now() < deadline) {  // When will now be now?  Soon...
     Dispatch(max_timeout, shutdown_mask_set.Get());
@@ -283,7 +282,7 @@ bool TDispatcher::Dispatch(const TOptTimeout &max_timeout,
   TOptTimeout timeout;
 
   if (nearest_deadline) {
-    timeout.MakeKnown(
+    timeout.emplace(
         std::chrono::duration_cast<TTimeout>(*nearest_deadline - Now()));
   }
 

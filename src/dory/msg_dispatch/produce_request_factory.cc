@@ -85,10 +85,10 @@ void TProduceRequestFactory::Reset() {
   TopicDataMap.clear();
 }
 
-TOpt<TProduceRequest> TProduceRequestFactory::BuildRequest(
+std::optional<TProduceRequest> TProduceRequestFactory::BuildRequest(
     std::vector<uint8_t> &dst) {
   if (IsEmpty()) {
-    return TOpt<TProduceRequest>();
+    return std::nullopt;
   }
 
   TProduceRequest request(++CorrIdCounter, BuildRequestContents());
@@ -97,7 +97,7 @@ TOpt<TProduceRequest> TProduceRequestFactory::BuildRequest(
     assert(false);
     BugAllTopicsEmpty.Increment();
     LOG_R(TPri::ERR, std::chrono::seconds(30)) << "Bug!!! TAllTopics is empty";
-    return TOpt<TProduceRequest>();
+    return std::nullopt;
   }
 
   const char *client_id_begin = Conf.KafkaConfigConf.ClientId.data();
@@ -129,16 +129,17 @@ TOpt<TProduceRequest> TProduceRequestFactory::BuildRequest(
 
   RequestWriter->CloseRequest();
   SerializeProduceRequest.Increment();
-  return TOpt<TProduceRequest>(std::move(request));
+  return request;
 }
 
-static TOpt<int> GetRealCompressionLevel(const TCompressionConf::TConf &conf) {
+static std::optional<int> GetRealCompressionLevel(
+    const TCompressionConf::TConf &conf) {
   const Compress::TCompressionCodecApi *codec = GetCompressionCodec(conf.Type);
-  TOpt<int> real_level = codec ?
-      codec->GetRealCompressionLevel(conf.Level) : TOpt<int>();
+  auto real_level = codec ?
+      codec->GetRealCompressionLevel(conf.Level) : std::nullopt;
 
-  if (conf.Level.IsKnown()) {
-    if (real_level.IsUnknown()) {
+  if (conf.Level) {
+    if (!real_level.has_value()) {
       LOG(TPri::WARNING) << "Ignoring compression level of " << *conf.Level
           << " requested for compression type that does not support levels: "
           << ToString(conf.Type);

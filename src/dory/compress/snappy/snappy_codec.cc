@@ -89,10 +89,10 @@ const TSnappyCodec &TSnappyCodec::The() {
   return *Singleton;
 }
 
-TOpt<int> TSnappyCodec::GetRealCompressionLevel(
-    const TOpt<int> & /*requested_level*/) const noexcept {
+std::optional<int> TSnappyCodec::GetRealCompressionLevel(
+    std::optional<int> /*requested_level*/) const noexcept {
   /* This algorithm does not support compression levels. */
-  return TOpt<int>();
+  return std::nullopt;
 }
 
 size_t TSnappyCodec::ComputeUncompressedResultBufSpace(
