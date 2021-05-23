@@ -68,8 +68,9 @@ namespace Dory {
           enum { VALUE_LEN_SIZE = 4 };
 
           enum {
-            MIN_MSG_SIZE = CRC_SIZE + MAGIC_BYTE_SIZE + ATTRIBUTES_SIZE +
-                KEY_LEN_SIZE + VALUE_LEN_SIZE
+            MIN_MSG_SIZE = size_t(CRC_SIZE) + size_t(MAGIC_BYTE_SIZE) +
+                size_t(ATTRIBUTES_SIZE) + size_t(KEY_LEN_SIZE) +
+                size_t(VALUE_LEN_SIZE)
           };
 
           enum {

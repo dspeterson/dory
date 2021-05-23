@@ -84,7 +84,8 @@ bool TMsgSetReader::NextMsg() {
         "Invalid message location while iterating over Kafka message set");
   }
 
-  CurrentMsg += PRC::MSG_OFFSET_SIZE + PRC::MSG_SIZE_SIZE + CurrentMsgSize;
+  CurrentMsg += int32_t(PRC::MSG_OFFSET_SIZE) + int32_t(PRC::MSG_SIZE_SIZE) +
+      int32_t(CurrentMsgSize);
 
   if (CurrentMsg > End) {
     THROW_ERROR(TMsgSetTruncated);

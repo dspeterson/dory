@@ -3671,7 +3671,7 @@ static int set_gpass_option(struct mg_context *ctx) {
 }
 
 static int set_acl_option(struct mg_context *ctx) {
-  struct usa fake;
+  struct usa fake = { 0 };
   return check_acl(ctx, &fake) != -1;
 }
 

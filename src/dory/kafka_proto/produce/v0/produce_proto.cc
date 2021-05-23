@@ -484,7 +484,8 @@ TProduceProto::ProcessAck(int16_t ack_value) const {
 
 TProduceProtocol::TConstants TProduceProto::ComputeConstants() {
   using PRC = TProduceRequestConstants;
-  return {PRC::MSG_OFFSET_SIZE + PRC::MSG_SIZE_SIZE +
-      PRC::CRC_SIZE + PRC::MAGIC_BYTE_SIZE + PRC::ATTRIBUTES_SIZE +
-      PRC::KEY_LEN_SIZE + PRC::VALUE_LEN_SIZE};
+  return {size_t(PRC::MSG_OFFSET_SIZE) + size_t(PRC::MSG_SIZE_SIZE) +
+      size_t(PRC::CRC_SIZE) + size_t(PRC::MAGIC_BYTE_SIZE) +
+      size_t(PRC::ATTRIBUTES_SIZE) + size_t(PRC::KEY_LEN_SIZE) +
+      size_t(PRC::VALUE_LEN_SIZE)};
 }

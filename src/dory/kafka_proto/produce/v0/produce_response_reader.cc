@@ -122,9 +122,11 @@ bool TProduceResponseReader::NextTopic() {
   }
 
   if (++CurrentTopicIndex < NumTopics) {
-    CurrentTopicBegin = CurrentTopicNameEnd + PRC::PARTITION_COUNT_SIZE +
+    CurrentTopicBegin = CurrentTopicNameEnd +
+        int32_t(PRC::PARTITION_COUNT_SIZE) +
         (NumPartitionsInTopic *
-            (PRC::PARTITION_SIZE + PRC::ERROR_CODE_SIZE + PRC::OFFSET_SIZE));
+            (int32_t(PRC::PARTITION_SIZE) + int32_t(PRC::ERROR_CODE_SIZE) +
+            int32_t(PRC::OFFSET_SIZE)));
     InitCurrentTopic();
     return true;
   }
@@ -235,9 +237,9 @@ const uint8_t *TProduceResponseReader::GetPartitionStart(int32_t index) const {
   assert(CurrentTopicNameEnd);
   assert(NumPartitionsInTopic >= 0);
 
-  return CurrentTopicNameEnd + PRC::PARTITION_COUNT_SIZE +
-      (index * (PRC::PARTITION_SIZE + PRC::ERROR_CODE_SIZE +
-          PRC::OFFSET_SIZE));
+  return CurrentTopicNameEnd + int32_t(PRC::PARTITION_COUNT_SIZE) +
+      (index * (int32_t(PRC::PARTITION_SIZE) + int32_t(PRC::ERROR_CODE_SIZE) +
+          int32_t(PRC::OFFSET_SIZE)));
 }
 
 void TProduceResponseReader::InitCurrentTopic() {

@@ -84,13 +84,14 @@ namespace Dory {
           };  // TState
 
           static size_t ComputeMsgMinusValueSize(size_t key_size) {
-            return PRC::CRC_SIZE + PRC::MAGIC_BYTE_SIZE +
-                PRC::ATTRIBUTES_SIZE + PRC::KEY_LEN_SIZE + key_size +
-                PRC::VALUE_LEN_SIZE;
+            return size_t(PRC::CRC_SIZE) + size_t(PRC::MAGIC_BYTE_SIZE) +
+                size_t(PRC::ATTRIBUTES_SIZE) + size_t(PRC::KEY_LEN_SIZE) +
+                size_t(key_size) + size_t(PRC::VALUE_LEN_SIZE);
           }
 
           static size_t ComputeMsgSetItemSize(size_t msg_size) {
-            return PRC::MSG_OFFSET_SIZE + PRC::MSG_SIZE_SIZE + msg_size;
+            return size_t(PRC::MSG_OFFSET_SIZE) + size_t(PRC::MSG_SIZE_SIZE) +
+                msg_size;
           }
 
           void WriteInt8(size_t offset, int8_t value) {
