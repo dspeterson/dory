@@ -200,7 +200,7 @@ TManagedThreadPoolBase::TWorkerBase::~TWorkerBase() {
   }
 }
 
-void TManagedThreadPoolBase::TWorkerBase::Activate() {
+std::thread::id TManagedThreadPoolBase::TWorkerBase::Activate() {
   if (WorkerThread.joinable()) {
     /* The thread was obtained from the idle list, and has been placed on the
        busy list but not yet awakened.  When we release 'WakeupWait' below, it
@@ -221,6 +221,11 @@ void TManagedThreadPoolBase::TWorkerBase::Activate() {
   }
 
   assert(WorkerThread.joinable());
+
+  /* Get the thread ID here _before_ we wake up the worker below.  Otherwise
+     the worker may finish, become idle, and be pruned by the manager before we
+     try to get its ID. */
+  const auto id = WorkerThread.get_id();
 
   /* If the thread was obtained from the idle list, this starts it working.
 
@@ -246,6 +251,8 @@ void TManagedThreadPoolBase::TWorkerBase::Activate() {
      holding 'PoolLock'.  In the typical case, the thread avoids sleeping
      because it acquires the lock long after we release it here. */
   WakeupWait.unlock();
+
+  return id;
 }
 
 TManagedThreadPoolBase::TWorkerBase::TWorkerBase(

@@ -146,15 +146,25 @@ namespace Thread {
          called after the client has allocated the worker and called any
          subclass methods for giving the worker something to do.  If pool is
          configured with a maximum size, client must call IsLaunchable() to
-         verify that thread allocation succeeded before calling this method. */
+         verify that thread allocation succeeded before calling this method.
+
+         The caller should use the returned std::thread::id with caution.
+         Depending on worker-specific behavior, it's possible for the worker to
+         quickly finish, become idle, and be pruned by the manager, which
+         invalidates the thread ID. */
       std::thread::id Launch() {
         if (!IsLaunchable()) {
           Base::Die("Cannot call Launch() method on empty TReadyWorkerBase");
         }
 
-        Worker->Activate();
-        std::thread::id id = Worker->GetId();
+        const auto id = Worker->Activate();  // start worker running
+
+        /* Since we just launched the worker, record that we are now empty.  At
+           this point, we can no longer assume that 'Worker' points to a valid
+           object, since it's possible for the worker to finish, become idle,
+           and be pruned by the manager at any time. */
         Worker = nullptr;
+
         return id;
       }
 
@@ -380,7 +390,7 @@ namespace Thread {
              actual thread (i.e. IsStarted() returns false).  Calling this
              method creates the thread and starts it working.
        */
-      void Activate();
+      std::thread::id Activate();
 
       protected:
       /* If 'start' is true then the worker is started and immediately enters
