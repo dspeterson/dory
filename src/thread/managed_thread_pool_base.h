@@ -489,7 +489,7 @@ namespace Thread {
     explicit TManagedThreadPoolBase(const TManagedThreadPoolConfig &cfg);
 
     /* Subclasses call this to construct thread pool with given fatal error
-       handler.  Default configuration is used, as specifie by default
+       handler.  Default configuration is used, as specified by default
        constructor for TManagedThreadPoolConfig. */
     TManagedThreadPoolBase();
 

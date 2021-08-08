@@ -89,10 +89,12 @@ void TManagedThreadPoolBase::Start(bool populate) {
     assert(IdleList.Empty());
     assert(IdleList.SegmentCount() == 1);
     assert(BusyList.empty());
+    assert(JoinList.empty());
     assert(LiveWorkerCount == 0);
 
     /* Reset any remaining state from previous run. */
     old_worker_errors = std::move(WorkerErrorList);
+    ReconfigPending = false;
     Stats = TManagedThreadPoolStats();
 
     Stats.CreateWorkerCount += create_count;
@@ -101,6 +103,7 @@ void TManagedThreadPoolBase::Start(bool populate) {
     PoolIsReady = true;
   }
 
+  assert(!Manager.IsStarted());
   Manager.Start();
 }
 
@@ -210,6 +213,7 @@ void TManagedThreadPoolBase::TWorkerBase::Activate() {
        the thread, and start it running in the busy state.  At this point its
        TWorkerBase object (whose Activate() method we are now executing) has
        already been added to the busy list. */
+    assert(TerminateRequested == false);
     WorkerThread = std::thread(
         [this]() {
           BusyRun();
@@ -401,13 +405,10 @@ void TManagedThreadPoolBase::TWorkerBase::DoBusyRun() {
       try {
         DoWork();
       } catch (...) {
-        ClearClientState();
         error.emplace_back();
       }
 
-      if (error.empty()) {
-        ClearClientState();
-      }
+      ClearClientState();
     }
 
     bool error_notify = false;
