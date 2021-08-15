@@ -160,10 +160,10 @@ prog_libs = {'pthread', 'dl', 'rt', 'z'}
 env.Append(CFLAGS=['-Wwrite-strings'],
         CCFLAGS=['-Wall', '-Wextra', '-Werror', '-Wformat=2', '-Winit-self',
                 '-Wunused-parameter', '-Wshadow', '-Wpointer-arith',
-                '-Wcast-align', '-Wlogical-op', '-Wno-nonnull-compare'],
+                '-Wcast-align', '-Wlogical-op'],
         CPPDEFINES=[('SRC_ROOT', '\'"' + src.abspath + '"\'')],
         CPPPATH=[src, tclap, gtestincdir],
-        CXXFLAGS=['-std=c++2a', '-Wold-style-cast', '-Wno-noexcept-type'],
+        CXXFLAGS=['-std=c++2a', '-Wold-style-cast'],
         DEP_SUFFIXES=['.cc', '.cpp', '.c', '.cxx', '.c++', '.C'],
         PROG_LIBS=[lib for lib in prog_libs],
         TESTSUFFIX='.test',
@@ -176,8 +176,7 @@ def set_debug_options():
     # libasan on RHEL, Fedora, and CentOS).
     env.AppendUnique(CCFLAGS=['-g3', '-ggdb', '-fno-omit-frame-pointer',
                               '-fvisibility=hidden'])
-    env.AppendUnique(CXXFLAGS=['-D_GLIBCXX_DEBUG',
-                               '-D_GLIBCXX_DEBUG_PEDANTIC',
+    env.AppendUnique(CXXFLAGS=['-D_GLIBCXX_DEBUG', '-D_GLIBCXX_DEBUG_PEDANTIC',
                                '-DTRACK_FILE_DESCRIPTORS'])
     env.AppendUnique(LINKFLAGS=['-rdynamic'])
 
@@ -187,15 +186,14 @@ def set_debug_options():
 
 
 def set_release_options():
-    # Enabling link-time optimizations breaks the build on Ubuntu 15, so for
-    # now we avoid enabling them.  What a chore it is to get stuff to build on
-    # multiple platforms.  :-(
+    # Enabling link-time optimizations breaks the build on some platforms, so
+    # for now we avoid enabling them.  What a chore it is to get stuff to build
+    # on multiple platforms.  :-(
 
     env.AppendUnique(CCFLAGS=['-O2', '-DNDEBUG', '-Wno-unused',
                               '-Wno-unused-parameter', '-fvisibility=hidden'])
 
-    # Unfortunately this is needed to prevent spurious build errors on Ubuntu
-    # 14.  :-(
+    # Unfortunately this is needed to prevent errors on Ubuntu.
     env.AppendUnique(CPPFLAGS=['-U_FORTIFY_SOURCE'])
 
     env.AppendUnique(LINKFLAGS=['-rdynamic'])

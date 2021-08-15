@@ -113,7 +113,10 @@ static void WriteFatalMsgToStderr(const char *msg) noexcept {
   iov[0].iov_len = std::strlen(msg);
   iov[1].iov_base = const_cast<char *>("\n");
   iov[1].iov_len = 1;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"
   writev(stderr_fd, iov, sizeof(iov) / sizeof(*iov));
+#pragma GCC diagnostic pop
 }
 
 static void EmitStackTrace(const char *msg) {
