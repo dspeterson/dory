@@ -75,16 +75,16 @@ Dory:
 The following client support for sending messages to Dory is currently
 available:
 
-* [C and C++](example_clients/c_and_c%2B%2B)
-* [Java](example_clients/java/dory-client)
+* [C and C++](client/c_and_c%2B%2B)
+* [Java](client/java/dory-client)
 * Other JVM-based languages (Scala, Clojure, Groovy, etc.) via Dory's
-  [Java support](example_clients/java/dory-client)
-* [Python](example_clients/python)
-* [Ruby](example_clients/ruby)
-* [PHP](example_clients/php)
-* [Node.js](example_clients/nodejs)
-* [Perl](example_clients/perl)
-* [Shell scripting](example_clients/shell_scripting)
+  [Java support](client/java/dory-client)
+* [Python](client/python)
+* [Ruby](client/ruby)
+* [PHP](client/php)
+* [Node.js](client/nodejs)
+* [Perl](client/perl)
+* [Shell scripting](client/shell_scripting)
 
 Code contributions for clients in other programming languages are much
 appreciated.  Technical details on how to send messages to Dory are provided

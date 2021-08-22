@@ -43,9 +43,9 @@ UNIX domain socket path or port number, as described
 ### Other Clients
 
 Example client code for sending messages to Dory in various programming
-languages may be found in the [example_clients](../example_clients) directory
-of Dory's Git repository.  Community contributions for additional programming
-languages are much appreciated.
+languages may be found in the [client](../client) directory of Dory's Git
+repository.  Community contributions for additional programming languages are
+much appreciated.
 
 ### Message Types
 
