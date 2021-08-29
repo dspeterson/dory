@@ -79,6 +79,7 @@ available:
 * [Java](client/java/dory-client)
 * Other JVM-based languages (Scala, Clojure, Groovy, etc.) via Dory's
   [Java support](client/java/dory-client)
+* [Go (Golang)](client/go)
 * [Python](client/python)
 * [Ruby](client/ruby)
 * [PHP](client/php)
