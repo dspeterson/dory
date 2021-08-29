@@ -59,14 +59,14 @@ func sendExampleMsgs(useStreamSock bool) bool {
     dir, err := ioutil.TempDir("", "dory_go_client")
     if err != nil {
         _, _ = fmt.Fprintf(os.Stderr,
-            "failed to create temp directory for client socket file: %v", err)
+            "failed to create temp directory for client socket file: %v\n", err)
         return false
     }
     defer func() {
         cleanupErr := os.RemoveAll(dir)
         if cleanupErr != nil {
             _, _ = fmt.Fprintf(os.Stderr,
-                "failed to remove temp directory for client socket file: %v",
+                "failed to remove temp directory for client socket file: %v\n",
                 err)
         }
     }()
@@ -83,7 +83,7 @@ func sendExampleMsgs(useStreamSock bool) bool {
     }
     conn, err := net.DialUnix(sockType, &clientAddr, &serverAddr)
     if err != nil {
-        _, _ = fmt.Fprintf(os.Stderr, "failed to create %v socket: %v",
+        _, _ = fmt.Fprintf(os.Stderr, "failed to create %v socket: %v\n",
             sockType, err)
         return false
     }
@@ -93,7 +93,7 @@ func sendExampleMsgs(useStreamSock bool) bool {
         getEpochMilliseconds(), msgKey, msgValue)
     if err != nil {
         _, _ = fmt.Fprintf(os.Stderr,
-            "failed to create AnyPartition message: %v", err)
+            "failed to create AnyPartition message: %v\n", err)
         return false
     }
 
@@ -101,7 +101,7 @@ func sendExampleMsgs(useStreamSock bool) bool {
     _, err = conn.Write(anyPartitionMsg)
     if err != nil {
         _, _ = fmt.Fprintf(os.Stderr,
-            "failed to send AnyPartition %v message: %v", sockType, err)
+            "failed to send AnyPartition %v message: %v\n", sockType, err)
         return false
     }
 
@@ -110,7 +110,7 @@ func sendExampleMsgs(useStreamSock bool) bool {
         topic, getEpochMilliseconds(), msgKey, msgValue)
     if err != nil {
         _, _ = fmt.Fprintf(os.Stderr,
-            "failed to create PartitionKey message: %v", err)
+            "failed to create PartitionKey message: %v\n", err)
         return false
     }
 
@@ -118,7 +118,7 @@ func sendExampleMsgs(useStreamSock bool) bool {
     _, err = conn.Write(partitionKeyMsg)
     if err != nil {
         _, _ = fmt.Fprintf(os.Stderr,
-            "failed to send PartitionKey %v message: %v", sockType, err)
+            "failed to send PartitionKey %v message: %v\n", sockType, err)
         return false
     }
 
