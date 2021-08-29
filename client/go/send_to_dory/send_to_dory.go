@@ -26,8 +26,9 @@ import (
     "net"
     "os"
     "path/filepath"
-    "send_to_dory/doryclient"
     "time"
+
+    "github.com/dspeterson/dory/client/go/doryclient"
 )
 
 func getEpochMilliseconds() uint64 {
