@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -42,6 +43,37 @@ namespace Server {
     NO_COPY_SEMANTICS(TUnixStreamServer);
 
     public:
+    enum class TErrorReason {
+      SockFileUnlinkFailed,
+      BindFailed,
+      SockFileChmodFailed
+    };  // TErrorReason
+
+    class TError : public std::runtime_error {
+      public:
+      TError(TErrorReason reason, const char *path, const char *msg)
+          : std::runtime_error(BuildErrorMsg(msg, path, reason)),
+            Reason(reason),
+            Path(path) {
+      }
+
+      TErrorReason GetReason() const noexcept {
+        return Reason;
+      }
+
+      const std::string &GetPath() const noexcept {
+        return Path;
+      }
+
+      private:
+      static std::string BuildErrorMsg(const char *msg, const char *path,
+          TErrorReason reason);
+
+      TErrorReason Reason;
+
+      std::string Path;
+    };  // TError
+
     TUnixStreamServer(int backlog, const char *path,
         std::unique_ptr<TConnectionHandlerApi> &&connection_handler);
 

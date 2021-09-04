@@ -27,11 +27,41 @@
 #include <arpa/inet.h>
 
 #include <base/error_util.h>
+#include <base/no_default_case.h>
 #include <base/wr/file_util.h>
 #include <base/wr/net_util.h>
 
 using namespace Base;
 using namespace Server;
+
+static const char *ReasonToString(
+    TUnixStreamServer::TErrorReason reason) noexcept {
+  switch (reason) {
+    case TUnixStreamServer::TErrorReason::SockFileUnlinkFailed: {
+      break;
+    }
+    case TUnixStreamServer::TErrorReason::BindFailed: {
+      return "socket bind() failed";
+    }
+    case TUnixStreamServer::TErrorReason::SockFileChmodFailed: {
+      return "socket file chmod() failed";
+    }
+    NO_DEFAULT_CASE;
+  }
+
+  return "socket file unlink() failed";
+}
+
+std::string TUnixStreamServer::TError::BuildErrorMsg(const char *msg,
+    const char *path, TErrorReason reason) {
+  std::string result("UNIX domain stream socket server error (reason: ");
+  result += ReasonToString(reason);
+  result += "): path [";
+  result += path;
+  result += "], details: ";
+  result += msg;
+  return result;
+}
 
 TUnixStreamServer::TUnixStreamServer(int backlog, const char *path,
     std::unique_ptr<TConnectionHandlerApi> &&connection_handler)
@@ -56,17 +86,30 @@ void TUnixStreamServer::InitListeningSocket(TFd &sock) {
   std::strncpy(serv_addr.sun_path, Path.c_str(), sizeof(serv_addr.sun_path));
   serv_addr.sun_path[sizeof(serv_addr.sun_path) - 1] = '\0';
 
-  /* Make sure socket file doesn't already exist. */
-  UnlinkPath();
+  try {
+    /* Make sure socket file doesn't already exist. */
+    UnlinkPath();
+  } catch (const std::exception &x) {
+    throw TError(TErrorReason::SockFileUnlinkFailed, Path.c_str(), x.what());
+  }
 
-  IfLt0(Wr::bind(sock_fd, reinterpret_cast<const sockaddr *>(&serv_addr),
-      sizeof(serv_addr)));
+  try {
+    IfLt0(Wr::bind(sock_fd, reinterpret_cast<const sockaddr *>(&serv_addr),
+        sizeof(serv_addr)));
+  } catch (const std::exception &x) {
+    throw TError(TErrorReason::BindFailed, Path.c_str(), x.what());
+  }
+
   sock = std::move(sock_fd);
 
   /* Set the permission bits on the socket file if they have been specified.
      If unspecified, the umask determines the permission bits. */
   if (Mode) {
-    IfLt0(Wr::chmod(Path.c_str(), *Mode));
+    try {
+      IfLt0(Wr::chmod(Path.c_str(), *Mode));
+    } catch (const std::exception &x) {
+      throw TError(TErrorReason::SockFileChmodFailed, Path.c_str(), x.what());
+    }
   }
 }
 

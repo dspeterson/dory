@@ -124,7 +124,7 @@ void TUnixDgInputAgent::OpenUnixSocket() {
     Bind(InputSocket, input_socket_address);
   } catch (const std::system_error &x) {
     LOG(TPri::ERR) << "Failed to create datagram socket file: " << x.what();
-    Die("Terminating on fatal error");
+    DieNoStackTrace("Terminating on fatal error", false /* dump_core */);
   }
 
   /* Set the permission bits on the socket file if they were specified.  If
@@ -136,7 +136,7 @@ void TUnixDgInputAgent::OpenUnixSocket() {
     } catch (const std::system_error &x) {
       LOG(TPri::ERR) << "Failed to set permissions on datagram socket file: "
           << x.what();
-      Die("Terminating on fatal error");
+      DieNoStackTrace("Terminating on fatal error", false /* dump_core */);
     }
   }
 }

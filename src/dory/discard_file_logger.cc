@@ -696,14 +696,16 @@ void TDiscardFileLogger::EnforceMaxPrefixLen(std::vector<uint8_t> &msg) {
 
 TFd TDiscardFileLogger::OpenLogPath(const char *log_path) {
   assert(log_path);
-  TFd fd = Wr::open(log_path, O_CREAT | O_APPEND | O_WRONLY,
-      S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+  TFd fd;
 
-  if (!fd.IsOpen()) {
-    LOG_ERRNO(TPri::WARNING, errno)
+  try {
+    fd = IfLt0(Wr::open(log_path, O_CREAT | O_APPEND | O_WRONLY,
+        S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP));
+  } catch (const std::exception &x) {
+    LOG(TPri::WARNING)
         << "Disabling discard logfile mechanism due to failure to open "
-        << "discard logfile " << log_path << " for append: ";
-    DisableLogging();
+        << "discard logfile [" << log_path << "] for append: "
+        << x.what();
   }
 
   return fd;
