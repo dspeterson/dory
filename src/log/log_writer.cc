@@ -24,11 +24,11 @@
 #include <mutex>
 #include <optional>
 #include <string>
+#include <system_error>
 #include <utility>
 
 #include <base/error_util.h>
 #include <log/combined_log_writer.h>
-#include <log/log.h>
 
 using namespace Base;
 using namespace Log;
@@ -75,12 +75,12 @@ bool Log::HandleLogfileReopenRequest() {
   auto err = writer->GetFileOpenError();
 
   if (err.has_value()) {
-     LOG(TPri::ERR) << "Failed to reopen logfile [" << LogWriter->GetFilePath()
-         << "]: " << err->what();
-  } else {
-    LogWriter = std::move(writer);
+    // We failed to reopen the logfile.  Keep writing to the old file
+    // descriptor.  Our caller will catch the exception and report an error.
+    throw std::system_error(*err);
   }
 
+  LogWriter = std::move(writer);
   return true;
 }
 
