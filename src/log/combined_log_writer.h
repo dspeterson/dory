@@ -23,6 +23,7 @@
 
 #include <optional>
 #include <string>
+#include <system_error>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -74,6 +75,10 @@ namespace Log {
       return FileLogWriter.GetOpenMode();
     }
 
+    const std::optional<std::system_error> &GetFileOpenError() const noexcept {
+      return FileOpenError;
+    }
+
     void WriteEntry(TLogEntryAccessApi &entry,
         bool no_stdout_stderr) const noexcept override;
 
@@ -83,11 +88,16 @@ namespace Log {
         size_t size, bool no_stdout_stderr) const noexcept override;
 
     private:
+    void TryEnableFileLogWriter();
+
     const TStdoutStderrLogWriter StdoutStderrLogWriter;
 
-    const TFileLogWriter FileLogWriter;
+    TFileLogWriter FileLogWriter;
 
     const TSyslogLogWriter SyslogLogWriter;
+
+    /* Becomes nonempty on failure opening logfile. */
+    std::optional<std::system_error> FileOpenError;
   };  // TCombinedLogWriter
 
 }  // Log

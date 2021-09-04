@@ -168,7 +168,7 @@ static std::atomic_flag die_flag = ATOMIC_FLAG_INIT;
 static std::atomic<pid_t> die_flag_holder(0);
 
 [[ noreturn ]] static void DieImpl(const char *msg, bool stack_trace,
-    TDieHandler *die_handler) noexcept {
+    bool dump_core, TDieHandler *die_handler) noexcept {
   const pid_t my_tid = Gettid();
 
   if (!die_flag.test_and_set()) {
@@ -190,9 +190,14 @@ static std::atomic<pid_t> die_flag_holder(0);
       (*die_handler)();
     }
 
-    /* Unless we are running with libasan, this should cause a core dump.
-       libasan disables core dumps by default, since they may be very large. */
-    std::abort();
+    if (dump_core) {
+      /* Unless we are running with libasan, this should cause a core dump.
+         libasan disables core dumps by default, since they may be very
+         large. */
+      std::abort();
+    } else {
+      _exit(1);
+    }
   }
 
   /* If we get here, there are two possibilities:
@@ -234,12 +239,12 @@ static std::atomic<pid_t> die_flag_holder(0);
 
 [[ noreturn ]] void Base::Die(const char *msg,
     TDieHandler *die_handler) noexcept {
-  DieImpl(msg, true /* stack_trace */, die_handler);
+  DieImpl(msg, true /* stack_trace */, true /* dump_core */, die_handler);
 }
 
-[[ noreturn ]] void Base::DieNoStackTrace(const char *msg,
+[[ noreturn ]] void Base::DieNoStackTrace(const char *msg, bool dump_core,
     TDieHandler *die_handler) noexcept {
-  DieImpl(msg, false /* stack_trace */, die_handler);
+  DieImpl(msg, false /* stack_trace */, dump_core, die_handler);
 }
 
 [[ noreturn ]] void Base::DieErrno(const char *fn_name,
@@ -249,7 +254,8 @@ static std::atomic<pid_t> die_flag_holder(0);
        create one may fail.  Just log an error message that makes it obvious
        what happened. */
     DieNoStackTrace(
-        "System or library call failed with ENOMEM (out of memory)");
+        "System or library call failed with ENOMEM (out of memory)",
+        true /* dump_core */);
   }
 
   try {

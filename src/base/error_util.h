@@ -211,10 +211,10 @@ namespace Base {
   [[ noreturn ]] void Die(const char *msg,
       TDieHandler *die_handler = nullptr) noexcept;
 
-  /* Log fatal error message and dump core, but don't generate a stack
-     trace.  Optionally call a caller-provided function for emitting debug
-     output. */
-  [[ noreturn ]] void DieNoStackTrace(const char *msg,
+  /* Log error message and die.  Dump core if requested, but don't generate a
+     stack trace.  Optionally call a caller-provided function for emitting
+     debug output. */
+  [[ noreturn ]] void DieNoStackTrace(const char *msg, bool dump_core,
       TDieHandler *die_handler = nullptr) noexcept;
 
   /* fn_name is the name of a system call or library function (for instance,

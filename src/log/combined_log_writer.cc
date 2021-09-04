@@ -31,6 +31,7 @@ TCombinedLogWriter::TCombinedLogWriter(bool enable_stdout_stderr,
       StdoutStderrLogWriter(enable_stdout_stderr),
       FileLogWriter(file_path, file_mode),
       SyslogLogWriter(enable_syslog) {
+  TryEnableFileLogWriter();
 }
 
 TCombinedLogWriter::TCombinedLogWriter(const TCombinedLogWriter &old_writer,
@@ -42,6 +43,7 @@ TCombinedLogWriter::TCombinedLogWriter(const TCombinedLogWriter &old_writer,
           old_writer.FileLogWriter :
           TFileLogWriter(file_path, file_mode)),
       SyslogLogWriter(enable_syslog) {
+  TryEnableFileLogWriter();
 }
 
 void TCombinedLogWriter::WriteEntry(
@@ -56,4 +58,12 @@ void TCombinedLogWriter::WriteStackTrace(Log::TPri pri, void *const *buffer,
   StdoutStderrLogWriter.WriteStackTrace(pri, buffer, size, no_stdout_stderr);
   FileLogWriter.WriteStackTrace(pri, buffer, size, no_stdout_stderr);
   SyslogLogWriter.WriteStackTrace(pri, buffer, size, no_stdout_stderr);
+}
+
+void TCombinedLogWriter::TryEnableFileLogWriter() {
+  try {
+    FileLogWriter.Enable();
+  } catch (const std::system_error &err) {
+    FileOpenError.emplace(err);
+  }
 }

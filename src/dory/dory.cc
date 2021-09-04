@@ -67,6 +67,16 @@ static int DoryMain(int argc, char *const argv[]) {
     /* Init XML processing subsystem.  Needed for config file parsing. */
     xml_init.Init();
 
+    std::string config_file_contents;
+
+    try {
+      config_file_contents = ReadFileIntoString(args.ConfigPath);
+    } catch (const std::exception &x) {
+      LOG(TPri::ERR) << "Failed to read config file [" << args.ConfigPath
+          << "]: " << x.what();
+      return EXIT_FAILURE;
+    }
+
     /* TODO: Enable support for LZ4 compression.  To enable LZ4, dory's wire
        protocol implementation needs to be updated to support asking the
        brokers what version of Kafka they are running.  LZ4 support will be
@@ -76,7 +86,7 @@ static int DoryMain(int argc, char *const argv[]) {
        for details. */
     conf = Dory::Conf::TConf::TBuilder(
         false /* allow_input_bind_ephemeral */,
-        false /* enable_lz4 */).Build(ReadFileIntoString(args.ConfigPath));
+        false /* enable_lz4 */).Build(config_file_contents);
 
     /* may throw TInvalidArgError */
     large_sendbuf_required = TDoryServer::CheckUnixDgSize(conf);

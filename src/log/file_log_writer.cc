@@ -93,7 +93,13 @@ TFileLogWriter::TFileLogWriter(const std::string &path,
     : TLogWriterBase(),
       Path(ValidateFilePathAndMode(path, open_mode)),
       OpenMode(open_mode),
-      FdRef(std::make_shared<TFd>(OpenLogfile(path, open_mode))) {
+      FdRef(std::make_shared<TFd>()) {
+}
+
+void TFileLogWriter::Enable() {
+  if (!IsEnabled()) {
+    *FdRef = OpenLogfile(Path, OpenMode);
+  }
 }
 
 void TFileLogWriter::WriteEntry(TLogEntryAccessApi &entry,

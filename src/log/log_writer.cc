@@ -23,8 +23,12 @@
 
 #include <mutex>
 #include <optional>
+#include <string>
+#include <utility>
 
+#include <base/error_util.h>
 #include <log/combined_log_writer.h>
+#include <log/log.h>
 
 using namespace Base;
 using namespace Log;
@@ -41,6 +45,15 @@ void Log::SetLogWriter(bool enable_stdout_stderr, bool enable_syslog,
           file_path, file_mode) :
       std::make_shared<TCombinedLogWriter>(*LogWriter, enable_stdout_stderr,
           enable_syslog, file_path, file_mode);
+  auto err = LogWriter->GetFileOpenError();
+
+  if (err.has_value()) {
+    std::string msg("Failed to open logfile [");
+    msg += file_path;
+    msg += "]: ";
+    msg += err->what();
+    DieNoStackTrace(msg.c_str(), false /* dump_core */);
+  }
 }
 
 void Log::DropLogWriter() {
@@ -55,10 +68,19 @@ bool Log::HandleLogfileReopenRequest() {
     return false;
   }
 
-  LogWriter = std::make_shared<TCombinedLogWriter>(
+  auto writer = std::make_shared<TCombinedLogWriter>(
       LogWriter->StdoutStderrLoggingIsEnabled(),
       LogWriter->SyslogLoggingIsEnabled(), LogWriter->GetFilePath(),
       LogWriter->GetFileOpenMode());
+  auto err = writer->GetFileOpenError();
+
+  if (err.has_value()) {
+     LOG(TPri::ERR) << "Failed to reopen logfile [" << LogWriter->GetFilePath()
+         << "]: " << err->what();
+  } else {
+    LogWriter = std::move(writer);
+  }
+
   return true;
 }
 

@@ -78,22 +78,23 @@ namespace Log {
        so it should be set before concurrent access is possible. */
     static void SetErrorHandler(TWriteErrorHandler handler) noexcept;
 
-    /* Throws std::system_error on error opening file.  An empty path disables
-       the writer.  If nonempty, the path must be absolute (i.e. it must start
-       with '/'). */
+    /* An empty path disables the writer.  If nonempty, the path must be
+       absolute (i.e. it must start with '/').  Initially the logfile is not
+       opened.  To open tle logfile, call Enable(). */
     TFileLogWriter(const std::string &path, std::optional<mode_t> open_mode);
 
     TFileLogWriter(const TFileLogWriter &) = default;
 
     bool IsEnabled() const noexcept {
-      const bool is_open = FdRef->IsOpen();
-      assert(Path.empty() == !is_open);
-      return is_open;
+      return FdRef->IsOpen();
     }
+
+    /* This must be called to open the logfile.  Throws std::system_error on
+       error opening file. */
+    void Enable();
 
     /* Returns empty string if no logfile is open. */
     const std::string &GetPath() const noexcept {
-      assert(Path.empty() == !IsEnabled());
       return Path;
     }
 

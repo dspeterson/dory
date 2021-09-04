@@ -100,7 +100,8 @@ int Base::Wr::getaddrinfo(TDisp disp, std::initializer_list<int> errors,
   }
 
   if (ret == EAI_MEMORY) {
-    DieNoStackTrace("getaddrinfo() failed with EAI_MEMORY (out of memory)");
+    DieNoStackTrace("getaddrinfo() failed with EAI_MEMORY (out of memory)",
+        true /* dump_core */);
   }
 
   if (IsFatal(ret, disp, errors, true /* list_fatal */,
@@ -141,7 +142,8 @@ int Base::Wr::getnameinfo(TDisp disp, std::initializer_list<int> errors,
   }
 
   if (ret == EAI_MEMORY) {
-    DieNoStackTrace("getnameinfo() failed with EAI_MEMORY (out of memory)");
+    DieNoStackTrace("getnameinfo() failed with EAI_MEMORY (out of memory)",
+        true /* dump_core */);
   }
 
   if (IsFatal(ret, disp, errors, true /* list_fatal */,
