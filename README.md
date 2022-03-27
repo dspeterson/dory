@@ -26,15 +26,43 @@ Dory runs on each individual host that sends messages to Kafka, receiving
 messages from clients through local interprocess communication and forwarding
 them to the Kafka cluster.  Once a client has written a message, no further
 interaction with Dory is required.  From that point onward, Dory takes full
-responsibility for reliable message delivery.  The preferred method for sending
-messages to Dory is by UNIX domain datagram socket.  Dory can also receive
-messages by UNIX domain stream socket or local TCP.  The option of using stream
-sockets allows sending messages too large to fit in a single datagram.  Local
-TCP facilitates sending messages from clients written in programming languages
-that do not provide easy access to UNIX domain sockets.  Dory serves as a
-single intake point, receiving messages from diverse clients written in a
-variety of programming languages.  Here are some reasons to consider using
-Dory:
+responsibility for reliable message delivery.  Due to the inherent reliability
+of local interprocess communication, there is no need to wait for an
+acknowledgement after sending a message to Dory.  Just send it and forget it.
+
+The preferred method for sending messages to Dory is by UNIX domain datagram
+socket.  Dory can also receive messages by UNIX domain stream socket or local
+TCP.  The option of using stream sockets allows sending messages too large to
+fit in a single datagram.  Local TCP facilitates sending messages from clients
+written in programming languages that do not provide easy access to UNIX domain
+sockets.  To simplify things, example client code for sending messages to Dory
+is provided in a variety of popular programming languages.  Developers can
+incorporate this into their own client implementations, saving them the effort
+of writing their own code to serialize message data to an in-memory buffer and
+write it to a socket.  Using Dory to send a message to Kafka can then be
+reduced to making a simple API call.  The following client support for sending
+messages to Dory is currently available:
+
+* [C and C++](client/c_and_c%2B%2B)
+* [Java](client/java/dory-client)
+* Other JVM-based languages (Scala, Clojure, Groovy, etc.) via Dory's
+  [Java support](client/java/dory-client)
+* [Go (Golang)](client/go)
+* [Python](client/python)
+* [Ruby](client/ruby)
+* [PHP](client/php)
+* [Node.js](client/nodejs)
+* [Perl](client/perl)
+* [Shell scripting](client/shell_scripting)
+
+Code contributions for clients in other programming languages are much
+appreciated.  For those who are interested, low-level technical documentation
+on how to send messages to Dory is provided [here](doc/sending_messages.md).
+Support for [running Dory inside a Docker container](Docker) is also available.
+Dory works with Kafka versions from 0.8 through the latest.  It runs on Linux,
+and is supported on CentOS/RHEL, Ubuntu, and Debian.
+
+Here are some reasons to consider using Dory:
 
 * Dory decouples message sources from the Kafka cluster.  A client is not
   forced to wait for an ACK after sending a message, since Dory handles the
@@ -50,17 +78,15 @@ Dory:
   reporting through its web interface.  Likewise, it provides a unified
   configuration mechanism for settings related to batching, compression, and
   other aspects of interaction with Kafka.  This simplifies system
-  administration, as compared to a multitude of producer mechanisms for various
-  programming languages and applications, each with its own status monitoring,
-  data quality reporting, and configuration mechanisms or lack thereof.
+  administration.
 
 * Dory may enable more efficient interaction with the Kafka cluster.  Dory's
   C++ implementation is likely to be less resource-intensive than producers
   written in interpreted scripting languages.  Since Dory is capable of serving
-  as a single access point for all clients that send messages to Kafka, it
-  permits more efficient batching by combining messages from multiple client
-  programs into a single batch.  Batching behavior is coordinated across all
-  message senders, rather than having each client act independently without
+  as a single access point for a variety of clients that send messages to
+  Kafka, it permits more efficient batching by combining messages from multiple
+  client programs into a single batch.  Batching behavior is coordinated across
+  all message senders, rather than having each client act independently without
   awareness of messages from other clients.  If Dory assumes responsibility for
   all message transmission from a client host to a Kafka cluster with N
   brokers, only a single TCP connection to each broker is required, rather than
@@ -72,37 +98,12 @@ Dory:
   runtime environments.  Sending a message to Kafka requires only writing a
   message in a simple binary format to a UNIX domain or local TCP socket.
 
-The following client support for sending messages to Dory is currently
-available:
-
-* [C and C++](client/c_and_c%2B%2B)
-* [Java](client/java/dory-client)
-* Other JVM-based languages (Scala, Clojure, Groovy, etc.) via Dory's
-  [Java support](client/java/dory-client)
-* [Go (Golang)](client/go)
-* [Python](client/python)
-* [Ruby](client/ruby)
-* [PHP](client/php)
-* [Node.js](client/nodejs)
-* [Perl](client/perl)
-* [Shell scripting](client/shell_scripting)
-
-Code contributions for clients in other programming languages are much
-appreciated.  Technical details on how to send messages to Dory are provided
-[here](doc/sending_messages.md).  Support for [running Dory inside a Docker
-container](Docker) is also available.  Dory works with Kafka versions from 0.8
-through the latest.  It runs on Linux, and is supported on CentOS/RHEL versions
-8 and 7, Ubuntu versions 20.04 LTS, 18.04 LTS, and 16.04 LTS, and Debian
-versions 10 (Buster) and 9 (Stretch).
-
 Dory is the successor to [Bruce](https://github.com/ifwe/bruce), and is
 maintained by [Dave Peterson](https://github.com/dspeterson), who created Bruce
 while employed at [if(we)](http://www.ifwe.co/).  Code contributions and ideas
 for new features and other improvements are welcomed and much appreciated.
 Information for developers interested in contributing is provided
-[here](doc/dev_info.md) and [here](CONTRIBUTING.md).  If you have ideas for
-things you would like to see in future versions of Dory, please add them
-[here](http://dory.wikidot.com/start).
+[here](doc/dev_info.md) and [here](CONTRIBUTING.md).
 
 ## Setting Up a Build Environment
 
