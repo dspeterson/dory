@@ -32,11 +32,18 @@ using namespace Socket;
 
 void Dory::Util::ConnectToHost(const char *host_name, in_port_t port,
     TFd &result_socket) {
+  int tmp_family; 
   assert(host_name);
   result_socket.Reset();
 
+  tmp_family = AF_INET;
+  if ( strstr(host_name,":") != NULL )
+  {
+      tmp_family = AF_INET6;
+  } 
+   
   /* Iterate over our potential hosts. */
-  for (Db::TCursor csr(host_name, nullptr, AF_INET, SOCK_STREAM, 0,
+  for (Db::TCursor csr(host_name, nullptr, tmp_family, SOCK_STREAM, 0,
           AI_PASSIVE);
       csr;
       ++csr) {
