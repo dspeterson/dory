@@ -36,7 +36,7 @@ void Dory::Util::ConnectToHost(const char *host_name, in_port_t port,
   result_socket.Reset();
 
   /* Iterate over our potential hosts. */
-  for (Db::TCursor csr(host_name, nullptr, AF_INET, SOCK_STREAM, 0,
+  for (Db::TCursor csr(host_name, nullptr, AF_UNSPEC, SOCK_STREAM, 0,
           AI_PASSIVE);
       csr;
       ++csr) {
